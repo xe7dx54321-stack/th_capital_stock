@@ -4,6 +4,7 @@
 import json
 import os
 import re
+import ssl
 import urllib.error
 import urllib.request
 import warnings
@@ -18,6 +19,11 @@ warnings.filterwarnings(
 import requests
 
 from smr_paths import env_or_project_path, normalize_project_path, project_path, relative_to_project
+
+try:
+    import certifi
+except Exception:  # pragma: no cover - optional CA bundle fallback
+    certifi = None
 
 PROMPT_PACK_DIR = project_path("12_smr_agents", "prompt_packs")
 SHADOW_EXECUTION_ALLOWED_MODES = {"shadow", "canary"}
@@ -65,6 +71,28 @@ def load_prompt_pack(rel_path):
     return path.read_text(encoding="utf-8")
 
 
+def env_candidates(primary, aliases=None):
+    candidates = []
+    for name in [primary, *(aliases or [])]:
+        if name and name not in candidates:
+            candidates.append(name)
+    return candidates
+
+
+def first_present_env(candidates):
+    for name in candidates:
+        value = os.environ.get(name)
+        if value:
+            return name, value
+    return None, None
+
+
+def default_ssl_context():
+    if certifi is not None:
+        return ssl.create_default_context(cafile=certifi.where())
+    return ssl.create_default_context()
+
+
 def prompt_pack_rel_path(profile_id):
     if not profile_id:
         return None
@@ -79,14 +107,24 @@ def provider_readiness(provider_name, profiles=None):
     provider = (profiles.get("providers") or {}).get(provider_name) or {}
     api_key_env = provider.get("api_key_env")
     base_url_env = provider.get("base_url_env")
+    api_key_envs = env_candidates(api_key_env, provider.get("api_key_env_aliases"))
+    base_url_envs = env_candidates(base_url_env, provider.get("base_url_env_aliases"))
     fallback = codex_openai_fallback() if provider_name == "openai" else {}
-    resolved_api_key = os.environ.get(api_key_env or "") or fallback.get("api_key")
-    resolved_base_url = os.environ.get(base_url_env or "") or fallback.get("base_url")
+    resolved_api_key_env, resolved_api_key = first_present_env(api_key_envs)
+    resolved_base_url_env, resolved_base_url = first_present_env(base_url_envs)
+    resolved_api_key = resolved_api_key or fallback.get("api_key")
+    resolved_base_url = resolved_base_url or fallback.get("base_url")
     return {
         "provider": provider_name,
         "enabled": bool(provider.get("enabled")),
         "api_key_env": api_key_env,
+        "api_key_env_aliases": provider.get("api_key_env_aliases") or [],
+        "api_key_env_candidates": api_key_envs,
+        "resolved_api_key_env": resolved_api_key_env,
         "base_url_env": base_url_env,
+        "base_url_env_aliases": provider.get("base_url_env_aliases") or [],
+        "base_url_env_candidates": base_url_envs,
+        "resolved_base_url_env": resolved_base_url_env,
         "organization_env": provider.get("organization_env", "OPENAI_ORGANIZATION"),
         "project_env": provider.get("project_env", "OPENAI_PROJECT"),
         "anthropic_version": provider.get("anthropic_version", "2023-06-01"),
@@ -244,17 +282,17 @@ def codex_openai_fallback():
 
 
 def resolved_api_key(readiness):
-    api_key_env = readiness.get("api_key_env")
-    if api_key_env and os.environ.get(api_key_env):
-        return os.environ[api_key_env]
+    _, api_key = first_present_env(readiness.get("api_key_env_candidates") or [readiness.get("api_key_env")])
+    if api_key:
+        return api_key
     fallback = codex_openai_fallback() if readiness.get("provider") == "openai" else {}
     return fallback.get("api_key")
 
 
 def resolved_base_url(readiness):
-    base_url_env = readiness.get("base_url_env")
-    if base_url_env and os.environ.get(base_url_env):
-        return os.environ[base_url_env]
+    _, base_url = first_present_env(readiness.get("base_url_env_candidates") or [readiness.get("base_url_env")])
+    if base_url:
+        return base_url
     fallback = codex_openai_fallback() if readiness.get("provider") == "openai" else {}
     return fallback.get("base_url")
 
@@ -464,7 +502,7 @@ def call_anthropic_messages_api(request_payload, readiness, client_request_id=No
     request = urllib.request.Request(endpoint, data=body, headers=headers, method="POST")
 
     try:
-        with urllib.request.urlopen(request, timeout=timeout) as response:
+        with urllib.request.urlopen(request, timeout=timeout, context=default_ssl_context()) as response:
             raw = response.read().decode("utf-8")
             payload = json.loads(raw)
             return {

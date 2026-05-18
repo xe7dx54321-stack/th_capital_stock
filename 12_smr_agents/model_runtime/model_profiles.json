@@ -17,7 +17,10 @@
     },
     "anthropic": {
       "enabled": true,
-      "api_key_env": "ANTHROPIC_AUTH_TOKEN",
+      "api_key_env": "ANTHROPIC_API_KEY",
+      "api_key_env_aliases": [
+        "ANTHROPIC_AUTH_TOKEN"
+      ],
       "base_url_env": "ANTHROPIC_BASE_URL",
       "api_style": "messages",
       "anthropic_version": "2023-06-01"
