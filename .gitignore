@@ -16,6 +16,8 @@ venv/
 10_logs/
 *.log
 *.pid
+.smr_env.local
+*.local.env
 
 # Local databases and generated market data
 *.db

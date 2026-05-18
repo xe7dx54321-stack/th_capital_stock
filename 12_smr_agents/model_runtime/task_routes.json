@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "global_mode": "disabled",
+  "global_mode": "shadow",
   "entity_routes": {
     "dynamic_pool_snapshot": {
       "to_profile_id": "hermes_research_curator",

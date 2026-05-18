@@ -60,18 +60,20 @@ def configured_slot_model(tmp_root, slot_name):
 
 def live_packet(provider_name, tmp_root):
     now_text = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    if provider_name == "openai":
+    if provider_name in {"openai", "minimax"}:
+        model_slot = "reasoning_batch"
+        model = configured_slot_model(tmp_root, model_slot)
         return {
-            "handoff_id": "handoff_openai_shadow_live_smoke",
+            "handoff_id": f"handoff_{provider_name}_shadow_live_smoke",
             "entity_type": "us_signal_snapshot",
             "entity_id": "2026-04-14",
             "from_profile_id": "openclaw_report_exec",
             "to_profile_id": "hermes_research_curator",
             "required_action": "interpret_us_signal",
             "task_kind": "us_signal_interpreter",
-            "model_slot": "reasoning_batch",
-            "provider": "openai",
-            "model": configured_slot_model(tmp_root, "reasoning_batch") or "gpt-5.4",
+            "model_slot": model_slot,
+            "provider": provider_name,
+            "model": model or ("gpt-5.4" if provider_name == "openai" else "MiniMax-M2.7"),
             "prompt_pack_rel_path": "12_smr_agents/prompt_packs/hermes_research_curator.md",
             "output_contract": "research_context_note_candidate",
             "preview": "AMD、AVGO 上涨，NOW 下跌，判断这些显著变化对 A/H 链路有没有真正需要跟踪的映射。",
@@ -175,11 +177,23 @@ def write_smoke_assets(tmp_root, provider_name):
             "provider_readiness": {
                 "provider": cfg["provider"],
                 "enabled": False,
-                "api_key_env": "OPENAI_API_KEY" if provider_name == "openai" else "ANTHROPIC_AUTH_TOKEN",
-                "base_url_env": "OPENAI_BASE_URL" if provider_name == "openai" else "ANTHROPIC_BASE_URL",
+                "api_key_env": {
+                    "openai": "OPENAI_API_KEY",
+                    "minimax": "MINIMAX_API_KEY",
+                    "anthropic": "ANTHROPIC_API_KEY",
+                }[provider_name],
+                "base_url_env": {
+                    "openai": "OPENAI_BASE_URL",
+                    "minimax": "MINIMAX_BASE_URL",
+                    "anthropic": "ANTHROPIC_BASE_URL",
+                }[provider_name],
                 "has_api_key": False,
                 "has_base_url": False,
-                "api_style": "responses" if provider_name == "openai" else "messages",
+                "api_style": {
+                    "openai": "responses",
+                    "minimax": "anthropic_messages",
+                    "anthropic": "messages",
+                }[provider_name],
             },
         },
         "source_documents": [
@@ -203,7 +217,7 @@ def relative_to_display(path, base_root):
 
 def main():
     parser = argparse.ArgumentParser(description="Live smoke validation for SMR model shadow providers")
-    parser.add_argument("--provider", choices=["openai", "anthropic"], required=True)
+    parser.add_argument("--provider", choices=["openai", "anthropic", "minimax"], required=True)
     args = parser.parse_args()
 
     with tempfile.TemporaryDirectory(prefix=f"smr-shadow-{args.provider}-live-") as tmp:

@@ -1,13 +1,21 @@
 {
   "version": 1,
   "as_of": "2026-04-15",
-  "global_mode": "disabled",
+  "global_mode": "shadow",
   "providers": {
     "openai": {
-      "enabled": true,
+      "enabled": false,
       "api_key_env": "OPENAI_API_KEY",
       "base_url_env": "OPENAI_BASE_URL",
       "api_style": "responses"
+    },
+    "minimax": {
+      "enabled": true,
+      "api_key_env": "MINIMAX_API_KEY",
+      "base_url_env": "MINIMAX_BASE_URL",
+      "default_base_url": "https://api.minimaxi.com/anthropic",
+      "api_style": "anthropic_messages",
+      "anthropic_version": "2023-06-01"
     },
     "google": {
       "enabled": false,
@@ -28,8 +36,8 @@
   },
   "model_slots": {
     "reasoning_primary": {
-      "provider": "openai",
-      "model": "gpt-5.4",
+      "provider": "minimax",
+      "model": "MiniMax-M2.7",
       "reasoning_effort": "high",
       "intended_use": [
         "日报增强",
@@ -39,8 +47,8 @@
       ]
     },
     "reasoning_batch": {
-      "provider": "openai",
-      "model": "gpt-5.4",
+      "provider": "minimax",
+      "model": "MiniMax-M2.7",
       "reasoning_effort": "high",
       "intended_use": [
         "批量上下文整理",
@@ -49,8 +57,8 @@
       ]
     },
     "long_context_secondary": {
-      "provider": "google",
-      "model": "gemini-2.5-pro",
+      "provider": "minimax",
+      "model": "MiniMax-M2.7",
       "reasoning_effort": "medium",
       "intended_use": [
         "超长研究包阅读",

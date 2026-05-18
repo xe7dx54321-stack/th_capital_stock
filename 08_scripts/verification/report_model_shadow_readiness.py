@@ -23,7 +23,7 @@ FIRST_WAVE_PRIORITIES = {
     "portfolio_pnl_snapshot": ("P1-second", "适合补组合风险解释，但需控制措辞"),
     "research_context_note": ("P1-second", "适合做 dispatch 同步增强"),
     "risk_update_candidate": ("P1-second", "适合做风险同步增强"),
-    "trend_research_batch": ("P1-blocked", "当前挂在 Google 槽位，需补 provider 适配"),
+    "trend_research_batch": ("P1-second", "已切到 MiniMax 长上下文槽位，适合在首批稳定后进入"),
     "review_queue": ("P2-later", "治理分诊价值高，但不适合作为第一批真实 shadow"),
     "wiki_draft": ("P2-later", "需要更强人工审核边界，不适合作为第一批"),
 }
@@ -76,6 +76,7 @@ def sort_key(item):
 def print_summary(rows):
     profiles = load_model_profiles()
     openai = provider_readiness("openai", profiles)
+    minimax = provider_readiness("minimax", profiles)
     anthropic = provider_readiness("anthropic", profiles)
     print("SMR model shadow readiness report")
     print(f"- current_global_mode: {profiles.get('global_mode')}")
@@ -83,6 +84,10 @@ def print_summary(rows):
     print(f"- openai_api_key_available: {bool(openai.get('has_api_key'))}")
     print(f"- openai_base_url_available: {bool(openai.get('has_base_url'))}")
     print(f"- openai_fallback_source: {openai.get('fallback_source') or ''}")
+    print(f"- minimax_enabled: {bool(minimax.get('enabled'))}")
+    print(f"- minimax_api_key_available: {bool(minimax.get('has_api_key'))}")
+    print(f"- minimax_api_key_env: {minimax.get('resolved_api_key_env') or minimax.get('api_key_env') or ''}")
+    print(f"- minimax_base_url_available: {bool(minimax.get('has_base_url'))}")
     print(f"- anthropic_enabled: {bool(anthropic.get('enabled'))}")
     print(f"- anthropic_api_key_available: {bool(anthropic.get('has_api_key'))}")
     print(f"- anthropic_api_key_env: {anthropic.get('resolved_api_key_env') or anthropic.get('api_key_env') or ''}")

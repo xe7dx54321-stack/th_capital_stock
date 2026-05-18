@@ -30,6 +30,11 @@ SHADOW_EXECUTION_ALLOWED_MODES = {"shadow", "canary"}
 CODEX_HOME = Path.home() / ".codex"
 CODEX_CONFIG_PATH = CODEX_HOME / "config.toml"
 CODEX_AUTH_PATH = CODEX_HOME / "auth.json"
+LOCAL_ENV_PATHS = [
+    project_path(".smr_env.local"),
+    project_path("00_control", "local_model_env.env"),
+]
+_LOCAL_ENV_LOADED = False
 
 
 def _load_json(path):
@@ -71,6 +76,41 @@ def load_prompt_pack(rel_path):
     return path.read_text(encoding="utf-8")
 
 
+def parse_env_line(line):
+    text = line.strip()
+    if not text or text.startswith("#"):
+        return None, None
+    if text.startswith("export "):
+        text = text[len("export ") :].strip()
+    if "=" not in text:
+        return None, None
+    key, value = text.split("=", 1)
+    key = key.strip()
+    value = value.strip()
+    if not re.match(r"^[A-Za-z_][A-Za-z0-9_]*$", key):
+        return None, None
+    if len(value) >= 2 and value[0] == value[-1] and value[0] in {"'", '"'}:
+        value = value[1:-1]
+    return key, value
+
+
+def load_local_model_env():
+    global _LOCAL_ENV_LOADED
+    if _LOCAL_ENV_LOADED:
+        return
+    _LOCAL_ENV_LOADED = True
+    for path in LOCAL_ENV_PATHS:
+        if not path.exists():
+            continue
+        try:
+            for line in path.read_text(encoding="utf-8").splitlines():
+                key, value = parse_env_line(line)
+                if key and value and key not in os.environ:
+                    os.environ[key] = value
+        except Exception:
+            continue
+
+
 def env_candidates(primary, aliases=None):
     candidates = []
     for name in [primary, *(aliases or [])]:
@@ -80,6 +120,7 @@ def env_candidates(primary, aliases=None):
 
 
 def first_present_env(candidates):
+    load_local_model_env()
     for name in candidates:
         value = os.environ.get(name)
         if value:
@@ -113,7 +154,7 @@ def provider_readiness(provider_name, profiles=None):
     resolved_api_key_env, resolved_api_key = first_present_env(api_key_envs)
     resolved_base_url_env, resolved_base_url = first_present_env(base_url_envs)
     resolved_api_key = resolved_api_key or fallback.get("api_key")
-    resolved_base_url = resolved_base_url or fallback.get("base_url")
+    resolved_base_url = resolved_base_url or fallback.get("base_url") or provider.get("default_base_url")
     return {
         "provider": provider_name,
         "enabled": bool(provider.get("enabled")),
@@ -125,6 +166,7 @@ def provider_readiness(provider_name, profiles=None):
         "base_url_env_aliases": provider.get("base_url_env_aliases") or [],
         "base_url_env_candidates": base_url_envs,
         "resolved_base_url_env": resolved_base_url_env,
+        "default_base_url": provider.get("default_base_url"),
         "organization_env": provider.get("organization_env", "OPENAI_ORGANIZATION"),
         "project_env": provider.get("project_env", "OPENAI_PROJECT"),
         "anthropic_version": provider.get("anthropic_version", "2023-06-01"),
@@ -199,11 +241,15 @@ def shadow_execution_status(route):
         pass
     elif provider == "anthropic" and api_style == "messages":
         pass
+    elif provider == "minimax" and api_style in {"chat_completions", "anthropic_messages"}:
+        pass
     else:
         return "blocked_provider_unsupported"
     if provider == "openai" and readiness.get("api_style") not in {None, "responses"}:
         return "blocked_provider_api_style"
     if provider == "anthropic" and readiness.get("api_style") != "messages":
+        return "blocked_provider_api_style"
+    if provider == "minimax" and readiness.get("api_style") not in {"chat_completions", "anthropic_messages"}:
         return "blocked_provider_api_style"
     if not readiness.get("enabled"):
         return "blocked_provider_disabled"
@@ -294,7 +340,7 @@ def resolved_base_url(readiness):
     if base_url:
         return base_url
     fallback = codex_openai_fallback() if readiness.get("provider") == "openai" else {}
-    return fallback.get("base_url")
+    return fallback.get("base_url") or readiness.get("default_base_url")
 
 
 def join_endpoint(base_url, path_suffix):
@@ -344,6 +390,18 @@ def extract_anthropic_output_text(payload):
     for item in payload.get("content", []) or []:
         if item.get("type") == "text" and item.get("text"):
             chunks.append(item["text"])
+    return "\n\n".join(chunks).strip()
+
+
+def extract_chat_completion_output_text(payload):
+    if not isinstance(payload, dict):
+        return ""
+    chunks = []
+    for choice in payload.get("choices", []) or []:
+        message = choice.get("message") or {}
+        content = message.get("content")
+        if content:
+            chunks.append(content)
     return "\n\n".join(chunks).strip()
 
 
@@ -525,6 +583,54 @@ def call_anthropic_messages_api(request_payload, readiness, client_request_id=No
             "payload": payload,
             "output_text": "",
             "error": raw or str(exc),
+        }
+    except Exception as exc:
+        return {
+            "ok": False,
+            "status_code": None,
+            "headers": {},
+            "endpoint": endpoint,
+            "payload": None,
+            "output_text": "",
+            "error": str(exc),
+        }
+
+
+def call_minimax_chat_completions_api(request_payload, readiness, client_request_id=None, timeout=180):
+    api_key = resolved_api_key(readiness)
+    if not api_key:
+        raise RuntimeError(f"Missing MiniMax API key env: {readiness.get('api_key_env')}")
+
+    endpoint = provider_endpoint(
+        readiness,
+        "https://api.minimax.io/v1/chat/completions",
+        "/chat/completions",
+    )
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {api_key}",
+        "Accept": "application/json",
+    }
+    if client_request_id:
+        headers["X-Client-Request-Id"] = client_request_id[:512]
+
+    try:
+        response = requests.post(
+            endpoint,
+            headers=headers,
+            json=request_payload,
+            timeout=timeout,
+        )
+        raw = response.content.decode("utf-8", errors="replace")
+        payload = parse_json_or_none(raw)
+        return {
+            "ok": response.ok,
+            "status_code": response.status_code,
+            "headers": dict(response.headers.items()),
+            "endpoint": endpoint,
+            "payload": payload,
+            "output_text": extract_chat_completion_output_text(payload) if response.ok else "",
+            "error": None if response.ok else (raw or f"HTTP {response.status_code}"),
         }
     except Exception as exc:
         return {

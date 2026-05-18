@@ -16,6 +16,7 @@ if str(LIB_DIR) not in sys.path:
 from smr_agents import DB_PATH, get_handoff, get_latest_registry_entry, get_profile, profile_workspace_path
 from smr_llm import (
     call_anthropic_messages_api,
+    call_minimax_chat_completions_api,
     call_openai_responses_api,
     load_packet,
     load_prompt_pack,
@@ -282,12 +283,38 @@ def build_anthropic_request_payload(route, prompt_pack_text, task_input_text):
     }
 
 
+def build_chat_completions_request_payload(route, prompt_pack_text, task_input_text):
+    instructions = (
+        prompt_pack_text.strip()
+        or "你是 SMR 的影子辅助模型，只能生成中文候选内容，不能替代脚本真相层或人工审批。"
+    )
+    return {
+        "model": route.get("model"),
+        "messages": [
+            {
+                "role": "system",
+                "content": instructions,
+            },
+            {
+                "role": "user",
+                "content": task_input_text,
+            },
+        ],
+        "max_tokens": 4096,
+        "stream": False,
+    }
+
+
 def build_provider_request_payload(packet, route, prompt_pack_text, task_input_text):
     provider = route.get("provider")
     if provider == "openai":
         return build_openai_request_payload(packet, route, prompt_pack_text, task_input_text)
     if provider == "anthropic":
         return build_anthropic_request_payload(route, prompt_pack_text, task_input_text)
+    if provider == "minimax":
+        if (route.get("provider_readiness") or {}).get("api_style") == "anthropic_messages":
+            return build_anthropic_request_payload(route, prompt_pack_text, task_input_text)
+        return build_chat_completions_request_payload(route, prompt_pack_text, task_input_text)
     return {
         "provider": provider,
         "unsupported": True,
@@ -597,6 +624,20 @@ def main():
                     route.get("provider_readiness") or {},
                     client_request_id=packet.get("packet_id"),
                 )
+            elif provider == "minimax":
+                readiness = route.get("provider_readiness") or {}
+                if readiness.get("api_style") == "anthropic_messages":
+                    api_result = call_anthropic_messages_api(
+                        request_payload,
+                        readiness,
+                        client_request_id=packet.get("packet_id"),
+                    )
+                else:
+                    api_result = call_minimax_chat_completions_api(
+                        request_payload,
+                        readiness,
+                        client_request_id=packet.get("packet_id"),
+                    )
             else:
                 api_result = {
                     "ok": False,
