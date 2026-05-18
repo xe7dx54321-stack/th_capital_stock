@@ -24,8 +24,8 @@ def classify_row(raw_path):
     normalized = normalize_project_path(raw_path)
     normalized_str = str(normalized) if normalized else None
     normalized_exists = bool(normalized and normalized.exists())
-    is_legacy = str(raw_path or "").startswith("/Users/apple/")
     is_same_path = bool(raw_path and normalized_str and str(raw_path) == normalized_str)
+    is_legacy = bool(raw_path and normalized_str and not is_same_path)
 
     if not raw_path:
         status = "missing_path"

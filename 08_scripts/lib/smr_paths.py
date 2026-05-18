@@ -8,6 +8,7 @@ from pathlib import Path
 
 LEGACY_ROOT_HINTS = [
     Path("/Users/apple/Documents/同行资本二级市场"),
+    Path("/Users/tianmochen/Documents/二级市场项目开发/同行资本二级市场"),
 ]
 
 

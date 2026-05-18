@@ -31,7 +31,7 @@ def classify_path(raw_path):
             "rel_path": None,
             "exists": False,
         }
-    if str(raw_path).startswith("/Users/apple/"):
+    if normalized_str and str(raw_path) != normalized_str:
         return {
             "status": "legacy_path_mapped_exists" if path_obj and path_obj.exists() else "legacy_path_missing",
             "raw_path": raw_path,
