@@ -1,0 +1,22 @@
+{
+  "default_toolsets": [
+    "file",
+    "web"
+  ],
+  "lane": "hermes_like",
+  "match": {
+    "entity_types": [
+      "risk_update_candidate"
+    ]
+  },
+  "notes": [
+    "负责风险解释、risk case、playbook、组合复盘沉淀。",
+    "当前主要作为 handoff 目标存在，不直接接默认路由。"
+  ],
+  "profile_id": "hermes_risk_curator",
+  "role": "风险知识治理代理",
+  "suggested_handoffs": {
+    "risk_update_candidate": "hermes_reporting_editor"
+  },
+  "workspace_rel_path": "12_smr_agents/workspaces/hermes_risk_curator"
+}

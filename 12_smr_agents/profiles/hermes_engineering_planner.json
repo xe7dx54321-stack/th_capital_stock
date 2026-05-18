@@ -1,0 +1,23 @@
+{
+  "default_toolsets": [
+    "file",
+    "web"
+  ],
+  "lane": "hermes_like",
+  "match": {
+    "entity_types": [
+      "system_change_request"
+    ]
+  },
+  "notes": [
+    "负责把业务缺口整理成系统施工任务。",
+    "当前先负责工程任务单治理，不直接改代码。"
+  ],
+  "priority": 140,
+  "profile_id": "hermes_engineering_planner",
+  "role": "系统自进化规划代理",
+  "suggested_handoffs": {
+    "system_change_request": "openclaw_system_exec"
+  },
+  "workspace_rel_path": "12_smr_agents/workspaces/hermes_engineering_planner"
+}

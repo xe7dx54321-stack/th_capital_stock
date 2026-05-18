@@ -1,0 +1,18 @@
+{
+  "default_toolsets": [
+    "file",
+    "web"
+  ],
+  "lane": "hermes_like",
+  "match": {
+    "entity_types": []
+  },
+  "notes": [
+    "负责日报解释、dispatch 补充和高价值结论压缩。",
+    "当前主要作为 handoff 目标存在，不直接接默认路由。"
+  ],
+  "profile_id": "hermes_reporting_editor",
+  "role": "日报与调度知识代理",
+  "suggested_handoffs": {},
+  "workspace_rel_path": "12_smr_agents/workspaces/hermes_reporting_editor"
+}

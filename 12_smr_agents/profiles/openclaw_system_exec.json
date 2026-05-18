@@ -1,0 +1,21 @@
+{
+  "default_toolsets": [
+    "terminal",
+    "file"
+  ],
+  "lane": "openclaw_like",
+  "match": {
+    "entity_types": [
+      "system_patch_candidate",
+      "system_validation_snapshot"
+    ]
+  },
+  "notes": [
+    "负责系统施工、测试留痕和提交候选准备。",
+    "当前阶段只生成候选补丁和验证计划，不自动提交真相层代码。"
+  ],
+  "profile_id": "openclaw_system_exec",
+  "role": "系统施工执行代理",
+  "suggested_handoffs": {},
+  "workspace_rel_path": "12_smr_agents/workspaces/openclaw_system_exec"
+}

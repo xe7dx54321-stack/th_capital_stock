@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "as_of": "2026-04-17",
+  "mode": "guarded",
+  "goal": "让系统能够根据业务缺口生成工程任务，并在受控门禁下推进开发、审查、验证与提交。",
+  "gates": {
+    "allow_model_task_planning": true,
+    "allow_auto_code_write": false,
+    "allow_auto_test_execution": true,
+    "allow_auto_commit_to_branch": false,
+    "allow_auto_commit_to_main": false,
+    "require_green_tests_before_commit": true,
+    "require_human_review_before_commit": true,
+    "require_human_review_before_main_merge": true
+  },
+  "safe_outputs": [
+    "task_spec",
+    "patch_candidate",
+    "validation_plan",
+    "verification_summary",
+    "commit_candidate"
+  ],
+  "cli_shadow": {
+    "provider": "codex",
+    "enabled": true,
+    "auto_run": false,
+    "mode": "read_only",
+    "timeout_seconds": 45,
+    "max_request_count": 4
+  },
+  "default_test_commands": [
+    "python3 -m py_compile 相关脚本",
+    "python3 目标脚本 --dry-run",
+    "必要时刷新下游快照并做页面烟测"
+  ],
+  "blocked_actions": [
+    "未经人工批准直接改正式控制文件",
+    "未经验证直接提交到主分支",
+    "为了追求自动化而跳过测试与回归",
+    "因为单只股票缺口而对整套系统做无边界重构"
+  ],
+  "commit_policy": {
+    "branch_prefix": "codex/",
+    "main_branch_auto_merge": false,
+    "commit_message_style": "type(scope): summary"
+  }
+}

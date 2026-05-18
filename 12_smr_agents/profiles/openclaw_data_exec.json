@@ -1,0 +1,20 @@
+{
+  "default_toolsets": [
+    "terminal",
+    "file"
+  ],
+  "lane": "openclaw_like",
+  "match": {
+    "entity_types": [
+      "market_data_harvest"
+    ]
+  },
+  "notes": [
+    "负责 A/H 市场数据采集和基础入库。",
+    "默认只做稳定执行，不直接产出正式知识。"
+  ],
+  "profile_id": "openclaw_data_exec",
+  "role": "数据采集执行代理",
+  "suggested_handoffs": {},
+  "workspace_rel_path": "12_smr_agents/workspaces/openclaw_data_exec"
+}

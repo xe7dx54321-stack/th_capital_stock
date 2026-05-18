@@ -1,0 +1,19 @@
+# SMR 官方高价值信息源目标注册表
+
+> 这份表定义的是“值得长期接官方一手材料的公司 / 实体”，不是全部市场覆盖。
+> 这里优先放当前组合参照层、重点美股映射、以及验证过可落地的官方 IR / SEC 路径。
+> `Status` 表示当前建设状态：`live`（已纳入正式建设）、`experimental`（已验证可抓但还在磨稳定性）、`planned`（计划中）。
+
+## Targets
+
+| Target Key | Entity Type | Entity ID | Company | Market | SEC Symbol | IR URL | Include Keywords | Exclude Keywords | Max Links | Status | Enabled | Notes |
+|------------|-------------|-----------|---------|--------|------------|--------|------------------|------------------|-----------|--------|---------|-------|
+| alibaba_primary | stock | 09988.HK | Alibaba Group | HK | BABA | https://www.alibabagroup.com/en-US/ir-financial-reports-quarterly-results | earnings,results,quarter,annual,interim,report,presentation,transcript,earnings-call,webcast,financial,sec | facebook,linkedin,twitter,instagram,youtube,weibo,privacy,terms,career,contact,about,.css,.js,.jpg,.png,.gif,.svg | 10 | live | yes | 走阿里官方 IR 季报结果页，可直接捞到业绩演示稿、英文电话会稿、年报 / 中报 PDF。 |
+| microsoft_primary | stock | MSFT | Microsoft | US | MSFT | https://aka.ms/latestearnings | earnings,results,financial,quarter,press-release,webcast,presentation,transcript,10-k,10-q | facebook,linkedin,twitter,privacy,terms,career,contact,about,.css,.js,.jpg,.png,.gif,.svg | 8 | live | yes | 走微软官方最新业绩页，适合作为美股官方业绩一手材料入口。 |
+| apple_primary | stock | AAPL | Apple | US | AAPL | https://investor.apple.com/investor-relations/default.aspx | earnings,results,financial,quarter,presentation,webcast,sec-filings,10-k,10-q | facebook,linkedin,twitter,privacy,terms,career,contact,about,.css,.js,.jpg,.png,.gif,.svg | 8 | experimental | yes | Apple IR 站可访问，适合作为 Q4 型 IR 站模板验证对象。 |
+| nvidia_primary | stock | NVDA | NVIDIA | US | NVDA | https://investor.nvidia.com/ | earnings,results,prepared-remarks,presentation,transcript,webcast,financial,10-k,10-q | facebook,linkedin,twitter,privacy,terms,career,contact,about,.css,.js,.jpg,.png,.gif,.svg | 8 | experimental | yes | 当前官网存在 Cloudflare challenge（Cloudflare 挑战页），先保留对象和官方入口，更多依赖 SEC 正式披露补位。 |
+| amd_primary | stock | AMD | AMD | US | AMD | https://ir.amd.com/news-events/press-releases | earnings,results,financial,quarter,press-release,webcast,presentation,transcript,10-k,10-q | facebook,linkedin,twitter,privacy,terms,career,contact,about,.css,.js,.jpg,.png,.gif,.svg | 8 | live | yes | AMD IR 入口返回正常，适合作为算力 / 芯片主线的核心对标官方源。 |
+| micron_primary | stock | MU | Micron | US | MU | https://investors.micron.com/quarterly-results | earnings,results,financial,quarter,press-release,webcast,presentation,transcript,10-k,10-q | facebook,linkedin,twitter,privacy,terms,career,contact,about,.css,.js,.jpg,.png,.gif,.svg | 8 | live | yes | Micron 季报结果页可访问，适合作为存储链官方业绩材料入口。 |
+| broadcom_primary | stock | AVGO | Broadcom | US | AVGO | https://investors.broadcom.com/financial-information/quarterly-results | earnings,results,financial,quarter,press-release,webcast,presentation,transcript,10-k,10-q | facebook,linkedin,twitter,privacy,terms,career,contact,about,.css,.js,.jpg,.png,.gif,.svg | 8 | experimental | yes | Broadcom 官方 IR 入口值得纳入，但当前终端探测稳定性一般，先按实验对象接。 |
+| marvell_primary | stock | MRVL | Marvell | US | MRVL | https://investor.marvell.com/news-events/press-releases | earnings,results,financial,quarter,press-release,webcast,presentation,transcript,10-k,10-q | facebook,linkedin,twitter,privacy,terms,career,contact,about,.css,.js,.jpg,.png,.gif,.svg | 8 | experimental | yes | Marvell IR 新闻稿入口返回正常，适合作为算力互连 / 光通信链海外映射对象。 |
+| lumentum_primary | stock | LITE | Lumentum | US | LITE | https://investor.lumentum.com/financial-news-releases/ | earnings,results,financial,quarter,press-release,webcast,presentation,transcript,10-k,10-q | facebook,linkedin,twitter,privacy,terms,career,contact,about,.css,.js,.jpg,.png,.gif,.svg | 8 | experimental | yes | Lumentum 财报新闻页返回正常，适合作为光模块 / 光通信链海外映射对象。 |

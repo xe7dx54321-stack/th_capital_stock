@@ -1,0 +1,24 @@
+{
+  "default_toolsets": [
+    "terminal",
+    "file"
+  ],
+  "lane": "openclaw_like",
+  "match": {
+    "entity_types": [
+      "portfolio_pnl_snapshot",
+      "risk_monitor_snapshot"
+    ]
+  },
+  "notes": [
+    "负责组合 PnL 和风控巡检快照。",
+    "只有出现风险信号时，才建议交给风险知识代理解释。"
+  ],
+  "profile_id": "openclaw_risk_exec",
+  "role": "组合与风控执行代理",
+  "suggested_handoffs": {
+    "portfolio_pnl_snapshot": "hermes_risk_curator",
+    "risk_monitor_snapshot": "hermes_risk_curator"
+  },
+  "workspace_rel_path": "12_smr_agents/workspaces/openclaw_risk_exec"
+}

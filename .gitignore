@@ -1,0 +1,47 @@
+# macOS / editor
+.DS_Store
+*.swp
+*.swo
+
+# Python runtime
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# Runtime logs and process files
+10_logs/
+*.log
+*.pid
+
+# Local databases and generated market data
+*.db
+*.sqlite
+*.sqlite3
+01_data/
+
+# Generated research/reporting/portfolio/risk artifacts
+02_research/
+03_stock_pool/
+04_portfolio/
+05_risk/
+06_reports/
+07_publish/
+11_smr_wiki/raw/
+11_smr_wiki/drafts/
+11_smr_wiki/wiki/
+
+# Agent runtime queues and workspaces
+12_smr_agents/handoffs/
+12_smr_agents/workspaces/
+.smr_sandboxes/
+
+# Imported reference repos are managed independently
+12_agent_references/openclaw/
+12_agent_references/hermes-agent/
+
+# Historical Codex handover exports can be very large and machine-specific
+00_control/codex_handover/

@@ -1,0 +1,11 @@
+# Core runtime dependencies for SMR local scripts.
+# Verified on Python 3.14.3 on this Mac.
+akshare==1.18.54
+beautifulsoup4==4.14.3
+chardet==5.2.0
+lxml==5.4.0
+openai==2.24.0
+pandas==2.3.3
+pdfminer.six==20260107
+requests==2.32.5
+yfinance==1.2.1

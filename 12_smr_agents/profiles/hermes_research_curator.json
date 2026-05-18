@@ -1,0 +1,25 @@
+{
+  "default_toolsets": [
+    "file",
+    "web"
+  ],
+  "lane": "hermes_like",
+  "match": {
+    "entity_types": [
+      "research_context_note",
+      "wiki_draft",
+      "wiki_knowledge_entry"
+    ]
+  },
+  "notes": [
+    "负责研究知识治理、review queue、wiki draft、知识页维护。",
+    "以 wiki governance 和结构化 reason code 为主要输出。"
+  ],
+  "priority": 120,
+  "profile_id": "hermes_research_curator",
+  "role": "研究知识治理代理",
+  "suggested_handoffs": {
+    "research_context_note": "hermes_reporting_editor"
+  },
+  "workspace_rel_path": "12_smr_agents/workspaces/hermes_research_curator"
+}

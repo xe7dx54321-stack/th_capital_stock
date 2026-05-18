@@ -1,0 +1,33 @@
+{
+  "default_toolsets": [
+    "terminal",
+    "file"
+  ],
+  "lane": "openclaw_like",
+  "match": {
+    "entity_types": [
+      "daily_report_candidate",
+      "daily_reporting_snapshot",
+      "review_queue",
+      "source_manifest",
+      "ingest_draft_batch",
+      "ingest_draft_scan"
+    ]
+  },
+  "notes": [
+    "负责日报快照、manifest、draft batch、draft scan 这些知识入口型执行任务。",
+    "日报默认建议交给 reporting editor，知识入口默认建议交给 research curator。"
+  ],
+  "priority": 220,
+  "profile_id": "openclaw_report_exec",
+  "role": "日报与知识入口执行代理",
+  "suggested_handoffs": {
+    "daily_report_candidate": "hermes_reporting_editor",
+    "daily_reporting_snapshot": "hermes_reporting_editor",
+    "ingest_draft_batch": "hermes_research_curator",
+    "ingest_draft_scan": "hermes_research_curator",
+    "review_queue": "hermes_research_curator",
+    "source_manifest": "hermes_research_curator"
+  },
+  "workspace_rel_path": "12_smr_agents/workspaces/openclaw_report_exec"
+}

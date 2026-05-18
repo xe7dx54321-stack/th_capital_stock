@@ -1,0 +1,166 @@
+{
+  "version": 1,
+  "global_mode": "disabled",
+  "entity_routes": {
+    "dynamic_pool_snapshot": {
+      "to_profile_id": "hermes_research_curator",
+      "task_kind": "pool_change_explainer",
+      "model_slot": "reasoning_primary",
+      "packet_mode": "shadow",
+      "requires_human_review": true,
+      "auto_apply": false,
+      "output_contract": "research_context_note_candidate",
+      "prompt_pack_rel_path": "12_smr_agents/prompt_packs/hermes_research_curator.md"
+    },
+    "portfolio_action_memo_snapshot": {
+      "to_profile_id": "hermes_research_curator",
+      "task_kind": "portfolio_action_synthesizer",
+      "model_slot": "reasoning_batch",
+      "packet_mode": "shadow",
+      "requires_human_review": true,
+      "auto_apply": false,
+      "output_contract": "research_context_note_candidate",
+      "prompt_pack_rel_path": "12_smr_agents/prompt_packs/hermes_research_curator.md"
+    },
+    "trend_research_batch": {
+      "to_profile_id": "hermes_research_curator",
+      "task_kind": "research_batch_compressor",
+      "model_slot": "long_context_secondary",
+      "packet_mode": "shadow",
+      "requires_human_review": true,
+      "auto_apply": false,
+      "output_contract": "research_context_note_candidate",
+      "prompt_pack_rel_path": "12_smr_agents/prompt_packs/hermes_research_curator.md"
+    },
+    "research_quality_snapshot": {
+      "to_profile_id": "hermes_research_curator",
+      "task_kind": "research_gap_governor",
+      "model_slot": "reasoning_batch",
+      "packet_mode": "shadow",
+      "requires_human_review": true,
+      "auto_apply": false,
+      "output_contract": "research_context_note_candidate",
+      "prompt_pack_rel_path": "12_smr_agents/prompt_packs/hermes_research_curator.md"
+    },
+    "rotation_candidate_snapshot": {
+      "to_profile_id": "hermes_research_curator",
+      "task_kind": "rotation_candidate_synthesizer",
+      "model_slot": "reasoning_batch",
+      "packet_mode": "shadow",
+      "requires_human_review": true,
+      "auto_apply": false,
+      "output_contract": "research_context_note_candidate",
+      "prompt_pack_rel_path": "12_smr_agents/prompt_packs/hermes_research_curator.md"
+    },
+    "rotation_execution_plan_snapshot": {
+      "to_profile_id": "hermes_research_curator",
+      "task_kind": "rotation_execution_planner",
+      "model_slot": "reasoning_batch",
+      "packet_mode": "shadow",
+      "requires_human_review": true,
+      "auto_apply": false,
+      "output_contract": "research_context_note_candidate",
+      "prompt_pack_rel_path": "12_smr_agents/prompt_packs/hermes_research_curator.md"
+    },
+    "strategy_watch_batch": {
+      "to_profile_id": "hermes_research_curator",
+      "task_kind": "strategy_watch_synthesizer",
+      "model_slot": "reasoning_batch",
+      "packet_mode": "shadow",
+      "requires_human_review": true,
+      "auto_apply": false,
+      "output_contract": "research_context_note_candidate",
+      "prompt_pack_rel_path": "12_smr_agents/prompt_packs/hermes_research_curator.md"
+    },
+    "system_change_request": {
+      "to_profile_id": "openclaw_system_exec",
+      "task_kind": "system_change_executor",
+      "model_slot": "reasoning_primary",
+      "packet_mode": "shadow",
+      "requires_human_review": true,
+      "auto_apply": false,
+      "output_contract": "system_patch_candidate",
+      "prompt_pack_rel_path": "12_smr_agents/prompt_packs/openclaw_system_exec.md"
+    },
+    "us_signal_snapshot": {
+      "to_profile_id": "hermes_research_curator",
+      "task_kind": "us_signal_interpreter",
+      "model_slot": "reasoning_batch",
+      "packet_mode": "shadow",
+      "requires_human_review": true,
+      "auto_apply": false,
+      "output_contract": "research_context_note_candidate",
+      "prompt_pack_rel_path": "12_smr_agents/prompt_packs/hermes_research_curator.md"
+    },
+    "review_queue": {
+      "to_profile_id": "hermes_research_curator",
+      "task_kind": "governance_triage",
+      "model_slot": "review_second_opinion",
+      "packet_mode": "shadow",
+      "requires_human_review": true,
+      "auto_apply": false,
+      "output_contract": "review_recommendation_only",
+      "prompt_pack_rel_path": "12_smr_agents/prompt_packs/hermes_research_curator.md"
+    },
+    "wiki_draft": {
+      "to_profile_id": "hermes_research_curator",
+      "task_kind": "draft_review",
+      "model_slot": "review_second_opinion",
+      "packet_mode": "shadow",
+      "requires_human_review": true,
+      "auto_apply": false,
+      "output_contract": "draft_review_recommendation_only",
+      "prompt_pack_rel_path": "12_smr_agents/prompt_packs/hermes_research_curator.md"
+    },
+    "risk_monitor_snapshot": {
+      "to_profile_id": "hermes_risk_curator",
+      "task_kind": "risk_signal_interpreter",
+      "model_slot": "reasoning_primary",
+      "packet_mode": "shadow",
+      "requires_human_review": true,
+      "auto_apply": false,
+      "output_contract": "risk_update_candidate",
+      "prompt_pack_rel_path": "12_smr_agents/prompt_packs/hermes_risk_curator.md"
+    },
+    "portfolio_pnl_snapshot": {
+      "to_profile_id": "hermes_risk_curator",
+      "task_kind": "portfolio_risk_explainer",
+      "model_slot": "reasoning_batch",
+      "packet_mode": "shadow",
+      "requires_human_review": true,
+      "auto_apply": false,
+      "output_contract": "risk_update_candidate",
+      "prompt_pack_rel_path": "12_smr_agents/prompt_packs/hermes_risk_curator.md"
+    },
+    "daily_reporting_snapshot": {
+      "to_profile_id": "hermes_reporting_editor",
+      "task_kind": "daily_report_enrichment",
+      "model_slot": "reasoning_primary",
+      "packet_mode": "shadow",
+      "requires_human_review": true,
+      "auto_apply": false,
+      "output_contract": "dispatch_update_candidate",
+      "prompt_pack_rel_path": "12_smr_agents/prompt_packs/hermes_reporting_editor.md"
+    },
+    "research_context_note": {
+      "to_profile_id": "hermes_reporting_editor",
+      "task_kind": "dispatch_sync_enrichment",
+      "model_slot": "reasoning_batch",
+      "packet_mode": "shadow",
+      "requires_human_review": true,
+      "auto_apply": false,
+      "output_contract": "dispatch_sync_candidate",
+      "prompt_pack_rel_path": "12_smr_agents/prompt_packs/hermes_reporting_editor.md"
+    },
+    "risk_update_candidate": {
+      "to_profile_id": "hermes_reporting_editor",
+      "task_kind": "risk_sync_enrichment",
+      "model_slot": "reasoning_batch",
+      "packet_mode": "shadow",
+      "requires_human_review": true,
+      "auto_apply": false,
+      "output_contract": "dispatch_sync_candidate",
+      "prompt_pack_rel_path": "12_smr_agents/prompt_packs/hermes_reporting_editor.md"
+    }
+  }
+}

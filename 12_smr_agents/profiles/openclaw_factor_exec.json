@@ -1,0 +1,25 @@
+{
+  "default_toolsets": [
+    "terminal",
+    "file"
+  ],
+  "lane": "openclaw_like",
+  "match": {
+    "entity_types": [
+      "trend_factor_snapshot",
+      "fundamental_factor_snapshot",
+      "us_linkage_factor_snapshot",
+      "us_signal_snapshot"
+    ]
+  },
+  "notes": [
+    "负责因子和联动信号的稳定计算。",
+    "当美股信号出现显著变化时，可把解释工作交给知识代理。"
+  ],
+  "profile_id": "openclaw_factor_exec",
+  "role": "因子与信号执行代理",
+  "suggested_handoffs": {
+    "us_signal_snapshot": "hermes_research_curator"
+  },
+  "workspace_rel_path": "12_smr_agents/workspaces/openclaw_factor_exec"
+}

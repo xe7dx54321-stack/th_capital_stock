@@ -1,0 +1,36 @@
+{
+  "default_toolsets": [
+    "terminal",
+    "file"
+  ],
+  "lane": "openclaw_like",
+  "match": {
+    "entity_types": [
+      "trend_research_batch",
+      "dynamic_pool_snapshot",
+      "portfolio_action_memo_snapshot",
+      "rotation_candidate_snapshot",
+      "rotation_execution_plan_snapshot",
+      "stock_objective_monitor_snapshot",
+      "strategy_watch_batch",
+      "research_quality_snapshot"
+    ]
+  },
+  "notes": [
+    "负责趋势研究批量生成、研究质量快照和动态池重建。",
+    "当池子变化需要解释或研究结论需要压缩时，交给研究知识代理。"
+  ],
+  "profile_id": "openclaw_pool_exec",
+  "role": "研究与池子执行代理",
+  "suggested_handoffs": {
+    "dynamic_pool_snapshot": "hermes_research_curator",
+    "portfolio_action_memo_snapshot": "hermes_research_curator",
+    "research_quality_snapshot": "hermes_research_curator",
+    "rotation_candidate_snapshot": "hermes_research_curator",
+    "rotation_execution_plan_snapshot": "hermes_research_curator",
+    "stock_objective_monitor_snapshot": "hermes_research_curator",
+    "strategy_watch_batch": "hermes_research_curator",
+    "trend_research_batch": "hermes_research_curator"
+  },
+  "workspace_rel_path": "12_smr_agents/workspaces/openclaw_pool_exec"
+}

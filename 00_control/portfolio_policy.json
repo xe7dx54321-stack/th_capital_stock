@@ -1,0 +1,24 @@
+{
+  "currency": "CNY",
+  "portfolio_capital": 1000000,
+  "max_single_position_pct": 0.25,
+  "max_sector_concentration_pct": 0.5,
+  "max_total_exposure_pct": 0.9,
+  "max_drawdown_pct": 0.2,
+  "warning_drawdown_pct": 0.15,
+  "max_weekly_loss_pct": 0.08,
+  "warning_weekly_loss_pct": 0.05,
+  "decision_policy": {
+    "buy_score_strong": 75,
+    "buy_score_probe": 62,
+    "buy_score_watch": 52,
+    "sell_score_exit": 60,
+    "sell_score_trim": 35,
+    "sell_score_watch": 18,
+    "default_buy_tranche_pct": 0.08,
+    "cautious_buy_tranche_pct": 0.04,
+    "chase_pct_threshold": 8.0,
+    "pullback_pct_threshold": -5.0,
+    "take_profit_pct_threshold": 10.0
+  }
+}
