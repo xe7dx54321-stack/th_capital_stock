@@ -26,6 +26,7 @@ venv/
 01_data/
 
 # Generated research/reporting/portfolio/risk artifacts
+00_control/next_day_plan.md
 02_research/
 03_stock_pool/
 04_portfolio/

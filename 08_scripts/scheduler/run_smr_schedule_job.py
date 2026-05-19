@@ -224,6 +224,20 @@ def command_shell(command: tuple[str, ...]) -> str:
     return subprocess.list2cmdline(list(command))
 
 
+def split_csv(value: str | None) -> list[str]:
+    return [item.strip() for item in (value or "").split(",") if item.strip()]
+
+
+def execution_context() -> dict:
+    return {
+        "trigger": os.environ.get("SMR_RUN_TRIGGER") or "manual",
+        "schedule_id": os.environ.get("SMR_SCHEDULE_ID") or "",
+        "schedule_label": os.environ.get("SMR_SCHEDULE_LABEL") or "",
+        "lead_profile_id": os.environ.get("SMR_LEAD_PROFILE_ID") or "",
+        "operator_profile_ids": split_csv(os.environ.get("SMR_OPERATOR_PROFILE_IDS")),
+    }
+
+
 def run_command(command: tuple[str, ...], timeout_seconds: int | None = None) -> dict:
     started = time.time()
     completed = subprocess.run(
@@ -245,7 +259,14 @@ def run_command(command: tuple[str, ...], timeout_seconds: int | None = None) ->
     }
 
 
-def write_run_artifacts(job: JobSpec, results: list[dict], status: str, started_at: str, finished_at: str) -> dict:
+def write_run_artifacts(
+    job: JobSpec,
+    results: list[dict],
+    status: str,
+    started_at: str,
+    finished_at: str,
+    context: dict,
+) -> dict:
     ensure_dirs()
     stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     run_dir = RUN_ROOT / f"{stamp}__{job.job_id}"
@@ -258,6 +279,7 @@ def write_run_artifacts(job: JobSpec, results: list[dict], status: str, started_
         "status": status,
         "started_at": started_at,
         "finished_at": finished_at,
+        "execution_context": context,
         "command_count": len(results),
         "failed_count": sum(1 for item in results if item.get("returncode") not in (0, None)),
         "results": [
@@ -279,6 +301,10 @@ def write_run_artifacts(job: JobSpec, results: list[dict], status: str, started_
         f"- status: `{status}`",
         f"- started_at: `{started_at}`",
         f"- finished_at: `{finished_at}`",
+        f"- trigger: `{context.get('trigger') or ''}`",
+        f"- schedule_id: `{context.get('schedule_id') or ''}`",
+        f"- lead_profile_id: `{context.get('lead_profile_id') or ''}`",
+        f"- operator_profile_ids: `{', '.join(context.get('operator_profile_ids') or [])}`",
         "",
     ]
     for index, item in enumerate(results, start=1):
@@ -310,9 +336,18 @@ def execute_job(job: JobSpec, dry_run: bool, continue_on_error: bool, timeout_se
     started_at = now_ts()
     results: list[dict] = []
     status = "success"
+    context = execution_context()
 
     print(f"[{job.job_id}] {job.label}")
     print(job.description)
+    if context.get("trigger") != "manual":
+        print(
+            "agent_context: "
+            f"trigger={context.get('trigger')} "
+            f"schedule_id={context.get('schedule_id')} "
+            f"lead={context.get('lead_profile_id')} "
+            f"operators={','.join(context.get('operator_profile_ids') or [])}"
+        )
     print("")
 
     for index, command in enumerate(job.commands, start=1):
@@ -343,7 +378,7 @@ def execute_job(job: JobSpec, dry_run: bool, continue_on_error: bool, timeout_se
                 break
 
     finished_at = now_ts()
-    artifact_paths = write_run_artifacts(job, results, "dry_run" if dry_run else status, started_at, finished_at)
+    artifact_paths = write_run_artifacts(job, results, "dry_run" if dry_run else status, started_at, finished_at, context)
     log_run(
         SCRIPT_NAME,
         "success" if dry_run or status == "success" else "partial_failure",
@@ -352,6 +387,7 @@ def execute_job(job: JobSpec, dry_run: bool, continue_on_error: bool, timeout_se
             "job_id": job.job_id,
             "label": job.label,
             "dry_run": dry_run,
+            "execution_context": context,
             "command_count": len(results),
             "failed_count": sum(1 for item in results if item.get("returncode") not in (0, None)),
             **artifact_paths,

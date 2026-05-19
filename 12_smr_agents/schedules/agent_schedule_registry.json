@@ -1,0 +1,188 @@
+{
+  "version": 1,
+  "timezone": "Asia/Shanghai",
+  "boundary": {
+    "codex_role": "development_tool_only",
+    "operations_owner": "smr_agent_runtime",
+    "truth_layer_policy": "scheduled agents may generate snapshots and candidates; formal truth-layer writes still require the existing guarded scripts and review gates"
+  },
+  "weekday_launchd_values": {
+    "MO": 1,
+    "TU": 2,
+    "WE": 3,
+    "TH": 4,
+    "FR": 5
+  },
+  "schedules": [
+    {
+      "schedule_id": "deep_market_scan_morning",
+      "label": "深度市场扫描早",
+      "job_id": "deep_market_scan",
+      "lead_profile_id": "hermes_research_curator",
+      "operator_profile_ids": [
+        "openclaw_report_exec",
+        "hermes_research_curator"
+      ],
+      "weekdays": ["MO", "TU", "WE", "TH", "FR"],
+      "hour": 5,
+      "minute": 0,
+      "continue_on_error": true,
+      "timeout_seconds": 1800,
+      "purpose": "由研究知识治理岗牵头，早间刷新全网公开信息与深度市场机会扫描。"
+    },
+    {
+      "schedule_id": "morning_us",
+      "label": "晨间美股链",
+      "job_id": "morning_us",
+      "lead_profile_id": "openclaw_data_exec",
+      "operator_profile_ids": [
+        "openclaw_data_exec",
+        "openclaw_factor_exec",
+        "openclaw_pool_exec",
+        "hermes_research_curator",
+        "hermes_reporting_editor"
+      ],
+      "weekdays": ["MO", "TU", "WE", "TH", "FR"],
+      "hour": 6,
+      "minute": 0,
+      "continue_on_error": true,
+      "timeout_seconds": 1800,
+      "purpose": "由数据执行岗牵头，完成美股行情、联动因子、动态池和解释候选刷新。"
+    },
+    {
+      "schedule_id": "preopen_report",
+      "label": "盘前简报链",
+      "job_id": "preopen_report",
+      "lead_profile_id": "hermes_reporting_editor",
+      "operator_profile_ids": [
+        "openclaw_report_exec",
+        "hermes_reporting_editor"
+      ],
+      "weekdays": ["MO", "TU", "WE", "TH", "FR"],
+      "hour": 9,
+      "minute": 0,
+      "continue_on_error": true,
+      "timeout_seconds": 1800,
+      "purpose": "由日报与调度知识岗牵头，刷新盘前日报面和 dispatch 候选。"
+    },
+    {
+      "schedule_id": "afternoon_close",
+      "label": "午后收盘链",
+      "job_id": "afternoon_close",
+      "lead_profile_id": "openclaw_data_exec",
+      "operator_profile_ids": [
+        "openclaw_data_exec",
+        "openclaw_factor_exec",
+        "openclaw_pool_exec",
+        "hermes_research_curator",
+        "hermes_reporting_editor"
+      ],
+      "weekdays": ["MO", "TU", "WE", "TH", "FR"],
+      "hour": 15,
+      "minute": 30,
+      "continue_on_error": true,
+      "timeout_seconds": 1800,
+      "purpose": "由数据执行岗牵头，完成 A/H 收盘行情、因子、研究、池子与组合动作候选刷新。"
+    },
+    {
+      "schedule_id": "afternoon_refresh",
+      "label": "午后二次刷新",
+      "job_id": "afternoon_refresh",
+      "lead_profile_id": "openclaw_factor_exec",
+      "operator_profile_ids": [
+        "openclaw_factor_exec",
+        "openclaw_pool_exec",
+        "hermes_research_curator",
+        "hermes_reporting_editor"
+      ],
+      "weekdays": ["MO", "TU", "WE", "TH", "FR"],
+      "hour": 16,
+      "minute": 30,
+      "continue_on_error": true,
+      "timeout_seconds": 1800,
+      "purpose": "由因子与信号执行岗牵头，做收盘后第二轮因子、研究候选和 dispatch 收口。"
+    },
+    {
+      "schedule_id": "deep_market_scan_afternoon",
+      "label": "深度市场扫描午后",
+      "job_id": "deep_market_scan",
+      "lead_profile_id": "hermes_research_curator",
+      "operator_profile_ids": [
+        "openclaw_report_exec",
+        "hermes_research_curator"
+      ],
+      "weekdays": ["MO", "TU", "WE", "TH", "FR"],
+      "hour": 16,
+      "minute": 55,
+      "continue_on_error": true,
+      "timeout_seconds": 1800,
+      "purpose": "由研究知识治理岗牵头，午后补刷公开信息与市场主题扫描。"
+    },
+    {
+      "schedule_id": "portfolio_review",
+      "label": "持仓复盘",
+      "job_id": "portfolio_review",
+      "lead_profile_id": "openclaw_risk_exec",
+      "operator_profile_ids": [
+        "openclaw_risk_exec",
+        "hermes_risk_curator",
+        "hermes_reporting_editor"
+      ],
+      "weekdays": ["MO", "TU", "WE", "TH", "FR"],
+      "hour": 19,
+      "minute": 30,
+      "continue_on_error": true,
+      "timeout_seconds": 1800,
+      "purpose": "由组合与风控执行岗牵头，更新持仓盈亏并推动风险/调仓解释候选。"
+    },
+    {
+      "schedule_id": "daily_report",
+      "label": "晚间日报链",
+      "job_id": "daily_report",
+      "lead_profile_id": "hermes_reporting_editor",
+      "operator_profile_ids": [
+        "openclaw_report_exec",
+        "hermes_reporting_editor"
+      ],
+      "weekdays": ["MO", "TU", "WE", "TH", "FR"],
+      "hour": 20,
+      "minute": 30,
+      "continue_on_error": true,
+      "timeout_seconds": 1800,
+      "purpose": "由日报与调度知识岗牵头，物化正式日报并同步日报解释与 dispatch 候选。"
+    },
+    {
+      "schedule_id": "risk_review",
+      "label": "晚间风控链",
+      "job_id": "risk_review",
+      "lead_profile_id": "openclaw_risk_exec",
+      "operator_profile_ids": [
+        "openclaw_risk_exec",
+        "hermes_risk_curator",
+        "hermes_reporting_editor"
+      ],
+      "weekdays": ["MO", "TU", "WE", "TH", "FR"],
+      "hour": 21,
+      "minute": 0,
+      "continue_on_error": true,
+      "timeout_seconds": 1800,
+      "purpose": "由组合与风控执行岗牵头，刷新风控快照并推动风险解释候选。"
+    },
+    {
+      "schedule_id": "next_day_plan",
+      "label": "次日计划链",
+      "job_id": "next_day_plan",
+      "lead_profile_id": "hermes_reporting_editor",
+      "operator_profile_ids": [
+        "openclaw_report_exec",
+        "hermes_reporting_editor"
+      ],
+      "weekdays": ["MO", "TU", "WE", "TH", "FR"],
+      "hour": 22,
+      "minute": 0,
+      "continue_on_error": true,
+      "timeout_seconds": 1800,
+      "purpose": "由日报与调度知识岗牵头，抽取未来催化日历并生成次日 dispatch 候选。"
+    }
+  ]
+}

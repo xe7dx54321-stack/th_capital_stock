@@ -101,11 +101,13 @@
 - `08_scripts/agents/build_model_task_packet.py`
 - `08_scripts/agents/run_model_shadow.py`
 
-但当前默认还是：
+当前模型层已经切到：
 
-- `global_mode = disabled`
+- `global_mode = shadow`
+- 原 OpenAI 槽位由 `minimax/MiniMax-M2.7` 承接
+- Anthropic 复核槽位继续由 Anthropic 承接
 
-也就是说，当前运行时可以先生成模型任务包，但**默认不发起真实模型调用**。
+也就是说，当前运行时允许发起真实 shadow 请求，但仍然只写候选层和执行留痕。
 
 补充说明：
 
@@ -115,8 +117,9 @@
   - 截至 2026-04-14，`OpenAI` 已在当前机器上完成 live smoke（实时冒烟）验证，确认第三方中转需要走 `/responses + text/event-stream`（事件流）
   - 当前失败留痕会写出 `provider_error_code / provider_error_reason`
   - 截至 2026-04-14，`Anthropic` 代码接线已完成，但 `api.ailinkmax.com/v1` 这组入口仍未验证通过
-  - 但默认配置仍然是 `global_mode = disabled`
-  - 所以当前真实项目里依然不会自动调用模型，除非后续显式打开配置并补齐密钥
+  - 当前正式配置是 `global_mode = shadow`
+  - 所以进入模型路由的任务会在满足门禁时发起真实 shadow 请求
+  - shadow 输出仍然只进入 `shadow_runs/` 与候选层，不直接写正式真相层
   - `OpenAI` 在 shell 缺少环境变量时，会尝试回退读取本机 `~/.codex/auth.json + ~/.codex/config.toml`
   - 因此像 `trend_research_batch -> google` 这类路由，当前还不能作为第一批真实 shadow 链路
 - 运行时 override（覆盖层）
@@ -163,6 +166,24 @@
 - `hermes_engineering_planner`
   - 负责把业务缺口编译成 `system_change_request`
   - 当前不直接写代码，只负责系统施工任务治理
+
+## 日常运营调度边界
+
+Codex 只作为项目开发、排障和人工维护工具，不参与日常运营班表。
+
+日常运营由项目内 agent runtime 承接：
+
+- 班表注册表：`12_smr_agents/schedules/agent_schedule_registry.json`
+- agent 入口：`08_scripts/scheduler/run_agent_schedule.py`
+- macOS launchd 部署器：`08_scripts/scheduler/deploy_agent_launchd.py`
+
+每个班表都会声明：
+
+- `lead_profile_id`：牵头岗位
+- `operator_profile_ids`：参与执行/治理岗位
+- `job_id`：落到统一调度脚本的具体业务链
+
+统一调度脚本 `run_smr_schedule_job.py` 会把这些 agent execution context 写入 `summary.json / run.md`，方便控制塔和审计追踪。
 
 ---
 
