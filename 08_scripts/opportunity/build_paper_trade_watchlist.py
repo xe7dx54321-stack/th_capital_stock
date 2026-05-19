@@ -138,6 +138,7 @@ def build_ticket(case, radar_item):
         "signal_tags": case.get("signal_tags") or [],
         "latest_pct_chg": metrics.get("latest_pct_chg"),
         "volume_ratio_20d": metrics.get("volume_ratio_20d"),
+        "reference_trade_date": metrics.get("latest_trade_date"),
         "paper_status": "paper_watch_active",
         "paper_only": True,
         "execution_disabled": True,

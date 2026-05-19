@@ -27,9 +27,11 @@ KEY_ENTITY_TYPES = [
     "daily_reporting_snapshot",
     "market_flow_anomaly_snapshot",
     "opportunity_radar_snapshot",
+    "opportunity_lifecycle_snapshot",
     "strategy_evidence_snapshot",
     "thesis_attack_defense_snapshot",
     "paper_trade_watchlist_snapshot",
+    "paper_watch_performance_snapshot",
     "deep_market_analysis_snapshot",
     "price_range_forecast_snapshot",
     "execution_precheck_snapshot",
@@ -1386,7 +1388,9 @@ def build_state_version(state: dict[str, Any]) -> str:
         "today_script_count": overview.get("today_script_count"),
         "deep_analysis_created_at": deep_analysis.get("created_at"),
         "opportunity_radar_created_at": ((opportunity_engine.get("radar") or {}).get("created_at")),
+        "opportunity_lifecycle_created_at": ((opportunity_engine.get("lifecycle") or {}).get("created_at")),
         "paper_watchlist_created_at": ((opportunity_engine.get("paper_watchlist") or {}).get("created_at")),
+        "paper_performance_created_at": ((opportunity_engine.get("paper_performance") or {}).get("created_at")),
         "analysis_forecast_created_at": analysis_forecast.get("created_at"),
         "latest_report_updated_at": reporting.get("latest_report_updated_at"),
         "report_surface_date": reporting.get("report_surface_date"),
@@ -1466,6 +1470,18 @@ def build_dashboard_state(now: datetime | None = None, registry_limit: int = 24,
         paper_watchlist_snapshot = snapshots.get("paper_trade_watchlist_snapshot") or {}
         paper_watchlist_payload = paper_watchlist_snapshot.get("payload") or {}
         for item in paper_watchlist_payload.get("tickets") or []:
+            ts_code = item.get("ts_code")
+            if ts_code:
+                detail_symbols.add(ts_code)
+        lifecycle_snapshot = snapshots.get("opportunity_lifecycle_snapshot") or {}
+        lifecycle_payload = lifecycle_snapshot.get("payload") or {}
+        for item in lifecycle_payload.get("items") or []:
+            ts_code = item.get("ts_code")
+            if ts_code:
+                detail_symbols.add(ts_code)
+        paper_performance_snapshot = snapshots.get("paper_watch_performance_snapshot") or {}
+        paper_performance_payload = paper_performance_snapshot.get("payload") or {}
+        for item in paper_performance_payload.get("items") or []:
             ts_code = item.get("ts_code")
             if ts_code:
                 detail_symbols.add(ts_code)
@@ -1580,6 +1596,9 @@ def build_dashboard_state(now: datetime | None = None, registry_limit: int = 24,
     opportunity_radar_snapshot = snapshots["opportunity_radar_snapshot"] or {}
     opportunity_radar_payload = opportunity_radar_snapshot.get("payload") or {}
     opportunity_radar_relationships = opportunity_radar_snapshot.get("relationships") or {}
+    opportunity_lifecycle_snapshot = snapshots["opportunity_lifecycle_snapshot"] or {}
+    opportunity_lifecycle_payload = opportunity_lifecycle_snapshot.get("payload") or {}
+    opportunity_lifecycle_relationships = opportunity_lifecycle_snapshot.get("relationships") or {}
     strategy_evidence_snapshot = snapshots["strategy_evidence_snapshot"] or {}
     strategy_evidence_payload = strategy_evidence_snapshot.get("payload") or {}
     strategy_evidence_relationships = strategy_evidence_snapshot.get("relationships") or {}
@@ -1589,6 +1608,9 @@ def build_dashboard_state(now: datetime | None = None, registry_limit: int = 24,
     paper_watchlist_snapshot = snapshots["paper_trade_watchlist_snapshot"] or {}
     paper_watchlist_payload = paper_watchlist_snapshot.get("payload") or {}
     paper_watchlist_relationships = paper_watchlist_snapshot.get("relationships") or {}
+    paper_performance_snapshot = snapshots["paper_watch_performance_snapshot"] or {}
+    paper_performance_payload = paper_performance_snapshot.get("payload") or {}
+    paper_performance_relationships = paper_performance_snapshot.get("relationships") or {}
 
     forecast_snapshot = snapshots["price_range_forecast_snapshot"] or {}
     forecast_payload = forecast_snapshot.get("payload") or {}
@@ -1643,6 +1665,10 @@ def build_dashboard_state(now: datetime | None = None, registry_limit: int = 24,
     opportunity_radar_rel_path = (
         opportunity_radar_relationships.get("summary_rel_path") or opportunity_radar_payload.get("summary_rel_path")
     )
+    opportunity_lifecycle_rel_path = (
+        opportunity_lifecycle_relationships.get("summary_rel_path")
+        or opportunity_lifecycle_payload.get("summary_rel_path")
+    )
     strategy_evidence_rel_path = (
         strategy_evidence_relationships.get("summary_rel_path") or strategy_evidence_payload.get("summary_rel_path")
     )
@@ -1651,6 +1677,10 @@ def build_dashboard_state(now: datetime | None = None, registry_limit: int = 24,
     )
     paper_watchlist_rel_path = (
         paper_watchlist_relationships.get("summary_rel_path") or paper_watchlist_payload.get("summary_rel_path")
+    )
+    paper_performance_rel_path = (
+        paper_performance_relationships.get("summary_rel_path")
+        or paper_performance_payload.get("summary_rel_path")
     )
     forecast_rel_path = (
         forecast_relationships.get("summary_rel_path") or forecast_payload.get("summary_rel_path")
@@ -1824,6 +1854,17 @@ def build_dashboard_state(now: datetime | None = None, registry_limit: int = 24,
                 "top_candidates": opportunity_radar_payload.get("top_candidates") or [],
                 "artifact": build_artifact(opportunity_radar_rel_path, "主动机会雷达"),
             },
+            "lifecycle": {
+                "entity_id": opportunity_lifecycle_snapshot.get("entity_id"),
+                "status": opportunity_lifecycle_snapshot.get("status"),
+                "created_at": opportunity_lifecycle_snapshot.get("created_at"),
+                "current_candidate_count": opportunity_lifecycle_payload.get("current_candidate_count") or 0,
+                "previous_candidate_count": opportunity_lifecycle_payload.get("previous_candidate_count") or 0,
+                "state_counts": opportunity_lifecycle_payload.get("state_counts") or {},
+                "overview_lines": opportunity_lifecycle_payload.get("overview_lines") or [],
+                "items": opportunity_lifecycle_payload.get("items") or [],
+                "artifact": build_artifact(opportunity_lifecycle_rel_path, "机会生命周期"),
+            },
             "evidence": {
                 "entity_id": strategy_evidence_snapshot.get("entity_id"),
                 "status": strategy_evidence_snapshot.get("status"),
@@ -1856,6 +1897,16 @@ def build_dashboard_state(now: datetime | None = None, registry_limit: int = 24,
                 "overview_lines": paper_watchlist_payload.get("overview_lines") or [],
                 "tickets": paper_watchlist_payload.get("tickets") or [],
                 "artifact": build_artifact(paper_watchlist_rel_path, "纸面机会观察单"),
+            },
+            "paper_performance": {
+                "entity_id": paper_performance_snapshot.get("entity_id"),
+                "status": paper_performance_snapshot.get("status"),
+                "created_at": paper_performance_snapshot.get("created_at"),
+                "evaluated_ticket_count": paper_performance_payload.get("evaluated_ticket_count") or 0,
+                "status_counts": paper_performance_payload.get("status_counts") or {},
+                "overview_lines": paper_performance_payload.get("overview_lines") or [],
+                "items": paper_performance_payload.get("items") or [],
+                "artifact": build_artifact(paper_performance_rel_path, "纸面观察表现复盘"),
             },
         },
         "deep_analysis": {

@@ -27,7 +27,9 @@ from smr_runlog import log_run
 SUPPORTED_ENTITY_TYPES = {
     "dynamic_pool_snapshot",
     "opportunity_radar_snapshot",
+    "opportunity_lifecycle_snapshot",
     "paper_trade_watchlist_snapshot",
+    "paper_watch_performance_snapshot",
     "portfolio_action_memo_snapshot",
     "research_quality_snapshot",
     "rotation_candidate_snapshot",
@@ -470,6 +472,107 @@ def render_paper_watchlist_note(handoff, entry):
     return "\n".join(lines)
 
 
+def render_opportunity_lifecycle_note(handoff, entry):
+    payload = entry.get("payload", {})
+    relationships = entry.get("relationships", {})
+    items = payload.get("items") or []
+    lines = [
+        f"# 研究上下文草稿：{handoff['entity_type']} / {handoff['entity_id']}",
+        "",
+        f"- handoff_id: `{handoff['handoff_id']}`",
+        f"- source_entry_id: `{entry['id']}`",
+        f"- summary_rel_path: `{relationships.get('summary_rel_path') or payload.get('summary_rel_path') or ''}`",
+        f"- source_radar_entry_id: `{payload.get('source_radar_entry_id') or ''}`",
+        f"- previous_radar_entry_id: `{payload.get('previous_radar_entry_id') or ''}`",
+        "",
+        "## 机会生命周期",
+        "",
+        f"- current_candidate_count: `{payload.get('current_candidate_count', 0)}`",
+        f"- previous_candidate_count: `{payload.get('previous_candidate_count', 0)}`",
+        f"- state_counts: `{payload.get('state_counts') or {}}`",
+        "",
+        "## 优先变化",
+        "",
+    ]
+    if not items:
+        lines.append("- 当前没有可读的生命周期变化。")
+        lines.append("")
+    else:
+        for item in items[:10]:
+            lines.extend(
+                [
+                    f"### {item.get('name') or item.get('ts_code')} / {item.get('ts_code')}",
+                    "",
+                    f"- lifecycle_state: `{item.get('lifecycle_state') or '-'}`",
+                    f"- current_score / score_delta: `{item.get('current_score')}` / `{item.get('score_delta')}`",
+                    f"- current_bucket / previous_bucket: `{item.get('current_bucket') or '-'}` / `{item.get('previous_bucket') or '-'}`",
+                    f"- evidence_label / attack_verdict: `{item.get('evidence_label') or '-'}` / `{item.get('attack_verdict') or '-'}`",
+                    f"- next_action: {item.get('next_action') or '-'}",
+                    "",
+                ]
+            )
+    lines.extend(
+        [
+            "## 建议动作",
+            "",
+            "- 新进和强化机会要优先补事件锚点，不直接升级为组合动作。",
+            "- 降温、降级和退出雷达的机会要保留失效原因，形成后续信号质量反馈。",
+            "- 纸面观察中的机会进入纸面表现复盘，等待触发或失效证据。",
+            "",
+        ]
+    )
+    return "\n".join(lines)
+
+
+def render_paper_performance_note(handoff, entry):
+    payload = entry.get("payload", {})
+    relationships = entry.get("relationships", {})
+    items = payload.get("items") or []
+    lines = [
+        f"# 研究上下文草稿：{handoff['entity_type']} / {handoff['entity_id']}",
+        "",
+        f"- handoff_id: `{handoff['handoff_id']}`",
+        f"- source_entry_id: `{entry['id']}`",
+        f"- summary_rel_path: `{relationships.get('summary_rel_path') or payload.get('summary_rel_path') or ''}`",
+        "",
+        "## 纸面表现复盘",
+        "",
+        f"- evaluated_ticket_count: `{payload.get('evaluated_ticket_count', 0)}`",
+        f"- status_counts: `{payload.get('status_counts') or {}}`",
+        "",
+        "## 触发与失效",
+        "",
+    ]
+    if not items:
+        lines.append("- 当前没有可复盘的纸面观察单。")
+        lines.append("")
+    else:
+        for item in items[:10]:
+            lines.extend(
+                [
+                    f"### {item.get('name') or item.get('ts_code')} / {item.get('ts_code')}",
+                    "",
+                    f"- status: `{item.get('status') or '-'}`",
+                    f"- days_tracked: `{item.get('days_tracked') or 0}`",
+                    f"- latest_return / best_return / worst_return: `{item.get('latest_return')}` / `{item.get('best_return')}` / `{item.get('worst_return')}`",
+                    f"- observe_hit_date / invalidate_hit_date: `{item.get('observe_hit_date') or '-'}` / `{item.get('invalidate_hit_date') or '-'}`",
+                    f"- action: {item.get('action') or '-'}",
+                    "",
+                ]
+            )
+    lines.extend(
+        [
+            "## 建议动作",
+            "",
+            "- `trigger_confirmed` 只代表纸面验证成立，仍需研究和风控复核。",
+            "- `invalidated` 要进入信号复盘，检查是价格信号、研究锚点还是风控带设置的问题。",
+            "- `awaiting_market_data` 不做判断，避免用参考日前行情评价观察单。",
+            "",
+        ]
+    )
+    return "\n".join(lines)
+
+
 def render_objective_monitor_note(handoff, entry):
     payload = entry.get("payload", {})
     relationships = entry.get("relationships", {})
@@ -806,12 +909,16 @@ def render_note(handoff, entry, conn):
         return render_dynamic_pool_note(handoff, entry)
     if entity_type == "opportunity_radar_snapshot":
         return render_opportunity_radar_note(handoff, entry)
+    if entity_type == "opportunity_lifecycle_snapshot":
+        return render_opportunity_lifecycle_note(handoff, entry)
     if entity_type == "strategy_evidence_snapshot":
         return render_strategy_evidence_note(handoff, entry)
     if entity_type == "thesis_attack_defense_snapshot":
         return render_attack_defense_note(handoff, entry)
     if entity_type == "paper_trade_watchlist_snapshot":
         return render_paper_watchlist_note(handoff, entry)
+    if entity_type == "paper_watch_performance_snapshot":
+        return render_paper_performance_note(handoff, entry)
     if entity_type == "portfolio_action_memo_snapshot":
         return render_portfolio_action_memo_note(handoff, entry, conn)
     if entity_type == "trend_research_batch":

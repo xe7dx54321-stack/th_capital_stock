@@ -134,7 +134,7 @@
       "minute": 10,
       "continue_on_error": true,
       "timeout_seconds": 1800,
-      "purpose": "由研究与池子执行岗牵头，收盘后把异动、因子、研究池、策略证据和攻防推演收敛成纸面观察单。"
+      "purpose": "由研究与池子执行岗牵头，收盘后把异动、因子、研究池、策略证据、攻防推演、生命周期和纸面复盘收敛成机会闭环。"
     },
     {
       "schedule_id": "portfolio_review",

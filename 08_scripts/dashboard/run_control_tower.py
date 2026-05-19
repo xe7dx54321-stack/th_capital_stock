@@ -90,8 +90,8 @@ OPERATIONS_BLUEPRINT = [
         "label": "主动机会雷达链",
         "time_text": "17:10",
         "frequency_text": "工作日 1 次",
-        "purpose_text": "把异动、因子、研究池、轻量回测和攻防推演收敛成纸面观察单。",
-        "deliverable_text": "更新机会雷达、策略证据、攻防推演和纸面观察单。",
+        "purpose_text": "把异动、因子、研究池、轻量回测、攻防推演、生命周期和纸面复盘收敛成机会闭环。",
+        "deliverable_text": "更新机会雷达、策略证据、攻防推演、生命周期、纸面观察单和纸面表现复盘。",
         "schedule_note": "正式定时主链。",
         "formal_schedule": True,
     },
@@ -156,11 +156,25 @@ CODE_LABELS = {
     "high_conviction_watch": "高优先观察",
     "paper_watch_candidate": "纸面观察候选",
     "paper_watch_ready": "纸面观察就绪",
+    "new_candidate": "新进雷达",
+    "promoted": "晋级",
+    "strengthening": "强化",
+    "persistent_watch": "持续观察",
+    "cooling": "降温",
+    "demoted": "降级",
+    "dropped_from_radar": "退出雷达",
     "watch_with_evidence": "带证据观察",
     "research_first": "先补研究",
     "monitor_only": "仅监控",
     "radar_candidate": "雷达候选",
     "paper_watch_active": "纸面观察中",
+    "awaiting_market_data": "等待新行情",
+    "trigger_confirmed": "纸面触发成立",
+    "invalidated": "纸面失效",
+    "working": "观察运行中",
+    "positive_validation": "正向验证",
+    "failed_validation": "验证失败",
+    "pending": "待验证",
     "ready_for_paper_watch": "纸面证据通过",
     "thin_sample": "样本偏薄",
     "mixed_evidence": "证据混合",
@@ -507,6 +521,11 @@ def status_tone(value: str | None) -> str:
         "watch_with_evidence",
         "ready_for_paper_watch",
         "paper_watch_active",
+        "new_candidate",
+        "promoted",
+        "strengthening",
+        "trigger_confirmed",
+        "positive_validation",
     }:
         return "good"
     if key in {
@@ -524,9 +543,27 @@ def status_tone(value: str | None) -> str:
         "thin_sample",
         "mixed_evidence",
         "negative_evidence",
+        "cooling",
+        "demoted",
+        "dropped_from_radar",
+        "invalidated",
+        "failed_validation",
     }:
         return "warning"
-    if key in {"dry_run", "watch_only", "monitor_only", "observe", "neutral", "unknown", "missing", "radar_candidate"}:
+    if key in {
+        "dry_run",
+        "watch_only",
+        "monitor_only",
+        "observe",
+        "neutral",
+        "unknown",
+        "missing",
+        "radar_candidate",
+        "persistent_watch",
+        "awaiting_market_data",
+        "working",
+        "pending",
+    }:
         return "ghost"
     return "neutral"
 
@@ -2907,6 +2944,41 @@ def render_paper_ticket_table(tickets: list[dict]) -> str:
     return render_html_table(["标的", "纸面状态", "分数", "观察上沿", "失效下沿", "触发说明"], rows, "当前还没有纸面观察单。")
 
 
+def render_lifecycle_table(items: list[dict]) -> str:
+    rows = []
+    for item in items[:12]:
+        rows.append(
+            [
+                render_watch_name_link({"ts_code": item.get("ts_code"), "name": item.get("name")}),
+                badge(item.get("lifecycle_state"), status_tone(item.get("lifecycle_state"))),
+                escape(fmt_number(item.get("current_score"))),
+                escape(fmt_number(item.get("score_delta"))),
+                escape(fmt_number(item.get("seen_snapshot_count") or 0)),
+                badge(item.get("evidence_label") or item.get("attack_verdict") or "-", status_tone(item.get("evidence_label") or item.get("attack_verdict"))),
+                escape(compact_text(item.get("next_action") or "-", 88)),
+            ]
+        )
+    return render_html_table(["标的", "生命周期", "当前分", "变化", "出现", "证据", "下一步"], rows, "当前还没有机会生命周期快照。")
+
+
+def render_paper_performance_table(items: list[dict]) -> str:
+    rows = []
+    for item in items[:12]:
+        rows.append(
+            [
+                render_watch_name_link({"ts_code": item.get("ts_code"), "name": item.get("name")}),
+                badge(item.get("status"), status_tone(item.get("status"))),
+                escape(fmt_number(item.get("days_tracked") or 0)),
+                escape(fmt_pct(item.get("latest_return"))),
+                escape(f"{fmt_pct(item.get('best_return'))} / {fmt_pct(item.get('worst_return'))}"),
+                escape(item.get("observe_hit_date") or "-"),
+                escape(item.get("invalidate_hit_date") or "-"),
+                escape(compact_text(item.get("action") or "-", 82)),
+            ]
+        )
+    return render_html_table(["标的", "状态", "跟踪日", "最新收益", "最好/最差", "触发日", "失效日", "下一步"], rows, "当前还没有纸面表现复盘。")
+
+
 def render_event_table(items: list[dict]) -> str:
     rows = []
     for item in items:
@@ -2971,6 +3043,7 @@ def render_home(state: dict, refresh_seconds: int) -> str:
     overview = state["overview"]
     opportunity_engine = state.get("opportunity_engine") or {}
     radar = opportunity_engine.get("radar") or {}
+    lifecycle = opportunity_engine.get("lifecycle") or {}
     paper_watchlist = opportunity_engine.get("paper_watchlist") or {}
     deep_analysis = state.get("deep_analysis") or {}
     analysis_forecast = state.get("analysis_forecast") or {}
@@ -3014,6 +3087,7 @@ def render_home(state: dict, refresh_seconds: int) -> str:
                 "基于主题深度分析，直接看当下更值得继续深挖的 A 股和美股票。",
                 [
                     f"主动雷达候选 {radar.get('candidate_count') or 0} 只 / 纸面观察单 {paper_watchlist.get('ticket_count') or 0} 张。",
+                    f"新进机会 {(lifecycle.get('state_counts') or {}).get('new_candidate') or 0} 个 / 强化机会 {((lifecycle.get('state_counts') or {}).get('promoted') or 0) + ((lifecycle.get('state_counts') or {}).get('strengthening') or 0)} 个。",
                     *(deep_analysis.get("overview_lines") or [])[:2],
                     f"A股候选 {deep_analysis.get('a_share_candidate_count') or 0} 只 / 美股候选 {deep_analysis.get('us_candidate_count') or 0} 只。",
                 ],
@@ -3730,7 +3804,9 @@ def render_opportunities_page(state: dict, refresh_seconds: int) -> str:
     radar = opportunity_engine.get("radar") or {}
     evidence = opportunity_engine.get("evidence") or {}
     attack_defense = opportunity_engine.get("attack_defense") or {}
+    lifecycle = opportunity_engine.get("lifecycle") or {}
     paper_watchlist = opportunity_engine.get("paper_watchlist") or {}
+    paper_performance = opportunity_engine.get("paper_performance") or {}
     deep_analysis = state.get("deep_analysis") or {}
     overview_lines = "".join(
         f"<li>{escape(business_text(line))}</li>" for line in (deep_analysis.get("overview_lines") or [])
@@ -3823,6 +3899,20 @@ def render_opportunities_page(state: dict, refresh_seconds: int) -> str:
             "tone": "good" if (paper_watchlist.get("ticket_count") or 0) > 0 else status_tone(paper_watchlist.get("status")),
             "footer_html": link_for_artifact(paper_watchlist.get("artifact")),
         },
+        {
+            "title": "生命周期",
+            "value": fmt_number((lifecycle.get("state_counts") or {}).get("new_candidate") or 0),
+            "note": f"新进 / 强化 / 降温：{fmt_number((lifecycle.get('state_counts') or {}).get('new_candidate') or 0)} / {fmt_number(((lifecycle.get('state_counts') or {}).get('promoted') or 0) + ((lifecycle.get('state_counts') or {}).get('strengthening') or 0))} / {fmt_number(((lifecycle.get('state_counts') or {}).get('cooling') or 0) + ((lifecycle.get('state_counts') or {}).get('demoted') or 0))}。",
+            "tone": status_tone(lifecycle.get("status")),
+            "footer_html": link_for_artifact(lifecycle.get("artifact")),
+        },
+        {
+            "title": "纸面复盘",
+            "value": fmt_number(paper_performance.get("evaluated_ticket_count") or 0),
+            "note": f"触发 {fmt_number((paper_performance.get('status_counts') or {}).get('trigger_confirmed') or 0)} / 失效 {fmt_number((paper_performance.get('status_counts') or {}).get('invalidated') or 0)}。",
+            "tone": status_tone(paper_performance.get("status")),
+            "footer_html": link_for_artifact(paper_performance.get("artifact")),
+        },
     ]
 
     body = (
@@ -3849,9 +3939,19 @@ def render_opportunities_page(state: dict, refresh_seconds: int) -> str:
         f"{render_attack_defense_table(attack_defense.get('cases') or [])}"
         "</section>"
         "<section class='panel'>"
+        "<h2>机会生命周期</h2>"
+        "<div class='section-intro'>这里回答“今天的机会是新冒出来、继续强化、开始降温，还是已经退出雷达”。</div>"
+        f"{render_lifecycle_table(lifecycle.get('items') or [])}"
+        "</section>"
+        "<section class='panel'>"
         "<h2>纸面观察单</h2>"
         "<div class='section-intro'>这里只做 paper-only 观察，不产生真实交易指令。真实组合动作仍走现有组合和风控门禁。</div>"
         f"{render_paper_ticket_table(paper_watchlist.get('tickets') or [])}"
+        "</section>"
+        "<section class='panel'>"
+        "<h2>纸面表现复盘</h2>"
+        "<div class='section-intro'>纸面单不是写完就算结束；这层负责记录后续行情是否触发、失效或仍待验证。</div>"
+        f"{render_paper_performance_table(paper_performance.get('items') or [])}"
         "</section>"
         "<section class='panel'>"
         "<h2>本轮结论</h2>"

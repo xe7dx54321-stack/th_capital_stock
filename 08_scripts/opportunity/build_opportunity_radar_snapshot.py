@@ -697,6 +697,7 @@ def main():
             "paper_watch_candidate_count": sum(
                 1 for item in candidate_items if item["opportunity_score"] >= paper_score
             ),
+            "candidate_items": candidate_items,
             "markets": market_groups,
             "top_candidates": scored_items[:20],
             "sector_heatmap": sector_heatmap(candidate_items),

@@ -26,7 +26,9 @@ DEFAULT_REQUIRED_ACTIONS = {
     "ingest_draft_scan": "resolve_blocked_drafts",
     "portfolio_pnl_snapshot": "review_portfolio_snapshot",
     "opportunity_radar_snapshot": "review_opportunity_radar",
+    "opportunity_lifecycle_snapshot": "review_opportunity_lifecycle",
     "paper_trade_watchlist_snapshot": "review_paper_watchlist",
+    "paper_watch_performance_snapshot": "review_paper_watch_performance",
     "research_context_note": "merge_context_into_dispatch",
     "research_quality_snapshot": "review_research_quality",
     "review_queue": "review_queue_triage",
@@ -57,7 +59,9 @@ DEFAULT_HANDOFF_TYPES = {
     "ingest_draft_scan": "research_review",
     "portfolio_pnl_snapshot": "risk_review",
     "opportunity_radar_snapshot": "research_review",
+    "opportunity_lifecycle_snapshot": "research_review",
     "paper_trade_watchlist_snapshot": "research_review",
+    "paper_watch_performance_snapshot": "research_review",
     "research_context_note": "report_sync",
     "research_quality_snapshot": "research_review",
     "review_queue": "research_review",
@@ -511,12 +515,16 @@ def should_suggest_handoff(entry):
         return (payload.get("plan_count") or 0) > 0
     if entity_type == "opportunity_radar_snapshot":
         return (payload.get("candidate_count") or 0) > 0
+    if entity_type == "opportunity_lifecycle_snapshot":
+        return (payload.get("current_candidate_count") or 0) > 0 or bool(payload.get("state_counts"))
     if entity_type == "strategy_evidence_snapshot":
         return (payload.get("candidate_count") or 0) > 0
     if entity_type == "thesis_attack_defense_snapshot":
         return (payload.get("case_count") or 0) > 0
     if entity_type == "paper_trade_watchlist_snapshot":
         return (payload.get("ticket_count") or 0) > 0
+    if entity_type == "paper_watch_performance_snapshot":
+        return (payload.get("evaluated_ticket_count") or 0) > 0
     if entity_type == "portfolio_action_memo_snapshot":
         return (payload.get("action_count") or 0) > 0
     if entity_type == "portfolio_pnl_snapshot":

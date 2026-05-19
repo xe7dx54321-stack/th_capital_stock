@@ -19,7 +19,9 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 RESEARCH_CONTEXT_ENTITY_TYPES = {
     "dynamic_pool_snapshot",
     "opportunity_radar_snapshot",
+    "opportunity_lifecycle_snapshot",
     "paper_trade_watchlist_snapshot",
+    "paper_watch_performance_snapshot",
     "portfolio_action_memo_snapshot",
     "trend_research_batch",
     "research_quality_snapshot",

@@ -25,7 +25,9 @@
 3. `08_scripts/opportunity/build_strategy_evidence_snapshot.py`
 4. `08_scripts/opportunity/build_thesis_attack_defense_snapshot.py`
 5. `08_scripts/opportunity/build_paper_trade_watchlist.py`
-6. `08_scripts/agents/run_agent_control_loop.py --research-governance-mode skip --build-dispatch`
+6. `08_scripts/opportunity/build_opportunity_lifecycle_snapshot.py`
+7. `08_scripts/opportunity/build_paper_watch_performance_snapshot.py`
+8. `08_scripts/agents/run_agent_control_loop.py --research-governance-mode skip --build-dispatch`
 
 正式 schedule:
 
@@ -40,6 +42,8 @@
 - `strategy_evidence_snapshot`: 策略证据，输出轻量历史回测结果和证据标签。
 - `thesis_attack_defense_snapshot`: 攻防推演，输出 defense、attack、kill triggers 和 verdict。
 - `paper_trade_watchlist_snapshot`: 纸面观察单，输出 paper-only ticket。
+- `opportunity_lifecycle_snapshot`: 机会生命周期，输出新进、强化、降温、降级、退出和纸面观察中的机会。
+- `paper_watch_performance_snapshot`: 纸面表现复盘，输出触发、失效、运行中和等待新行情的结果。
 
 ## Policy
 
@@ -59,5 +63,12 @@
 - 策略证据
 - 攻防推演
 - 纸面观察单
+- 机会生命周期
+- 纸面表现复盘
 
 这些内容和原有“深度市场分析”并列展示：前者偏动态机会发现，后者偏主题研究和低估候选。
+
+## Feedback Loop
+
+- 生命周期层回答“机会是否还在变强”，避免每天只看一张新的候选清单。
+- 纸面复盘层回答“纸面观察是否被后续行情验证”，用于沉淀信号质量，不用于自动实盘。
