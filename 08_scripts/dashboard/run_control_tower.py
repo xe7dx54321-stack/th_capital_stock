@@ -86,6 +86,16 @@ OPERATIONS_BLUEPRINT = [
         "formal_schedule": True,
     },
     {
+        "job_id": "opportunity_radar",
+        "label": "主动机会雷达链",
+        "time_text": "17:10",
+        "frequency_text": "工作日 1 次",
+        "purpose_text": "把异动、因子、研究池、轻量回测和攻防推演收敛成纸面观察单。",
+        "deliverable_text": "更新机会雷达、策略证据、攻防推演和纸面观察单。",
+        "schedule_note": "正式定时主链。",
+        "formal_schedule": True,
+    },
+    {
         "job_id": "portfolio_review",
         "label": "持仓复盘",
         "time_text": "19:30",
@@ -143,6 +153,18 @@ CODE_LABELS = {
     "swap_blocked": "阻塞换仓",
     "holding_watch": "持仓复核",
     "opportunity_followup": "机会跟踪",
+    "high_conviction_watch": "高优先观察",
+    "paper_watch_candidate": "纸面观察候选",
+    "paper_watch_ready": "纸面观察就绪",
+    "watch_with_evidence": "带证据观察",
+    "research_first": "先补研究",
+    "monitor_only": "仅监控",
+    "radar_candidate": "雷达候选",
+    "paper_watch_active": "纸面观察中",
+    "ready_for_paper_watch": "纸面证据通过",
+    "thin_sample": "样本偏薄",
+    "mixed_evidence": "证据混合",
+    "negative_evidence": "负证据",
     "high": "高",
     "medium": "中",
     "low": "低",
@@ -479,6 +501,12 @@ def status_tone(value: str | None) -> str:
         "strong",
         "active",
         "high_conviction",
+        "high_conviction_watch",
+        "paper_watch_candidate",
+        "paper_watch_ready",
+        "watch_with_evidence",
+        "ready_for_paper_watch",
+        "paper_watch_active",
     }:
         return "good"
     if key in {
@@ -492,9 +520,13 @@ def status_tone(value: str | None) -> str:
         "trim",
         "buy_small",
         "medium_conviction",
+        "research_first",
+        "thin_sample",
+        "mixed_evidence",
+        "negative_evidence",
     }:
         return "warning"
-    if key in {"dry_run", "watch_only", "observe", "neutral", "unknown", "missing"}:
+    if key in {"dry_run", "watch_only", "monitor_only", "observe", "neutral", "unknown", "missing", "radar_candidate"}:
         return "ghost"
     return "neutral"
 
@@ -2788,6 +2820,93 @@ def render_opportunity_cards(title: str, items: list[dict], state: dict, empty_t
     )
 
 
+def flatten_radar_market_items(radar: dict, limit: int = 12) -> list[dict]:
+    rows = []
+    for market_items in (radar.get("markets") or {}).values():
+        rows.extend(market_items or [])
+    if not rows:
+        rows = radar.get("top_candidates") or []
+    rows.sort(key=lambda item: (-(item.get("opportunity_score") or 0), item.get("ts_code") or ""))
+    return rows[:limit]
+
+
+def render_active_radar_cards(items: list[dict], state: dict, empty_text: str) -> str:
+    if not items:
+        return f"<div class='empty'>{escape(empty_text)}</div>"
+    cards = []
+    for item in items:
+        metrics = item.get("metrics") or {}
+        volume_ratio = metrics.get("volume_ratio_20d")
+        volume_ratio_text = f"{volume_ratio:.2f}x" if volume_ratio not in (None, "") else "-"
+        why_rows = "".join(f"<li>{escape(business_text(row))}</li>" for row in (item.get("why") or [])[:3])
+        risk_rows = "".join(f"<li>{escape(business_text(row))}</li>" for row in (item.get("risks") or [])[:2])
+        cards.append(
+            "<article class='card'>"
+            "<div class='card-header'>"
+            f"<div>{render_opportunity_name(item, state)}</div>"
+            f"<div>{badge(item.get('radar_bucket'), status_tone(item.get('radar_bucket')))}</div>"
+            "</div>"
+            f"<div class='badge-row' style='margin-bottom:10px'>{badge(fmt_number(item.get('opportunity_score')), 'neutral')}{badge(' / '.join(item.get('signal_tags') or ['-']), 'ghost')}</div>"
+            f"<div class='info-grid' style='margin-top:12px'>{render_kv_chips([('最新涨跌', fmt_pct(metrics.get('latest_pct_chg'))), ('5日收益', fmt_pct(metrics.get('return_5d'))), ('20日收益', fmt_pct(metrics.get('return_20d'))), ('量能倍数', volume_ratio_text), ('趋势强度', (item.get('factors') or {}).get('trend_strength')), ('主池', item.get('primary_pool') or '-')], chip_class='info-chip compact')}</div>"
+            f"<div style='margin-top:14px'><h4>为什么进入雷达</h4><ul>{why_rows or '<li>当前没有足够解释。</li>'}</ul></div>"
+            f"<div style='margin-top:14px'><h4>先看风险</h4><ul>{risk_rows or '<li>当前没有明确风险。</li>'}</ul></div>"
+            "</article>"
+        )
+    return "".join(cards)
+
+
+def render_strategy_evidence_table(items: list[dict]) -> str:
+    rows = []
+    for item in items[:12]:
+        best = item.get("best_evidence") or {}
+        rows.append(
+            [
+                render_watch_name_link({"ts_code": item.get("ts_code"), "name": item.get("name")}),
+                escape(fmt_number(item.get("opportunity_score"))),
+                escape(best.get("strategy_id") or "-"),
+                escape(fmt_number(best.get("trade_count") or 0)),
+                escape(fmt_ratio(best.get("win_rate"))),
+                escape(fmt_ratio(best.get("avg_return"))),
+                badge(best.get("evidence_label"), status_tone(best.get("evidence_label"))),
+            ]
+        )
+    return render_html_table(["标的", "雷达分", "最佳策略", "交易数", "胜率", "平均收益", "证据"], rows, "当前还没有策略证据。")
+
+
+def render_attack_defense_table(cases: list[dict]) -> str:
+    rows = []
+    for item in cases[:10]:
+        attack = compact_text("；".join(item.get("attack_points") or []), 98)
+        kill = compact_text("；".join(item.get("kill_triggers") or []), 98)
+        rows.append(
+            [
+                render_watch_name_link({"ts_code": item.get("ts_code"), "name": item.get("name")}),
+                badge(item.get("verdict"), status_tone(item.get("verdict"))),
+                escape(compact_text(item.get("verdict_summary") or "-", 90)),
+                escape(attack or "-"),
+                escape(kill or "-"),
+            ]
+        )
+    return render_html_table(["标的", "结论", "摘要", "攻击点", "失效条件"], rows, "当前还没有攻防推演。")
+
+
+def render_paper_ticket_table(tickets: list[dict]) -> str:
+    rows = []
+    for ticket in tickets[:10]:
+        levels = ticket.get("reference_levels") or {}
+        rows.append(
+            [
+                render_watch_name_link({"ts_code": ticket.get("ts_code"), "name": ticket.get("name")}),
+                badge(ticket.get("verdict"), status_tone(ticket.get("verdict"))),
+                escape(fmt_number(ticket.get("opportunity_score"))),
+                escape(fmt_number(levels.get("observe_above"))),
+                escape(fmt_number(levels.get("invalidate_below"))),
+                escape(compact_text(ticket.get("paper_trigger") or "-", 86)),
+            ]
+        )
+    return render_html_table(["标的", "纸面状态", "分数", "观察上沿", "失效下沿", "触发说明"], rows, "当前还没有纸面观察单。")
+
+
 def render_event_table(items: list[dict]) -> str:
     rows = []
     for item in items:
@@ -2850,6 +2969,9 @@ def render_operation_run_cell(run: dict | None) -> str:
 
 def render_home(state: dict, refresh_seconds: int) -> str:
     overview = state["overview"]
+    opportunity_engine = state.get("opportunity_engine") or {}
+    radar = opportunity_engine.get("radar") or {}
+    paper_watchlist = opportunity_engine.get("paper_watchlist") or {}
     deep_analysis = state.get("deep_analysis") or {}
     analysis_forecast = state.get("analysis_forecast") or {}
     operations = state.get("operations") or {}
@@ -2891,6 +3013,7 @@ def render_home(state: dict, refresh_seconds: int) -> str:
                 "/opportunities",
                 "基于主题深度分析，直接看当下更值得继续深挖的 A 股和美股票。",
                 [
+                    f"主动雷达候选 {radar.get('candidate_count') or 0} 只 / 纸面观察单 {paper_watchlist.get('ticket_count') or 0} 张。",
                     *(deep_analysis.get("overview_lines") or [])[:2],
                     f"A股候选 {deep_analysis.get('a_share_candidate_count') or 0} 只 / 美股候选 {deep_analysis.get('us_candidate_count') or 0} 只。",
                 ],
@@ -3603,6 +3726,11 @@ def render_analysis_page(state: dict, refresh_seconds: int) -> str:
 def render_opportunities_page(state: dict, refresh_seconds: int) -> str:
     overview = state.get("overview") or {}
     capital = state.get("capital_flow") or {}
+    opportunity_engine = state.get("opportunity_engine") or {}
+    radar = opportunity_engine.get("radar") or {}
+    evidence = opportunity_engine.get("evidence") or {}
+    attack_defense = opportunity_engine.get("attack_defense") or {}
+    paper_watchlist = opportunity_engine.get("paper_watchlist") or {}
     deep_analysis = state.get("deep_analysis") or {}
     overview_lines = "".join(
         f"<li>{escape(business_text(line))}</li>" for line in (deep_analysis.get("overview_lines") or [])
@@ -3656,9 +3784,75 @@ def render_opportunities_page(state: dict, refresh_seconds: int) -> str:
             "tone": "warning" if (deep_analysis.get("coverage_gaps") or []) else "good",
         },
     ]
+    radar_items = flatten_radar_market_items(radar, limit=12)
+    radar_overview_html = "".join(
+        f"<li>{escape(business_text(line))}</li>" for line in (radar.get("overview_lines") or [])
+    ) or "<li>当前还没有主动雷达快照。</li>"
+    active_metrics = [
+        {
+            "title": "主动雷达",
+            "value": radar.get("created_at") or "-",
+            "note": f"覆盖打分 {fmt_number(radar.get('scored_count') or 0)} 个，候选 {fmt_number(radar.get('candidate_count') or 0)} 个。",
+            "tone": status_tone(radar.get("status")),
+            "footer_html": link_for_artifact(radar.get("artifact")),
+        },
+        {
+            "title": "纸面候选",
+            "value": fmt_number(radar.get("paper_watch_candidate_count") or 0),
+            "note": "雷达层达到纸面观察阈值的候选数。",
+            "tone": "good" if (radar.get("paper_watch_candidate_count") or 0) > 0 else "ghost",
+        },
+        {
+            "title": "策略证据",
+            "value": fmt_number(evidence.get("ready_count") or 0),
+            "note": f"已验证 {fmt_number(evidence.get('candidate_count') or 0)} 个雷达候选。",
+            "tone": "good" if (evidence.get("ready_count") or 0) > 0 else status_tone(evidence.get("status")),
+            "footer_html": link_for_artifact(evidence.get("artifact")),
+        },
+        {
+            "title": "攻防推演",
+            "value": fmt_number(attack_defense.get("case_count") or 0),
+            "note": f"纸面就绪 {fmt_number(attack_defense.get('paper_watch_ready_count') or 0)} 个 / 先补研究 {fmt_number(attack_defense.get('research_first_count') or 0)} 个。",
+            "tone": status_tone(attack_defense.get("status")),
+            "footer_html": link_for_artifact(attack_defense.get("artifact")),
+        },
+        {
+            "title": "纸面观察单",
+            "value": fmt_number(paper_watchlist.get("ticket_count") or 0),
+            "note": "paper_only；不包含真实下单或券商指令。",
+            "tone": "good" if (paper_watchlist.get("ticket_count") or 0) > 0 else status_tone(paper_watchlist.get("status")),
+            "footer_html": link_for_artifact(paper_watchlist.get("artifact")),
+        },
+    ]
 
     body = (
         f"{render_market_fact_panel(overview, capital, '市场事实口径')}"
+        "<section class='panel'>"
+        "<h2>主动机会雷达</h2>"
+        "<div class='section-intro'>这一块借鉴 QuantDinger 的闭环、Qlib 的因子排序、vectorbt 的证据先行和 vn.py 的事件驱动思路：先发现，再验证，再攻防，最后只进入纸面观察。</div>"
+        f"{render_metric_grid(active_metrics)}"
+        f"<div style='margin-top:18px'><ul>{radar_overview_html}</ul></div>"
+        "</section>"
+        "<section class='panel'>"
+        "<h2>雷达候选</h2>"
+        "<div class='section-intro'>这些是系统主动从当前覆盖库里挑出来的候选，不等同于推荐买入。</div>"
+        f"{render_active_radar_cards(radar_items, state, '当前还没有主动雷达候选。')}"
+        "</section>"
+        "<section class='panel'>"
+        "<h2>策略证据</h2>"
+        "<div class='section-intro'>轻量历史验证先回答“这个信号过去有没有基本可复核的胜率和收益特征”。</div>"
+        f"{render_strategy_evidence_table(evidence.get('items') or [])}"
+        "</section>"
+        "<section class='panel'>"
+        "<h2>攻防推演</h2>"
+        "<div class='section-intro'>每个机会都必须同时给出支持项、攻击点和失效条件，避免只看多头故事。</div>"
+        f"{render_attack_defense_table(attack_defense.get('cases') or [])}"
+        "</section>"
+        "<section class='panel'>"
+        "<h2>纸面观察单</h2>"
+        "<div class='section-intro'>这里只做 paper-only 观察，不产生真实交易指令。真实组合动作仍走现有组合和风控门禁。</div>"
+        f"{render_paper_ticket_table(paper_watchlist.get('tickets') or [])}"
+        "</section>"
         "<section class='panel'>"
         "<h2>本轮结论</h2>"
         "<div class='section-intro'>这一页只回答两个问题：哪些主题还值得继续挖，哪些 A 股 / 美股票当前更像被低估而不是单纯热门。</div>"
@@ -3690,6 +3884,8 @@ def render_opportunities_page(state: dict, refresh_seconds: int) -> str:
         body=body,
         refresh_seconds=refresh_seconds,
         hero_facts=[
+            ("主动雷达", radar.get("created_at") or "-"),
+            ("纸面观察单", paper_watchlist.get("ticket_count") or 0),
             ("最近快照", deep_analysis.get("created_at") or "-"),
             ("主题数量", deep_analysis.get("theme_count") or 0),
             ("A股候选", deep_analysis.get("a_share_candidate_count") or 0),

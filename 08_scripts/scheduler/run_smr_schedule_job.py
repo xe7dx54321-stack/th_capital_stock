@@ -120,6 +120,19 @@ JOB_SPECS: dict[str, JobSpec] = {
             py("08_scripts/agents/run_agent_control_loop.py", "--research-governance-mode", "skip", "--build-dispatch"),
         ),
     ),
+    "opportunity_radar": JobSpec(
+        job_id="opportunity_radar",
+        label="主动机会雷达链",
+        description="把异动、因子、研究池、轻量回测和攻防推演收敛成纸面观察单。",
+        commands=(
+            py("08_scripts/reporting/build_market_flow_anomaly_snapshot.py"),
+            py("08_scripts/opportunity/build_opportunity_radar_snapshot.py"),
+            py("08_scripts/opportunity/build_strategy_evidence_snapshot.py", "--limit", "16"),
+            py("08_scripts/opportunity/build_thesis_attack_defense_snapshot.py", "--limit", "12"),
+            py("08_scripts/opportunity/build_paper_trade_watchlist.py", "--limit", "8"),
+            py("08_scripts/agents/run_agent_control_loop.py", "--research-governance-mode", "skip", "--build-dispatch"),
+        ),
+    ),
     "portfolio_review": JobSpec(
         job_id="portfolio_review",
         label="持仓复盘",

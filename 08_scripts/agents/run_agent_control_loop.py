@@ -18,13 +18,17 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 
 RESEARCH_CONTEXT_ENTITY_TYPES = {
     "dynamic_pool_snapshot",
+    "opportunity_radar_snapshot",
+    "paper_trade_watchlist_snapshot",
     "portfolio_action_memo_snapshot",
     "trend_research_batch",
     "research_quality_snapshot",
     "rotation_candidate_snapshot",
     "rotation_execution_plan_snapshot",
+    "strategy_evidence_snapshot",
     "stock_objective_monitor_snapshot",
     "strategy_watch_batch",
+    "thesis_attack_defense_snapshot",
     "us_signal_snapshot",
 }
 RISK_ENTITY_TYPES = {

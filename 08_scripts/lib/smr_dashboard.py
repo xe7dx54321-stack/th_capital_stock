@@ -26,6 +26,10 @@ KEY_ENTITY_TYPES = [
     "daily_report_candidate",
     "daily_reporting_snapshot",
     "market_flow_anomaly_snapshot",
+    "opportunity_radar_snapshot",
+    "strategy_evidence_snapshot",
+    "thesis_attack_defense_snapshot",
+    "paper_trade_watchlist_snapshot",
     "deep_market_analysis_snapshot",
     "price_range_forecast_snapshot",
     "execution_precheck_snapshot",
@@ -1363,6 +1367,7 @@ def build_state_version(state: dict[str, Any]) -> str:
     run_log = operations.get("run_log") or {}
     overview = state.get("overview") or {}
     deep_analysis = state.get("deep_analysis") or {}
+    opportunity_engine = state.get("opportunity_engine") or {}
     analysis_forecast = state.get("analysis_forecast") or {}
     reporting = state.get("reporting") or {}
     portfolio_action = state.get("portfolio_action") or {}
@@ -1380,6 +1385,8 @@ def build_state_version(state: dict[str, Any]) -> str:
         "today_script_status_counts": overview.get("today_script_status_counts"),
         "today_script_count": overview.get("today_script_count"),
         "deep_analysis_created_at": deep_analysis.get("created_at"),
+        "opportunity_radar_created_at": ((opportunity_engine.get("radar") or {}).get("created_at")),
+        "paper_watchlist_created_at": ((opportunity_engine.get("paper_watchlist") or {}).get("created_at")),
         "analysis_forecast_created_at": analysis_forecast.get("created_at"),
         "latest_report_updated_at": reporting.get("latest_report_updated_at"),
         "report_surface_date": reporting.get("report_surface_date"),
@@ -1448,6 +1455,20 @@ def build_dashboard_state(now: datetime | None = None, registry_limit: int = 24,
                 ts_code = item.get("ts_code")
                 if ts_code:
                     detail_symbols.add(ts_code)
+
+        opportunity_radar_snapshot = snapshots.get("opportunity_radar_snapshot") or {}
+        opportunity_radar_payload = opportunity_radar_snapshot.get("payload") or {}
+        for market_items in (opportunity_radar_payload.get("markets") or {}).values():
+            for item in market_items or []:
+                ts_code = item.get("ts_code")
+                if ts_code:
+                    detail_symbols.add(ts_code)
+        paper_watchlist_snapshot = snapshots.get("paper_trade_watchlist_snapshot") or {}
+        paper_watchlist_payload = paper_watchlist_snapshot.get("payload") or {}
+        for item in paper_watchlist_payload.get("tickets") or []:
+            ts_code = item.get("ts_code")
+            if ts_code:
+                detail_symbols.add(ts_code)
 
         forecast_snapshot = snapshots.get("price_range_forecast_snapshot") or {}
         forecast_payload = forecast_snapshot.get("payload") or {}
@@ -1556,6 +1577,19 @@ def build_dashboard_state(now: datetime | None = None, registry_limit: int = 24,
     market_flow_payload = market_flow_snapshot.get("payload") or {}
     market_flow_relationships = market_flow_snapshot.get("relationships") or {}
 
+    opportunity_radar_snapshot = snapshots["opportunity_radar_snapshot"] or {}
+    opportunity_radar_payload = opportunity_radar_snapshot.get("payload") or {}
+    opportunity_radar_relationships = opportunity_radar_snapshot.get("relationships") or {}
+    strategy_evidence_snapshot = snapshots["strategy_evidence_snapshot"] or {}
+    strategy_evidence_payload = strategy_evidence_snapshot.get("payload") or {}
+    strategy_evidence_relationships = strategy_evidence_snapshot.get("relationships") or {}
+    attack_defense_snapshot = snapshots["thesis_attack_defense_snapshot"] or {}
+    attack_defense_payload = attack_defense_snapshot.get("payload") or {}
+    attack_defense_relationships = attack_defense_snapshot.get("relationships") or {}
+    paper_watchlist_snapshot = snapshots["paper_trade_watchlist_snapshot"] or {}
+    paper_watchlist_payload = paper_watchlist_snapshot.get("payload") or {}
+    paper_watchlist_relationships = paper_watchlist_snapshot.get("relationships") or {}
+
     forecast_snapshot = snapshots["price_range_forecast_snapshot"] or {}
     forecast_payload = forecast_snapshot.get("payload") or {}
     forecast_relationships = forecast_snapshot.get("relationships") or {}
@@ -1605,6 +1639,18 @@ def build_dashboard_state(now: datetime | None = None, registry_limit: int = 24,
     )
     market_flow_rel_path = (
         market_flow_relationships.get("summary_rel_path") or market_flow_payload.get("summary_rel_path")
+    )
+    opportunity_radar_rel_path = (
+        opportunity_radar_relationships.get("summary_rel_path") or opportunity_radar_payload.get("summary_rel_path")
+    )
+    strategy_evidence_rel_path = (
+        strategy_evidence_relationships.get("summary_rel_path") or strategy_evidence_payload.get("summary_rel_path")
+    )
+    attack_defense_rel_path = (
+        attack_defense_relationships.get("summary_rel_path") or attack_defense_payload.get("summary_rel_path")
+    )
+    paper_watchlist_rel_path = (
+        paper_watchlist_relationships.get("summary_rel_path") or paper_watchlist_payload.get("summary_rel_path")
     )
     forecast_rel_path = (
         forecast_relationships.get("summary_rel_path") or forecast_payload.get("summary_rel_path")
@@ -1760,6 +1806,56 @@ def build_dashboard_state(now: datetime | None = None, registry_limit: int = 24,
                     "US": [simplify_market_flow_item(item) for item in (market_flow_payload.get("markets") or {}).get("US", [])],
                 },
                 "artifact": build_artifact(market_flow_rel_path, "全覆盖库资金异动"),
+            },
+        },
+        "opportunity_engine": {
+            "radar": {
+                "entity_id": opportunity_radar_snapshot.get("entity_id"),
+                "status": opportunity_radar_snapshot.get("status"),
+                "created_at": opportunity_radar_snapshot.get("created_at"),
+                "mode": opportunity_radar_payload.get("mode"),
+                "coverage_summary": opportunity_radar_payload.get("coverage_summary") or {},
+                "scored_count": opportunity_radar_payload.get("scored_count") or 0,
+                "candidate_count": opportunity_radar_payload.get("candidate_count") or 0,
+                "paper_watch_candidate_count": opportunity_radar_payload.get("paper_watch_candidate_count") or 0,
+                "overview_lines": opportunity_radar_payload.get("overview_lines") or [],
+                "sector_heatmap": opportunity_radar_payload.get("sector_heatmap") or [],
+                "markets": opportunity_radar_payload.get("markets") or {},
+                "top_candidates": opportunity_radar_payload.get("top_candidates") or [],
+                "artifact": build_artifact(opportunity_radar_rel_path, "主动机会雷达"),
+            },
+            "evidence": {
+                "entity_id": strategy_evidence_snapshot.get("entity_id"),
+                "status": strategy_evidence_snapshot.get("status"),
+                "created_at": strategy_evidence_snapshot.get("created_at"),
+                "candidate_count": strategy_evidence_payload.get("candidate_count") or 0,
+                "ready_count": strategy_evidence_payload.get("ready_count") or 0,
+                "overview_lines": strategy_evidence_payload.get("overview_lines") or [],
+                "items": strategy_evidence_payload.get("items") or [],
+                "artifact": build_artifact(strategy_evidence_rel_path, "策略证据快照"),
+            },
+            "attack_defense": {
+                "entity_id": attack_defense_snapshot.get("entity_id"),
+                "status": attack_defense_snapshot.get("status"),
+                "created_at": attack_defense_snapshot.get("created_at"),
+                "case_count": attack_defense_payload.get("case_count") or 0,
+                "paper_watch_ready_count": attack_defense_payload.get("paper_watch_ready_count") or 0,
+                "watch_with_evidence_count": attack_defense_payload.get("watch_with_evidence_count") or 0,
+                "research_first_count": attack_defense_payload.get("research_first_count") or 0,
+                "overview_lines": attack_defense_payload.get("overview_lines") or [],
+                "cases": attack_defense_payload.get("cases") or [],
+                "artifact": build_artifact(attack_defense_rel_path, "机会攻防推演"),
+            },
+            "paper_watchlist": {
+                "entity_id": paper_watchlist_snapshot.get("entity_id"),
+                "status": paper_watchlist_snapshot.get("status"),
+                "created_at": paper_watchlist_snapshot.get("created_at"),
+                "mode": paper_watchlist_payload.get("mode"),
+                "live_trading_enabled": paper_watchlist_payload.get("live_trading_enabled"),
+                "ticket_count": paper_watchlist_payload.get("ticket_count") or 0,
+                "overview_lines": paper_watchlist_payload.get("overview_lines") or [],
+                "tickets": paper_watchlist_payload.get("tickets") or [],
+                "artifact": build_artifact(paper_watchlist_rel_path, "纸面机会观察单"),
             },
         },
         "deep_analysis": {

@@ -2,6 +2,7 @@
 """Process reporting sync handoffs into dispatch-ready candidate blocks."""
 
 import argparse
+import re
 import sqlite3
 import sys
 from datetime import datetime
@@ -42,6 +43,19 @@ def latest_reporting_surface_date(conn):
     if row and row[0]:
         return row[0]
     return datetime.now().strftime("%Y-%m-%d")
+
+
+def source_business_date(handoff, entry):
+    relationships = entry.get("relationships") or {}
+    for value in (
+        relationships.get("source_entity_id"),
+        handoff.get("entity_id"),
+        entry.get("entity_id"),
+    ):
+        match = re.search(r"\d{4}-\d{2}-\d{2}", str(value or ""))
+        if match:
+            return match.group(0)
+    return None
 
 
 def load_source_entry(conn, handoff):
@@ -122,6 +136,12 @@ def render_research_sync_candidate(handoff, entry):
             "当前优先盯盘标的",
             "池子概览",
             "当前关键池子",
+            "主动机会雷达",
+            "当前优先候选",
+            "策略证据",
+            "证据摘要",
+            "攻防概览",
+            "纸面观察单",
             "批次概览",
             "质量快照",
             "美股联动快照",
@@ -223,8 +243,8 @@ def main():
     candidate_path = dispatch_dir / f"{handoff['entity_type']}__{handoff['entity_id']}__{handoff['handoff_id']}.md"
 
     conn = sqlite3.connect(DB_PATH)
-    dispatch_date = latest_reporting_surface_date(conn)
     entry = load_source_entry(conn, handoff)
+    dispatch_date = source_business_date(handoff, entry) or latest_reporting_surface_date(conn)
 
     if args.dry_run:
         print(f"handoff_id: {handoff['handoff_id']}")

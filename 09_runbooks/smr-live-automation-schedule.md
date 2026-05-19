@@ -75,6 +75,7 @@ launchd 部署脚本：
 | `afternoon_close` | 工作日 15:30 | `afternoon_close` | `openclaw_data_exec` | `openclaw_data_exec`, `openclaw_factor_exec`, `openclaw_pool_exec`, `hermes_research_curator`, `hermes_reporting_editor` |
 | `afternoon_refresh` | 工作日 16:30 | `afternoon_refresh` | `openclaw_factor_exec` | `openclaw_factor_exec`, `openclaw_pool_exec`, `hermes_research_curator`, `hermes_reporting_editor` |
 | `deep_market_scan_afternoon` | 工作日 16:55 | `deep_market_scan` | `hermes_research_curator` | `openclaw_report_exec`, `hermes_research_curator` |
+| `opportunity_radar_close` | 工作日 17:10 | `opportunity_radar` | `openclaw_pool_exec` | `openclaw_factor_exec`, `openclaw_pool_exec`, `hermes_research_curator`, `hermes_reporting_editor` |
 | `portfolio_review` | 工作日 19:30 | `portfolio_review` | `openclaw_risk_exec` | `openclaw_risk_exec`, `hermes_risk_curator`, `hermes_reporting_editor` |
 | `daily_report` | 工作日 20:30 | `daily_report` | `hermes_reporting_editor` | `openclaw_report_exec`, `hermes_reporting_editor` |
 | `risk_review` | 工作日 21:00 | `risk_review` | `openclaw_risk_exec` | `openclaw_risk_exec`, `hermes_risk_curator`, `hermes_reporting_editor` |

@@ -119,6 +119,24 @@
       "purpose": "由研究知识治理岗牵头，午后补刷公开信息与市场主题扫描。"
     },
     {
+      "schedule_id": "opportunity_radar_close",
+      "label": "主动机会雷达收盘",
+      "job_id": "opportunity_radar",
+      "lead_profile_id": "openclaw_pool_exec",
+      "operator_profile_ids": [
+        "openclaw_factor_exec",
+        "openclaw_pool_exec",
+        "hermes_research_curator",
+        "hermes_reporting_editor"
+      ],
+      "weekdays": ["MO", "TU", "WE", "TH", "FR"],
+      "hour": 17,
+      "minute": 10,
+      "continue_on_error": true,
+      "timeout_seconds": 1800,
+      "purpose": "由研究与池子执行岗牵头，收盘后把异动、因子、研究池、策略证据和攻防推演收敛成纸面观察单。"
+    },
+    {
       "schedule_id": "portfolio_review",
       "label": "持仓复盘",
       "job_id": "portfolio_review",

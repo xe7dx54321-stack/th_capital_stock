@@ -25,11 +25,15 @@ DEFAULT_REQUIRED_ACTIONS = {
     "ingest_draft_batch": "triage_ingest_drafts",
     "ingest_draft_scan": "resolve_blocked_drafts",
     "portfolio_pnl_snapshot": "review_portfolio_snapshot",
+    "opportunity_radar_snapshot": "review_opportunity_radar",
+    "paper_trade_watchlist_snapshot": "review_paper_watchlist",
     "research_context_note": "merge_context_into_dispatch",
     "research_quality_snapshot": "review_research_quality",
     "review_queue": "review_queue_triage",
     "rotation_candidate_snapshot": "review_rotation_candidates",
     "rotation_execution_plan_snapshot": "review_rotation_execution_plan",
+    "strategy_evidence_snapshot": "review_strategy_evidence",
+    "thesis_attack_defense_snapshot": "review_attack_defense",
     "portfolio_action_memo_snapshot": "review_portfolio_action_memo",
     "risk_update_candidate": "merge_risk_into_dispatch",
     "risk_monitor_snapshot": "interpret_risk_snapshot",
@@ -52,11 +56,15 @@ DEFAULT_HANDOFF_TYPES = {
     "ingest_draft_batch": "research_review",
     "ingest_draft_scan": "research_review",
     "portfolio_pnl_snapshot": "risk_review",
+    "opportunity_radar_snapshot": "research_review",
+    "paper_trade_watchlist_snapshot": "research_review",
     "research_context_note": "report_sync",
     "research_quality_snapshot": "research_review",
     "review_queue": "research_review",
     "rotation_candidate_snapshot": "research_review",
     "rotation_execution_plan_snapshot": "research_review",
+    "strategy_evidence_snapshot": "research_review",
+    "thesis_attack_defense_snapshot": "research_review",
     "portfolio_action_memo_snapshot": "research_review",
     "risk_update_candidate": "report_sync",
     "risk_monitor_snapshot": "risk_review",
@@ -501,6 +509,14 @@ def should_suggest_handoff(entry):
         return (payload.get("opportunity_count") or 0) > 0 or (payload.get("rotation_pair_count") or 0) > 0
     if entity_type == "rotation_execution_plan_snapshot":
         return (payload.get("plan_count") or 0) > 0
+    if entity_type == "opportunity_radar_snapshot":
+        return (payload.get("candidate_count") or 0) > 0
+    if entity_type == "strategy_evidence_snapshot":
+        return (payload.get("candidate_count") or 0) > 0
+    if entity_type == "thesis_attack_defense_snapshot":
+        return (payload.get("case_count") or 0) > 0
+    if entity_type == "paper_trade_watchlist_snapshot":
+        return (payload.get("ticket_count") or 0) > 0
     if entity_type == "portfolio_action_memo_snapshot":
         return (payload.get("action_count") or 0) > 0
     if entity_type == "portfolio_pnl_snapshot":

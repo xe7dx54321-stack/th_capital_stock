@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "mode": "paper_only",
+  "live_trading_enabled": false,
+  "execution_boundary": {
+    "codex_role": "development_tool_only",
+    "agent_runtime_role": "generate_snapshots_candidates_and_paper_watchlists",
+    "human_role": "approve_research_thesis_portfolio_action_and_any_real_trade",
+    "hard_rule": "No script in the opportunity engine may place real orders or emit executable broker instructions."
+  },
+  "borrowed_design_patterns": {
+    "quantdinger": [
+      "idea_to_strategy_to_backtest_to_monitor_loop",
+      "paper_only_default",
+      "scoped_agent_outputs",
+      "audit_friendly_snapshots"
+    ],
+    "qlib": [
+      "factor_based_cross_sectional_ranking",
+      "research_to_production_evidence_chain",
+      "model_or_signal_evaluation_before_action"
+    ],
+    "vectorbt": [
+      "fast_parameter_sweep_mindset",
+      "batch_backtest_evidence",
+      "walk_forward_bias_awareness"
+    ],
+    "vnpy": [
+      "event_driven_market_monitoring",
+      "gateway_separation_before_any_execution",
+      "risk_manager_before_trade_manager"
+    ]
+  },
+  "candidate_thresholds": {
+    "radar_candidate_min_score": 9.0,
+    "paper_watch_min_score": 11.0,
+    "high_conviction_min_score": 14.0,
+    "max_candidates_per_market": 12,
+    "max_paper_watch_tickets": 8
+  },
+  "risk_guards": {
+    "overheat_rsi": 78,
+    "single_day_chase_pct": 9.5,
+    "min_backtest_trades_for_ready": 8,
+    "min_win_rate_for_ready": 0.48,
+    "min_avg_return_for_ready": 0.0
+  }
+}

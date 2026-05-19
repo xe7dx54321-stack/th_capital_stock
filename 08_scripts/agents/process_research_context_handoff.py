@@ -26,12 +26,16 @@ from smr_runlog import log_run
 
 SUPPORTED_ENTITY_TYPES = {
     "dynamic_pool_snapshot",
+    "opportunity_radar_snapshot",
+    "paper_trade_watchlist_snapshot",
     "portfolio_action_memo_snapshot",
     "research_quality_snapshot",
     "rotation_candidate_snapshot",
     "rotation_execution_plan_snapshot",
     "stock_objective_monitor_snapshot",
+    "strategy_evidence_snapshot",
     "strategy_watch_batch",
+    "thesis_attack_defense_snapshot",
     "trend_research_batch",
     "us_signal_snapshot",
 }
@@ -255,6 +259,214 @@ def render_us_signal_note(handoff, entry):
         "- 如果影响持续存在，再把联动结论补进行业页或时间线。",
         "",
     ]
+    return "\n".join(lines)
+
+
+def render_opportunity_radar_note(handoff, entry):
+    payload = entry.get("payload", {})
+    relationships = entry.get("relationships", {})
+    top_candidates = payload.get("top_candidates") or []
+    market_counts = {
+        market: len(payload.get("markets", {}).get(market) or [])
+        for market in ("A", "H", "US")
+    }
+    lines = [
+        f"# 研究上下文草稿：{handoff['entity_type']} / {handoff['entity_id']}",
+        "",
+        f"- handoff_id: `{handoff['handoff_id']}`",
+        f"- source_entry_id: `{entry['id']}`",
+        f"- summary_rel_path: `{relationships.get('summary_rel_path') or payload.get('summary_rel_path') or ''}`",
+        f"- mode: `{payload.get('mode') or 'paper_only'}`",
+        "",
+        "## 主动机会雷达",
+        "",
+        f"- scored_count: `{payload.get('scored_count', 0)}`",
+        f"- candidate_count: `{payload.get('candidate_count', 0)}`",
+        f"- paper_watch_candidate_count: `{payload.get('paper_watch_candidate_count', 0)}`",
+        f"- market_candidate_counts: `{market_counts}`",
+        "",
+        "## 当前优先候选",
+        "",
+    ]
+    if not top_candidates:
+        lines.append("- 当前没有主动机会候选。")
+        lines.append("")
+    else:
+        for item in top_candidates[:8]:
+            metrics = item.get("metrics") or {}
+            lines.extend(
+                [
+                    f"### {item.get('name') or item.get('ts_code')} / {item.get('ts_code')}",
+                    "",
+                    f"- opportunity_score: `{item.get('opportunity_score')}`",
+                    f"- radar_bucket: `{item.get('radar_bucket') or '-'}`",
+                    f"- signal_tags: `{preview_list(item.get('signal_tags'))}`",
+                    f"- latest_pct_chg / volume_ratio_20d: `{metrics.get('latest_pct_chg')}` / `{metrics.get('volume_ratio_20d')}`",
+                ]
+            )
+            for reason in (item.get("why") or [])[:2]:
+                lines.append(f"- 支撑：{reason}")
+            for risk in (item.get("risks") or [])[:2]:
+                lines.append(f"- 风险：{risk}")
+            lines.append("")
+    lines.extend(
+        [
+            "## 建议动作",
+            "",
+            "- 把高分候选分成三类：直接进入纸面观察、先补研究、只保留监控。",
+            "- 不把雷达分数直接解释成买入建议；必须等待策略证据和攻防推演。",
+            "- 对没有事件锚点的候选，优先补公告、研报、电话会和资金流证据。",
+            "",
+        ]
+    )
+    return "\n".join(lines)
+
+
+def render_strategy_evidence_note(handoff, entry):
+    payload = entry.get("payload", {})
+    relationships = entry.get("relationships", {})
+    items = payload.get("items") or []
+    lines = [
+        f"# 研究上下文草稿：{handoff['entity_type']} / {handoff['entity_id']}",
+        "",
+        f"- handoff_id: `{handoff['handoff_id']}`",
+        f"- source_entry_id: `{entry['id']}`",
+        f"- summary_rel_path: `{relationships.get('summary_rel_path') or payload.get('summary_rel_path') or ''}`",
+        f"- source_radar_entry_id: `{payload.get('source_radar_entry_id') or ''}`",
+        "",
+        "## 策略证据",
+        "",
+        f"- candidate_count: `{payload.get('candidate_count', 0)}`",
+        f"- ready_count: `{payload.get('ready_count', 0)}`",
+        "",
+        "## 证据摘要",
+        "",
+    ]
+    if not items:
+        lines.append("- 当前没有可用策略证据。")
+        lines.append("")
+    else:
+        for item in items[:8]:
+            best = item.get("best_evidence") or {}
+            lines.extend(
+                [
+                    f"### {item.get('name') or item.get('ts_code')} / {item.get('ts_code')}",
+                    "",
+                    f"- best_strategy: `{best.get('strategy_id') or '-'}`",
+                    f"- evidence_label: `{best.get('evidence_label') or '-'}`",
+                    f"- trades / win_rate / avg_return: `{best.get('trade_count') or 0}` / `{best.get('win_rate')}` / `{best.get('avg_return')}`",
+                    f"- worst_return / profit_factor: `{best.get('worst_return')}` / `{best.get('profit_factor')}`",
+                    "",
+                ]
+            )
+    lines.extend(
+        [
+            "## 建议动作",
+            "",
+            "- 只把 `ready_for_paper_watch` 当作纸面观察证据，不升级成真实交易。",
+            "- `thin_sample` 和 `negative_evidence` 必须回到研究补证或降级监控。",
+            "- 后续如果引入 vectorbt/Qlib，这层应升级为批量参数扫描和 walk-forward 验证。",
+            "",
+        ]
+    )
+    return "\n".join(lines)
+
+
+def render_attack_defense_note(handoff, entry):
+    payload = entry.get("payload", {})
+    relationships = entry.get("relationships", {})
+    cases = payload.get("cases") or []
+    lines = [
+        f"# 研究上下文草稿：{handoff['entity_type']} / {handoff['entity_id']}",
+        "",
+        f"- handoff_id: `{handoff['handoff_id']}`",
+        f"- source_entry_id: `{entry['id']}`",
+        f"- summary_rel_path: `{relationships.get('summary_rel_path') or payload.get('summary_rel_path') or ''}`",
+        "",
+        "## 攻防概览",
+        "",
+        f"- case_count: `{payload.get('case_count', 0)}`",
+        f"- paper_watch_ready_count: `{payload.get('paper_watch_ready_count', 0)}`",
+        f"- watch_with_evidence_count: `{payload.get('watch_with_evidence_count', 0)}`",
+        f"- research_first_count: `{payload.get('research_first_count', 0)}`",
+        "",
+    ]
+    for item in cases[:8]:
+        lines.extend(
+            [
+                f"### {item.get('name') or item.get('ts_code')} / {item.get('ts_code')}",
+                "",
+                f"- verdict: `{item.get('verdict') or '-'}`",
+                f"- summary: {item.get('verdict_summary') or '-'}",
+            ]
+        )
+        for point in (item.get("defense_points") or [])[:2]:
+            lines.append(f"- Defense: {point}")
+        for point in (item.get("attack_points") or [])[:2]:
+            lines.append(f"- Attack: {point}")
+        for trigger in (item.get("kill_triggers") or [])[:2]:
+            lines.append(f"- Kill: {trigger}")
+        lines.append("")
+    lines.extend(
+        [
+            "## 建议动作",
+            "",
+            "- 只允许 `paper_watch_ready` 或 `watch_with_evidence` 进入纸面观察。",
+            "- 攻击点不能被删掉；若要升级研究结论，必须同时带上失效条件。",
+            "- 这层可以作为后续 IC memo/red-team 段落的原料。",
+            "",
+        ]
+    )
+    return "\n".join(lines)
+
+
+def render_paper_watchlist_note(handoff, entry):
+    payload = entry.get("payload", {})
+    relationships = entry.get("relationships", {})
+    tickets = payload.get("tickets") or []
+    lines = [
+        f"# 研究上下文草稿：{handoff['entity_type']} / {handoff['entity_id']}",
+        "",
+        f"- handoff_id: `{handoff['handoff_id']}`",
+        f"- source_entry_id: `{entry['id']}`",
+        f"- summary_rel_path: `{relationships.get('summary_rel_path') or payload.get('summary_rel_path') or ''}`",
+        f"- mode: `{payload.get('mode') or 'paper_only'}`",
+        f"- live_trading_enabled: `{payload.get('live_trading_enabled')}`",
+        "",
+        "## 纸面观察单",
+        "",
+        f"- ticket_count: `{payload.get('ticket_count', 0)}`",
+        "- boundary: `paper_only; no broker instruction`",
+        "",
+    ]
+    if not tickets:
+        lines.append("- 当前没有纸面观察单。")
+        lines.append("")
+    else:
+        for ticket in tickets[:8]:
+            levels = ticket.get("reference_levels") or {}
+            lines.extend(
+                [
+                    f"### {ticket.get('name') or ticket.get('ts_code')} / {ticket.get('ts_code')}",
+                    "",
+                    f"- verdict: `{ticket.get('verdict') or '-'}`",
+                    f"- opportunity_score: `{ticket.get('opportunity_score')}`",
+                    f"- observe_above / invalidate_below: `{levels.get('observe_above')}` / `{levels.get('invalidate_below')}`",
+                    f"- paper_trigger: {ticket.get('paper_trigger') or '-'}",
+                    f"- paper_invalidation: {ticket.get('paper_invalidation') or '-'}",
+                    "",
+                ]
+            )
+    lines.extend(
+        [
+            "## 建议动作",
+            "",
+            "- 把纸面观察单同步到调度板，作为次日盯盘项。",
+            "- 如果 ticket 后续连续触发失效条件，应转为风险/研究降级记录。",
+            "- 仍然不进入真实交易系统；真实动作必须走现有组合和风控门禁。",
+            "",
+        ]
+    )
     return "\n".join(lines)
 
 
@@ -592,6 +804,14 @@ def render_note(handoff, entry, conn):
     entity_type = handoff["entity_type"]
     if entity_type == "dynamic_pool_snapshot":
         return render_dynamic_pool_note(handoff, entry)
+    if entity_type == "opportunity_radar_snapshot":
+        return render_opportunity_radar_note(handoff, entry)
+    if entity_type == "strategy_evidence_snapshot":
+        return render_strategy_evidence_note(handoff, entry)
+    if entity_type == "thesis_attack_defense_snapshot":
+        return render_attack_defense_note(handoff, entry)
+    if entity_type == "paper_trade_watchlist_snapshot":
+        return render_paper_watchlist_note(handoff, entry)
     if entity_type == "portfolio_action_memo_snapshot":
         return render_portfolio_action_memo_note(handoff, entry, conn)
     if entity_type == "trend_research_batch":
