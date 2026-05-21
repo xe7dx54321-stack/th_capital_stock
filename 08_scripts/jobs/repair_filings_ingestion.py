@@ -18,11 +18,14 @@ from smr_runlog import log_run
 SCRIPT_NAME = "repair_filings_ingestion.py"
 
 PIPELINE = [
-    ("08_scripts/data_harvester/fetch_cninfo_announcements.py", ["--limit", "80"]),
-    ("08_scripts/data_harvester/fetch_hkex_announcements.py", ["--limit", "80"]),
-    ("08_scripts/data_harvester/fetch_sec_official_materials.py", ["--limit", "40"]),
-    ("08_scripts/data_harvester/fetch_ir_primary_materials.py", ["--limit", "40"]),
+    ("08_scripts/wiki/fetch_cninfo_announcements.py", ["--limit", "80"]),
+    ("08_scripts/wiki/fetch_hkex_announcements.py", ["--limit", "80"]),
+    ("08_scripts/wiki/fetch_sec_official_materials.py", ["--limit", "40"]),
+    ("08_scripts/wiki/fetch_ir_primary_materials.py", ["--limit", "40"]),
+    ("08_scripts/wiki/build_source_manifest.py", []),
     ("08_scripts/events/normalize_market_events.py", []),
+    ("08_scripts/jobs/ingest_filings.py", ["--from-manifest", "--export-evidence"]),
+    ("08_scripts/jobs/recompute_filings_health.py", []),
 ]
 
 

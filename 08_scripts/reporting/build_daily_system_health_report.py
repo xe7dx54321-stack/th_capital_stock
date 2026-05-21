@@ -211,6 +211,11 @@ def render_markdown(payload: dict[str, Any]) -> str:
 
 
 def main() -> None:
+    # Kept for compatibility with jobs that treat an empty local runtime as a
+    # valid development state.
+    if "--allow-empty" in sys.argv:
+        sys.argv.remove("--allow-empty")
+
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     batch_date = now[:10]

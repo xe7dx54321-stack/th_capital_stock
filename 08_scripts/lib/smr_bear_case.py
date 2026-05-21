@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
-"""Deterministic Bear Case Agent v1 for buy/add candidates."""
+"""Deterministic Bear Case Agent v2 for promotion-aware candidates."""
 
 from __future__ import annotations
 
 from typing import Any
 
 from smr_claim_graph import _hash_id, ensure_claim_graph_tables, link_claim_evidence, upsert_claim
+
+
+def _risk_level(condition: bool, fallback: str = "medium") -> str:
+    return "high" if condition else fallback
 
 
 def build_bear_case(
@@ -23,39 +27,51 @@ def build_bear_case(
     missing = missing_data or []
     evidence_ids = evidence_ids or []
     action_text = str(summary.get("action_detail") or summary.get("action") or "")
+
+    valuation_blocked = valuation.get("allowed_usage") in {"context_only", "blocked_due_to_stale_price"}
+    missing_count = len(missing)
+    data_quality_risk = _risk_level(missing_count >= 3 or valuation.get("allowed_usage") == "blocked_due_to_stale_price")
+    valuation_risk = _risk_level(valuation_blocked)
+    thesis_risk = "medium"
+    timing_risk = "medium"
+
     bear_claims = []
-    if valuation.get("allowed_usage") == "context_only" or valuation.get("valuation_status") in {"partial", "stale_price", "missing"}:
+    if valuation_blocked or valuation.get("valuation_status") in {"partial", "stale_price", "missing"}:
         bear_claims.append(
             {
-                "claim_text": "估值事实层仍不完整，当前结论不能把估值便宜或赔率充分作为强支撑。",
+                "claim_text": "Valuation evidence is incomplete; cheap/expensive language cannot be used as strong support.",
                 "claim_type": "valuation_risk",
-                "severity": "medium",
-                "what_would_confirm": "补齐 forward EPS、历史分位、同行对比后，估值仍有安全边际。",
+                "severity": valuation_risk,
+                "what_would_confirm": "Forward EPS proxy, historical percentile, and peer comparison still support the thesis.",
             }
         )
     if missing:
         bear_claims.append(
             {
-                "claim_text": "关键数据仍有缺口，预期修正、产业链验证或价格有效性可能不足。",
+                "claim_text": "Key data gaps remain; expectation revision, industry-chain validation, or price validity may be insufficient.",
                 "claim_type": "missing_data_risk",
-                "severity": "medium",
-                "what_would_confirm": "缺失数据补齐后仍支持原核心假设。",
+                "severity": data_quality_risk,
+                "what_would_confirm": "Missing data is repaired and still supports the original thesis.",
             }
         )
     if not bear_claims:
         bear_claims.append(
             {
-                "claim_text": "市场可能已经提前反映主线景气变化，后续需要财报、订单或价格行为继续确认。",
+                "claim_text": "The market may have already priced in the thesis, so price action and new primary evidence must keep confirming it.",
                 "claim_type": "price_in_risk",
                 "severity": "medium",
-                "what_would_confirm": "盈利预测或订单证据继续上修，且价格反应未过度透支。",
+                "what_would_confirm": "Fresh filings/news continue to support the thesis without excessive price exhaustion.",
             }
         )
+
     deal_breakers = summary.get("kill_triggers") or [
-        "主要客户 capex 或订单能见度下修。",
-        "毛利率连续两个季度下滑且无法由产品结构解释。",
-        "核心证据更新后不再支持原投资假设。",
+        "Primary filing/news evidence no longer supports the core thesis.",
+        "Margin or guidance deteriorates for two consecutive updates without a credible offset.",
+        "The stock breaks the planned risk threshold before evidence improves.",
     ]
+    evidence_backed_count = min(len(bear_claims), len(evidence_ids))
+    high_count = sum(1 for claim in bear_claims if claim.get("severity") == "high")
+    bear_case_strength = "high" if high_count else ("medium" if bear_claims else "low")
     inserted_claim_ids = []
     for index, claim in enumerate(bear_claims, start=1):
         claim_id = _hash_id("claim", report_id, recommendation_id, "bear", index, claim["claim_text"])
@@ -65,23 +81,32 @@ def build_bear_case(
                 "claim_id": claim_id,
                 "report_id": report_id,
                 "recommendation_id": recommendation_id,
-                "ticker": None,
+                "ticker": summary.get("ticker"),
                 "theme": summary.get("theme"),
                 "claim_text": claim["claim_text"],
                 "claim_type": "bear_case",
                 "importance": "supporting",
                 "stance": "bear",
                 "confidence": 0.55,
-                "metadata": {**claim, "agent": "bear_case_v1"},
+                "metadata": {**claim, "agent": "bear_case_v2"},
             },
         )
         inserted_claim_ids.append(claim_id)
         for evidence_id in evidence_ids[:2]:
-            link_claim_evidence(conn, claim_id, evidence_id, "contextual", 0.45, "Bear Case v1 使用同一证据包作反方复核锚点。")
-    adjustment = "reduce_position_or_wait" if action_text else "observe"
+            link_claim_evidence(conn, claim_id, evidence_id, "contextual", 0.45, "Bear Case v2 contextual evidence anchor.")
+    adjustment = "reduce_position_or_wait" if action_text and bear_case_strength == "high" else ("observe" if not action_text else "normal_review")
     return {
         "bear_case_claims": bear_claims,
         "deal_breakers": deal_breakers,
         "recommendation_adjustment": adjustment,
         "claim_ids": inserted_claim_ids,
+        "bear_case_strength": bear_case_strength,
+        "deal_breaker_count": len(deal_breakers),
+        "evidence_backed_bear_claim_count": evidence_backed_count,
+        "valuation_risk": valuation_risk,
+        "thesis_risk": thesis_risk,
+        "timing_risk": timing_risk,
+        "data_quality_risk": data_quality_risk,
+        "alternative_explanation": "Observed signal could be price-in, temporary sentiment, or incomplete evidence rather than durable fundamental improvement.",
+        "thesis_response": summary.get("bear_case_response"),
     }

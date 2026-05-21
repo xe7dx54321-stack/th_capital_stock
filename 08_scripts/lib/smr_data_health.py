@@ -432,11 +432,36 @@ def critical_health_specs(rules: dict[str, Any] | None = None) -> list[tuple[str
 
 def refresh_system_data_health(conn: sqlite3.Connection) -> dict[str, Any]:
     rules = load_rules()
-    rows = [
+    for source_key, market, data_type in critical_health_specs(rules):
+        rule = rule_for(data_type, market, rules)
+        stale_after = int(rule.get("stale_after_minutes") or 1440)
+        affected_modules = rule.get("affected_modules") or []
+        if data_type == "news":
+            try:
+                from smr_news_ingestion import update_news_health_rows
+
+                update_news_health_rows(
+                    conn,
+                    stale_after_minutes=stale_after,
+                    affected_modules=affected_modules,
+                )
+                continue
+            except Exception:
+                pass
+        if data_type == "filings":
+            try:
+                from smr_filings_ingestion import update_filings_health_rows
+
+                update_filings_health_rows(
+                    conn,
+                    stale_after_minutes=stale_after,
+                    affected_modules=affected_modules,
+                )
+                continue
+            except Exception:
+                pass
         update_data_source_health(conn, source_key=source_key, market=market, data_type=data_type, rules=rules)
-        for source_key, market, data_type in critical_health_specs(rules)
-    ]
-    return build_health_snapshot(rows)
+    return build_health_snapshot(health_rows(conn))
 
 
 def health_rows(conn: sqlite3.Connection) -> list[dict[str, Any]]:

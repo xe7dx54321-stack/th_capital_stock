@@ -67,6 +67,13 @@ class LintIssue:
     message: str
     location: str | None = None
     suggested_fix: str | None = None
+    blocks_publication: bool = False
+    blocks_promotion: bool = False
+    blocks_trade_action: bool = False
+    auto_fixable: bool = False
+    required_fix: str | None = None
+    related_claim_id: str | None = None
+    related_evidence_id: str | None = None
 
 
 @dataclass
@@ -180,6 +187,7 @@ def check_report_evidence(
     summary = dashboard_summary or {}
     evidence_summary = evidence_summary_from_pack(evidence_pack_text)
     action = report_has_action(text, summary)
+    valuation_snapshot = summary.get("valuation_snapshot") or summary.get("valuation") or {}
     counter = has_bear_case(text)
     primary_count = evidence_summary.get("primary_anchor_count") or 0
     source_count = evidence_summary.get("source_path_count") or 0
@@ -227,8 +235,35 @@ def check_report_evidence(
     )
 
 
-def issue(severity: str, code: str, message: str, location: str | None = None, suggested_fix: str | None = None) -> LintIssue:
-    return LintIssue(severity=severity, code=code, message=message, location=location, suggested_fix=suggested_fix)
+def issue(
+    severity: str,
+    code: str,
+    message: str,
+    location: str | None = None,
+    suggested_fix: str | None = None,
+    blocks_publication: bool | None = None,
+    blocks_promotion: bool | None = None,
+    blocks_trade_action: bool | None = None,
+    auto_fixable: bool = False,
+    required_fix: str | None = None,
+    related_claim_id: str | None = None,
+    related_evidence_id: str | None = None,
+) -> LintIssue:
+    hard_block = severity in {"error", "blocker"}
+    return LintIssue(
+        severity=severity,
+        code=code,
+        message=message,
+        location=location,
+        suggested_fix=suggested_fix,
+        blocks_publication=hard_block if blocks_publication is None else blocks_publication,
+        blocks_promotion=hard_block if blocks_promotion is None else blocks_promotion,
+        blocks_trade_action=hard_block if blocks_trade_action is None else blocks_trade_action,
+        auto_fixable=auto_fixable,
+        required_fix=required_fix or suggested_fix,
+        related_claim_id=related_claim_id,
+        related_evidence_id=related_evidence_id,
+    )
 
 
 def max_severity(issues: list[LintIssue]) -> str:
@@ -252,6 +287,7 @@ def lint_report(
     src_snapshot = source_snapshot or source_registry_snapshot()
     issues: list[LintIssue] = []
     action = report_has_action(text, summary)
+    valuation_snapshot = summary.get("valuation_snapshot") or summary.get("valuation") or {}
 
     for token in PLACEHOLDER_PATTERNS:
         if token in text:
@@ -260,6 +296,18 @@ def lint_report(
         issues.append(issue("blocker", "action_with_stale_data", "数据新鲜度门禁未通过，不能输出买入/卖出/加仓/减仓候选。", suggested_fix="改为 observation_only 或先修复数据。"))
     elif action and gate.get("status") == "degrade":
         issues.append(issue("warn", "action_with_degraded_data", "数据新鲜度为 degraded，交易动作只能作为候选观察或人审前材料，不能直接升级为正式结论。", suggested_fix="补齐降级数据或明确 proxy/缺口。"))
+    if action and valuation_snapshot.get("allowed_usage") == "context_only":
+        issues.append(
+            issue(
+                "warn",
+                "VALUATION_CONTEXT_ONLY",
+                "valuation snapshot is context_only and cannot support buy/add promotion",
+                suggested_fix="provide forward EPS proxy, historical percentile, or peer comparison",
+                blocks_promotion=True,
+                blocks_trade_action=True,
+                required_fix="provide forward EPS proxy, historical percentile, or peer comparison",
+            )
+        )
     if CONSENSUS_CLAIM_PATTERN.search(text):
         disabled_consensus = any(
             item.get("source_key") == "consensus_revision" or item.get("data_type") == "expectation"

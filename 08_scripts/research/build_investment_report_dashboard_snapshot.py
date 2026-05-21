@@ -20,6 +20,8 @@ from smr_data_health import check_freshness_gate, gate_to_dict
 from smr_decision import determine_recommendation_status, parse_primary_ticker, record_agent_run, upsert_decision_ledger
 from smr_investment_reports import load_text_rel_path, parse_report_dashboard_payload
 from smr_registry import register_snapshot
+from smr_recommendation_candidate import build_recommendation_candidate
+from smr_recommendation_promotion import evaluate_promotion, promotion_to_dict
 from smr_research_quality import check_report_evidence, lint_report, quality_to_dict
 from smr_runlog import log_run
 from smr_source_registry import source_registry_snapshot
@@ -148,6 +150,7 @@ def parse_entry(conn: sqlite3.Connection, entry: dict[str, Any], dry_run: bool =
     claim_summary = claim_graph_summary(conn, entry["entity_id"])
     dashboard_summary = {
         **dashboard_summary,
+        "valuation_snapshot": valuation_snapshot,
         "bear_case_summary": "; ".join(item.get("claim_text", "") for item in (bear_case_result.get("bear_case_claims") or [])[:2]),
         "bear_case_result": bear_case_result,
     }
@@ -177,6 +180,48 @@ def parse_entry(conn: sqlite3.Connection, entry: dict[str, Any], dry_run: bool =
         evidence_check_dict,
         lint_result,
     )
+    promotion_result = evaluate_promotion(
+        conn,
+        report_id=entry["entity_id"],
+        recommendation_id=entry["id"],
+        from_status=recommendation_status,
+        dashboard_summary={
+            **dashboard_summary,
+            "ticker": ticker,
+            "suggested_position_pct": dashboard_summary.get("suggested_position_pct"),
+            "max_position_pct": dashboard_summary.get("max_position_pct"),
+        },
+        data_health_snapshot=freshness_gate.data_health_snapshot,
+        evidence_check_snapshot=evidence_check_dict,
+        claim_graph_snapshot=claim_summary,
+        valuation_snapshot=valuation_snapshot,
+        consensus_proxy=consensus_proxy,
+        bear_case=bear_case_result,
+        risk_snapshot={},
+        lint_result=quality_to_dict(lint_result),
+        write_ledger=False,
+    )
+    candidate_result = build_recommendation_candidate(
+        conn,
+        recommendation_id=entry["id"],
+        ticker=ticker,
+        report=dashboard_summary,
+        claim_graph=claim_summary,
+        evidence_check=evidence_check_dict,
+        valuation_snapshot=valuation_snapshot,
+        consensus_proxy=consensus_proxy,
+        bear_case=bear_case_result,
+        risk_snapshot={},
+        market_signal={},
+        promotion_result=promotion_result,
+        write_ledger=False,
+    )
+    if promotion_result.allowed:
+        recommendation_status = candidate_result.get("status") or "pending_human_review"
+        status_reasons = candidate_result.get("reasons") or promotion_result.reasons
+    else:
+        recommendation_status = promotion_result.to_status
+        status_reasons = promotion_result.reasons + [f"missing: {item}" for item in promotion_result.missing_requirements]
     enhanced_payload = {
         **payload,
         **parsed,
@@ -196,6 +241,8 @@ def parse_entry(conn: sqlite3.Connection, entry: dict[str, Any], dry_run: bool =
         "bear_case_result": bear_case_result,
         "evidence_check_result": evidence_check_dict,
         "lint_result": quality_to_dict(lint_result),
+        "promotion_result": promotion_to_dict(promotion_result),
+        "recommendation_candidate": candidate_result,
         "recommendation_status": recommendation_status,
         "recommendation_state_reasons": status_reasons,
     }
@@ -230,7 +277,13 @@ def parse_entry(conn: sqlite3.Connection, entry: dict[str, Any], dry_run: bool =
         conn,
         recommendation_id=entry["id"],
         status=recommendation_status,
-        dashboard_summary=dashboard_summary,
+        dashboard_summary={
+            **dashboard_summary,
+            "action": candidate_result.get("action") or dashboard_summary.get("action"),
+            "suggested_position_pct": candidate_result.get("suggested_position_pct"),
+            "max_position_pct": candidate_result.get("max_position_pct"),
+            "kill_triggers": candidate_result.get("kill_conditions") or dashboard_summary.get("kill_triggers") or [],
+        },
         data_health_snapshot=freshness_gate.data_health_snapshot,
         evidence_check_snapshot=evidence_check_dict,
         lint_snapshot=quality_to_dict(lint_result),
@@ -248,6 +301,8 @@ def parse_entry(conn: sqlite3.Connection, entry: dict[str, Any], dry_run: bool =
             "valuation_snapshot": valuation_snapshot,
             "consensus_revision_proxy": consensus_proxy,
             "bear_case_result": bear_case_result,
+            "promotion_result": promotion_to_dict(promotion_result),
+            "recommendation_candidate": candidate_result,
         },
     )
     record_agent_run(
