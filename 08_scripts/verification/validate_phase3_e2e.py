@@ -54,6 +54,7 @@ CASES = [
         "proxy_method": "guidance_change",
         "proxy_evidence_limit": 2,
         "valuation_allowed_usage": "promotion_eligible",
+        "fundamentals_status": "fresh",
         "expected_status": "pending_human_review",
     },
     {
@@ -70,6 +71,7 @@ CASES = [
         "proxy_method": "news_language_proxy",
         "proxy_evidence_limit": 0,
         "valuation_allowed_usage": "context_only",
+        "fundamentals_status": "fresh",
         "expected_status": "observation_only",
     },
     {
@@ -86,6 +88,7 @@ CASES = [
         "proxy_method": "broker_report_extraction",
         "proxy_evidence_limit": 1,
         "valuation_allowed_usage": "supporting_evidence",
+        "fundamentals_status": "fresh",
         "expected_status": "candidate_shadow",
     },
 ]
@@ -238,6 +241,7 @@ def evaluate_case(conn: sqlite3.Connection, case: dict[str, Any]) -> dict[str, A
         evidence_check_snapshot=evidence_check,
         claim_graph_snapshot=claim_graph,
         valuation_snapshot=valuation,
+        fundamentals_snapshot={"ticker": ticker, "freshness_status": case.get("fundamentals_status") or "fresh", "missing_fields": []},
         consensus_proxy=proxy,
         bear_case=bear_case,
         risk_snapshot={"status": "pass"},

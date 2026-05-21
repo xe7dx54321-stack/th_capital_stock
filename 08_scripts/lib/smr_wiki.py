@@ -3,6 +3,7 @@
 
 import json
 import re
+import uuid
 from datetime import datetime
 
 from smr_paths import normalize_project_path, project_path, relative_to_project
@@ -395,7 +396,7 @@ def active_knowledge_entry(conn, knowledge_id):
 
 
 def generate_execution_id(prefix):
-    return f"{prefix}_{datetime.now().strftime('%Y%m%d%H%M%S%f')}"
+    return f"{prefix}_{datetime.now().strftime('%Y%m%d%H%M%S%f')}_{uuid.uuid4().hex[:8]}"
 
 
 def validate_review_reason_code(reason_code):

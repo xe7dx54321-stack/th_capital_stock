@@ -18,6 +18,7 @@ from smr_claim_graph import build_claim_evidence_graph, claim_evidence_map, clai
 from smr_consensus_proxy import build_consensus_revision_proxy
 from smr_data_health import check_freshness_gate, gate_to_dict
 from smr_decision import determine_recommendation_status, parse_primary_ticker, record_agent_run, upsert_decision_ledger
+from smr_fundamentals import latest_fundamentals_snapshot
 from smr_investment_reports import load_text_rel_path, parse_report_dashboard_payload
 from smr_registry import register_snapshot
 from smr_recommendation_candidate import build_recommendation_candidate
@@ -132,6 +133,7 @@ def parse_entry(conn: sqlite3.Connection, entry: dict[str, Any], dry_run: bool =
     if not ticker or ("." in str(entity_ticker or "") and "." not in str(ticker or "")):
         ticker, _market = entity_ticker, entity_market
     valuation_snapshot = build_valuation_snapshot(conn, ticker, freshness_gate.data_health_snapshot) if ticker else {}
+    fundamentals_snapshot = latest_fundamentals_snapshot(conn, ticker) if ticker else {}
     consensus_proxy = build_consensus_revision_proxy(
         conn,
         f"{dashboard_summary.get('confidence_rationale') or ''}\n{report_text or ''}",
@@ -195,6 +197,7 @@ def parse_entry(conn: sqlite3.Connection, entry: dict[str, Any], dry_run: bool =
         evidence_check_snapshot=evidence_check_dict,
         claim_graph_snapshot=claim_summary,
         valuation_snapshot=valuation_snapshot,
+        fundamentals_snapshot=fundamentals_snapshot,
         consensus_proxy=consensus_proxy,
         bear_case=bear_case_result,
         risk_snapshot={},
@@ -238,6 +241,7 @@ def parse_entry(conn: sqlite3.Connection, entry: dict[str, Any], dry_run: bool =
         "claim_evidence_map": claim_map,
         "consensus_revision_proxy": consensus_proxy,
         "valuation_snapshot": valuation_snapshot,
+        "fundamentals_snapshot": fundamentals_snapshot,
         "bear_case_result": bear_case_result,
         "evidence_check_result": evidence_check_dict,
         "lint_result": quality_to_dict(lint_result),
@@ -299,6 +303,7 @@ def parse_entry(conn: sqlite3.Connection, entry: dict[str, Any], dry_run: bool =
             "market": _market,
             "claim_evidence_summary": claim_summary,
             "valuation_snapshot": valuation_snapshot,
+            "fundamentals_snapshot": fundamentals_snapshot,
             "consensus_revision_proxy": consensus_proxy,
             "bear_case_result": bear_case_result,
             "promotion_result": promotion_to_dict(promotion_result),

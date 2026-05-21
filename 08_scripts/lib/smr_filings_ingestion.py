@@ -260,6 +260,25 @@ def upsert_filing_document(conn: sqlite3.Connection, item: dict[str, Any]) -> di
     return normalized
 
 
+def count_live_filings_for_ticker(conn: sqlite3.Connection, ticker: str, since_date: str | None = None) -> int:
+    ensure_filings_tables(conn)
+    params: list[Any] = [ticker]
+    where = "ticker=?"
+    if since_date:
+        where += " AND substr(COALESCE(published_at, ingested_at), 1, 10) >= ?"
+        params.append(since_date)
+    row = conn.execute(
+        f"""
+        SELECT COUNT(*)
+        FROM filing_documents
+        WHERE {where}
+          AND metadata_json LIKE '%"live"%'
+        """,
+        tuple(params),
+    ).fetchone()
+    return int(row[0] or 0)
+
+
 def split_chunks(text: str, max_chars: int = 900, limit: int = 20) -> list[str]:
     clean = normalize_text(text)
     if not clean:
@@ -309,6 +328,11 @@ def manifest_row_to_filing(row: sqlite3.Row | tuple[Any, ...], columns: list[str
     data = dict(row) if isinstance(row, sqlite3.Row) else {columns[index]: row[index] for index in range(len(row))}
     metadata = loads_json(data.get("metadata_json"), {})
     source_kind = metadata.get("source_kind") or data.get("source_type")
+    provider = str(metadata.get("provider") or "").lower()
+    if source_kind == "announcement" and provider == "cninfo":
+        source_kind = "cninfo_announcement"
+    elif source_kind == "announcement" and provider == "hkexnews":
+        source_kind = "hkex_announcement"
     if source_kind not in FILING_SOURCE_KINDS and "announcement" not in str(source_kind) and "filing" not in str(source_kind):
         return None
     source_path = normalize_project_path(data.get("source_path")) if data.get("source_path") else None
@@ -330,6 +354,7 @@ def manifest_row_to_filing(row: sqlite3.Row | tuple[Any, ...], columns: list[str
         "body": body,
         "metadata": {
             **metadata,
+            "live": bool(metadata.get("live", True)),
             "source_id": data.get("source_id"),
             "source_rel_path": relative_to_project(source_path) if source_path else data.get("source_rel_path"),
         },
@@ -656,7 +681,8 @@ def export_filings_to_evidence(conn: sqlite3.Connection, limit: int = 80) -> dic
             f.ingested_at,
             f.source_url,
             f.filing_type,
-            f.title
+            f.title,
+            f.metadata_json
         FROM document_chunks c
         JOIN filing_documents f ON f.filing_id=c.document_id
         ORDER BY datetime(COALESCE(f.published_at, f.ingested_at)) DESC, c.chunk_index
@@ -681,6 +707,7 @@ def export_filings_to_evidence(conn: sqlite3.Connection, limit: int = 80) -> dic
                 "text_excerpt": row[5],
                 "url_or_doc_id": row[9] or row[1],
                 "metadata": {
+                    **loads_json(row[12], {}),
                     "chunk_id": row[0],
                     "filing_id": row[1],
                     "ticker": row[3],

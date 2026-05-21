@@ -74,6 +74,7 @@ class RecommendationPromotionTests(unittest.TestCase):
             evidence_check_snapshot={"severity": "pass", "evidence_summary": {"source_path_count": 2, "primary_anchor_count": 1}},
             claim_graph_snapshot={"unsupported_core_claims": [], "counter_evidence_count": 1},
             valuation_snapshot={"allowed_usage": "supporting_evidence"},
+            fundamentals_snapshot={"freshness_status": "fresh", "missing_fields": []},
             consensus_proxy={"proxy_quality": "strong", "usable_for_promotion": True, "is_official_consensus": False},
             bear_case={"bear_case_claims": [{"claim_text": "risk"}], "deal_breakers": ["break"]},
             risk_snapshot={"status": "pass"},

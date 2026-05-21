@@ -109,6 +109,10 @@ def evidence_requirements(
     if unsupported:
         missing.append("all_core_claims_supported")
         fixes.append("link every core claim to evidence_id before promotion")
+    low_quality = claim_graph.get("low_quality_core_claims") or evidence_check.get("low_quality_core_claims") or []
+    if low_quality:
+        missing.append("core_claim_evidence_quality")
+        fixes.append("replace stale/low-quality evidence with primary or high-quality live evidence")
     summary = evidence_check.get("evidence_summary") or {}
     independent_count = (
         evidence_check.get("independent_source_count")
@@ -152,6 +156,31 @@ def valuation_requirements(valuation: dict[str, Any], action: str) -> tuple[list
         missing.append("valuation_not_context_only_for_buy_add")
         fixes.append("provide forward EPS proxy, historical percentile, or peer comparison")
     return [], missing, fixes
+
+
+def fundamentals_requirements(fundamentals: dict[str, Any], action: str) -> tuple[list[str], list[str], list[str]]:
+    if not is_buy_or_add(action):
+        return [], [], []
+    if not fundamentals:
+        return (
+            [],
+            ["fundamentals_snapshot"],
+            ["build ticker-level fundamentals_snapshot or mark strategy as event/technical-only"],
+        )
+    status = fundamentals.get("freshness_status")
+    if status not in {"fresh", "degraded", "explainable_missing"}:
+        return (
+            [],
+            ["fundamentals_snapshot_fresh_or_explainable"],
+            ["refresh fundamentals_snapshot and expose missing_fields"],
+        )
+    if status == "degraded" and not fundamentals.get("missing_fields"):
+        return (
+            [],
+            ["fundamentals_missing_fields_visible"],
+            ["include fundamentals missing_fields before promotion"],
+        )
+    return [], [], []
 
 
 def consensus_requirements(consensus_proxy: dict[str, Any], action: str) -> tuple[list[str], list[str], list[str]]:
@@ -233,6 +262,7 @@ def evaluate_promotion(
     claim_graph_snapshot: dict[str, Any] | None = None,
     valuation_snapshot: dict[str, Any] | None = None,
     consensus_proxy: dict[str, Any] | None = None,
+    fundamentals_snapshot: dict[str, Any] | None = None,
     bear_case: dict[str, Any] | None = None,
     risk_snapshot: dict[str, Any] | None = None,
     lint_result: dict[str, Any] | None = None,
@@ -254,6 +284,7 @@ def evaluate_promotion(
         "claim_graph_snapshot": claim_graph_snapshot or {},
         "valuation_snapshot": valuation_snapshot or {},
         "consensus_proxy": consensus_proxy or {},
+        "fundamentals_snapshot": fundamentals_snapshot or ((valuation_snapshot or {}).get("fundamentals_snapshot") or {}),
         "bear_case": bear_case or {},
         "risk_snapshot": risk_snapshot or {},
         "lint_result": lint_result or {},
@@ -262,6 +293,10 @@ def evaluate_promotion(
         data_health_requirements(data_health_snapshot or {}, ticker, action),
         evidence_requirements(evidence_check_snapshot or {}, claim_graph_snapshot or {}, action),
         valuation_requirements(valuation_snapshot or {}, action),
+        fundamentals_requirements(
+            fundamentals_snapshot or ((valuation_snapshot or {}).get("fundamentals_snapshot") or {}),
+            action,
+        ),
         consensus_requirements(consensus_proxy or {}, action),
         bear_case_requirements(bear_case or {}, action),
         risk_requirements(risk_snapshot or {}, summary, action),

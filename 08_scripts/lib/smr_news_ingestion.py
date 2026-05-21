@@ -7,7 +7,11 @@ import hashlib
 import json
 import re
 import sqlite3
+import urllib.parse
+import urllib.request
+import xml.etree.ElementTree as ET
 from datetime import datetime
+from email.utils import parsedate_to_datetime
 from typing import Any
 
 from smr_claim_graph import ensure_claim_graph_tables, upsert_evidence
@@ -17,9 +21,11 @@ from smr_wiki import generate_execution_id, loads_json, now_ts, read_markdown
 NEWS_SOURCE_KEYS = {
     "eastmoney_news_article",
     "eastmoney_news_search",
+    "manual_news",
     "news_article",
     "news_search",
     "public_analyst_signal_marketscreener",
+    "yahoo_finance_rss",
 }
 
 
@@ -149,6 +155,85 @@ def infer_tickers(*values: Any) -> list[str]:
     return result
 
 
+def yahoo_symbol_for_ticker(ticker: str) -> str:
+    text = str(ticker or "").strip().upper()
+    if re.match(r"^[0-9]{5}\.HK$", text):
+        return f"{int(text.split('.')[0])}.HK"
+    return text
+
+
+def fetch_yahoo_finance_news(ticker: str, limit: int = 20, timeout: int = 30) -> list[dict[str, Any]]:
+    symbol = yahoo_symbol_for_ticker(ticker)
+    params = urllib.parse.urlencode({"s": symbol, "region": "US", "lang": "en-US"})
+    url = f"https://feeds.finance.yahoo.com/rss/2.0/headline?{params}"
+    request = urllib.request.Request(
+        url,
+        headers={
+            "User-Agent": "Mozilla/5.0",
+            "Accept": "application/rss+xml, application/xml, text/xml, */*",
+        },
+    )
+    with urllib.request.urlopen(request, timeout=timeout) as response:
+        payload = response.read().decode("utf-8", errors="replace")
+    root = ET.fromstring(payload)
+    items = []
+    for item in root.findall(".//item")[:limit]:
+        title = normalize_text(item.findtext("title"), limit=500)
+        link = normalize_text(item.findtext("link"), limit=1200)
+        description = normalize_text(item.findtext("description"), limit=12000)
+        pub_date = item.findtext("pubDate")
+        published_at = None
+        if pub_date:
+            try:
+                published_at = parsedate_to_datetime(pub_date).strftime("%Y-%m-%d %H:%M:%S")
+            except (TypeError, ValueError, AttributeError):
+                published_at = None
+        if not title:
+            continue
+        items.append(
+            {
+                "news_id": "yahoo_news_" + stable_hash("yahoo_finance_rss", ticker, title, published_at or link)[:20],
+                "source_key": "yahoo_finance_rss",
+                "source_name": "Yahoo Finance RSS",
+                "title": title,
+                "body": description,
+                "url": link,
+                "published_at": published_at,
+                "tickers": [ticker],
+                "market": infer_market([ticker]),
+                "credibility": "medium",
+                "metadata": {
+                    "live": True,
+                    "provider": "yahoo_finance",
+                    "rss_symbol": symbol,
+                    "source_url": url,
+                },
+            }
+        )
+    return items
+
+
+def ingest_yahoo_finance_news(conn: sqlite3.Connection, tickers: list[str], limit: int = 20, timeout: int = 30) -> dict[str, Any]:
+    inserted = 0
+    deduped = 0
+    errors: list[dict[str, str]] = []
+    scanned = 0
+    for ticker in tickers:
+        try:
+            items = fetch_yahoo_finance_news(ticker, limit=limit, timeout=timeout)
+        except Exception as exc:
+            errors.append({"ticker": ticker, "error": str(exc)})
+            continue
+        for item in items:
+            scanned += 1
+            result = upsert_news_item(conn, item)
+            if result.get("deduped"):
+                deduped += 1
+            else:
+                inserted += 1
+    return {"inserted": inserted, "deduped": deduped, "scanned": scanned, "errors": errors, "source_key": "yahoo_finance_rss"}
+
+
 def normalize_news_item(raw: dict[str, Any]) -> dict[str, Any]:
     title = normalize_text(raw.get("title") or raw.get("headline"), limit=500)
     if not title:
@@ -258,6 +343,25 @@ def upsert_news_item(conn: sqlite3.Connection, item: dict[str, Any]) -> dict[str
     return normalized
 
 
+def count_live_news_for_ticker(conn: sqlite3.Connection, ticker: str, since_date: str | None = None) -> int:
+    ensure_news_tables(conn)
+    params: list[Any] = [f"%{ticker}%", f"%{ticker}%"]
+    where = "(tickers_json LIKE ? OR metadata_json LIKE ?)"
+    if since_date:
+        where += " AND substr(COALESCE(published_at, ingested_at), 1, 10) >= ?"
+        params.append(since_date)
+    row = conn.execute(
+        f"""
+        SELECT COUNT(*)
+        FROM news_items
+        WHERE {where}
+          AND metadata_json LIKE '%"live"%'
+        """,
+        tuple(params),
+    ).fetchone()
+    return int(row[0] or 0)
+
+
 def manifest_row_to_news(row: sqlite3.Row | tuple[Any, ...], columns: list[str]) -> dict[str, Any] | None:
     data = dict(row) if isinstance(row, sqlite3.Row) else {columns[index]: row[index] for index in range(len(row))}
     metadata = loads_json(data.get("metadata_json"), {})
@@ -279,6 +383,7 @@ def manifest_row_to_news(row: sqlite3.Row | tuple[Any, ...], columns: list[str])
         "market": metadata.get("market"),
         "metadata": {
             **metadata,
+            "live": bool(metadata.get("live", True)),
             "source_id": data.get("source_id"),
             "source_rel_path": relative_to_project(source_path) if source_path else data.get("source_rel_path"),
         },
@@ -311,8 +416,13 @@ def ingest_news_from_manifest(conn: sqlite3.Connection, limit: int | None = None
         SELECT {', '.join(columns)}
         FROM source_manifest
         WHERE source_type='external_source_snapshot'
-           OR metadata_json LIKE '%news%'
-           OR source_id LIKE '%news%'
+           OR metadata_json LIKE '%eastmoney_news%'
+           OR metadata_json LIKE '%news_article%'
+           OR metadata_json LIKE '%news_search%'
+           OR metadata_json LIKE '%public_analyst_signal_marketscreener%'
+           OR source_id LIKE '%eastmoney_news%'
+           OR source_id LIKE '%news_article%'
+           OR source_id LIKE '%news_search%'
         ORDER BY datetime(COALESCE(updated_at, created_at)) DESC, source_id DESC
         LIMIT ?
         """,
@@ -338,10 +448,12 @@ def ingest_news_from_manifest(conn: sqlite3.Connection, limit: int | None = None
     return {"inserted": inserted, "deduped": deduped, "skipped": skipped, "scanned": len(rows)}
 
 
-def latest_news_by_source(conn: sqlite3.Connection) -> list[dict[str, Any]]:
+def latest_news_by_source(conn: sqlite3.Connection, source_keys: set[str] | None = None) -> list[dict[str, Any]]:
     ensure_news_tables(conn)
+    allowed_sources = source_keys or NEWS_SOURCE_KEYS
+    placeholders = ",".join("?" for _ in allowed_sources)
     rows = conn.execute(
-        """
+        f"""
         SELECT
             source_key,
             COALESCE(market, 'global') AS market,
@@ -350,9 +462,11 @@ def latest_news_by_source(conn: sqlite3.Connection) -> list[dict[str, Any]]:
             COUNT(*) AS item_count,
             COUNT(DISTINCT dedupe_hash) AS unique_count
         FROM news_items
+        WHERE source_key IN ({placeholders})
         GROUP BY source_key, COALESCE(market, 'global')
         ORDER BY source_key, market
-        """
+        """,
+        tuple(sorted(allowed_sources)),
     ).fetchall()
     return [
         {
@@ -371,9 +485,10 @@ def build_news_health_snapshot(
     conn: sqlite3.Connection,
     stale_after_minutes: int = 360,
     now: datetime | None = None,
+    source_keys: set[str] | None = None,
 ) -> dict[str, Any]:
     now = now or datetime.now()
-    rows = latest_news_by_source(conn)
+    rows = latest_news_by_source(conn, source_keys=source_keys)
     source_rows = []
     status_counts: dict[str, int] = {}
     for row in rows:
@@ -408,13 +523,14 @@ def update_news_health_rows(
     conn: sqlite3.Connection,
     stale_after_minutes: int = 360,
     affected_modules: list[str] | None = None,
+    source_keys: set[str] | None = None,
 ) -> dict[str, Any]:
     from smr_data_health import ensure_data_health_tables
 
     ensure_news_tables(conn)
     ensure_data_health_tables(conn)
     affected_modules = affected_modules or ["deep_market_scan", "opportunity_radar", "report_generation"]
-    snapshot = build_news_health_snapshot(conn, stale_after_minutes=stale_after_minutes)
+    snapshot = build_news_health_snapshot(conn, stale_after_minutes=stale_after_minutes, source_keys=source_keys)
     rows = snapshot["source_rows"] or [
         {
             "source_key": "news",
@@ -480,20 +596,25 @@ def export_news_to_evidence(
     conn: sqlite3.Connection,
     limit: int = 50,
     min_credibility: set[str] | None = None,
+    source_keys: set[str] | None = None,
 ) -> dict[str, Any]:
     ensure_news_tables(conn)
     ensure_claim_graph_tables(conn)
     min_credibility = min_credibility or {"medium", "high"}
+    allowed_sources = source_keys or NEWS_SOURCE_KEYS
     placeholders = ",".join("?" for _ in min_credibility)
+    source_placeholders = ",".join("?" for _ in allowed_sources)
     rows = conn.execute(
         f"""
-        SELECT news_id, source_key, title, body, url, published_at, ingested_at, credibility, metadata_json
+        SELECT news_id, source_key, title, body, url, published_at, ingested_at,
+               credibility, metadata_json, tickers_json, market
         FROM news_items
         WHERE credibility IN ({placeholders})
+          AND source_key IN ({source_placeholders})
         ORDER BY datetime(COALESCE(published_at, ingested_at)) DESC, news_id DESC
         LIMIT ?
         """,
-        (*sorted(min_credibility), limit),
+        (*sorted(min_credibility), *sorted(allowed_sources), limit),
     ).fetchall()
     exported = 0
     for row in rows:
@@ -518,6 +639,8 @@ def export_news_to_evidence(
                     **loads_json(row[8], {}),
                     "news_id": row[0],
                     "credibility": row[7],
+                    "tickers": loads_json(row[9], []),
+                    "market": row[10],
                     "exporter": "smr_news_ingestion",
                 },
             },

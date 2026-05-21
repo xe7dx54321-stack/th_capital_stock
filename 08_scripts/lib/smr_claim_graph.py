@@ -354,6 +354,11 @@ def build_claim_evidence_graph(
 
 def claim_graph_summary(conn: sqlite3.Connection, report_id: str) -> dict[str, Any]:
     ensure_claim_graph_tables(conn)
+    evidence_columns = {
+        row[1]
+        for row in conn.execute("PRAGMA table_info(evidence_items)").fetchall()
+    }
+    has_quality_columns = {"quality_score", "usable_for_core_claim"}.issubset(evidence_columns)
     rows = conn.execute(
         """
         SELECT claim_id, claim_text, claim_type, importance, stance
@@ -366,18 +371,45 @@ def claim_graph_summary(conn: sqlite3.Connection, report_id: str) -> dict[str, A
     supported_core = 0
     unsupported = []
     counter_count = 0
+    low_quality_core_claims = []
     for row in rows:
         claim_id, claim_text, claim_type, importance, stance = row
-        link_rows = conn.execute(
-            """
-            SELECT l.relation_type, e.source_status
-            FROM claim_evidence_links l
-            JOIN evidence_items e ON e.evidence_id=l.evidence_id
-            WHERE l.claim_id=?
-            """,
-            (claim_id,),
-        ).fetchall()
-        support_links = [item for item in link_rows if item[0] == "supports" and item[1] not in UNUSABLE_STATUSES]
+        if has_quality_columns:
+            link_rows = conn.execute(
+                """
+                SELECT l.relation_type, e.source_status, e.quality_score, e.usable_for_core_claim
+                FROM claim_evidence_links l
+                JOIN evidence_items e ON e.evidence_id=l.evidence_id
+                WHERE l.claim_id=?
+                """,
+                (claim_id,),
+            ).fetchall()
+        else:
+            link_rows = conn.execute(
+                """
+                SELECT l.relation_type, e.source_status, NULL AS quality_score, NULL AS usable_for_core_claim
+                FROM claim_evidence_links l
+                JOIN evidence_items e ON e.evidence_id=l.evidence_id
+                WHERE l.claim_id=?
+                """,
+                (claim_id,),
+            ).fetchall()
+        support_links = [
+            item
+            for item in link_rows
+            if item[0] == "supports"
+            and item[1] not in UNUSABLE_STATUSES
+            and (item[3] is None or bool(item[3]) or (item[2] is not None and float(item[2]) >= 0.62))
+        ]
+        weak_support_links = [
+            item
+            for item in link_rows
+            if item[0] == "supports"
+            and item[1] not in UNUSABLE_STATUSES
+            and item[2] is not None
+            and not bool(item[3])
+            and float(item[2]) < 0.62
+        ]
         counter_links = [item for item in link_rows if item[0] in {"contradicts", "contextual"}]
         if stance == "bear" or claim_type in {"risk", "bear_case"}:
             counter_count += max(1, len(counter_links))
@@ -387,10 +419,20 @@ def claim_graph_summary(conn: sqlite3.Connection, report_id: str) -> dict[str, A
                 supported_core += 1
             else:
                 unsupported.append({"claim_id": claim_id, "claim_text": claim_text, "support_count": len(support_links)})
+            if weak_support_links:
+                low_quality_core_claims.append(
+                    {
+                        "claim_id": claim_id,
+                        "claim_text": claim_text,
+                        "low_quality_support_count": len(weak_support_links),
+                        "min_quality_score": min(float(item[2]) for item in weak_support_links if item[2] is not None),
+                    }
+                )
     return {
         "total_core_claims": total_core,
         "supported_core_claims": supported_core,
         "unsupported_core_claims": unsupported,
+        "low_quality_core_claims": low_quality_core_claims,
         "counter_evidence_count": counter_count,
         "recommendation_allowed": not unsupported and counter_count >= 1,
     }

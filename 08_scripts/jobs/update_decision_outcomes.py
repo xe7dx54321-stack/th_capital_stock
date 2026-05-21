@@ -16,6 +16,7 @@ if str(LIB_DIR) not in sys.path:
 from smr_agents import DB_PATH
 from smr_data_health import check_freshness_gate
 from smr_decision import ensure_decision_tables
+from smr_paper_portfolio import mark_open_positions_to_market
 from smr_runlog import log_run
 
 SCRIPT_NAME = "update_decision_outcomes.py"
@@ -51,7 +52,7 @@ def update_outcomes(conn: sqlite3.Connection, limit: int = 200) -> dict[str, int
             """,
             ("daily_bar stale or missing; performance update skipped", datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
         )
-        return {"updated": 0, "skipped": conn.total_changes}
+        return {"updated": 0, "skipped": conn.total_changes, **mark_open_positions_to_market(conn)}
     rows = conn.execute(
         """
         SELECT recommendation_id, ticker, market, decision_time, status
@@ -81,7 +82,7 @@ def update_outcomes(conn: sqlite3.Connection, limit: int = 200) -> dict[str, int
             (p1d, p1w, p1m, p3m, now, rec_id),
         )
         updated += 1
-    return {"updated": updated, "skipped": 0}
+    return {"updated": updated, "skipped": 0, **mark_open_positions_to_market(conn)}
 
 
 def main() -> None:

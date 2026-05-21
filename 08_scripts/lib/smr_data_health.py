@@ -264,8 +264,10 @@ def discover_source_timestamps(conn: sqlite3.Connection, data_type: str, market:
             )
         return latest, latest, {"tables": ["market_event", "source_manifest"]}
     if data_type == "fundamentals":
-        latest = max_value(conn, "factor_daily", "trade_date")
-        return latest, latest, {"table": "factor_daily"}
+        latest_snapshot = max_value(conn, "fundamentals_snapshot", "created_at")
+        latest_factor = max_value(conn, "factor_daily", "trade_date")
+        latest = latest_snapshot or latest_factor
+        return latest, latest, {"table": "fundamentals_snapshot" if latest_snapshot else "factor_daily"}
     if data_type == "consensus_revision":
         return None, None, {"source_registry_status": source_registry_planned_or_disabled(data_type, source_key) or "unknown"}
     latest = latest_registry_created_at(conn, source_key)

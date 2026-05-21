@@ -24,7 +24,7 @@
     "news": {
       "global": {
         "source_key": "eastmoney_news_article",
-        "stale_after_minutes": 360,
+        "stale_after_minutes": 1440,
         "blocking_level_when_stale": "degrade",
         "affected_modules": ["deep_market_scan", "opportunity_radar", "report_generation"]
       }

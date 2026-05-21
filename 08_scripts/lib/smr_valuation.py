@@ -136,6 +136,15 @@ def latest_factor(conn: sqlite3.Connection, ticker: str) -> dict[str, Any]:
     return {}
 
 
+def latest_fundamentals(conn: sqlite3.Connection, ticker: str) -> dict[str, Any]:
+    try:
+        from smr_fundamentals import latest_fundamentals_snapshot
+
+        return latest_fundamentals_snapshot(conn, ticker)
+    except Exception:
+        return {}
+
+
 def _daily_rows_for_market(health: dict[str, Any], market: str | None) -> list[dict[str, Any]]:
     return [
         item for item in health.get("items") or []
@@ -152,6 +161,7 @@ def build_valuation_snapshot(
     market = market_for_ticker(ticker)
     current_price, price_date = latest_daily_price(conn, ticker, market)
     factor = latest_factor(conn, ticker)
+    fundamentals = latest_fundamentals(conn, ticker)
     health = data_health_snapshot or {}
     daily_rows = _daily_rows_for_market(health, market)
     stale_price = any(item.get("freshness_status") in {"stale", "missing"} for item in daily_rows)
@@ -165,6 +175,8 @@ def build_valuation_snapshot(
         missing.append("ps_ttm")
     if "pb" not in factor:
         missing.append("pb")
+    if not fundamentals:
+        missing.append("fundamentals_snapshot")
     missing.extend(["forward_eps", "official_consensus", "historical_percentile", "peer_set"])
     if stale_price:
         missing.append("fresh_price")
@@ -173,7 +185,7 @@ def build_valuation_snapshot(
     has_basic_multiple = any(factor.get(key) is not None for key in ("pe_ttm", "ps_ttm", "pb"))
     peer_comparison: dict[str, Any] = {}
     peer_set: list[str] = []
-    broker_forward_eps_proxy = None
+    broker_forward_eps_proxy = fundamentals.get("eps_diluted") or fundamentals.get("eps_basic")
     valuation_confidence = 0.0
     if current_price is not None:
         valuation_confidence += 0.25
@@ -183,6 +195,8 @@ def build_valuation_snapshot(
         valuation_confidence += 0.2
     if broker_forward_eps_proxy:
         valuation_confidence += 0.25
+    if fundamentals.get("freshness_status") in {"fresh", "degraded"}:
+        valuation_confidence += 0.1
 
     if stale_price:
         valuation_status = "stale_price"
@@ -222,6 +236,7 @@ def build_valuation_snapshot(
         "valuation_status": valuation_status,
         "missing_data": sorted(set(missing)),
         "allowed_usage": allowed_usage,
+        "fundamentals_snapshot": fundamentals,
     }
     conn.execute(
         """
@@ -250,7 +265,14 @@ def build_valuation_snapshot(
             valuation_status,
             _dumps(snapshot["missing_data"]),
             allowed_usage,
-            _dumps({"price_trade_date": price_date, "factor_trade_date": factor.get("factor_trade_date")}),
+            _dumps(
+                {
+                    "price_trade_date": price_date,
+                    "factor_trade_date": factor.get("factor_trade_date"),
+                    "fundamentals_snapshot_id": fundamentals.get("snapshot_id"),
+                    "fundamentals_status": fundamentals.get("freshness_status"),
+                }
+            ),
             snapshot["ev_ebitda_ttm"],
             None,
             None,

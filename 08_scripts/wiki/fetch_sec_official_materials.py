@@ -40,6 +40,26 @@ DEFAULT_FORMS = ("8-K", "6-K", "10-K", "10-Q", "20-F")
 
 
 def resolve_targets(args):
+    if args.symbol and not (args.target_key or args.entity_id):
+        return [
+            {
+                "target_key": f"ad_hoc_{str(raw_symbol or '').strip().lower()}",
+                "entity_type": "stock",
+                "entity_id": str(raw_symbol or "").strip().upper(),
+                "company_name": str(raw_symbol or "").strip().upper(),
+                "market": "US",
+                "sec_symbol": str(raw_symbol or "").strip().upper(),
+                "ir_url": "",
+                "include_keywords": [],
+                "exclude_keywords": [],
+                "max_links": args.max_materials,
+                "status": "ad_hoc",
+                "enabled": True,
+                "notes": "ad hoc SEC target",
+            }
+            for raw_symbol in args.symbol
+            if str(raw_symbol or "").strip()
+        ]
     registry_rows = parse_official_intel_target_registry()
     selected = select_target_rows(
         registry_rows,

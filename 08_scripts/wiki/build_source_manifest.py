@@ -191,9 +191,14 @@ def build_external_rows():
                     {
                         "source_url": source_url,
                         "source_kind": source_kind,
+                        "provider": provider,
                         "source_domain": metadata.get("source_domain"),
                         "content_type": metadata.get("content_type"),
                         "fetched_at": metadata.get("fetched_at"),
+                        "published_at": metadata.get("published_at"),
+                        "notice_date": metadata.get("notice_date"),
+                        "announcement_id": metadata.get("announcement_id"),
+                        "market": metadata.get("market"),
                         "raw_rel_path": metadata.get("raw_rel_path"),
                         "meta_rel_path": metadata.get("meta_rel_path"),
                     }
