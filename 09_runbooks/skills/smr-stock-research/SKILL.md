@@ -20,6 +20,7 @@ Its job is:
 
 ## Load order
 
+0. Read `/Users/apple/Documents/同行资本二级市场/09_runbooks/skills/smr-research-synthesis/SKILL.md`
 1. Read `/Users/apple/Documents/同行资本二级市场/00_control/sector_priority_map.md`
 2. Read relevant industry research from `/Users/apple/Documents/同行资本二级市场/02_research/industry/`
 3. Read VCR project card for this company (if exists, read-only): `/Users/apple/Documents/虚拟vc项目开发规划/同行资本运行台/04_project_cards/`
@@ -65,6 +66,12 @@ Its job is:
 
 7. **Produce stock research report** following the template.
 
+8. **Synthesis gate**:
+   - Do not treat a single external report as the conclusion.
+   - Compare at least 3 reports from at least 2 institutions when available.
+   - Separate consensus, divergence, first-party verification, and SMR's own judgment.
+   - If evidence is incomplete, label the report as `素材型假设` or `中等置信假设`.
+
 ## Required output fields
 
 Every stock research report must include:
@@ -84,6 +91,7 @@ Every stock research report must include:
 - Do not research stocks outside SMR sectors.
 - Do not give specific buy/sell price targets (that is smr-advisor's job).
 - Do not recommend short-term trading.
+- Do not copy sell-side conclusions into SMR conclusions.
 - Always include disclaimer.
 - Always cite data sources.
 

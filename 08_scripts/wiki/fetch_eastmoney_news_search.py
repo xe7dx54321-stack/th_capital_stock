@@ -6,7 +6,6 @@ import json
 import sqlite3
 import sys
 import urllib.parse
-import urllib.request
 from datetime import datetime
 from pathlib import Path
 
@@ -15,6 +14,7 @@ if str(LIB_DIR) not in sys.path:
     sys.path.insert(0, str(LIB_DIR))
 
 from smr_external_sources import persist_external_snapshot, truncate_text
+from smr_fetch import fetch_url
 from smr_paths import env_or_project_path
 from smr_registry import register_snapshot
 from smr_runlog import log_run
@@ -67,7 +67,7 @@ def build_page_url(keyword, search_scope, sort):
     return EASTMONEY_NEWS_PAGE + "?" + params
 
 
-def fetch_news_search(keyword, search_scope, sort, page_size):
+def fetch_news_search(keyword, search_scope, sort, page_size, fetch_mode="auto", timeout=20):
     request_payload = {
         "uid": "",
         "keyword": keyword,
@@ -93,21 +93,20 @@ def fetch_news_search(keyword, search_scope, sort, page_size):
         }
     )
     page_url = build_page_url(keyword, search_scope, sort)
-    request = urllib.request.Request(
+    result = fetch_url(
         EASTMONEY_NEWS_API + "?" + query,
-        headers={
-            "User-Agent": "Mozilla/5.0",
+        mode=fetch_mode,
+        timeout=timeout,
+        accept="*/*",
+        extra_headers={
             "Referer": page_url,
-            "Accept": "*/*",
         },
-        method="GET",
     )
-    with urllib.request.urlopen(request, timeout=20) as response:
-        raw_bytes = response.read()
-        content_type = response.headers.get("Content-Type", "")
-        charset = response.headers.get_content_charset() or "utf-8"
-        body_text = raw_bytes.decode(charset, errors="replace")
-        return parse_jsonp(body_text), raw_bytes, request_payload, content_type
+    raw_bytes = result.get("raw_bytes") or result.get("bytes") or b""
+    body_text = result.get("text") or raw_bytes.decode("utf-8", errors="replace")
+    request_payload["_fetch_engine"] = result.get("fetch_engine")
+    request_payload["_fallback_chain"] = result.get("fallback_chain") or []
+    return parse_jsonp(body_text), raw_bytes, request_payload, result.get("content_type") or ""
 
 
 def resolve_targets(conn, args):
@@ -211,6 +210,13 @@ def main():
         help="Eastmoney news sort mode",
     )
     parser.add_argument("--per-symbol-limit", type=int, default=5, help="Maximum news rows to persist for each symbol")
+    parser.add_argument(
+        "--fetch-mode",
+        default="auto",
+        choices=["auto", "urllib", "scrapling-static", "dynamic", "stealth"],
+        help="Fetch engine policy. auto uses 00_control/source_fetch_policy.json",
+    )
+    parser.add_argument("--timeout", type=int, default=20)
     args = parser.parse_args()
 
     conn = sqlite3.connect(DB_PATH)
@@ -227,6 +233,8 @@ def main():
                 search_scope=args.search_scope,
                 sort=args.sort,
                 page_size=args.per_symbol_limit,
+                fetch_mode=args.fetch_mode,
+                timeout=args.timeout,
             )
             snapshot = persist_snapshot(
                 target,
@@ -266,6 +274,7 @@ def main():
             "search_scope": args.search_scope,
             "sort": args.sort,
             "per_symbol_limit": args.per_symbol_limit,
+            "fetch_mode": args.fetch_mode,
         },
         payload={
             "persisted_count": len(persisted),
@@ -274,6 +283,7 @@ def main():
             "persisted": persisted[:20],
             "empty": empty[:20],
             "failed": failed[:20],
+            "fetch_mode": args.fetch_mode,
         },
     )
     conn.commit()

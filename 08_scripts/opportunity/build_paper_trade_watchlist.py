@@ -16,6 +16,8 @@ if str(LIB_DIR) not in sys.path:
 
 from smr_paths import env_or_project_path, project_path, relative_to_project
 from smr_agents import ensure_auto_handoff
+from smr_data_health import check_freshness_gate, gate_to_dict
+from smr_decision import record_agent_run
 from smr_registry import register_snapshot
 from smr_runlog import log_run
 
@@ -240,6 +242,68 @@ def main():
 
     conn = sqlite3.connect(DB_PATH)
     try:
+        gate = check_freshness_gate(
+            conn,
+            module_name="paper_watch",
+            required_data_types=["daily_bar"],
+            allow_degraded=False,
+        )
+        if gate.status == "block":
+            payload = {
+                "generated_at": generated_at,
+                "batch_date": batch_date,
+                "mode": "paper_only",
+                "live_trading_enabled": False,
+                "blocked_by_data": True,
+                "ticket_count": 0,
+                "tickets": [],
+                "policy_rel_path": relative_to_project(POLICY_PATH),
+                "freshness_gate_result": gate_to_dict(gate),
+                "data_health_snapshot": gate.data_health_snapshot,
+                "overview_lines": [
+                    "Freshness Gate 已阻断纸面观察单生成：行情数据过期时不能生成观察价格带、观察上沿或失效下沿。",
+                    *gate.reasons[:4],
+                ],
+            }
+            write_markdown(output_path, payload)
+            registry_entry = register_snapshot(
+                conn,
+                entity_type="paper_trade_watchlist_snapshot",
+                entity_id=batch_date,
+                status="blocked_by_data",
+                source=SCRIPT_NAME,
+                relationships={"summary_rel_path": relative_to_project(output_path)},
+                payload={**payload, "summary_rel_path": relative_to_project(output_path)},
+                created_at=generated_at,
+            )
+            record_agent_run(
+                conn,
+                agent_or_script=SCRIPT_NAME,
+                status="blocked",
+                entity_type="paper_trade_watchlist_snapshot",
+                entity_id=batch_date,
+                data_health_snapshot=gate.data_health_snapshot,
+                freshness_gate_result=gate_to_dict(gate),
+                output_status="blocked_by_data",
+                block_reasons=gate.reasons,
+            )
+            conn.commit()
+            handoff_result = {"reason": "freshness_gate_block", "handoff": None}
+            log_run(
+                SCRIPT_NAME,
+                "success",
+                "paper trade watchlist blocked by freshness gate",
+                {
+                    "registry_entry_id": registry_entry["id"],
+                    "summary_rel_path": relative_to_project(output_path),
+                    "ticket_count": 0,
+                    "freshness_gate_status": gate.status,
+                    "block_reasons": gate.reasons,
+                },
+            )
+            print(f"Paper trade watchlist: {relative_to_project(output_path)}")
+            print("  status=blocked_by_data")
+            return
         radar_snapshot = latest_registry_snapshot(conn, "opportunity_radar_snapshot", args.date)
         attack_snapshot = latest_registry_snapshot(conn, "thesis_attack_defense_snapshot", args.date)
         if not radar_snapshot:
@@ -268,6 +332,8 @@ def main():
             "ticket_count": len(tickets),
             "tickets": tickets,
             "policy_rel_path": relative_to_project(POLICY_PATH),
+            "freshness_gate_result": gate_to_dict(gate),
+            "data_health_snapshot": gate.data_health_snapshot,
         }
         payload["overview_lines"] = overview_lines(tickets, cases)
         write_markdown(output_path, payload)
@@ -290,6 +356,16 @@ def main():
             registry_entry,
             note="纸面机会观察单已生成，自动转交研究代理同步到调度候选。",
             created_by=SCRIPT_NAME,
+        )
+        record_agent_run(
+            conn,
+            agent_or_script=SCRIPT_NAME,
+            status="success",
+            entity_type="paper_trade_watchlist_snapshot",
+            entity_id=batch_date,
+            data_health_snapshot=gate.data_health_snapshot,
+            freshness_gate_result=gate_to_dict(gate),
+            output_status=registry_entry["status"],
         )
         conn.commit()
     finally:

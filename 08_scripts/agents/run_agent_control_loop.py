@@ -17,7 +17,10 @@ from smr_runlog import log_run
 SCRIPT_DIR = Path(__file__).resolve().parent
 
 RESEARCH_CONTEXT_ENTITY_TYPES = {
+    "current_state_snapshot",
+    "data_freshness_snapshot",
     "dynamic_pool_snapshot",
+    "opportunity_evidence_gap_snapshot",
     "opportunity_radar_snapshot",
     "opportunity_lifecycle_snapshot",
     "paper_trade_watchlist_snapshot",
@@ -40,6 +43,10 @@ RISK_ENTITY_TYPES = {
 REPORTING_SYNC_ENTITY_TYPES = {
     "research_context_note",
     "risk_update_candidate",
+}
+INVESTMENT_MODEL_ENTITY_TYPES = {
+    "investment_evidence_pack_snapshot",
+    "investment_research_synthesis_snapshot",
 }
 RESEARCH_GOVERNANCE_ENTITY_TYPES = {
     "review_queue",
@@ -125,6 +132,17 @@ def choose_command(record, research_governance_mode):
         ]
         command.append("--complete")
         return command
+
+    if to_profile_id in {"hermes_investment_analyst", "hermes_investment_report_writer"}:
+        if entity_type in INVESTMENT_MODEL_ENTITY_TYPES:
+            command = [
+                sys.executable,
+                str(SCRIPT_DIR / "process_investment_model_handoff.py"),
+                "--handoff-id",
+                handoff_id,
+            ]
+            command.append("--complete")
+            return command
 
     return None
 

@@ -13,6 +13,8 @@ if str(LIB_DIR) not in sys.path:
     sys.path.insert(0, str(LIB_DIR))
 
 from smr_agents import ensure_auto_handoff
+from smr_data_health import check_freshness_gate, gate_to_dict
+from smr_decision import record_agent_run
 from smr_external_research import load_external_research_digest
 from smr_paths import env_or_project_path, relative_to_project
 from smr_registry import register_snapshot
@@ -339,6 +341,12 @@ def main():
     conn = sqlite3.connect(DB_PATH)
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     policy = load_portfolio_policy()
+    freshness_gate = check_freshness_gate(
+        conn,
+        module_name="risk_agent",
+        required_data_types=["daily_bar", "fundamentals"],
+        allow_degraded=True,
+    )
     open_positions = current_open_positions(conn)
     open_position_codes = [row[0] for row in open_positions]
     external_research_digest = load_external_research_digest(
@@ -349,6 +357,15 @@ def main():
     )
 
     all_alerts = []
+    if freshness_gate.status == "block":
+        all_alerts.append(
+            build_alert(
+                "data_stale",
+                "critical" if open_positions else "warning",
+                "Risk Agent Freshness Gate 未通过：行情或基础因子过期，价格型止损/目标/回撤判断只能作为静态告警，不能生成调仓动作。",
+                "先修复数据采集，再复核任何价格型风险结论。",
+            )
+        )
     all_alerts.extend(check_position_concentration(conn, policy))
     all_alerts.extend(check_total_exposure(conn, policy))
     all_alerts.extend(check_sector_concentration(conn, policy))
@@ -397,6 +414,8 @@ def main():
                 "counts_by_severity": count_by_key(all_alerts, "severity"),
                 "counts_by_type": count_by_key(all_alerts, "alert_type"),
                 "open_position_count": len(open_positions),
+                "freshness_gate_result": gate_to_dict(freshness_gate),
+                "data_health_snapshot": freshness_gate.data_health_snapshot,
                 "unacknowledged_alert_count": conn.execute(
                     "SELECT COUNT(*) FROM risk_alert WHERE acknowledged=0"
                 ).fetchone()[0],
@@ -411,6 +430,17 @@ def main():
             registry_entry,
             note="风险快照已更新，自动转交 Hermes-like 风险代理补充解释。",
             created_by="monitor.py",
+        )
+        record_agent_run(
+            conn,
+            agent_or_script="monitor.py",
+            status="success",
+            entity_type="risk_monitor_snapshot",
+            entity_id=now[:10],
+            data_health_snapshot=freshness_gate.data_health_snapshot,
+            freshness_gate_result=gate_to_dict(freshness_gate),
+            output_status=registry_entry["status"],
+            block_reasons=freshness_gate.reasons if freshness_gate.status == "block" else [],
         )
         conn.commit()
         conn.close()
@@ -454,6 +484,8 @@ def main():
             payload={
                 "alert_count": 0,
                 "open_position_count": len(open_positions),
+                "freshness_gate_result": gate_to_dict(freshness_gate),
+                "data_health_snapshot": freshness_gate.data_health_snapshot,
                 "unacknowledged_alert_count": conn.execute(
                     "SELECT COUNT(*) FROM risk_alert WHERE acknowledged=0"
                 ).fetchone()[0],
@@ -468,6 +500,16 @@ def main():
             registry_entry,
             note="风险快照已更新，自动转交 Hermes-like 风险代理补充解释。",
             created_by="monitor.py",
+        )
+        record_agent_run(
+            conn,
+            agent_or_script="monitor.py",
+            status="success",
+            entity_type="risk_monitor_snapshot",
+            entity_id=now[:10],
+            data_health_snapshot=freshness_gate.data_health_snapshot,
+            freshness_gate_result=gate_to_dict(freshness_gate),
+            output_status=registry_entry["status"],
         )
         conn.commit()
         conn.close()

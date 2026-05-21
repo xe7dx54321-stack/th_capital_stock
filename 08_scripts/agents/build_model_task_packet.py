@@ -91,6 +91,30 @@ def collect_rel_paths(handoff, entry):
             relationships.get("execution_plan_rel_path"),
             payload.get("summary_rel_path"),
         ],
+        "investment_evidence_pack_snapshot": [
+            relationships.get("pack_md_rel_path"),
+            relationships.get("pack_json_rel_path"),
+            payload.get("pack_md_rel_path"),
+            payload.get("pack_json_rel_path"),
+        ],
+        "investment_research_synthesis_snapshot": [
+            relationships.get("synthesis_md_rel_path"),
+            relationships.get("synthesis_json_rel_path"),
+            relationships.get("model_response_text_rel_path"),
+            relationships.get("evidence_pack_md_rel_path"),
+            payload.get("synthesis_md_rel_path"),
+            payload.get("synthesis_json_rel_path"),
+            payload.get("model_response_text_rel_path"),
+            payload.get("evidence_pack_md_rel_path"),
+        ],
+        "investment_report_snapshot": [
+            relationships.get("report_md_rel_path"),
+            relationships.get("summary_json_rel_path"),
+            relationships.get("model_response_text_rel_path"),
+            payload.get("report_md_rel_path"),
+            payload.get("summary_json_rel_path"),
+            payload.get("model_response_text_rel_path"),
+        ],
         "us_signal_snapshot": [
             relationships.get("signal_file_rel_path"),
             payload.get("signal_file_rel_path"),
@@ -139,6 +163,16 @@ def read_preview(rel_path, max_lines=16, max_chars=1600):
     if len(preview) > max_chars:
         preview = preview[: max_chars - 3].rstrip() + "..."
     return {"rel_path": rel_path, "exists": True, "preview": preview}
+
+
+def source_preview_budget(entity_type):
+    if entity_type in {
+        "investment_evidence_pack_snapshot",
+        "investment_research_synthesis_snapshot",
+        "investment_report_snapshot",
+    }:
+        return {"max_lines": 520, "max_chars": 36000}
+    return {"max_lines": 16, "max_chars": 1600}
 
 
 def sanitize(value):
@@ -236,7 +270,8 @@ def main():
     packet_md_path = packet_dir / f"{stem}.md"
 
     rel_paths = collect_rel_paths(handoff, entry)
-    source_documents = [read_preview(rel_path) for rel_path in rel_paths]
+    preview_budget = source_preview_budget(handoff["entity_type"])
+    source_documents = [read_preview(rel_path, **preview_budget) for rel_path in rel_paths]
     packet = {
         "packet_id": stem,
         "generated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),

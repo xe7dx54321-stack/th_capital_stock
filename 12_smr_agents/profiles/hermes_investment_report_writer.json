@@ -1,0 +1,23 @@
+{
+  "default_toolsets": [
+    "file",
+    "web"
+  ],
+  "lane": "hermes_like",
+  "match": {
+    "entity_types": [
+      "investment_report_snapshot"
+    ]
+  },
+  "notes": [
+    "负责把研究综合、证据包、技术证据、风控和组合上下文写成完整投行式深度报告。",
+    "执行前必须加载 09_runbooks/skills/smr-investment-report-writing/SKILL.md，并按 report template 输出。",
+    "前台只应展示报告结论、操作计划和可点击报告入口，不展示后台状态噪音。",
+    "所有输出只进入候选层/影子层，必须保留人工审核边界。"
+  ],
+  "priority": 125,
+  "profile_id": "hermes_investment_report_writer",
+  "role": "投资报告主笔代理",
+  "suggested_handoffs": {},
+  "workspace_rel_path": "12_smr_agents/workspaces/hermes_investment_report_writer"
+}

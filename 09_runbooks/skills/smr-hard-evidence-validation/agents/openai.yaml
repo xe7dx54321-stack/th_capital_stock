@@ -1,0 +1,4 @@
+interface:
+  display_name: "SMR Hard Evidence Validation"
+  short_description: "Validate key thesis variables with hard evidence"
+  default_prompt: "Use $smr-hard-evidence-validation to audit key thesis variables, separate facts from inference, and convert missing hard evidence into follow-up research tasks."

@@ -128,6 +128,60 @@ def load_focus_equities(conn, limit=5, focus_ts_codes=None):
 
 
 def latest_external_research_snapshot(conn, ts_code):
+    snapshots = external_research_snapshots(conn, ts_code, limit=4)
+    return snapshots[0] if snapshots else None
+
+
+def normalize_external_research_payload(title, source_rel_path, metadata, raw_payload, updated_at):
+    source_kind = metadata.get("source_kind")
+    raw_rel_path = metadata.get("raw_rel_path")
+    raw_name = str(raw_rel_path or "").rsplit("/", 1)[-1]
+    report_key = raw_name.split("__research_", 1)[0] if "__research_" in raw_name else raw_name or source_rel_path
+    if source_kind == "research_table_structured":
+        normalized = raw_payload.get("forecast_table", {}).get("normalized_metrics", {})
+        rating = raw_payload.get("rating", {})
+        document = raw_payload.get("document", {})
+        return {
+            "report_key": report_key,
+            "source_kind": source_kind,
+            "title": title,
+            "source_rel_path": source_rel_path,
+            "updated_at": updated_at,
+            "published_at": document.get("published_at"),
+            "org_name": document.get("org_name"),
+            "rating_name": document.get("rating_name"),
+            "target_price_yuan": rating.get("target_price_yuan"),
+            "revenue_billion": normalized.get("revenue_billion", {}),
+            "net_profit_billion": normalized.get("net_profit_billion", {}),
+            "eps_yuan": normalized.get("eps_yuan", {}),
+            "pe_multiple": normalized.get("pe_multiple", {}),
+            "roe_percent": normalized.get("roe_percent", {}),
+        }
+
+    if source_kind == "research_structured":
+        metrics = raw_payload.get("forecast_metrics", {})
+        document = raw_payload.get("document", {})
+        return {
+            "report_key": report_key,
+            "source_kind": source_kind,
+            "title": title,
+            "source_rel_path": source_rel_path,
+            "updated_at": updated_at,
+            "published_at": document.get("published_at"),
+            "org_name": document.get("org_name"),
+            "rating_name": document.get("rating_name"),
+            "target_price_yuan": metrics.get("target_price_yuan"),
+            "revenue_billion": metrics.get("revenue_billion", {}),
+            "net_profit_billion": metrics.get("net_profit_billion", {}),
+            "eps_yuan": metrics.get("eps_yuan", {}),
+            "pe_multiple": metrics.get("pe_multiple", {}),
+            "roe_percent": {},
+        }
+
+    return None
+
+
+def external_research_snapshots(conn, ts_code, limit=8):
     ensure_source_manifest_table(conn)
     rows = conn.execute(
         """
@@ -145,57 +199,33 @@ def latest_external_research_snapshot(conn, ts_code):
             END ASC,
             datetime(updated_at) DESC,
             source_id DESC
-        LIMIT 4
+        LIMIT ?
         """,
-        (ts_code,),
+        (ts_code, max(limit * 3, limit)),
     ).fetchall()
 
+    snapshots = []
+    seen = set()
     for title, source_rel_path, metadata_json, updated_at in rows:
         metadata = parse_metadata_json(metadata_json)
         raw_payload = load_json_rel_path(metadata.get("raw_rel_path"))
         if not raw_payload:
             continue
-
-        source_kind = metadata.get("source_kind")
-        if source_kind == "research_table_structured":
-            normalized = raw_payload.get("forecast_table", {}).get("normalized_metrics", {})
-            rating = raw_payload.get("rating", {})
-            document = raw_payload.get("document", {})
-            return {
-                "source_kind": source_kind,
-                "title": title,
-                "source_rel_path": source_rel_path,
-                "updated_at": updated_at,
-                "published_at": document.get("published_at"),
-                "org_name": document.get("org_name"),
-                "rating_name": document.get("rating_name"),
-                "target_price_yuan": rating.get("target_price_yuan"),
-                "revenue_billion": normalized.get("revenue_billion", {}),
-                "net_profit_billion": normalized.get("net_profit_billion", {}),
-                "eps_yuan": normalized.get("eps_yuan", {}),
-                "pe_multiple": normalized.get("pe_multiple", {}),
-                "roe_percent": normalized.get("roe_percent", {}),
-            }
-
-        if source_kind == "research_structured":
-            metrics = raw_payload.get("forecast_metrics", {})
-            document = raw_payload.get("document", {})
-            return {
-                "source_kind": source_kind,
-                "title": title,
-                "source_rel_path": source_rel_path,
-                "updated_at": updated_at,
-                "published_at": document.get("published_at"),
-                "org_name": document.get("org_name"),
-                "rating_name": document.get("rating_name"),
-                "target_price_yuan": metrics.get("target_price_yuan"),
-                "revenue_billion": metrics.get("revenue_billion", {}),
-                "net_profit_billion": metrics.get("net_profit_billion", {}),
-                "eps_yuan": metrics.get("eps_yuan", {}),
-                "pe_multiple": metrics.get("pe_multiple", {}),
-                "roe_percent": {},
-            }
-    return None
+        snapshot = normalize_external_research_payload(title, source_rel_path, metadata, raw_payload, updated_at)
+        if not snapshot:
+            continue
+        dedupe_key = (
+            snapshot.get("report_key"),
+            snapshot.get("published_at"),
+            snapshot.get("org_name"),
+        )
+        if dedupe_key in seen:
+            continue
+        seen.add(dedupe_key)
+        snapshots.append(snapshot)
+        if len(snapshots) >= limit:
+            break
+    return snapshots
 
 
 def load_external_research_digest(conn, limit=5, focus_ts_codes=None, fallback_to_pool=True):

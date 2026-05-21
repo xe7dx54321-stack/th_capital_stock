@@ -14,6 +14,9 @@
 | amd_fool | stock | AMD | Advanced Micro Devices | US | AMD | fool | AMD,Advanced Micro Devices | live | yes | 适合作为算力芯片主线的公开电话会文字入口。 |
 | nvda_fool | stock | NVDA | NVIDIA Corporation | US | NVDA | fool | NVDA,NVIDIA | experimental | yes | 预期可命中，但需要验证分页深度和更新频率。 |
 | msft_fool | stock | MSFT | Microsoft Corporation | US | MSFT | fool | MSFT,Microsoft | experimental | yes | 作为云 / AI 基建大盘对标，保留公开电话会文字入口。 |
+| googl_fool | stock | GOOGL | Alphabet Inc. | US | GOOGL | fool | GOOGL,GOOG,Alphabet,Google | experimental | yes | 作为 GCP / 云厂商 capex 与 AI 基建投入的公开电话会文字入口。 |
+| amzn_fool | stock | AMZN | Amazon.com Inc. | US | AMZN | fool | AMZN,Amazon,AWS | experimental | yes | 作为 AWS capex 与 AI 数据中心投入的公开电话会文字入口。 |
+| meta_fool | stock | META | Meta Platforms | US | META | fool | META,Meta Platforms,Facebook | experimental | yes | 作为 Meta AI / 数据中心 capex 的公开电话会文字入口。 |
 | aapl_fool | stock | AAPL | Apple Inc. | US | AAPL | fool | AAPL,Apple | experimental | yes | 适合作为大盘科技电话会源的稳定性验证对象。 |
 | baba_fool | stock | 09988.HK | Alibaba Group | HK | BABA | fool | BABA,Alibaba | experimental | yes | 如果能命中 ADR（美国存托凭证）电话会文字稿，可反哺港股主线。 |
 | mrvl_seekingalpha | stock | MRVL | Marvell Technology | US | MRVL | seekingalpha | MRVL,Marvell | planned | yes | 预留 Seeking Alpha（寻求阿尔法）电话会文本接入位，当前先不纳入正式生产。 |

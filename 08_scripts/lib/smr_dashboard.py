@@ -11,7 +11,7 @@ from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
-from smr_external_research import latest_external_research_snapshot
+from smr_external_research import external_research_snapshots, latest_external_research_snapshot
 from smr_flow_event_digest import build_capital_flow_fact_sheet_from_payloads
 from smr_official_materials import summarize_official_materials
 from smr_paths import ROOT, env_or_project_path, normalize_project_path, relative_to_project
@@ -32,6 +32,9 @@ KEY_ENTITY_TYPES = [
     "thesis_attack_defense_snapshot",
     "paper_trade_watchlist_snapshot",
     "paper_watch_performance_snapshot",
+    "opportunity_evidence_gap_snapshot",
+    "data_freshness_snapshot",
+    "current_state_snapshot",
     "deep_market_analysis_snapshot",
     "price_range_forecast_snapshot",
     "execution_precheck_snapshot",
@@ -39,6 +42,11 @@ KEY_ENTITY_TYPES = [
     "rotation_candidate_snapshot",
     "rotation_execution_plan_snapshot",
     "portfolio_action_memo_snapshot",
+    "investment_evidence_pack_snapshot",
+    "investment_research_synthesis_snapshot",
+    "investment_report_snapshot",
+    "investment_evidence_gap_task_snapshot",
+    "investment_evidence_gap_fetch_snapshot",
     "risk_monitor_snapshot",
     "trade_risk_decision_snapshot",
     "market_event_snapshot",
@@ -164,6 +172,145 @@ def latest_snapshot_for_entity(conn: sqlite3.Connection, entity_type: str, entit
         (entity_type, entity_id),
     ).fetchone()
     return snapshot_from_row(row)
+
+
+def action_id_from_investment_entity(entity_id: str | None, payload: dict[str, Any] | None = None) -> str | None:
+    payload = payload or {}
+    if payload.get("action_id"):
+        return payload.get("action_id")
+    text = str(entity_id or "")
+    if "__" in text:
+        return text.split("__", 1)[1]
+    return None
+
+
+def latest_investment_artifacts_by_action(conn: sqlite3.Connection, action_ids: list[str]) -> dict[str, dict[str, Any]]:
+    wanted = {str(action_id) for action_id in action_ids if action_id}
+    if not wanted:
+        return {}
+    rows = conn.execute(
+        """
+        SELECT id, entity_type, entity_id, status, source, relationships_json, payload_json, created_at
+        FROM task_registry_entry
+        WHERE entity_type IN (
+            'investment_evidence_pack_snapshot',
+            'investment_research_synthesis_snapshot',
+            'investment_report_snapshot',
+            'investment_evidence_gap_task_snapshot',
+            'investment_evidence_gap_fetch_snapshot'
+        )
+        ORDER BY datetime(created_at) DESC, snapshot_index DESC, id DESC
+        LIMIT 240
+        """
+    ).fetchall()
+    results: dict[str, dict[str, Any]] = {action_id: {} for action_id in wanted}
+    for row in rows:
+        snapshot = snapshot_from_row(row)
+        action_id = action_id_from_investment_entity(snapshot.get("entity_id"), snapshot.get("payload") or {})
+        if action_id not in wanted:
+            continue
+        entity_type = snapshot.get("entity_type")
+        if entity_type == "investment_evidence_gap_fetch_snapshot":
+            payload = snapshot.get("payload") or {}
+            if (payload.get("source_path_count") or 0) <= 0 and not payload.get("failures"):
+                continue
+        if entity_type in results[action_id]:
+            continue
+        results[action_id][entity_type] = snapshot
+    return {action_id: artifacts for action_id, artifacts in results.items() if artifacts}
+
+
+def latest_investment_action_ids(conn: sqlite3.Connection, limit: int = 12) -> list[str]:
+    rows = conn.execute(
+        """
+        SELECT entity_id, payload_json
+        FROM task_registry_entry
+        WHERE entity_type IN (
+            'investment_report_snapshot',
+            'investment_research_synthesis_snapshot',
+            'investment_evidence_pack_snapshot'
+        )
+        ORDER BY snapshot_index DESC, id DESC
+        LIMIT ?
+        """,
+        (limit * 3,),
+    ).fetchall()
+    action_ids: list[str] = []
+    seen = set()
+    for row in rows:
+        payload = load_json(row["payload_json"], {})
+        action_id = action_id_from_investment_entity(row["entity_id"], payload)
+        if not action_id or action_id in seen:
+            continue
+        seen.add(action_id)
+        action_ids.append(action_id)
+        if len(action_ids) >= limit:
+            break
+    return action_ids
+
+
+def archived_action_from_investment_artifacts(action_id: str, artifacts: dict[str, Any]) -> dict[str, Any] | None:
+    if not action_id or not artifacts:
+        return None
+    report_payload = ((artifacts.get("investment_report_snapshot") or {}).get("payload") or {})
+    evidence_payload = ((artifacts.get("investment_evidence_pack_snapshot") or {}).get("payload") or {})
+    summary = report_payload.get("dashboard_summary") or {}
+    if not isinstance(summary, dict):
+        summary = {}
+    action_plan = summary.get("portfolio_action_plan") or {}
+    initial_action = action_plan.get("initial_action") if isinstance(action_plan, dict) else {}
+    initial_action = initial_action if isinstance(initial_action, dict) else {}
+    buy_leg = initial_action.get("buy") if isinstance(initial_action.get("buy"), dict) else {}
+    sell_leg = initial_action.get("sell") if isinstance(initial_action.get("sell"), dict) else {}
+    add_code = summary.get("in_ticker") or buy_leg.get("ticker")
+    remove_code = summary.get("out_ticker") or sell_leg.get("ticker")
+    if not add_code and not remove_code and not evidence_payload.get("title"):
+        return None
+    trade_amount = buy_leg.get("amount_cny") or sell_leg.get("amount_cny")
+    title = evidence_payload.get("title") or f"调入 {summary.get('in_name') or add_code or '-'} / 调出 {summary.get('out_name') or remove_code or '-'}"
+    return {
+        "action_id": action_id,
+        "action_type": evidence_payload.get("action_type") or summary.get("action") or "investment_report_candidate",
+        "priority": evidence_payload.get("priority") or "candidate",
+        "gate_status": summary.get("gate_status") or "human_review_required",
+        "title": title,
+        "summary": summary.get("action_detail") or summary.get("confidence_rationale") or "来自投资报告归档的候选动作。",
+        "trade_amount": trade_amount,
+        "trade_amount_pct": None,
+        "add": {
+            "ts_code": add_code,
+            "name": summary.get("in_name") or add_code,
+        }
+        if add_code
+        else {},
+        "remove": {
+            "ts_code": remove_code,
+            "name": summary.get("out_name") or remove_code,
+        }
+        if remove_code
+        else {},
+        "subject": {},
+        "rationale": [summary.get("confidence_rationale")] if summary.get("confidence_rationale") else [],
+        "risk_flags": [summary.get("disclaimer")] if summary.get("disclaimer") else [],
+        "next_checks": [
+            str(task.get("task") or task.get("research_question") or task)
+            for task in (summary.get("follow_up_tasks") or [])[:5]
+        ],
+        "archived_from_investment_report": True,
+    }
+
+
+def merge_archived_investment_actions(actions: list[dict[str, Any]], artifacts_by_action: dict[str, dict[str, Any]]) -> list[dict[str, Any]]:
+    merged = list(actions)
+    existing = {action.get("action_id") for action in merged if action.get("action_id")}
+    for action_id, artifacts in artifacts_by_action.items():
+        if action_id in existing:
+            continue
+        archived = archived_action_from_investment_artifacts(action_id, artifacts)
+        if archived:
+            merged.append(archived)
+            existing.add(action_id)
+    return merged
 
 
 def latest_trade_dates(conn: sqlite3.Connection) -> dict[str, str | None]:
@@ -1508,6 +1655,10 @@ def build_dashboard_state(now: datetime | None = None, registry_limit: int = 24,
             ts_code: latest_external_research_snapshot(conn, ts_code)
             for ts_code in detail_symbol_list
         }
+        detail_external_research_items = {
+            ts_code: external_research_snapshots(conn, ts_code, limit=8)
+            for ts_code in detail_symbol_list
+        }
         detail_official_materials = {
             ts_code: summarize_official_materials(conn, ts_code, limit=4)
             for ts_code in detail_symbol_list
@@ -1516,6 +1667,13 @@ def build_dashboard_state(now: datetime | None = None, registry_limit: int = 24,
             ts_code: latest_public_transcript_snapshot(conn, ts_code)
             for ts_code in detail_symbol_list
         }
+        current_action_ids = [
+            action.get("action_id")
+            for action in (action_snapshot_payload.get("actions") or [])
+            if action.get("action_id")
+        ]
+        investment_action_ids = list(dict.fromkeys([*current_action_ids, *latest_investment_action_ids(conn, limit=12)]))
+        investment_action_artifacts = latest_investment_artifacts_by_action(conn, investment_action_ids)
     finally:
         conn.close()
 
@@ -1611,6 +1769,15 @@ def build_dashboard_state(now: datetime | None = None, registry_limit: int = 24,
     paper_performance_snapshot = snapshots["paper_watch_performance_snapshot"] or {}
     paper_performance_payload = paper_performance_snapshot.get("payload") or {}
     paper_performance_relationships = paper_performance_snapshot.get("relationships") or {}
+    evidence_gap_snapshot = snapshots["opportunity_evidence_gap_snapshot"] or {}
+    evidence_gap_payload = evidence_gap_snapshot.get("payload") or {}
+    evidence_gap_relationships = evidence_gap_snapshot.get("relationships") or {}
+    data_freshness_snapshot = snapshots["data_freshness_snapshot"] or {}
+    data_freshness_payload = data_freshness_snapshot.get("payload") or {}
+    data_freshness_relationships = data_freshness_snapshot.get("relationships") or {}
+    current_state_snapshot = snapshots["current_state_snapshot"] or {}
+    current_state_payload = current_state_snapshot.get("payload") or {}
+    current_state_relationships = current_state_snapshot.get("relationships") or {}
 
     forecast_snapshot = snapshots["price_range_forecast_snapshot"] or {}
     forecast_payload = forecast_snapshot.get("payload") or {}
@@ -1682,6 +1849,18 @@ def build_dashboard_state(now: datetime | None = None, registry_limit: int = 24,
         paper_performance_relationships.get("summary_rel_path")
         or paper_performance_payload.get("summary_rel_path")
     )
+    evidence_gap_rel_path = (
+        evidence_gap_relationships.get("summary_rel_path") or evidence_gap_payload.get("summary_rel_path")
+    )
+    data_freshness_rel_path = (
+        data_freshness_relationships.get("summary_rel_path") or data_freshness_payload.get("summary_rel_path")
+    )
+    current_state_rel_path = (
+        current_state_relationships.get("current_state_rel_path") or current_state_payload.get("current_state_rel_path")
+    )
+    current_state_archive_rel_path = (
+        current_state_relationships.get("summary_rel_path") or current_state_payload.get("summary_rel_path")
+    )
     forecast_rel_path = (
         forecast_relationships.get("summary_rel_path") or forecast_payload.get("summary_rel_path")
     )
@@ -1719,6 +1898,11 @@ def build_dashboard_state(now: datetime | None = None, registry_limit: int = 24,
             "status": snapshot.get("status"),
             "created_at": snapshot.get("created_at"),
         }
+
+    portfolio_actions = merge_archived_investment_actions(
+        [simplify_action(item) for item in (action_payload.get("actions") or [])],
+        investment_action_artifacts,
+    )
 
     state = {
         "generated_at": now.strftime("%Y-%m-%d %H:%M:%S"),
@@ -1772,6 +1956,23 @@ def build_dashboard_state(now: datetime | None = None, registry_limit: int = 24,
             "today_script_status_counts": run_log["today_status_counts"],
             "today_script_count": run_log["today_script_count"],
             "key_status": key_status,
+        },
+        "current_state": {
+            "entity_id": current_state_snapshot.get("entity_id"),
+            "status": current_state_snapshot.get("status"),
+            "created_at": current_state_snapshot.get("created_at"),
+            "generated_at": current_state_payload.get("generated_at"),
+            "batch_date": current_state_payload.get("batch_date"),
+            "operating_status": current_state_payload.get("operating_status"),
+            "p0_actions": current_state_payload.get("p0_actions") or [],
+            "top_opportunities": current_state_payload.get("top_opportunities") or [],
+            "paper_watch": current_state_payload.get("paper_watch") or [],
+            "evidence_gaps": current_state_payload.get("evidence_gaps") or [],
+            "freshness_problems": current_state_payload.get("freshness_problems") or [],
+            "status_counts": current_state_payload.get("status_counts") or {},
+            "dispatch_board": current_state_payload.get("dispatch_board") or {},
+            "artifact": build_artifact(current_state_rel_path, "当前作战状态"),
+            "archive_artifact": build_artifact(current_state_archive_rel_path, "当前作战状态归档"),
         },
         "reporting": {
             "report_surface_date": daily_payload.get("report_surface_date"),
@@ -1908,6 +2109,32 @@ def build_dashboard_state(now: datetime | None = None, registry_limit: int = 24,
                 "items": paper_performance_payload.get("items") or [],
                 "artifact": build_artifact(paper_performance_rel_path, "纸面观察表现复盘"),
             },
+            "evidence_gap": {
+                "entity_id": evidence_gap_snapshot.get("entity_id"),
+                "status": evidence_gap_snapshot.get("status"),
+                "created_at": evidence_gap_snapshot.get("created_at"),
+                "candidate_count": evidence_gap_payload.get("candidate_count") or 0,
+                "gap_count": evidence_gap_payload.get("gap_count") or 0,
+                "state_counts": evidence_gap_payload.get("state_counts") or {},
+                "overview_lines": evidence_gap_payload.get("overview_lines") or [],
+                "items": evidence_gap_payload.get("items") or [],
+                "fetch_targets": evidence_gap_payload.get("fetch_targets") or [],
+                "fetch_results": evidence_gap_payload.get("fetch_results") or [],
+                "artifact": build_artifact(evidence_gap_rel_path, "机会证据缺口"),
+            },
+        },
+        "system_health": {
+            "data_freshness": {
+                "entity_id": data_freshness_snapshot.get("entity_id"),
+                "status": data_freshness_snapshot.get("status"),
+                "created_at": data_freshness_snapshot.get("created_at"),
+                "overall_status": data_freshness_payload.get("overall_status"),
+                "problem_count": data_freshness_payload.get("problem_count") or 0,
+                "status_counts": data_freshness_payload.get("status_counts") or {},
+                "overview_lines": data_freshness_payload.get("overview_lines") or [],
+                "items": data_freshness_payload.get("items") or [],
+                "artifact": build_artifact(data_freshness_rel_path, "数据新鲜度"),
+            },
         },
         "deep_analysis": {
             "entity_id": deep_analysis_snapshot.get("entity_id"),
@@ -1986,7 +2213,8 @@ def build_dashboard_state(now: datetime | None = None, registry_limit: int = 24,
             "action_type_counts": action_payload.get("action_type_counts") or {},
             "execution_precheck_status": action_payload.get("execution_precheck_status"),
             "primary_call": (action_payload.get("primary_call") or [])[:5],
-            "actions": [simplify_action(item) for item in (action_payload.get("actions") or [])],
+            "actions": portfolio_actions,
+            "investment_artifacts": investment_action_artifacts,
             "artifact": build_artifact(action_rel_path, "组合动作建议"),
             "action_log_artifact": build_artifact(action_payload.get("action_log_rel_path"), "组合动作日志"),
             "execution_precheck_artifact": build_artifact(precheck_rel_path, "执行前检查"),
@@ -2112,6 +2340,7 @@ def build_dashboard_state(now: datetime | None = None, registry_limit: int = 24,
                     "capital_flow_fact_sheet": capital_flow_fact_sheet,
                     "risk_alerts": detail_risk_alerts.get(ts_code) or [],
                     "external_research": detail_external_research.get(ts_code),
+                    "external_research_items": detail_external_research_items.get(ts_code) or [],
                     "official_material": detail_official_materials.get(ts_code) or {},
                     "public_transcript": detail_public_transcripts.get(ts_code),
                     "open_position": open_positions_by_code.get(ts_code),

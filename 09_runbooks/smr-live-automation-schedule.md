@@ -58,6 +58,12 @@ launchd 部署脚本：
 08_scripts/scheduler/run_smr_schedule_job.py
 ```
 
+当前作战状态面板：
+
+```text
+00_control/current_state.md
+```
+
 运行日志：
 
 ```text
@@ -127,6 +133,12 @@ python3 08_scripts/scheduler/deploy_agent_launchd.py --unload
 - `schedule_id`
 - `lead_profile_id`
 - `operator_profile_ids`
+
+当前重点闭环：
+
+- `opportunity_radar` 会额外生成证据缺口、新鲜度和 current_state。
+- `morning_us`、`preopen_report`、`afternoon_close`、`afternoon_refresh` 会刷新 current_state。
+- 当 `dispatch_board.md` 仍停留在旧口径时，先看 `00_control/current_state.md`。
 
 这能保证后续看日志时可以区分：
 

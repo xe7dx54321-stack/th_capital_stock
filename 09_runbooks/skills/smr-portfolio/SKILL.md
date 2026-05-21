@@ -20,6 +20,7 @@ Its job is:
 
 ## Load order
 
+0. Read `/Users/apple/Documents/同行资本二级市场/09_runbooks/skills/smr-research-synthesis/SKILL.md`
 1. Read all open positions from database `/Users/apple/Documents/同行资本二级市场/01_data/db/smr.db`
 2. Read latest P&L data from `/Users/apple/Documents/同行资本二级市场/04_portfolio/performance/`
 3. Read risk alerts from `/Users/apple/Documents/同行资本二级市场/05_risk/alerts/`
@@ -46,6 +47,7 @@ Its job is:
    - Add to position: Only if thesis strengthens and trend confirms
    - Reduce position: If thesis weakens or sector concentration too high
    - Exit position: If thesis broken, stop-loss hit, or target reached
+   - For rotation actions, distinguish research conclusion, research hypothesis, material note, and price signal
 
 4. **Portfolio rebalancing** (weekly):
    - Check sector concentration (must be < 50% per sector)
@@ -69,6 +71,7 @@ For daily position review:
 ## Hard constraints
 
 - Do not hold positions without a thesis.
+- Do not justify a portfolio action by copying one external report.
 - Do not ignore stop-loss triggers.
 - Do not exceed position limits (25% single, 50% sector).
 - All trades require user confirmation.

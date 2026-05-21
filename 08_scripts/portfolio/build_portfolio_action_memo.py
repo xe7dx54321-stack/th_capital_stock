@@ -540,6 +540,8 @@ def write_action_memo(path, created_at, action_date, payload, relationships):
             "## 边界说明",
             "",
             "- 这层是把已有研究与组合约束收敛成动作清单，不是自动交易指令。",
+            "- 单篇研报、单条新闻、单次电话会摘要只能作为原料；不能直接当成 SMR 的调仓结论。",
+            "- 调仓逻辑必须按 `09_runbooks/skills/smr-research-synthesis/SKILL.md` 区分共识、分歧、第一方验证、证据缺口和可证伪条件。",
             "- 如果还没补真实 `position`，所有金额和节奏都只能按参照层理解。",
             "- 真正执行前，仍要叠加 `entry.py / pnl.py / risk_monitor_snapshot` 的正式门禁。",
             "",

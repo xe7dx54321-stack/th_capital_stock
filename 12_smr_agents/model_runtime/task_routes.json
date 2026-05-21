@@ -22,6 +22,26 @@
       "output_contract": "research_context_note_candidate",
       "prompt_pack_rel_path": "12_smr_agents/prompt_packs/hermes_research_curator.md"
     },
+    "investment_evidence_pack_snapshot": {
+      "to_profile_id": "hermes_investment_analyst",
+      "task_kind": "investment_research_synthesis",
+      "model_slot": "long_context_secondary",
+      "packet_mode": "shadow",
+      "requires_human_review": true,
+      "auto_apply": false,
+      "output_contract": "investment_research_synthesis_candidate",
+      "prompt_pack_rel_path": "12_smr_agents/prompt_packs/hermes_investment_analyst.md"
+    },
+    "investment_research_synthesis_snapshot": {
+      "to_profile_id": "hermes_investment_report_writer",
+      "task_kind": "investment_report_writer",
+      "model_slot": "long_context_secondary",
+      "packet_mode": "shadow",
+      "requires_human_review": true,
+      "auto_apply": false,
+      "output_contract": "investment_report_candidate",
+      "prompt_pack_rel_path": "12_smr_agents/prompt_packs/hermes_investment_report_writer.md"
+    },
     "trend_research_batch": {
       "to_profile_id": "hermes_research_curator",
       "task_kind": "research_batch_compressor",

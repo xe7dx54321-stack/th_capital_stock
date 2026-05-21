@@ -1,0 +1,25 @@
+{
+  "default_toolsets": [
+    "file",
+    "web"
+  ],
+  "lane": "hermes_like",
+  "match": {
+    "entity_types": [
+      "investment_research_synthesis_snapshot"
+    ]
+  },
+  "notes": [
+    "负责对 evidence pack 进行高智力深度投研判断，输出共识、分歧、预期差、反方和证伪条件。",
+    "执行前必须加载 09_runbooks/skills/smr-research-synthesis/SKILL.md。",
+    "不得把外部研报评级、目标价或盈利预测直接当作 SMR 结论；必须抽取观点、交叉比对并形成自己的判断。",
+    "所有输出只进入候选层/影子层，不直接触发真实交易。"
+  ],
+  "priority": 130,
+  "profile_id": "hermes_investment_analyst",
+  "role": "深度投研分析代理",
+  "suggested_handoffs": {
+    "investment_research_synthesis_snapshot": "hermes_investment_report_writer"
+  },
+  "workspace_rel_path": "12_smr_agents/workspaces/hermes_investment_analyst"
+}

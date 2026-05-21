@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import sqlite3
 import sys
 import webbrowser
 from datetime import date as dt_date
@@ -18,20 +19,13 @@ LIB_DIR = Path(__file__).resolve().parents[1] / "lib"
 if str(LIB_DIR) not in sys.path:
     sys.path.insert(0, str(LIB_DIR))
 
-from smr_dashboard import build_dashboard_state, resolve_project_path
+from smr_dashboard import DB_PATH, build_dashboard_state, resolve_project_path
+from smr_decision import ensure_decision_tables, review_recommendation
 
 
 NAV_ITEMS = [
-    ("/", "导航"),
-    ("/reports", "日报"),
-    ("/opportunities", "机会挖掘"),
-    ("/analysis", "个股分析"),
-    ("/operations", "自动运营"),
-    ("/research", "研究观察"),
-    ("/portfolio", "调仓动作"),
-    ("/risk", "风险结果"),
-    ("/capital-flow", "资金流"),
-    ("/events", "事件"),
+    ("/", "看板"),
+    ("/review-queue", "审核"),
 ]
 
 OPERATIONS_BLUEPRINT = [
@@ -154,8 +148,17 @@ CODE_LABELS = {
     "holding_watch": "持仓复核",
     "opportunity_followup": "机会跟踪",
     "high_conviction_watch": "高优先观察",
+    "breakout_with_volume": "放量突破",
+    "trend_continuation": "趋势延续",
+    "price_volume_acceleration": "价量加速",
+    "overheat_watch": "短线过热",
+    "reversal_probe": "反转试探",
+    "watch_only": "仅观察",
     "paper_watch_candidate": "纸面观察候选",
     "paper_watch_ready": "纸面观察就绪",
+    "breakout_20d_volume_hold10": "20日放量突破后持有10日",
+    "ma20_ma60_trend_hold20": "20/60日均线多头排列后持有20日",
+    "pullback_above_ma60_hold10": "60日线上方回撤后持有10日",
     "new_candidate": "新进雷达",
     "promoted": "晋级",
     "strengthening": "强化",
@@ -177,7 +180,7 @@ CODE_LABELS = {
     "pending": "待验证",
     "ready_for_paper_watch": "纸面证据通过",
     "thin_sample": "样本偏薄",
-    "mixed_evidence": "证据混合",
+    "mixed_evidence": "混合证据",
     "negative_evidence": "负证据",
     "high": "高",
     "medium": "中",
@@ -221,6 +224,7 @@ CODE_LABELS = {
     "research": "研报",
     "announcement": "公告",
     "fresh": "较新",
+    "warn": "预警",
     "fresh_hot": "很新",
     "usable": "还能参考",
     "aging": "开始变旧",
@@ -229,9 +233,30 @@ CODE_LABELS = {
     "quarterly": "季频",
     "missing": "缺失",
     "unknown": "未知",
+    "data_first": "先补数据",
+    "evidence_first": "先补证据",
+    "review_triggers": "复核触发",
+    "normal_watch": "正常观察",
+    "event_backed": "有新证据",
+    "stale_evidence": "证据偏旧",
+    "price_only": "仅价格信号",
+    "overheated_without_fresh_evidence": "偏热缺新证据",
     "success": "成功",
     "failed": "失败",
     "error": "错误",
+    "initial": "首次试单",
+    "initial_build": "首次试单",
+    "initial_action": "首次试单",
+    "add": "加仓条件",
+    "add_position": "加仓条件",
+    "reduce": "降敞口条件",
+    "reduce_exposure": "降敞口条件",
+    "reduce_position": "减仓条件",
+    "exit": "退出条件",
+    "exit_observation": "退出观察",
+    "stop_loss": "止损条件",
+    "hold": "继续持有条件",
+    "watch": "继续观察",
     "dry_run": "演练",
     "running": "运行中",
     "partial": "部分成功",
@@ -526,6 +551,9 @@ def status_tone(value: str | None) -> str:
         "strengthening",
         "trigger_confirmed",
         "positive_validation",
+        "event_backed",
+        "normal_watch",
+        "review_triggers",
     }:
         return "good"
     if key in {
@@ -548,6 +576,12 @@ def status_tone(value: str | None) -> str:
         "dropped_from_radar",
         "invalidated",
         "failed_validation",
+        "warn",
+        "data_first",
+        "evidence_first",
+        "stale_evidence",
+        "price_only",
+        "overheated_without_fresh_evidence",
     }:
         return "warning"
     if key in {
@@ -946,6 +980,7 @@ def render_shell(
     hero_facts: list[tuple[str, str | int | float | None]] | None = None,
     snapshot_generated_at: str | None = None,
     state_version: str | None = None,
+    show_status_strip: bool = True,
 ) -> str:
     facts_html = ""
     if hero_facts:
@@ -954,7 +989,7 @@ def render_shell(
     if refresh_seconds > 0 and not state_version:
         refresh_meta = f'  <meta http-equiv="refresh" content="{refresh_seconds}">\n'
     status_strip_html = ""
-    if snapshot_generated_at or state_version:
+    if show_status_strip and (snapshot_generated_at or state_version):
         status_strip_html = (
             "<section class='status-strip'>"
             "<div class='status-pill'><span>自动更新</span><strong data-auto-refresh-state>已开启</strong></div>"
@@ -1024,15 +1059,15 @@ def render_shell(
 {refresh_meta}  <title>{escape(page_title)}</title>
   <style>
     :root {{
-      --bg: #f3efe7;
-      --panel: rgba(255, 252, 248, 0.9);
+      --bg: #eef2f5;
+      --panel: rgba(255, 255, 255, 0.92);
       --ink: #1f272e;
       --muted: #6d7579;
       --line: rgba(31, 39, 46, 0.1);
-      --brand: #114a72;
-      --brand-soft: rgba(17, 74, 114, 0.08);
+      --brand: #155a6f;
+      --brand-soft: rgba(21, 90, 111, 0.08);
       --good: #165f4f;
-      --warn: #a86112;
+      --warn: #9a5b14;
       --ghost: #546673;
       --shadow: 0 20px 48px rgba(31, 39, 46, 0.08);
     }}
@@ -1040,10 +1075,7 @@ def render_shell(
     body {{
       margin: 0;
       color: var(--ink);
-      background:
-        radial-gradient(circle at top left, rgba(16, 111, 140, 0.1), transparent 32%),
-        radial-gradient(circle at top right, rgba(184, 116, 52, 0.1), transparent 30%),
-        linear-gradient(180deg, #fbf8f2 0%, var(--bg) 100%);
+      background: linear-gradient(180deg, #f9fbfc 0%, var(--bg) 100%);
       font-family: "PingFang SC", "Noto Serif SC", "Hiragino Sans GB", "Source Han Serif SC", Georgia, serif;
       line-height: 1.58;
     }}
@@ -1108,7 +1140,7 @@ def render_shell(
     .hero {{
       background: var(--panel);
       border: 1px solid var(--line);
-      border-radius: 28px;
+      border-radius: 18px;
       box-shadow: var(--shadow);
       padding: 26px 26px 22px;
       margin-bottom: 18px;
@@ -1131,18 +1163,35 @@ def render_shell(
       gap: 10px;
       margin-top: 16px;
     }}
+    .hero-chip {{
+      display: inline-flex;
+      align-items: baseline;
+      gap: 7px;
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: rgba(21, 90, 111, 0.08);
+      border: 1px solid rgba(21, 90, 111, 0.12);
+      font-size: 13px;
+    }}
+    .hero-chip span {{
+      color: var(--muted);
+    }}
+    .hero-chip strong {{
+      color: var(--ink);
+      font-size: 13px;
+    }}
     .status-strip {{
       display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 12px;
-      margin-bottom: 18px;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 8px;
+      margin-bottom: 14px;
     }}
     .status-pill {{
-      padding: 14px 16px;
-      border-radius: 18px;
+      padding: 10px 12px;
+      border-radius: 12px;
       border: 1px solid var(--line);
       background: rgba(255, 255, 255, 0.76);
-      box-shadow: 0 12px 28px rgba(31, 39, 46, 0.05);
+      box-shadow: 0 8px 18px rgba(31, 39, 46, 0.04);
     }}
     .status-pill span {{
       display: block;
@@ -1159,7 +1208,7 @@ def render_shell(
     .panel {{
       background: var(--panel);
       border: 1px solid var(--line);
-      border-radius: 24px;
+      border-radius: 18px;
       box-shadow: var(--shadow);
       padding: 22px;
       margin-bottom: 18px;
@@ -1198,10 +1247,10 @@ def render_shell(
     }}
     .tile {{
       display: block;
-      border-radius: 22px;
-      padding: 20px;
+      border-radius: 12px;
+      padding: 18px;
       border: 1px solid rgba(17, 74, 114, 0.14);
-      background: linear-gradient(180deg, rgba(255,255,255,0.72), rgba(17,74,114,0.04));
+      background: rgba(255,255,255,0.78);
       box-shadow: 0 14px 36px rgba(31, 39, 46, 0.06);
     }}
     .tile:hover {{
@@ -1261,7 +1310,7 @@ def render_shell(
     }}
     .card {{
       border: 1px solid rgba(31, 39, 46, 0.08);
-      border-radius: 18px;
+      border-radius: 12px;
       background: rgba(255, 255, 255, 0.72);
       padding: 18px;
       margin-bottom: 14px;
@@ -1273,7 +1322,7 @@ def render_shell(
     }}
     .metric-card {{
       border: 1px solid rgba(31, 39, 46, 0.08);
-      border-radius: 20px;
+      border-radius: 12px;
       background: rgba(255, 255, 255, 0.78);
       padding: 18px;
       box-shadow: 0 12px 28px rgba(31, 39, 46, 0.04);
@@ -1508,14 +1557,198 @@ def render_shell(
       border-bottom: none;
       padding-bottom: 0;
     }}
+    .command-layout {{
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(300px, 0.9fr);
+      gap: 18px;
+      align-items: start;
+      margin-bottom: 18px;
+    }}
+    .focus-list {{
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }}
+    .focus-list li {{
+      display: flex;
+      gap: 12px;
+      padding: 13px 0;
+      border-bottom: 1px solid rgba(31, 39, 46, 0.08);
+      align-items: flex-start;
+    }}
+    .focus-list li:last-child {{
+      border-bottom: none;
+    }}
+    .focus-index {{
+      flex: 0 0 auto;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 999px;
+      background: var(--brand);
+      color: white;
+      font-size: 12px;
+      font-weight: 700;
+    }}
+    .focus-main {{
+      flex: 1 1 auto;
+      min-width: 0;
+    }}
+    .focus-actions {{
+      flex: 0 0 auto;
+      padding-top: 1px;
+    }}
+    .focus-title {{
+      margin: 0 0 4px;
+      font-size: 15px;
+      font-weight: 700;
+      line-height: 1.38;
+    }}
+    .focus-note {{
+      color: var(--muted);
+      font-size: 13px;
+    }}
+    .watch-row {{
+      display: grid;
+      grid-template-columns: minmax(120px, 1fr) auto;
+      gap: 10px;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(31, 39, 46, 0.08);
+      align-items: baseline;
+    }}
+    .watch-row:last-child {{
+      border-bottom: none;
+    }}
+    .entry-grid {{
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+    }}
+    .entry-link {{
+      display: block;
+      padding: 14px 15px;
+      border: 1px solid rgba(31, 39, 46, 0.08);
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.76);
+      min-height: 88px;
+    }}
+    .entry-link:hover {{
+      text-decoration: none;
+      border-color: rgba(21, 90, 111, 0.35);
+    }}
+    .entry-link strong {{
+      display: block;
+      margin-bottom: 6px;
+      color: var(--ink);
+      font-size: 15px;
+    }}
+    .entry-link span {{
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }}
+    .action-card {{
+      border: 1px solid rgba(31, 39, 46, 0.08);
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.76);
+      padding: 14px;
+      margin-bottom: 10px;
+    }}
+    .action-card:last-child {{
+      margin-bottom: 0;
+    }}
+    .action-topline {{
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: flex-start;
+      margin-bottom: 8px;
+    }}
+    .action-title {{
+      margin: 0;
+      font-size: 15px;
+      line-height: 1.4;
+      font-weight: 700;
+    }}
+    .action-copy {{
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }}
+    .button-row {{
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }}
+    .small-button {{
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.46rem 0.76rem;
+      border-radius: 999px;
+      background: var(--brand);
+      color: white;
+      font-size: 12px;
+      font-weight: 700;
+    }}
+    .small-button:hover {{
+      text-decoration: none;
+      background: #0f4758;
+    }}
     .source-link {{
       margin-top: 14px;
       padding-top: 14px;
       border-top: 1px solid rgba(31, 39, 46, 0.08);
     }}
+    .report-section {{
+      display: grid;
+      gap: 18px;
+    }}
+    .report-block {{
+      border: 1px solid rgba(31, 39, 46, 0.08);
+      border-radius: 12px;
+      padding: 16px;
+      background: rgba(255, 255, 255, 0.72);
+    }}
+    .report-block h3 {{
+      margin: 0 0 8px;
+      font-size: 18px;
+      line-height: 1.35;
+    }}
+    .report-block p {{
+      margin: 0 0 10px;
+      color: var(--ink);
+    }}
+    .report-block ul {{
+      margin: 0.4rem 0 0 1.2rem;
+      padding: 0;
+    }}
+    .report-block li {{
+      margin-bottom: 0.42rem;
+    }}
+    .report-muted {{
+      color: var(--muted);
+      font-size: 13px;
+    }}
+    .report-warning {{
+      border-left: 4px solid var(--warn);
+      padding-left: 12px;
+      color: var(--ink);
+    }}
     @media (max-width: 1080px) {{
-      .grid-2, .grid-3, .split, .report-layout, .event-grid, .story-grid, .status-strip {{
+      .grid-2, .grid-3, .split, .report-layout, .event-grid, .story-grid, .command-layout, .entry-grid {{
         grid-template-columns: 1fr;
+      }}
+      .focus-list li {{
+        flex-wrap: wrap;
+      }}
+      .focus-actions {{
+        width: 100%;
+        padding-left: 40px;
       }}
     }}
   </style>
@@ -1523,7 +1756,7 @@ def render_shell(
 <body>
   <div class="page">
     <header class="topbar">
-      <div class="brand">SMR Business Dashboard</div>
+      <div class="brand">SMR 指挥台</div>
       <nav class="nav">{render_nav(current_path)}</nav>
     </header>
     {status_strip_html}
@@ -2314,6 +2547,1135 @@ def render_symbol_compare_panel(title: str, left_label: str, left_item: dict | N
     )
 
 
+def as_float(value: object) -> float | None:
+    if value in (None, ""):
+        return None
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def action_proxy_score(action: dict) -> float | None:
+    for text in action.get("rationale") or []:
+        match = re.search(r"结构改善代理分\s*`?([0-9]+(?:\.[0-9]+)?)`?", str(text))
+        if match:
+            return as_float(match.group(1))
+    return None
+
+
+def action_forecast_context(state: dict, item: dict | None) -> dict:
+    if not item:
+        return {}
+    context = detail_context_for_symbol(state, item.get("ts_code"))
+    return context.get("forecast") or {}
+
+
+def window_bias_pct(forecast: dict | None, window_key: str) -> float | None:
+    window = (forecast or {}).get(window_key) or {}
+    return as_float(window.get("bias_pct"))
+
+
+def fmt_bias_delta(value: float | None) -> str:
+    return fmt_pct(value) if value is not None else "-"
+
+
+def action_target_price_text(item: dict | None, context: dict | None) -> str:
+    external = (context or {}).get("external_research") or {}
+    target = external.get("target_price_yuan") or (item or {}).get("target_price_yuan")
+    if target not in (None, ""):
+        return f"外部研报目标价 {fmt_number(target)}"
+    return "当前没有统一目标价口径；这条动作只能按受控试单和观察/失效位推进，不能当成目标价驱动的满仓交易。"
+
+
+def external_research_fact(item: dict | None, context: dict | None) -> str:
+    external = (context or {}).get("external_research") or {}
+    if not external and not item:
+        return "暂无外部研究锚点。"
+    parts = []
+    org = external.get("org_name") or (item or {}).get("external_research_org")
+    rating = external.get("rating_name") or (item or {}).get("external_research_rating")
+    published = external.get("published_at") or (item or {}).get("external_research_published_at")
+    if org:
+        parts.append(org)
+    if rating:
+        parts.append(rating)
+    if published:
+        parts.append(published)
+    eps = external.get("eps_yuan") or {}
+    pe = external.get("pe_multiple") or {}
+    if eps:
+        latest_key = sorted(eps.keys())[0]
+        parts.append(f"EPS {latest_key}={fmt_number(eps.get(latest_key))}")
+    if pe:
+        latest_key = sorted(pe.keys())[0]
+        parts.append(f"PE {latest_key}={fmt_number(pe.get(latest_key))}")
+    return " / ".join(parts) if parts else external_research_summary(external or item or {})
+
+
+def capital_flow_fact(context: dict | None) -> str:
+    context = context or {}
+    margin = context.get("margin_balance") or {}
+    stock_connect_hits = context.get("stock_connect_hits") or []
+    parts = []
+    if margin:
+        parts.append(
+            f"两融余额 {fmt_money_cn(margin.get('financing_balance'))}"
+            f" / 单日融资买入 {fmt_money_cn(margin.get('financing_buy_amount'))}"
+            f" / {margin.get('trade_date') or '-'}"
+        )
+    if stock_connect_hits:
+        head = stock_connect_hits[0]
+        parts.append(
+            f"{head.get('route_name') or '-'}持有 {fmt_shares_cn(head.get('holding_quantity'))}"
+            f" / {code_label(head.get('frequency'))}"
+            f" / {head.get('trade_date') or '-'}"
+        )
+    return "；".join(parts) if parts else "暂无资金面锚点。"
+
+
+def action_price_line(item: dict | None, forecast: dict | None) -> str:
+    item = item or {}
+    forecast = forecast or {}
+    return (
+        f"最新价 {fmt_number(item.get('latest_close') or forecast.get('latest_close'))}"
+        f" / 日涨跌 {fmt_pct(item.get('latest_pct_chg') if item.get('latest_pct_chg') is not None else forecast.get('latest_pct_chg'))}"
+        f" / MA20 {fmt_number(forecast.get('ma_20'))}"
+        f" / MA60 {fmt_number(forecast.get('ma_60'))}"
+        f" / 趋势强度 {fmt_number(forecast.get('trend_strength'))}"
+    )
+
+
+def paper_watch_line(state: dict, ts_code: str | None) -> str:
+    ticket = find_paper_watch_ticket(((state.get("current_state") or {}).get("paper_watch") or []), ts_code)
+    if not ticket:
+        return "暂无纸面观察上下沿，需用下一轮区间/风控链补齐。"
+    return f"观察上沿 {fmt_number(ticket.get('observe_above'))}；失效下沿 {fmt_number(ticket.get('invalidate_below'))}"
+
+
+def render_action_logic_panel(state: dict, action: dict, add_item: dict | None, remove_item: dict | None, subject_item: dict | None) -> str:
+    add_forecast = action_forecast_context(state, add_item)
+    remove_forecast = action_forecast_context(state, remove_item)
+    proxy_score = action_proxy_score(action)
+    next_spread = None
+    five_spread = None
+    if add_forecast and remove_forecast:
+        add_next = window_bias_pct(add_forecast, "next_day")
+        remove_next = window_bias_pct(remove_forecast, "next_day")
+        add_five = window_bias_pct(add_forecast, "five_day")
+        remove_five = window_bias_pct(remove_forecast, "five_day")
+        if add_next is not None and remove_next is not None:
+            next_spread = add_next - remove_next
+        if add_five is not None and remove_five is not None:
+            five_spread = add_five - remove_five
+    trade_amount = as_float(action.get("trade_amount"))
+    model_effect = trade_amount * five_spread / 100 if trade_amount is not None and five_spread is not None else None
+    rows = [
+        [
+            "为什么要做",
+            "；".join(business_text(item) for item in (action.get("rationale") or [])) or business_text(action.get("summary") or "-"),
+        ],
+        [
+            "相比不调仓的好处",
+            (
+                f"把 {code_label((remove_item or {}).get('primary_pool')) or '原参照腿'} 的修复/等待口径，"
+                f"替换为 {code_label((add_item or subject_item or {}).get('primary_pool'))} 的主线/候选口径；"
+                f"同时把资金、研究和趋势证据集中到更强的一侧。"
+                if add_item and remove_item
+                else "保持当前对象在复核清单中，先避免无证据加仓。"
+            ),
+        ],
+        [
+            "预期收益如何变化",
+            (
+                f"当前没有正式目标价收益预测；用结构改善代理分 {fmt_number(proxy_score)} 和短周期模型做参照。"
+                f"下一交易日中值偏置差 {fmt_bias_delta(next_spread)}，5日中值偏置差 {fmt_bias_delta(five_spread)}"
+                f"{f'，按 {fmt_money_cn(trade_amount)} 试单折算约 {fmt_money_cn(model_effect)} 的模型弹性' if model_effect is not None else ''}。"
+                "该口径不是收益承诺。"
+            ),
+        ],
+        [
+            "目标价口径",
+            action_target_price_text(add_item or subject_item, detail_context_for_symbol(state, (add_item or subject_item or {}).get("ts_code"))),
+        ],
+    ]
+    return (
+        "<section class='panel'>"
+        "<h2>完整操作逻辑</h2>"
+        "<div class='section-intro'>这块把结论背后的“为什么、好处、收益口径和目标价缺口”直接摊开；不能给确定答案的地方会明确标成缺口。</div>"
+        f"{render_html_table(['问题', '系统当前回答'], [[escape(a), escape(b)] for a, b in rows], '当前没有可展示的操作逻辑。')}"
+        "</section>"
+    )
+
+
+def render_action_execution_panel(state: dict, action: dict, add_item: dict | None, remove_item: dict | None, subject_item: dict | None) -> str:
+    active_item = add_item or subject_item
+    active_forecast = action_forecast_context(state, active_item)
+    active_context = detail_context_for_symbol(state, (active_item or {}).get("ts_code"))
+    target_text = action_target_price_text(active_item, active_context)
+    next_checks = [business_text(item) for item in (action.get("next_checks") or [])]
+    if active_item:
+        next_checks.extend(business_text(item) for item in (active_item.get("next_check_items") or [])[:3])
+    exit_rules = []
+    if active_item:
+        exit_rules.append(f"跌破或确认失效：{paper_watch_line(state, active_item.get('ts_code'))}")
+        if active_forecast.get("ma_20") not in (None, ""):
+            exit_rules.append(f"若重新跌回 MA20（{fmt_number(active_forecast.get('ma_20'))}）且量能不能修复，降级或卖出。")
+        exit_rules.append("若最新公告、电话会或研报证伪核心 thesis，停止加仓并重新评估。")
+        exit_rules.append("若出现 critical 风险预警，优先执行风控而不是继续按原计划推进。")
+    if remove_item:
+        exit_rules.append(f"若调出腿 {remove_item.get('name') or remove_item.get('ts_code')} 重新站上关键均线且研究/管理层原话修复，调出理由需要复核。")
+    rows = [
+        ["执行动作", business_text(action.get("summary") or "-")],
+        ["执行规模", f"参照金额 {fmt_money_cn(action.get('trade_amount'))} / 组合占比 {fmt_ratio(action.get('trade_amount_pct'))}"],
+        ["参考买价", action_price_line(active_item, active_forecast)],
+        ["短周期区间", f"下一交易日 {fmt_forecast_window(active_forecast.get('next_day'))}；5日 {fmt_forecast_window(active_forecast.get('five_day'))}"],
+        ["买后重点", "；".join(item for item in next_checks if item) or "-"],
+        ["什么情况下卖出/降级", "；".join(exit_rules) or "-"],
+        ["目标价", target_text],
+    ]
+    return (
+        "<section class='panel'>"
+        "<h2>执行与卖出规则</h2>"
+        "<div class='section-intro'>这块只回答“怎么做、按什么价位看、买后盯什么、什么情况下撤”。</div>"
+        f"{render_html_table(['事项', '口径'], [[escape(a), escape(b)] for a, b in rows], '当前没有执行规则。')}"
+        "</section>"
+    )
+
+
+def render_action_evidence_panel(state: dict, action: dict, add_item: dict | None, remove_item: dict | None, subject_item: dict | None) -> str:
+    rows: list[list[str]] = []
+
+    def add_row(layer: str, conclusion: str, evidence: str, rel_path: str | None = None) -> None:
+        rows.append(
+            [
+                escape(layer),
+                escape(conclusion),
+                escape(evidence),
+                link_for_rel_path(rel_path, "查看原文") if rel_path else "<span class='muted'>暂无原文</span>",
+            ]
+        )
+
+    plan_rel = ((state.get("rotation") or {}).get("execution_plan_artifact") or {}).get("rel_path") or ((state.get("portfolio_action") or {}).get("artifact") or {}).get("rel_path")
+    add_row("组合执行计划", "门禁已通过，允许进入受控试单前检查。", f"动作阶段 {code_label(action.get('gate_status'))}；参照金额 {fmt_money_cn(action.get('trade_amount'))}；结构改善代理分 {fmt_number(action_proxy_score(action))}", plan_rel)
+
+    for role, item in (("调入腿", add_item), ("调出腿", remove_item), ("复核对象", subject_item)):
+        if not item:
+            continue
+        context = detail_context_for_symbol(state, item.get("ts_code"))
+        forecast = context.get("forecast") or {}
+        official = context.get("official_material") or item
+        external = context.get("external_research") or item
+        transcript = context.get("public_transcript") or item
+        add_row(
+            f"{role} / 趋势价格",
+            business_text(item.get("trend_summary") or "-"),
+            action_price_line(item, forecast),
+            forecast.get("event_source_rel_path"),
+        )
+        add_row(
+            f"{role} / 官方一手",
+            code_label(official_material_freshness(official)),
+            official_material_summary(official),
+            (official_material_source_rel_paths(official) or [None])[0],
+        )
+        add_row(
+            f"{role} / 外部研报",
+            external_research_fact(item, context),
+            action_target_price_text(item, context),
+            external.get("source_rel_path") or item.get("external_research_source_rel_path"),
+        )
+        add_row(
+            f"{role} / 管理层原话",
+            code_label((transcript or {}).get("freshness_label") or item.get("public_transcript_freshness")),
+            public_transcript_summary(transcript or item),
+            public_transcript_source_rel_path(transcript or item),
+        )
+        add_row(
+            f"{role} / 资金面",
+            "资金参与度与持仓锚点",
+            capital_flow_fact(context),
+            None,
+        )
+    return (
+        "<section class='panel'>"
+        "<h2>证据链</h2>"
+        "<div class='section-intro'>每条结论都挂到可复核事实：组合计划、趋势价格、官方一手、外部研报/机构观点、管理层原话和资金面。</div>"
+        f"{render_html_table(['证据层', '结论', '事实依据', '原文'], rows, '当前没有证据链。')}"
+        "</section>"
+    )
+
+
+def render_action_capability_gap_panel(state: dict, action: dict, add_item: dict | None, remove_item: dict | None, subject_item: dict | None) -> str:
+    gaps = []
+    for role, item in (("调入腿", add_item), ("调出腿", remove_item), ("复核对象", subject_item)):
+        if not item:
+            continue
+        context = detail_context_for_symbol(state, item.get("ts_code"))
+        external = context.get("external_research") or {}
+        official = context.get("official_material") or {}
+        if (external.get("target_price_yuan") or item.get("target_price_yuan")) in (None, ""):
+            gaps.append(f"{role} {item.get('name') or item.get('ts_code')} 缺统一目标价。")
+        if not context.get("public_transcript") and not item.get("public_transcript_summary"):
+            gaps.append(f"{role} {item.get('name') or item.get('ts_code')} 缺可用电话会/管理层原话。")
+        if official and official.get("freshness_label") in {"missing", "stale"}:
+            gaps.append(f"{role} {item.get('name') or item.get('ts_code')} 官方一手材料不够新。")
+    if not gaps:
+        return ""
+    items = "".join(f"<li>{escape(gap)}</li>" for gap in gaps)
+    return (
+        "<section class='panel'>"
+        "<h2>能力和证据缺口</h2>"
+        "<div class='section-intro'>这些缺口会限制动作强度：有缺口时只能受控试单或复核，不能升级成无条件买入。</div>"
+        f"<ul>{items}</ul>"
+        "</section>"
+    )
+
+
+def pct_from_fraction(value: object) -> str:
+    number = as_float(value)
+    if number is None:
+        return "-"
+    return f"{number * 100:+.2f}%"
+
+
+def clean_report_sentence(text: str | None) -> str:
+    cleaned = business_text(text)
+    cleaned = cleaned.replace("thesis（投资逻辑）", "投资逻辑").replace("thesis", "投资逻辑")
+    cleaned = cleaned.replace("和 投资逻辑", "和投资逻辑")
+    cleaned = cleaned.replace("critical 风险预警", "最高级风险预警")
+
+    def money_repl(match: re.Match[str]) -> str:
+        return f"拟替换金额约 {fmt_money_cn(match.group(1))}"
+
+    return re.sub(r"拟替换金额约\s*([0-9]+(?:\.[0-9]+)?)", money_repl, cleaned)
+
+
+def find_strategy_evidence(state: dict, ts_code: str | None) -> dict | None:
+    if not ts_code:
+        return None
+    for item in (((state.get("opportunity_engine") or {}).get("evidence") or {}).get("items") or []):
+        if item.get("ts_code") == ts_code:
+            return item
+    return None
+
+
+def external_model_sentence(context: dict | None) -> str:
+    external = (context or {}).get("external_research") or {}
+    if not external:
+        return "当前没有可用的外部研报模型。"
+    parts = []
+    for label, key in (("收入", "revenue_billion"), ("净利润", "net_profit_billion"), ("EPS", "eps_yuan"), ("PE", "pe_multiple")):
+        series = external.get(key) or {}
+        if len(series) >= 2:
+            keys = sorted(series.keys())
+            parts.append(f"{label} {keys[0]} {fmt_number(series.get(keys[0]))} -> {keys[-1]} {fmt_number(series.get(keys[-1]))}")
+        elif len(series) == 1:
+            only_key = next(iter(series))
+            parts.append(f"{label} {only_key} {fmt_number(series.get(only_key))}")
+    return "；".join(parts) if parts else external_research_summary(external)
+
+
+def external_research_items(context: dict | None) -> list[dict]:
+    items = list((context or {}).get("external_research_items") or [])
+    if not items and (context or {}).get("external_research"):
+        items = [(context or {}).get("external_research") or {}]
+    return [item for item in items if item]
+
+
+def research_orgs(items: list[dict]) -> list[str]:
+    orgs = []
+    seen = set()
+    for item in items:
+        org = str(item.get("org_name") or "").strip()
+        if not org or org in seen:
+            continue
+        seen.add(org)
+        orgs.append(org)
+    return orgs
+
+
+def metric_range_sentence(items: list[dict], key: str, label: str) -> str | None:
+    by_year: dict[str, list[float]] = {}
+    for item in items:
+        for year, value in (item.get(key) or {}).items():
+            number = as_float(value)
+            if number is None:
+                continue
+            by_year.setdefault(str(year), []).append(number)
+    if not by_year:
+        return None
+    year = sorted(by_year.keys())[0]
+    values = by_year[year]
+    if not values:
+        return None
+    low = min(values)
+    high = max(values)
+    if abs(high - low) < 1e-9:
+        return f"{label} {year} {fmt_number(low)}"
+    return f"{label} {year} 区间 {fmt_number(low)} - {fmt_number(high)}"
+
+
+def target_price_range_sentence(items: list[dict]) -> str | None:
+    values = [as_float(item.get("target_price_yuan")) for item in items]
+    values = [value for value in values if value is not None]
+    if not values:
+        return None
+    low = min(values)
+    high = max(values)
+    if abs(high - low) < 1e-9:
+        return f"目标价样本 {fmt_number(low)}"
+    return f"目标价样本区间 {fmt_number(low)} - {fmt_number(high)}"
+
+
+def research_source_profile(context: dict | None, item: dict | None) -> dict:
+    items = external_research_items(context)
+    official = (context or {}).get("official_material") or {}
+    transcript = (context or {}).get("public_transcript") or {}
+    official_count = len(official.get("items") or []) or int(official.get("item_count") or 0)
+    transcript_freshness = str(transcript.get("freshness_label") or (item or {}).get("public_transcript_freshness") or "missing")
+    orgs = research_orgs(items)
+    score = 0
+    if len(items) >= 3 and len(orgs) >= 2:
+        score += 2
+    elif len(items) >= 2:
+        score += 1
+    if official_count >= 2:
+        score += 2
+    elif official_count == 1:
+        score += 1
+    if transcript_freshness in {"fresh", "usable"}:
+        score += 1
+    if score >= 4:
+        grade = "可形成研究判断"
+    elif score >= 2:
+        grade = "中等置信假设"
+    else:
+        grade = "素材型假设"
+    return {
+        "grade": grade,
+        "research_count": len(items),
+        "org_count": len(orgs),
+        "orgs": orgs,
+        "official_count": official_count,
+        "transcript_freshness": transcript_freshness,
+    }
+
+
+def research_profile_sentence(profile: dict) -> str:
+    org_text = "、".join(profile.get("orgs") or []) or "0家"
+    return (
+        f"证据等级：{profile.get('grade')}。"
+        f"当前已接入结构化卖方研报 {profile.get('research_count') or 0} 篇 / {profile.get('org_count') or 0} 家（{org_text}），"
+        f"官方一手材料 {profile.get('official_count') or 0} 条，"
+        f"电话会原话状态为{code_label(profile.get('transcript_freshness'))}。"
+    )
+
+
+def clean_research_title(title: str | None) -> str:
+    text = plain_text(title)
+    text = re.sub(r"^[0-9A-Z.]+\.?[A-Z]*\s+", "", text)
+    text = text.replace("东方财富研报表格结构化", "").replace("东方财富研报结构化", "")
+    text = re.sub(r"\s+", " ", text).strip(" ：:-")
+    return text or plain_text(title)
+
+
+def research_consensus_sentence(context: dict | None) -> str:
+    items = external_research_items(context)
+    if not items:
+        return "当前还没有结构化研报样本，不能形成卖方共识或分歧判断。"
+    titles = [compact_text(clean_research_title(item.get("title")), 58) for item in items[:3] if item.get("title")]
+    ratings = sorted({str(item.get("rating_name")) for item in items if item.get("rating_name")})
+    model_parts = [
+        item
+        for item in [
+            metric_range_sentence(items, "revenue_billion", "收入"),
+            metric_range_sentence(items, "net_profit_billion", "净利润"),
+            metric_range_sentence(items, "eps_yuan", "EPS"),
+            metric_range_sentence(items, "pe_multiple", "PE"),
+            target_price_range_sentence(items),
+        ]
+        if item
+    ]
+    pieces = [
+        f"已读研报主题集中在：{'；'.join(titles) if titles else '暂无标题主题'}。",
+        f"评级口径：{'、'.join(ratings) if ratings else '暂无评级'}。",
+    ]
+    if model_parts:
+        pieces.append(f"模型可比项：{'；'.join(model_parts[:4])}。")
+    return "".join(pieces)
+
+
+def research_gap_sentence(profile: dict, name: str) -> str:
+    gaps = []
+    if (profile.get("research_count") or 0) < 3:
+        gaps.append(f"{name}还需要至少 3 篇卖方或独立研究样本")
+    if (profile.get("org_count") or 0) < 2:
+        gaps.append(f"{name}还需要至少 2 家以上机构来源")
+    if (profile.get("official_count") or 0) <= 0:
+        gaps.append(f"{name}缺官方一手材料，不能只靠研报转述")
+    if profile.get("transcript_freshness") not in {"fresh", "usable"}:
+        gaps.append(f"{name}缺近期电话会/管理层原话，需要补订单、指引、毛利率、客户和产能表述")
+    gaps.append("还需要补行业层数据，如需求增速、价格/份额变化、客户 capex、库存和竞争格局，用来交叉验证公司逻辑")
+    return "；".join(gaps)
+
+
+def render_fundamental_synthesis_block(title: str, name: str, context: dict, item: dict | None, role: str) -> str:
+    profile = research_source_profile(context, item)
+    consensus = research_consensus_sentence(context)
+    gap_text = research_gap_sentence(profile, name)
+    role_text = (
+        "调入腿现在只能被视为研究假设：需要证明它的收入、利润或估值驱动确实优于市场预期。"
+        if role == "add"
+        else "调出腿现在只能被视为机会成本判断：需要证明它的业务动能、预期修复或性价比弱于调入腿。"
+    )
+    return (
+        "<div class='report-block'>"
+        f"<h3>{escape(title)}</h3>"
+        f"<p>{escape(research_profile_sentence(profile))}{escape(role_text)}</p>"
+        f"<p>{escape(consensus)}这些材料只能说明“市场正在如何叙事和建模”，不能直接替代系统自己的结论。</p>"
+        f"<p class='report-warning'>升级为高质量二级市场研报前必须补齐：{escape(gap_text)}</p>"
+        "</div>"
+    )
+
+
+def action_research_source_link(context: dict | None, label: str = "查看研报原文") -> str:
+    external = (context or {}).get("external_research") or {}
+    return link_for_rel_path(external.get("source_rel_path"), label) if external.get("source_rel_path") else "<span class='muted'>暂无研报原文</span>"
+
+
+def action_official_source_link(context: dict | None, label: str = "查看官方材料") -> str:
+    official = (context or {}).get("official_material") or {}
+    paths = official_material_source_rel_paths(official)
+    return link_for_rel_path(paths[0], label) if paths else "<span class='muted'>暂无官方原文</span>"
+
+
+def signal_sentence(item: dict | None, forecast: dict | None) -> str:
+    item = item or {}
+    forecast = forecast or {}
+    close = as_float(item.get("latest_close") or forecast.get("latest_close"))
+    ma20 = as_float(forecast.get("ma_20"))
+    ma60 = as_float(forecast.get("ma_60"))
+    rsi = as_float(forecast.get("rsi_14"))
+    pieces = [action_price_line(item, forecast)]
+    if close is not None and ma20 is not None and ma60 is not None:
+        if close > ma20 > ma60:
+            pieces.append("价格在 MA20 与 MA60 上方，且 MA20 高于 MA60，属于趋势延续形态。")
+        elif close < ma20:
+            pieces.append("价格低于 MA20，说明短线结构仍在修复或转弱区。")
+        else:
+            pieces.append("价格处在关键均线之间，趋势结论需要继续确认。")
+    if rsi is not None and rsi >= 78:
+        pieces.append(f"RSI {fmt_number(rsi)} 已进入短线过热区，买入只能用受控试单。")
+    return " ".join(pieces)
+
+
+def strategy_evidence_sentence(evidence_item: dict | None) -> str:
+    if not evidence_item:
+        return "当前没有接入同一套策略回测证据，不能用历史胜率支持这条腿。"
+    best = evidence_item.get("best_evidence") or {}
+    if not best:
+        return "当前没有形成有效的策略证据。"
+    return (
+        f"最佳策略为“{code_label(best.get('strategy_id'))}”，样本 {fmt_number(best.get('trade_count') or 0)} 笔，"
+        f"持有 {fmt_number(best.get('hold_days') or 0)} 个交易日；胜率 {pct_from_fraction(best.get('win_rate'))}，"
+        f"平均收益 {pct_from_fraction(best.get('avg_return'))}，中位数收益 {pct_from_fraction(best.get('median_return'))}，"
+        f"最差收益 {pct_from_fraction(best.get('worst_return'))}，证据标签为{code_label(best.get('evidence_label'))}。"
+    )
+
+
+def render_strategy_samples(evidence_item: dict | None) -> str:
+    best = (evidence_item or {}).get("best_evidence") or {}
+    samples = best.get("sample_trades") or []
+    if not samples:
+        return "<p class='report-muted'>当前没有可展示的历史样本明细。</p>"
+    rows = []
+    for sample in samples[-5:]:
+        rows.append(
+            "<li>"
+            f"{escape(sample.get('entry_date') or '-')} -> {escape(sample.get('exit_date') or '-')}："
+            f"{escape(pct_from_fraction(sample.get('return')))}；{escape(sample.get('signal_note') or '-')}"
+            "</li>"
+        )
+    return "<ul>" + "".join(rows) + "</ul>"
+
+
+def investment_artifacts_for_action(state: dict, action: dict) -> dict:
+    action_id = action.get("action_id")
+    return ((state.get("portfolio_action") or {}).get("investment_artifacts") or {}).get(action_id) or {}
+
+
+def investment_snapshot_payload(snapshot: dict | None) -> dict:
+    return (snapshot or {}).get("payload") or {}
+
+
+def investment_report_rel_path_for_action(state: dict, action: dict) -> str | None:
+    artifacts = investment_artifacts_for_action(state, action)
+    report_snapshot = artifacts.get("investment_report_snapshot") or {}
+    report_payload = investment_snapshot_payload(report_snapshot)
+    return report_payload.get("report_md_rel_path") or report_payload.get("model_response_text_rel_path")
+
+
+def read_project_text(rel_path: str | None) -> str | None:
+    path = resolve_project_path(rel_path)
+    if path is None or not path.exists() or not path.is_file():
+        return None
+    try:
+        return path.read_text(encoding="utf-8")
+    except UnicodeDecodeError:
+        return path.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return None
+
+
+def model_output_body(text: str | None) -> str:
+    raw = str(text or "").strip()
+    marker = "\n## Model Output\n"
+    if marker in raw:
+        return raw.split(marker, 1)[1].strip()
+    marker = "## Model Output"
+    if marker in raw:
+        return raw.split(marker, 1)[1].strip()
+    return raw
+
+
+def normalize_markdown_heading(title: str) -> str:
+    text = re.sub(r"^\s*#+\s*", "", str(title or "")).strip()
+    text = re.sub(r"^[0-9一二三四五六七八九十]+[.、．]\s*", "", text)
+    return re.sub(r"\s+", "", text).lower()
+
+
+def extract_markdown_section(text: str | None, titles: list[str]) -> str | None:
+    body = model_output_body(text)
+    if not body:
+        return None
+    wanted = {normalize_markdown_heading(title) for title in titles}
+    lines = body.splitlines()
+    start = None
+    start_level = None
+    for index, line in enumerate(lines):
+        match = re.match(r"^(#{2,5})\s+(.+?)\s*$", line)
+        if not match:
+            continue
+        if normalize_markdown_heading(match.group(2)) in wanted:
+            start = index
+            start_level = len(match.group(1))
+            break
+    if start is None:
+        return None
+    end = len(lines)
+    for index in range(start + 1, len(lines)):
+        match = re.match(r"^(#{2,5})\s+(.+?)\s*$", lines[index])
+        if match and len(match.group(1)) <= (start_level or 2):
+            end = index
+            break
+    section = "\n".join(lines[start:end]).strip()
+    section_lines = section.splitlines()
+    if section_lines and re.match(r"^#{2,5}\s+", section_lines[0]):
+        section = "\n".join(section_lines[1:]).strip()
+    return section or None
+
+
+def render_report_markdown_section(title: str, content: str | None, empty_text: str) -> str:
+    if not content:
+        return (
+            "<section class='panel'>"
+            f"<h2>{escape(title)}</h2>"
+            f"<div class='empty'>{escape(empty_text)}</div>"
+            "</section>"
+        )
+    return (
+        "<section class='panel'>"
+        f"<h2>{escape(title)}</h2>"
+        f"{render_markdown_block(content)}"
+        "</section>"
+    )
+
+
+def render_report_driven_action_sections(state: dict, action: dict) -> str:
+    report_rel_path = investment_report_rel_path_for_action(state, action)
+    report_text = read_project_text(report_rel_path)
+    if not report_text:
+        return ""
+    operation = extract_markdown_section(report_text, ["调仓操作"])
+    operation_plan = extract_markdown_section(report_text, ["操作计划"])
+    risk = extract_markdown_section(report_text, ["风险与证伪"])
+    logic = extract_markdown_section(report_text, ["逻辑分析"])
+    consensus = extract_markdown_section(report_text, ["共识与分歧"])
+    technical = extract_markdown_section(report_text, ["技术分析"])
+
+    operation_parts = [part for part in (operation, operation_plan, risk) if part]
+    logic_parts = [part for part in (logic, consensus) if part]
+    operation_text = "\n\n".join(operation_parts)
+    logic_text = "\n\n".join(logic_parts)
+    return (
+        f"{render_report_markdown_section('调仓操作', operation_text, '报告中暂未抽取到调仓操作段落。')}"
+        f"{render_report_markdown_section('逻辑分析', logic_text, '报告中暂未抽取到逻辑分析段落。')}"
+        f"{render_report_markdown_section('技术分析', technical, '报告中暂未抽取到技术分析段落。')}"
+    )
+
+
+def compact_summary_value(value) -> str:
+    if value in (None, "", [], {}):
+        return "-"
+    if isinstance(value, list):
+        return "；".join(compact_summary_value(item) for item in value if item not in (None, "", [], {}))
+    if isinstance(value, dict):
+        parts = []
+        for key, item in value.items():
+            if item in (None, "", [], {}):
+                continue
+            parts.append(f"{code_label(key)}：{compact_summary_value(item)}")
+        return "；".join(parts) if parts else "-"
+    return business_text(str(value))
+
+
+def render_dashboard_summary_action_plan(summary: dict) -> str:
+    plan = summary.get("portfolio_action_plan")
+    if not isinstance(plan, dict) or not plan:
+        return "<div class='empty'>当前报告还没有结构化操作计划。</div>"
+    initial_action = plan.get("initial_action")
+    if isinstance(initial_action, dict):
+        action_rows = []
+        for key, label in (("buy", "调入候选"), ("sell", "调出候选")):
+            item = initial_action.get(key)
+            if not isinstance(item, dict):
+                continue
+            conditions = item.get("conditions") or []
+            if isinstance(conditions, list):
+                condition_text = "；".join(str(condition) for condition in conditions if condition not in (None, ""))
+            else:
+                condition_text = str(conditions or "-")
+            action_rows.append(
+                [
+                    escape(label),
+                    escape(compact_summary_value(item.get("ticker") or item.get("name"))),
+                    escape(fmt_money_cn(item.get("amount_cny")) if item.get("amount_cny") not in (None, "") else "-"),
+                    escape(condition_text or "-"),
+                ]
+            )
+        condition_labels = {
+            "add_conditions": "提高敞口条件",
+            "reduce_conditions": "降低敞口条件",
+            "exit_conditions": "退出观察条件",
+            "hold_conditions": "继续观察条件",
+        }
+        condition_rows = []
+        for key, label in condition_labels.items():
+            value = plan.get(key)
+            if value in (None, "", [], {}):
+                continue
+            condition_rows.append([escape(label), escape(compact_summary_value(value))])
+        body = render_html_table(["动作", "标的", "候选金额", "前置条件"], action_rows, "当前没有操作步骤。")
+        if condition_rows:
+            body += "<div style='height:10px'></div>" + render_html_table(["条件", "处理"], condition_rows, "当前没有触发条件。")
+        return body
+
+    preferred_order = [
+        "initial",
+        "initial_build",
+        "initial_action",
+        "add",
+        "add_position",
+        "reduce",
+        "reduce_exposure",
+        "reduce_position",
+        "exit",
+        "exit_observation",
+        "stop_loss",
+        "hold",
+        "watch",
+    ]
+    ordered_keys = [key for key in preferred_order if key in plan]
+    ordered_keys.extend(key for key in plan.keys() if key not in set(ordered_keys))
+    steps = []
+    conditions = []
+    for key in ordered_keys:
+        value = plan.get(key)
+        label = code_label(key)
+        text = compact_summary_value(value)
+        if key.startswith("step"):
+            steps.append([escape(label), escape(text)])
+        elif "condition" in key or "trigger" in key:
+            conditions.append([escape(label), escape(text)])
+        else:
+            steps.append([escape(label), escape(text)])
+    body = ""
+    if steps:
+        body += render_html_table(["步骤", "动作"], steps, "当前没有操作步骤。")
+    if conditions:
+        body += "<div style='height:10px'></div>" + render_html_table(["条件", "处理"], conditions, "当前没有触发条件。")
+    return body
+
+
+def render_dashboard_summary_kill_triggers(summary: dict) -> str:
+    triggers = summary.get("kill_triggers")
+    if not isinstance(triggers, list) or not triggers:
+        return "<div class='empty'>当前报告还没有结构化证伪触发器。</div>"
+    rows = []
+    for item in triggers[:8]:
+        if isinstance(item, dict):
+            condition = (
+                item.get("condition")
+                or item.get("trigger")
+                or item.get("name")
+                or item.get("title")
+                or compact_summary_value(item)
+            )
+            verification = (
+                item.get("verification")
+                or item.get("verify_method")
+                or item.get("source")
+                or item.get("action")
+                or "触发后暂停加仓并复核仓位"
+            )
+            impact = (
+                item.get("impact")
+                or item.get("thesis_effect")
+                or item.get("reason")
+                or item.get("priority")
+                or "重新评估调仓结论"
+            )
+            rows.append(
+                [
+                    escape(compact_summary_value(condition)),
+                    escape(compact_summary_value(verification)),
+                    escape(compact_summary_value(impact)),
+                ]
+            )
+        else:
+            rows.append([escape(compact_summary_value(item)), "触发后暂停加仓并复核仓位", "重新评估调仓结论"])
+    return render_html_table(["触发器", "验证/处理", "影响"], rows, "当前没有证伪触发器。")
+
+
+def render_dashboard_summary_followups(summary: dict) -> str:
+    tasks = summary.get("follow_up_tasks")
+    if not isinstance(tasks, list) or not tasks:
+        return "<div class='empty'>当前报告还没有后续跟踪任务。</div>"
+    if any(isinstance(item, dict) for item in tasks):
+        rows = []
+        for item in tasks[:8]:
+            if isinstance(item, dict):
+                rows.append(
+                    [
+                        escape(compact_summary_value(item.get("priority"))),
+                        escape(compact_summary_value(item.get("task") or item.get("research_question"))),
+                        escape(compact_summary_value(item.get("deadline") or item.get("frequency"))),
+                    ]
+                )
+            else:
+                rows.append(["-", escape(compact_summary_value(item)), "-"])
+        return render_html_table(["优先级", "任务", "时间/频率"], rows, "当前没有后续跟踪任务。")
+    items = "".join(f"<li>{escape(compact_summary_value(item))}</li>" for item in tasks[:8])
+    return f"<ul>{items}</ul>"
+
+
+def render_source_discipline_audit(audit: dict | None) -> str:
+    audit = audit or {}
+    status = audit.get("status") or "unknown"
+    findings = audit.get("findings") or []
+    if status == "pass":
+        return "<p class='muted'>来源纪律审计：当前没有发现需要单独提示的无来源关键变量。</p>"
+    rows = []
+    for item in findings[:8]:
+        rows.append(
+            [
+                escape(item.get("label") or item.get("term_id") or "-"),
+                escape(item.get("message") or "-"),
+            ]
+        )
+    notes = "".join(f"<li>{escape(item)}</li>" for item in (audit.get("missing_source_notes") or [])[:5])
+    return (
+        "<div class='report-warning'>关键变量仍缺少一手或硬数据锚点，需要先补证再升级置信度。</div>"
+        f"{render_html_table(['变量', '问题'], rows, '当前没有具体问题。')}"
+        f"{'<ul>' + notes + '</ul>' if notes else ''}"
+    )
+
+
+def render_investment_evidence_gap_tasks(task_snapshot: dict | None, fallback_tasks: list[dict] | None = None) -> str:
+    payload = investment_snapshot_payload(task_snapshot)
+    tasks = payload.get("tasks") or fallback_tasks or []
+    if not tasks:
+        return "<div class='empty'>当前没有需要单独补证的关键变量。</div>"
+
+    rows = []
+    for task in tasks[:8]:
+        accepted = task.get("accepted_evidence") or []
+        if isinstance(accepted, list):
+            accepted_text = "；".join(str(item) for item in accepted[:3])
+        else:
+            accepted_text = str(accepted)
+        rows.append(
+            [
+                badge(task.get("priority") or "P1", "warning"),
+                escape(task.get("variable_label") or task.get("variable_id") or "-"),
+                escape(compact_summary_value(task.get("research_question"))),
+                escape(compact_summary_value(accepted_text)),
+                escape(compact_summary_value(task.get("thesis_effect"))),
+            ]
+        )
+    task_rel_path = payload.get("task_md_rel_path")
+    link_html = (
+        f"<p class='source-link'>{link_for_rel_path(task_rel_path, '打开补证任务包')}</p>" if task_rel_path else ""
+    )
+    return (
+        "<p>这些不是普通抓取清单，而是会决定调仓结论能否升级置信度的关键变量。</p>"
+        f"{render_html_table(['优先级', '变量', '研究问题', '验收标准', '对结论的影响'], rows, '当前没有补证任务。')}"
+        f"{link_html}"
+    )
+
+
+def render_investment_evidence_gap_fetch(fetch_snapshot: dict | None) -> str:
+    payload = investment_snapshot_payload(fetch_snapshot)
+    if not payload:
+        return "<div class='empty'>补证任务已生成，但还没有执行资料抓取。</div>"
+    outputs = (payload.get("fetch_outputs") or {}).get("outputs") or []
+    failures = (payload.get("fetch_outputs") or {}).get("failures") or []
+    rows = []
+    for item in outputs[:8]:
+        source_rel_path = item.get("source_rel_path")
+        source_html = link_for_rel_path(source_rel_path, compact_summary_value(item.get("title"))) if source_rel_path else "-"
+        rows.append(
+            [
+                escape(compact_summary_value(item.get("entity_id"))),
+                source_html,
+                escape(compact_summary_value(item.get("published_at"))),
+            ]
+        )
+    summary_rel_path = payload.get("summary_rel_path")
+    summary_link = (
+        f"<p class='source-link'>{link_for_rel_path(summary_rel_path, '打开补证执行结果')}</p>"
+        if summary_rel_path
+        else ""
+    )
+    intro = (
+        f"状态：{code_label(fetch_snapshot.get('status') or payload.get('mode'))}；"
+        f"已沉淀来源 {fmt_number(payload.get('source_path_count') or 0)} 条；"
+        f"待复核失败 {fmt_number(len(failures))} 条。"
+    )
+    failure_note = ""
+    if failures:
+        first_failure = failures[0]
+        failure_note = (
+            "<p class='report-warning'>"
+            f"有来源未抓到：{escape(compact_summary_value(first_failure.get('entity_id') or first_failure.get('target_key')))} / "
+            f"{escape(compact_summary_value(first_failure.get('error') or first_failure))}"
+            "</p>"
+        )
+    return (
+        f"<p>{escape(intro)}</p>"
+        f"{render_html_table(['对象', '来源', '日期'], rows, '还没有可展示的补证来源。')}"
+        f"{failure_note}"
+        f"{summary_link}"
+    )
+
+
+def render_action_deep_report_panel(state: dict, action: dict) -> str:
+    artifacts = investment_artifacts_for_action(state, action)
+    report_snapshot = artifacts.get("investment_report_snapshot") or {}
+    synthesis_snapshot = artifacts.get("investment_research_synthesis_snapshot") or {}
+    evidence_snapshot = artifacts.get("investment_evidence_pack_snapshot") or {}
+    task_snapshot = artifacts.get("investment_evidence_gap_task_snapshot") or {}
+    fetch_snapshot = artifacts.get("investment_evidence_gap_fetch_snapshot") or {}
+
+    report_payload = investment_snapshot_payload(report_snapshot)
+    synthesis_payload = investment_snapshot_payload(synthesis_snapshot)
+    evidence_payload = investment_snapshot_payload(evidence_snapshot)
+    report_rel_path = report_payload.get("report_md_rel_path") or report_payload.get("model_response_text_rel_path")
+    synthesis_rel_path = synthesis_payload.get("synthesis_md_rel_path") or synthesis_payload.get("model_response_text_rel_path")
+    evidence_rel_path = evidence_payload.get("pack_md_rel_path")
+
+    if not (report_rel_path or synthesis_rel_path or evidence_rel_path):
+        return ""
+
+    dashboard_summary = report_payload.get("dashboard_summary") or {}
+    source_audit = report_payload.get("source_discipline_audit") or {}
+    evidence_gap_tasks = report_payload.get("evidence_gap_tasks") or dashboard_summary.get("evidence_gap_tasks") or []
+
+    links = []
+    if report_rel_path:
+        links.append(f"<li>{link_for_rel_path(report_rel_path, '打开完整调仓报告')}</li>")
+    if synthesis_rel_path:
+        links.append(f"<li>{link_for_rel_path(synthesis_rel_path, '查看研究综合底稿')}</li>")
+    if evidence_rel_path:
+        links.append(f"<li>{link_for_rel_path(evidence_rel_path, '查看证据包')}</li>")
+
+    report_time = report_snapshot.get("created_at") or synthesis_snapshot.get("created_at") or evidence_snapshot.get("created_at")
+    conclusion_note = (
+        dashboard_summary.get("confidence_note")
+        or dashboard_summary.get("entry_decision")
+        or dashboard_summary.get("primary_signal")
+        or ""
+    )
+    report_intro = (
+        "这份报告由深度投研 agent 和报告主笔 agent 在候选层生成，用来支持人工复核。"
+        "它应该优先回答为什么调、怎么调、错了如何处理。"
+    )
+    return (
+        "<section class='panel'>"
+        "<h2>完整调仓报告</h2>"
+        f"<div class='section-intro'>{escape(report_intro)}</div>"
+        "<div class='report-section'>"
+        "<div class='report-block'>"
+        "<h3>当前可读结论</h3>"
+        f"<p>已经为 <strong>{escape(action.get('title') or action.get('action_id') or '-')}</strong> 生成深度报告候选。"
+        f"{'生成时间：' + escape(report_time) + '。' if report_time else ''}</p>"
+        f"<p>动作：{escape(compact_summary_value(dashboard_summary.get('action_detail') or dashboard_summary.get('action')))}；置信度：{escape(compact_summary_value(dashboard_summary.get('confidence')))}。</p>"
+        f"{'<p>' + escape(compact_summary_value(conclusion_note)) + '</p>' if conclusion_note else ''}"
+        "</div>"
+        "<div class='report-block'>"
+        "<h3>继续查看</h3>"
+        f"<ul>{''.join(links)}</ul>"
+        "</div>"
+        "<div class='report-block'>"
+        "<h3>结构化操作计划</h3>"
+        f"{render_dashboard_summary_action_plan(dashboard_summary)}"
+        "</div>"
+        "<div class='report-block'>"
+        "<h3>证伪与退出触发器</h3>"
+        f"{render_dashboard_summary_kill_triggers(dashboard_summary)}"
+        "</div>"
+        "<div class='report-block'>"
+        "<h3>后续跟踪任务</h3>"
+        f"{render_dashboard_summary_followups(dashboard_summary)}"
+        "</div>"
+        "<div class='report-block'>"
+        "<h3>待补硬证据</h3>"
+        f"{render_investment_evidence_gap_tasks(task_snapshot, evidence_gap_tasks)}"
+        "</div>"
+        "<div class='report-block'>"
+        "<h3>补证进展</h3>"
+        f"{render_investment_evidence_gap_fetch(fetch_snapshot)}"
+        "</div>"
+        "<div class='report-block'>"
+        "<h3>证据缺口说明</h3>"
+        f"{render_source_discipline_audit(source_audit)}"
+        "</div>"
+        "</div>"
+        "</section>"
+    )
+
+
+def render_action_operation_report(state: dict, action: dict, add_item: dict | None, remove_item: dict | None, subject_item: dict | None) -> str:
+    active_item = add_item or subject_item
+    active_forecast = action_forecast_context(state, active_item)
+    title = action.get("title") or "动作详情"
+    add_leg = action.get("add") or {}
+    remove_leg = action.get("remove") or {}
+    add_name = (add_item or add_leg).get("name") or (add_item or add_leg).get("ts_code") or "-"
+    add_code = (add_item or add_leg).get("ts_code") or "-"
+    remove_name = (remove_item or remove_leg).get("name") or (remove_item or remove_leg).get("ts_code") or "-"
+    remove_code = (remove_item or remove_leg).get("ts_code") or "-"
+    add_text = f"{add_name} / {add_code}"
+    remove_text = f"{remove_name} / {remove_code}"
+    next_checks = [clean_report_sentence(item) for item in (action.get("next_checks") or [])]
+    if active_item:
+        next_checks.extend(clean_report_sentence(item) for item in (active_item.get("next_check_items") or [])[:2])
+    active_context = detail_context_for_symbol(state, (active_item or {}).get("ts_code"))
+    target_text = action_target_price_text(active_item, active_context)
+    exit_rules = [
+        f"跌破或确认失效：{paper_watch_line(state, (active_item or {}).get('ts_code'))}",
+        f"目标价/验证区间：{target_text}",
+        f"若重新跌回 MA20（{fmt_number(active_forecast.get('ma_20'))}）且量能不能修复，降级或卖出。" if active_forecast.get("ma_20") not in (None, "") else "",
+        "若最新公告、电话会或研报证伪核心逻辑，停止加仓并重新评估。",
+        "若出现最高级风险预警，先执行风控。",
+    ]
+    next_check_html = "".join(f"<li>{escape(item)}</li>" for item in next_checks if item) or "<li>-</li>"
+    exit_rule_html = "".join(f"<li>{escape(item)}</li>" for item in exit_rules if item) or "<li>-</li>"
+    return (
+        "<section class='panel'>"
+        "<h2>调仓的操作</h2>"
+        "<div class='report-section'>"
+        "<div class='report-block'>"
+        f"<h3>{escape(title)}</h3>"
+        f"<p>本次动作是参照层建议，不是自动下单。执行口径是调入 <strong>{escape(add_text)}</strong>，调出 <strong>{escape(remove_text)}</strong>，先按受控试单推进。</p>"
+        f"<ul><li>参照金额：{escape(fmt_money_cn(action.get('trade_amount')))}，组合占比：{escape(fmt_ratio(action.get('trade_amount_pct')))}。</li>"
+        f"<li>参考买价：{escape(action_price_line(active_item, active_forecast))}。</li>"
+        f"<li>短周期参考区间：下一交易日 {escape(fmt_forecast_window(active_forecast.get('next_day')))}；5日 {escape(fmt_forecast_window(active_forecast.get('five_day')))}。</li>"
+        f"<li>目标价/验证区间：{escape(target_text)}</li></ul>"
+        "</div>"
+        "<div class='report-block'>"
+        "<h3>执行后怎么盯</h3>"
+        f"<ul>{next_check_html}</ul>"
+        "</div>"
+        "<div class='report-block'>"
+        "<h3>什么情况下撤退或降级</h3>"
+        f"<ul>{exit_rule_html}</ul>"
+        "</div>"
+        "</div>"
+        "</section>"
+    )
+
+
+def render_action_logic_report(state: dict, action: dict, add_item: dict | None, remove_item: dict | None, subject_item: dict | None) -> str:
+    add_context = detail_context_for_symbol(state, (add_item or {}).get("ts_code"))
+    remove_context = detail_context_for_symbol(state, (remove_item or {}).get("ts_code"))
+    add_external = add_context.get("external_research") or {}
+    remove_external = remove_context.get("external_research") or {}
+    proxy_score = fmt_number(action_proxy_score(action))
+    add_name = (add_item or {}).get("name") or "调入标的"
+    remove_name = (remove_item or {}).get("name") or "调出标的"
+    add_profile = research_source_profile(add_context, add_item)
+    remove_profile = research_source_profile(remove_context, remove_item)
+    thesis_gap = []
+    if not (add_context.get("public_transcript") or (add_item or {}).get("public_transcript_summary")):
+        thesis_gap.append(f"{add_name}缺最新电话会/管理层原话抽取")
+    if not add_external.get("target_price_yuan"):
+        thesis_gap.append(f"{add_name}外部研报没有统一目标价")
+    if remove_item and not remove_external:
+        thesis_gap.append(f"{remove_name}缺可复核的外部研报模型")
+    if add_profile.get("grade") != "可形成研究判断":
+        thesis_gap.append(f"{add_name}还没有达到多源交叉验证的研报级证据")
+    if remove_item and remove_profile.get("grade") == "素材型假设":
+        thesis_gap.append(f"{remove_name}调出理由仍偏素材型，不能写成业务恶化结论")
+    thesis_gap_text = "；".join(thesis_gap) if thesis_gap else "未发现关键缺口。"
+    return (
+        "<section class='panel'>"
+        "<h2>逻辑分析</h2>"
+        "<div class='report-section'>"
+        f"{render_fundamental_synthesis_block(f'调入 {add_name}：研究假设与证据等级', add_name, add_context, add_item, 'add')}"
+        f"{render_fundamental_synthesis_block(f'调出 {remove_name}：机会成本与证据等级', remove_name, remove_context, remove_item, 'remove')}"
+        "<div class='report-block'>"
+        "<h3>本次到底在赌什么</h3>"
+        f"<p>结构改善代理分为 {escape(proxy_score)}。本次调仓真正要验证的不是“某篇研报说了什么”，而是：调入腿的产业数据、公司经营数据、管理层原话和价格行为，能否持续强于调出腿。相比不调仓，它提高了组合对更强主线的暴露；代价是如果调出腿随后被新证据修复，组合会损失这部分反弹。</p>"
+        f"<p>当前页面已经不把单篇研报当成结论。卖方研报、电话会、公告和新闻只作为原料，最终判断必须来自多源交叉验证、分歧识别和可证伪假设。</p>"
+        f"<p class='report-warning'>证据缺口：{escape(thesis_gap_text)}。这些缺口意味着动作只能是受控试单或研究跟踪，不能升级成高置信调仓。</p>"
+        "</div>"
+        "</div>"
+        "</section>"
+    )
+
+
+def render_action_technical_report(state: dict, action: dict, add_item: dict | None, remove_item: dict | None, subject_item: dict | None) -> str:
+    add_forecast = action_forecast_context(state, add_item)
+    remove_forecast = action_forecast_context(state, remove_item)
+    add_evidence = find_strategy_evidence(state, (add_item or {}).get("ts_code"))
+    remove_evidence = find_strategy_evidence(state, (remove_item or {}).get("ts_code"))
+    return (
+        "<section class='panel'>"
+        "<h2>技术分析</h2>"
+        "<div class='report-section'>"
+        "<div class='report-block'>"
+        f"<h3>调入腿技术状态：{escape((add_item or {}).get('name') or '-')}</h3>"
+        f"<p>{escape(signal_sentence(add_item, add_forecast))}</p>"
+        f"<p>历史验证：{escape(strategy_evidence_sentence(add_evidence))}</p>"
+        f"{render_strategy_samples(add_evidence)}"
+        "</div>"
+        "<div class='report-block'>"
+        f"<h3>调出腿技术状态：{escape((remove_item or {}).get('name') or '-')}</h3>"
+        f"<p>{escape(signal_sentence(remove_item, remove_forecast))}</p>"
+        f"<p>历史验证：{escape(strategy_evidence_sentence(remove_evidence))}</p>"
+        "</div>"
+        "<div class='report-block'>"
+        "<h3>技术结论</h3>"
+        f"<p>调入腿的技术依据主要来自趋势结构和轻量历史验证；调出腿的技术状态更偏修复/等待。当前技术面支持“先做受控试单并持续观察”，但并不支持无条件追高。</p>"
+        f"<p>后续复盘时，重点看：调入腿是否守住观察/失效位、是否继续保持 MA20 上方运行、历史信号对应的持有窗口内是否兑现；若没有兑现，就说明本次调仓赌的是主线延续但没有发生。</p>"
+        "</div>"
+        "</div>"
+        "</section>"
+    )
+
+
 def render_badge_group(parts: list[tuple[str | None, str]]) -> str:
     items = [badge(text, tone) for text, tone in parts if text not in (None, "")]
     if not items:
@@ -3039,145 +4401,400 @@ def render_operation_run_cell(run: dict | None) -> str:
     )
 
 
+def render_home_focus_list(actions: list, empty_text: str = "当前没有需要置顶处理的事项。") -> str:
+    if not actions:
+        return f"<div class='empty'>{escape(empty_text)}</div>"
+    rows = []
+    for index, action in enumerate(actions[:4], start=1):
+        if isinstance(action, dict):
+            title = home_status_text(action.get("title"), 92)
+            note = home_status_text(action.get("note"), 112) if action.get("note") else ""
+            href = action.get("href")
+            cta = action.get("cta") or "查看"
+        else:
+            title = home_status_text(action, 92)
+            note = ""
+            href = None
+            cta = "查看"
+        note_html = f"<div class='focus-note'>{escape(note)}</div>" if note else ""
+        action_html = (
+            f"<div class='focus-actions'><a class='small-button' href='{escape(str(href))}'>{escape(str(cta))}</a></div>"
+            if href
+            else ""
+        )
+        rows.append(
+            "<li>"
+            f"<span class='focus-index'>{index}</span>"
+            "<div class='focus-main'>"
+            f"<div class='focus-title'>{escape(title)}</div>"
+            f"{note_html}"
+            "</div>"
+            f"{action_html}"
+            "</li>"
+        )
+    return f"<ol class='focus-list'>{''.join(rows)}</ol>"
+
+
+def home_status_text(value: str | None, limit: int | None = None) -> str:
+    text = business_text(value)
+    text = text.replace("patch 候选池", "patch 候选稿")
+    if limit is not None and len(text) > limit:
+        return f"{text[: limit - 1].rstrip()}…"
+    return text
+
+
+def render_home_opportunity_rows(
+    items: list[dict],
+    actions: list[dict],
+    paper_watch: list[dict],
+    limit: int = 3,
+) -> str:
+    if not items:
+        return "<div class='empty'>当前没有高优先机会。</div>"
+    cards = [
+        "<div class='section-intro'>"
+        "置顶按机会分排序：短线涨跌、5/20日收益、量能、趋势强度、20日突破、池子级别、研究/事件锚点共同加分；RSI 过热和单日追高会扣分。"
+        "它不是自动买入清单，只有穿过组合动作门禁的标的才给出试单金额。"
+        "</div>"
+    ]
+    for rank, item in enumerate(items[:limit], start=1):
+        name = item.get("name") or item.get("ts_code") or "-"
+        ts_code = item.get("ts_code") or ""
+        metrics = item.get("metrics") or {}
+        factors = item.get("factors") or {}
+        action = find_action_for_buy_or_subject(actions, ts_code)
+        paper_ticket = find_paper_watch_ticket(paper_watch, ts_code)
+        add_leg = (action or {}).get("add") or {}
+        is_buy_action = action and add_leg.get("ts_code") == ts_code and (action.get("gate_status") == "ready")
+        if is_buy_action:
+            decision = "可做换仓试单"
+            trade_text = (
+                f"规模：约 {fmt_money_cn(action.get('trade_amount'))} / {fmt_ratio(action.get('trade_amount_pct'))}"
+                f"；估算股数：{extract_trial_shares(action)}"
+            )
+            action_href = action_detail_href(action.get("action_id"))
+            action_cta = "看买入方案"
+        elif action:
+            decision = "先复核，不新增买入"
+            trade_text = "规模：当前不新增仓位；先看已有持仓/候选是否还能留在主线。"
+            action_href = action_detail_href(action.get("action_id"))
+            action_cta = "看复核详情"
+        else:
+            decision = "只观察，不下单"
+            trade_text = "规模：0；等连续信号和研究链补齐后再升级到动作建议。"
+            action_href = research_detail_href(ts_code)
+            action_cta = "看标的详情"
+        observe_text = (
+            f"观察上沿 {fmt_number(paper_ticket.get('observe_above'))}；失效下沿 {fmt_number(paper_ticket.get('invalidate_below'))}"
+            if paper_ticket
+            else "暂无纸面观察价位；先补研究和下一交易日量价验证。"
+        )
+        volume_ratio = metrics.get("volume_ratio_20d")
+        volume_ratio_text = f"{volume_ratio:.2f}x" if volume_ratio is not None else "-"
+        why = "；".join((item.get("why") or [])[:2])
+        risk = compact_text((item.get("risks") or [""])[0], 96)
+        buy_after = compact_text((item.get("next_checks") or [""])[0], 96)
+        target_text = "目标价：当前没有统一目标价口径；先用观察上沿/失效下沿做触发与风控，目标价需在详情链补齐。"
+        cards.append(
+            "<article class='action-card'>"
+            "<div class='action-topline'>"
+            "<div>"
+            f"<h3 class='action-title'>#{rank} {escape(name)} / {escape(ts_code or '-')}</h3>"
+            f"<div class='focus-note'>机会分 {escape(fmt_number(item.get('opportunity_score')))}；池子 {escape(code_label(item.get('primary_pool')))}；{escape(' / '.join(code_label(tag) for tag in (item.get('signal_tags') or [])[:3]))}</div>"
+            "</div>"
+            f"{badge(decision, 'good' if is_buy_action else 'warning' if action else 'neutral')}"
+            "</div>"
+            f"<div class='info-grid' style='margin-top:10px'>{render_kv_chips([('最新价', metrics.get('latest_close')), ('日涨跌', fmt_pct(metrics.get('latest_pct_chg'))), ('5日', fmt_pct(metrics.get('return_5d'))), ('20日', fmt_pct(metrics.get('return_20d'))), ('量能', volume_ratio_text), ('热度RSI', factors.get('rsi_14'))], chip_class='info-chip compact')}</div>"
+            f"<p class='action-copy'>为什么置顶：{escape(why or '由机会分排序进入前三。')}</p>"
+            f"<p class='action-copy'>怎么操作：{escape(decision)}；{escape(trade_text)}</p>"
+            f"<p class='action-copy'>买价/风控：最新价 {escape(fmt_number(metrics.get('latest_close')))}；{escape(observe_text)}</p>"
+            f"<p class='action-copy'>买后观察：{escape(buy_after or '-')}</p>"
+            f"<p class='action-copy'>{escape(target_text)}</p>"
+            f"<p class='action-copy'>主要风险：{escape(risk or '暂无突出风险备注。')}</p>"
+            "<div class='button-row'>"
+            f"<a class='small-button' href='{action_href}'>{escape(action_cta)}</a>"
+            f"<a class='small-button' href='{research_detail_href(ts_code)}'>看研究详情</a>"
+            "</div>"
+            "</article>"
+        )
+    return "".join(cards)
+
+
+def render_home_gap_rows(items: list[dict], limit: int = 3) -> str:
+    if not items:
+        return "<div class='empty'>当前没有置顶证据缺口。</div>"
+    rows = []
+    for item in items[:limit]:
+        name = item.get("name") or item.get("ts_code") or "-"
+        ts_code = item.get("ts_code") or ""
+        latest = item.get("latest_source_updated_at") or ((item.get("latest_event") or {}).get("publish_time")) or "-"
+        action = compact_text(item.get("recommended_action"), 68)
+        subject = f"<a href='{research_detail_href(ts_code)}'>{escape(name)}</a>" if ts_code else escape(name)
+        rows.append(
+            "<div class='watch-row'>"
+            "<div>"
+            f"<div class='focus-title'>{subject}</div>"
+            f"<div class='focus-note'>{escape(ts_code or '-')} · {escape(latest)}</div>"
+            f"<div class='focus-note'>{escape(action or '补公开来源后再升级判断。')}</div>"
+            "</div>"
+            f"{badge(item.get('evidence_state'), status_tone(item.get('evidence_state')))}"
+            "</div>"
+        )
+    return "".join(rows)
+
+
+def find_action_for_sell(actions: list[dict], ts_code: str | None) -> dict | None:
+    if not ts_code:
+        return None
+    for action in actions:
+        remove_code = ((action.get("remove") or {}).get("ts_code"))
+        subject_code = ((action.get("subject") or {}).get("ts_code"))
+        if ts_code in {remove_code, subject_code}:
+            return action
+    return None
+
+
+def find_action_for_buy_or_subject(actions: list[dict], ts_code: str | None) -> dict | None:
+    if not ts_code:
+        return None
+    for action in actions:
+        add_code = ((action.get("add") or {}).get("ts_code"))
+        subject_code = ((action.get("subject") or {}).get("ts_code"))
+        if ts_code in {add_code, subject_code}:
+            return action
+    return None
+
+
+def find_paper_watch_ticket(items: list[dict], ts_code: str | None) -> dict | None:
+    if not ts_code:
+        return None
+    for item in items:
+        if item.get("ts_code") == ts_code:
+            return item
+    return None
+
+
+def extract_trial_shares(action: dict | None) -> str:
+    if not action:
+        return "-"
+    checks = " ".join(str(item) for item in (action.get("next_checks") or []))
+    match = re.search(r"可先试\s*`?([0-9,]+)`?\s*股", checks)
+    return f"{match.group(1)} 股" if match else "-"
+
+
+def render_home_risk_cards(sell_candidates: list[dict], actions: list[dict]) -> str:
+    actionable = [
+        item for item in sell_candidates
+        if str(item.get("verdict") or "").lower() in {"sell", "trim"}
+    ]
+    if not actionable:
+        return "<div class='empty'>当前没有需要立刻处理的卖出侧对象。</div>"
+    cards = []
+    for item in actionable[:3]:
+        linked_buy = item.get("linked_buy") or {}
+        linked_text = f"；可对换：{linked_buy.get('name')} / {linked_buy.get('ts_code')}" if linked_buy else ""
+        action = find_action_for_sell(actions, item.get("ts_code"))
+        href = action_detail_href(action.get("action_id")) if action else research_detail_href(item.get("ts_code"))
+        why = compact_text("；".join(item.get("why") or []), 96)
+        next_check = compact_text((item.get("next_checks") or [""])[0], 88)
+        cards.append(
+            "<article class='action-card'>"
+            "<div class='action-topline'>"
+            "<div>"
+            f"<h3 class='action-title'>{escape(item.get('name') or '-')} / {escape(item.get('ts_code') or '-')}</h3>"
+            f"<div class='focus-note'>{escape(item.get('summary') or '-')}{escape(linked_text)}</div>"
+            "</div>"
+            f"{badge(item.get('verdict_label') or item.get('verdict'), status_tone(item.get('verdict')))}"
+            "</div>"
+            f"<p class='action-copy'>原因：{escape(why or '-')}</p>"
+            f"<p class='action-copy'>下一步：{escape(next_check or '-')}</p>"
+            f"<div class='button-row'><a class='small-button' href='{href}'>看处理方案</a></div>"
+            "</article>"
+        )
+    return "".join(cards)
+
+
+def render_home_action_cards(actions: list[dict], limit: int = 5) -> str:
+    if not actions:
+        return "<div class='empty'>当前没有动作建议。</div>"
+    cards = []
+    for action in actions[:limit]:
+        href = action_detail_href(action.get("action_id"))
+        next_check = compact_text((action.get("next_checks") or [""])[0], 92)
+        risk = compact_text((action.get("risk_flags") or [""])[0], 86)
+        cards.append(
+            "<article class='action-card'>"
+            "<div class='action-topline'>"
+            "<div>"
+            f"<h3 class='action-title'>{escape(action.get('title') or '-')}</h3>"
+            f"<div class='focus-note'>{escape(action.get('summary') or '-')}</div>"
+            "</div>"
+            f"{badge(action.get('priority'), status_tone(action.get('priority')))}"
+            "</div>"
+            f"<p class='action-copy'>下一步：{escape(next_check or '-')}</p>"
+            f"<p class='action-copy'>注意：{escape(risk or '-')}</p>"
+            f"<div class='button-row'><a class='small-button' href='{href}'>看建议详情</a></div>"
+            "</article>"
+        )
+    return "".join(cards)
+
+
+def render_home_paper_watch_cards(items: list[dict], artifact: dict | None = None, limit: int = 4) -> str:
+    if not items:
+        return "<div class='empty'>当前没有纸面观察对象。</div>"
+    cards = []
+    for item in items[:limit]:
+        subject = f"{item.get('name') or '-'} / {item.get('ts_code') or '-'}"
+        observe = fmt_number(item.get("observe_above"))
+        invalidate = fmt_number(item.get("invalidate_below"))
+        href = research_detail_href(item.get("ts_code"))
+        cards.append(
+            "<article class='action-card'>"
+            "<div class='action-topline'>"
+            "<div>"
+            f"<h3 class='action-title'>{escape(subject)}</h3>"
+            f"<div class='focus-note'>观察上沿 {escape(observe)}；失效下沿 {escape(invalidate)}</div>"
+            "</div>"
+            f"{badge(item.get('performance_status') or item.get('verdict'), status_tone(item.get('performance_status') or item.get('verdict')))}"
+            "</div>"
+            f"<p class='action-copy'>{escape(item.get('action') or '等待新行情后再评价。')}</p>"
+            f"<div class='button-row'><a class='small-button' href='{href}'>看标的详情</a></div>"
+            "</article>"
+        )
+    artifact_link = (
+        f"<div class='source-link'>{link_for_rel_path((artifact or {}).get('rel_path'), '查看完整纸面观察单')}</div>"
+        if artifact
+        else ""
+    )
+    return "".join(cards) + artifact_link
+
+
+def build_home_focus_items(sell_candidates: list[dict], actions: list[dict], paper_watch: list[dict]) -> list[dict]:
+    focus_items: list[dict] = []
+    actionable = [
+        item for item in sell_candidates
+        if str(item.get("verdict") or "").lower() in {"sell", "trim"}
+    ]
+    for index, item in enumerate(actionable[:2]):
+        action = find_action_for_sell(actions, item.get("ts_code"))
+        href = action_detail_href(action.get("action_id")) if action else research_detail_href(item.get("ts_code"))
+        label = item.get("verdict_label") or code_label(item.get("verdict"))
+        subject = f"{item.get('name') or '-'} / {item.get('ts_code') or '-'}"
+        prefix = "先处理" if index == 0 else "再处理"
+        summary = compact_text(item.get("summary") or "", 48)
+        action_title = action.get("title") if action else ""
+        plan = f"方案：{action_title}" if action_title else "进入标的详情看风险依据。"
+        note = "；".join(part for part in [summary, plan] if part)
+        focus_items.append(
+            {
+                "title": f"{prefix} {subject}：{label}",
+                "note": note,
+                "href": href,
+                "cta": "看处理方案",
+            }
+        )
+    if actions:
+        high_count = sum(1 for action in actions if str(action.get("priority") or "").lower() in {"high", "高"})
+        watch_count = max(len(actions) - high_count, 0)
+        focus_items.append(
+            {
+                "title": f"{len(actions)}条动作建议：先看{high_count or 0}条高优先级换仓",
+                "note": f"其余{watch_count}条先做观察或复核，不混进交易决策。",
+                "href": "#actions",
+                "cta": "看全部建议",
+            }
+        )
+    if paper_watch:
+        names = "、".join(str(item.get("name") or item.get("ts_code") or "-") for item in paper_watch[:3])
+        focus_items.append(
+            {
+                "title": f"纸面观察{len(paper_watch)}个：只盯突破/失效",
+                "note": f"先看{names or '当前标的'}的观察上沿和失效下沿；这不是交易指令。",
+                "href": "#paper-watch",
+                "cta": "看观察位",
+            }
+        )
+    return focus_items[:4]
+
+
+def render_home_entry_links(entries: list[tuple[str, str, str]]) -> str:
+    return "<div class='entry-grid'>" + "".join(
+        f"<a class='entry-link' href='{escape(href)}'>"
+        f"<strong>{escape(title)}</strong>"
+        f"<span>{escape(note)}</span>"
+        "</a>"
+        for title, href, note in entries
+    ) + "</div>"
+
+
 def render_home(state: dict, refresh_seconds: int) -> str:
     overview = state["overview"]
+    current_state = state.get("current_state") or {}
     opportunity_engine = state.get("opportunity_engine") or {}
     radar = opportunity_engine.get("radar") or {}
-    lifecycle = opportunity_engine.get("lifecycle") or {}
     paper_watchlist = opportunity_engine.get("paper_watchlist") or {}
-    deep_analysis = state.get("deep_analysis") or {}
-    analysis_forecast = state.get("analysis_forecast") or {}
-    operations = state.get("operations") or {}
-    scheduler = operations.get("scheduler") or {}
-    reporting = state["reporting"]
-    strategy = state["strategy_watch"]
-    portfolio = state["portfolio_action"]
-    risk = state["risk"]
-    capital = state["capital_flow"]
-    events = state["events"]
-
-    latest_run = scheduler.get("latest_run") or {}
-    research_names = [item.get("name") for item in (strategy.get("top_focus_items") or [])[:3] if item.get("name")]
-    action_titles = [item.get("title") for item in (portfolio.get("actions") or [])[:2] if item.get("title")]
-    recent_alerts = risk.get("recent_alerts") or []
-    recent_events = events.get("recent_market_events") or []
-    upcoming_events = events.get("upcoming_market_events") or []
-    latest_run_line = (
-        f"今天自动链已跑 {scheduler.get('today_run_count') or 0} 次，最新一条是 {latest_run.get('label') or latest_run.get('job_id') or '暂无'}。"
+    portfolio = state.get("portfolio_action") or {}
+    risk_decision = (state.get("risk") or {}).get("decision") or {}
+    top_opportunities = current_state.get("top_opportunities") or (radar.get("top_candidates") or [])
+    paper_watch = current_state.get("paper_watch") or []
+    actions = portfolio.get("actions") or []
+    sell_candidates = risk_decision.get("sell_candidates") or []
+    paper_watch_artifact = (paper_watchlist or {}).get("artifact")
+    focus_items = build_home_focus_items(sell_candidates, actions, paper_watch)
+    hero_summary = (
+        focus_items[0].get("title")
+        if focus_items
+        else "当前没有需要立刻处理的组合动作。"
     )
-    freshness_line = (
-        f"A/H/US 底层行情缺口 {overview.get('a_share_expected_gap_days') or 0} / "
-        f"{overview.get('hk_expected_gap_days') or 0} / {overview.get('us_expected_gap_days') or 0} 天。"
+    risk_count = sum(
+        1 for item in sell_candidates
+        if str(item.get("verdict") or "").lower() in {"sell", "trim"}
     )
-
-    tiles = "".join(
-        [
-            portal_tile(
-                "日报",
-                "/reports",
-                "只看日报和今天最重要的结论。",
-                [
-                    reporting.get("latest_report_title") or "当前暂无日报标题。",
-                    reporting.get("latest_report_summary") or "当前暂无日报摘要。",
-                ],
-            ),
-            portal_tile(
-                "机会挖掘",
-                "/opportunities",
-                "基于主题深度分析，直接看当下更值得继续深挖的 A 股和美股票。",
-                [
-                    f"主动雷达候选 {radar.get('candidate_count') or 0} 只 / 纸面观察单 {paper_watchlist.get('ticket_count') or 0} 张。",
-                    f"新进机会 {(lifecycle.get('state_counts') or {}).get('new_candidate') or 0} 个 / 强化机会 {((lifecycle.get('state_counts') or {}).get('promoted') or 0) + ((lifecycle.get('state_counts') or {}).get('strengthening') or 0)} 个。",
-                    *(deep_analysis.get("overview_lines") or [])[:2],
-                    f"A股候选 {deep_analysis.get('a_share_candidate_count') or 0} 只 / 美股候选 {deep_analysis.get('us_candidate_count') or 0} 只。",
-                ],
-            ),
-            portal_tile(
-                "个股分析",
-                "/analysis",
-                "把当前覆盖股票的短周期区间推演单独拆出来，看方向、区间和指数代理。",
-                [
-                    *(analysis_forecast.get("overview_lines") or [])[:2],
-                    f"已推演个股 {analysis_forecast.get('equity_count') or 0} 只 / 指数代理 {analysis_forecast.get('index_proxy_count') or 0} 条。",
-                ],
-            ),
-            portal_tile(
-                "自动运营",
-                "/operations",
-                "集中看岗位节奏、今天已经跑出的结果，以及哪些关键数据还不够新。",
-                [
-                    latest_run_line,
-                    f"价格区间推演最近快照 {analysis_forecast.get('created_at') or '暂无'}。",
-                    freshness_line,
-                ],
-            ),
-            portal_tile(
-                "研究观察",
-                "/research",
-                "集中看当前应该盯的标的、理由和下一步检查项。",
-                [
-                    f"当前优先盯：{', '.join(research_names)}" if research_names else "当前暂无研究焦点。",
-                    compact_text((strategy.get("top_focus_items") or [{}])[0].get("trend_summary"), 72),
-                ],
-            ),
-            portal_tile(
-                "调仓动作",
-                "/portfolio",
-                "专门展示调入调出建议、轮动对和组合动作，不混别的信息。",
-                [
-                    *(portfolio.get("primary_call") or [])[:2],
-                    *action_titles[:1],
-                ],
-            ),
-            portal_tile(
-                "风险结果",
-                "/risk",
-                "只看风险结论本身。",
-                [
-                    compact_text(recent_alerts[0].get("message"), 88) if recent_alerts else "当前没有风险预警。",
-                    compact_text(recent_alerts[1].get("message"), 88) if len(recent_alerts) > 1 else "没有新增需要人工处理的风险结果。",
-                ],
-            ),
-            portal_tile(
-                "资金流",
-                "/capital-flow",
-                "把两融和互联互通单独放在一个页面。",
-                [
-                    f"两融命中关注标的 {capital['margin_balance'].get('active_universe_hit_count') or 0} 只 / 互联互通命中 {capital['stock_connect'].get('active_universe_hit_count') or 0} 只。",
-                    compact_text(capital["margin_balance"].get("fact_summary_line"), 78)
-                    if capital["margin_balance"].get("fact_summary_line")
-                    else "当前暂无两融事实说明。",
-                    compact_text(capital["stock_connect"].get("fact_summary_line"), 78)
-                    if capital["stock_connect"].get("fact_summary_line")
-                    else "当前暂无互联互通事实说明。",
-                ],
-            ),
-            portal_tile(
-                "事件",
-                "/events",
-                "把事件日历和最新资讯单独整理，看新闻和研报时不用被别的页面打断。",
-                [
-                    compact_text((upcoming_events[0].get("summary") or upcoming_events[0].get("title")), 88) if upcoming_events else (compact_text(recent_events[0].get("title"), 88) if recent_events else "当前暂无事件流。"),
-                    f"未来催化当前收录 {events['event_calendar_snapshot'].get('upcoming_event_count') or 0} 条。",
-                ],
-            ),
-        ]
-    )
-
     body = (
-        "<section class='panel'>"
-        "<h2>业务导航</h2>"
-        "<div class='section-intro'>首页只做导航和极简提示。真正的内容都分页面展开，不再把所有结果堆在一张屏里。</div>"
-        f"<div class='grid-3'>{tiles}</div>"
+        "<section class='command-layout'>"
+        "<article class='panel'>"
+        "<h2>今日只看</h2>"
+        f"{render_home_focus_list(focus_items, '当前没有需要立刻处理的组合动作。')}"
+        "</article>"
+        "<article class='panel' id='risk'>"
+        "<h2>先处理风险</h2>"
+        "<div class='section-intro'>这里直接列出“卖出侧高优先级对象”是谁，以及对应处理方案。</div>"
+        f"{render_home_risk_cards(sell_candidates, actions)}"
+        "</article>"
+        "</section>"
+        "<section class='grid-2'>"
+        "<article class='panel' id='actions'>"
+        f"<h2>{escape(fmt_number(len(actions)))}条动作建议</h2>"
+        "<div class='section-intro'>这里就是动作建议本身，每条都可以点进详情。</div>"
+        f"{render_home_action_cards(actions, limit=5)}"
+        "</article>"
+        "<article class='panel' id='paper-watch'>"
+        "<h2>纸面观察什么</h2>"
+        "<div class='section-intro'>纸面观察不是交易指令，只记录哪些标的需要看突破/失效。</div>"
+        f"{render_home_paper_watch_cards(paper_watch, paper_watch_artifact, limit=4)}"
+        "</article>"
+        "</section>"
+        "<section>"
+        "<article class='panel'>"
+        "<h2>置顶机会怎么操作</h2>"
+        f"{render_home_opportunity_rows(top_opportunities, actions, paper_watch)}"
+        "</article>"
         "</section>"
     )
     return render_shell(
-        page_title="SMR 业务看板",
+        page_title="SMR 前台看板",
         current_path="/",
-        hero_title="SMR 业务看板",
-        hero_subtitle="只看业务结果。日报、研究观察、调仓动作、风险结果、资金流、事件各自分页面展示。",
+        hero_title="SMR 前台看板",
+        hero_subtitle=home_status_text(hero_summary, 108),
+        hero_facts=[
+            ("风险对象", risk_count),
+            ("动作建议", len(actions)),
+            ("纸面观察", len(paper_watch) or (paper_watchlist.get("ticket_count") or 0)),
+            ("最新行情", overview.get("a_share_trade_date") or "-"),
+        ],
         body=body,
         refresh_seconds=refresh_seconds,
+        show_status_strip=False,
         **shell_state_kwargs(state),
     )
 
@@ -3488,6 +5105,63 @@ def render_reports_page(state: dict, refresh_seconds: int) -> str:
     market_flow_overview_html = "".join(
         f"<li>{escape(business_text(item))}</li>" for item in market_flow_overview_lines
     ) or "<li>当前还没有抽取到跨市场异动结论。</li>"
+    current_state = state.get("current_state") or {}
+    evidence_counts = (current_state.get("status_counts") or {}).get("evidence") or {}
+    paper_counts = (current_state.get("status_counts") or {}).get("paper_watch") or {}
+    evidence_gap_count = len(current_state.get("evidence_gaps") or [])
+    paper_watch_count = len(current_state.get("paper_watch") or [])
+    top_opportunity_rows = []
+    for item in (current_state.get("top_opportunities") or [])[:5]:
+        risk_text = compact_text((item.get("risks") or [""])[0], 72)
+        next_check = compact_text((item.get("next_checks") or [""])[0], 82)
+        top_opportunity_rows.append(
+            [
+                render_watch_name_link({"ts_code": item.get("ts_code"), "name": item.get("name")}),
+                escape(fmt_number(item.get("opportunity_score"))),
+                badge(item.get("radar_bucket"), status_tone(item.get("radar_bucket"))),
+                escape(risk_text or "-"),
+                escape(next_check or "-"),
+            ]
+        )
+    risk_points = []
+    for value in (risk_decision.get("headline_actions") or [])[:3]:
+        if value:
+            risk_points.append(live_business_text(value))
+    for value in (risk_decision.get("portfolio_constraints") or [])[:3]:
+        if value:
+            risk_points.append(live_business_text(value))
+    risk_points_html = "".join(f"<li>{escape(item)}</li>" for item in risk_points[:5]) or "<li>当前没有抽取到额外风险约束。</li>"
+    conclusion_metrics = [
+        {
+            "title": "当前组合口径",
+            "value": risk_decision.get("portfolio_state_label") or code_label(risk_decision.get("portfolio_state")) or "-",
+            "note": compact_text(
+                live_business_text(risk_decision.get("portfolio_sell_call") or risk_decision.get("portfolio_buy_call") or "-"),
+                76,
+            ),
+            "tone": status_tone(risk_decision.get("portfolio_state")),
+        },
+        {
+            "title": "证据缺口",
+            "value": f"{evidence_gap_count} 个",
+            "note": "高分机会的新鲜公开来源已经补齐。" if evidence_gap_count == 0 else "先补来源，再判断是否升级。",
+            "tone": "good" if evidence_gap_count == 0 else "warning",
+            "footer_html": render_count_badges(evidence_counts, "暂无证据分布"),
+        },
+        {
+            "title": "纸面观察",
+            "value": f"{paper_watch_count} 张",
+            "note": "只做模拟跟踪，不构成真实交易指令。",
+            "tone": "neutral",
+            "footer_html": render_count_badges(paper_counts, "暂无纸面观察状态"),
+        },
+        {
+            "title": "动作建议",
+            "value": fmt_number(portfolio.get("action_count") or 0),
+            "note": compact_text(live_business_text((portfolio.get("primary_call") or [""])[0]), 76),
+            "tone": status_tone(portfolio.get("execution_precheck_status")),
+        },
+    ]
 
     latest_run_label = latest_run.get("label") or latest_run.get("job_id") or "暂无"
     latest_run_time = latest_run.get("finished_at") or latest_run.get("started_at") or "-"
@@ -3619,32 +5293,32 @@ def render_reports_page(state: dict, refresh_seconds: int) -> str:
 
     body = (
         "<section class='panel'>"
-        "<h2>核心指标</h2>"
-        "<div class='section-intro'>先看数据是不是新、自动链今天跑到了哪、当前风控和调仓建议收口到什么程度。</div>"
-        f"{render_metric_grid(metrics)}"
+        "<h2>结论先看</h2>"
+        "<div class='section-intro'>这里先给投资判断、组合口径和机会状态；数据新鲜度、自动链运行记录放到自动运营页。</div>"
+        f"<p>{escape(compact_text(report_summary, 220))}</p>"
+        f"{render_metric_grid(conclusion_metrics)}"
+        "</section>"
+        "<section class='grid-2'>"
+        "<article class='panel'>"
+        "<h2>今日动作口径</h2>"
+        "<div class='section-intro'>先看今天应该推进、暂缓还是继续观察。</div>"
+        f"<ul>{primary_calls}</ul>"
+        f"<div class='source-link'>{link_for_artifact(portfolio.get('artifact'))}</div>"
+        "</article>"
+        "<article class='panel'>"
+        "<h2>置顶机会与风险</h2>"
+        "<div class='section-intro'>只列当前最需要人工判断的机会，不展示系统运行状态。</div>"
+        f"{render_html_table(['标的', '分数', '状态', '主要风险', '下一步'], top_opportunity_rows, '当前没有置顶机会。')}"
+        "</article>"
         "</section>"
         "<section class='report-layout'>"
         "<div class='panel-stack'>"
         "<article class='panel'>"
-        "<h2>今日最重要的结论</h2>"
-        f"<div class='section-intro'>{escape(compact_text(report_summary, 180))}</div>"
-        f"<div class='muted' style='margin-top:10px'>{escape(report_mode_note)}</div>"
-        f"<ul>{primary_calls}</ul>"
+        "<h2>日报阅读入口</h2>"
+        f"<div class='section-intro'>{escape(report_mode_note)}</div>"
+        f"<ul>{risk_points_html}</ul>"
         "<div class='source-link'>"
         f"{link_for_artifact(active_report_artifact)}"
-        "</div>"
-        "</article>"
-        "<article class='panel'>"
-        "<h2>自动链结果</h2>"
-        "<div class='section-intro'>这里不看系统细节，只看今天自动链交付了什么、最新一条跑到哪一步。</div>"
-        "<div class='card'>"
-        "<div class='card-header'>"
-        f"<div><h3>{escape(latest_run_label)}</h3><div class='muted'>{escape(latest_run_time)}</div></div>"
-        f"<div>{badge(latest_run.get('status'), status_tone(latest_run.get('status')))}</div>"
-        "</div>"
-        f"<div class='muted'>今日自动链共 {escape(fmt_number(scheduler.get('today_run_count') or 0))} 次。</div>"
-        f"<div style='margin-top:10px'>{render_count_badges(scheduler_counts, '今天还没有自动链运行记录')}</div>"
-        f"{latest_run_link_html}"
         "</div>"
         "</article>"
         f"{render_capital_flow_fact_panel(capital)}"
@@ -3687,22 +5361,17 @@ def render_reports_page(state: dict, refresh_seconds: int) -> str:
         page_title="SMR 日报",
         current_path="/reports",
         hero_title=report_title,
-        hero_subtitle="这一页优先展示今天候选版和随时口径，不把旧日报直接当成今天口径。",
+        hero_subtitle="先看结论、动作口径、机会和风险；系统状态细节已收进自动运营页。",
         body=body,
         refresh_seconds=refresh_seconds,
+        show_status_strip=False,
         hero_facts=[
-            ("当前展示", f"{'正式日报' if latest_report_is_aligned else '候选版'} / {report_surface_date or '-'}"),
-            ("正式日报锚点", latest_report_anchor_date or "-"),
-            ("两融随时", capital["margin_balance"].get("anchor_trade_date") or "-"),
-            ("互联互通随时", capital["stock_connect"].get("anchor_trade_date") or "-"),
-            ("主张数量", len(portfolio.get("primary_call") or [])),
-            ("官方材料", len(official_material_items)),
-            ("电话会稿", len(public_transcript_items)),
-            ("外部研究", len(external_research_items)),
-            ("卖方参照", len(public_signal_items)),
-            ("A股异动", len(market_flow_a_items)),
-            ("港股异动", len(market_flow_h_items)),
-            ("美股异动", len(market_flow_us_items)),
+            ("组合口径", risk_decision.get("portfolio_state_label") or code_label(risk_decision.get("portfolio_state")) or "-"),
+            ("证据缺口", evidence_gap_count),
+            ("纸面观察", paper_watch_count),
+            ("动作建议", portfolio.get("action_count") or 0),
+            ("买入候选", risk_decision.get("buy_candidate_count") or 0),
+            ("卖出候选", risk_decision.get("sell_candidate_count") or 0),
         ],
         **shell_state_kwargs(state),
     )
@@ -4231,132 +5900,37 @@ def render_action_detail_page(state: dict, action_id: str, refresh_seconds: int)
     add_item = find_watch_item(state, add_leg.get("ts_code")) if add_leg else None
     remove_item = find_watch_item(state, remove_leg.get("ts_code")) if remove_leg else None
     subject_item = find_watch_item(state, subject.get("ts_code")) if subject else None
+    report_sections = render_report_driven_action_sections(state, action)
+    amount_label = fmt_money_cn(action.get("trade_amount"))
+    if amount_label == "-":
+        amount_label = "见操作计划"
+    hero_facts = [
+        ("候选动作", action.get("title") or action_id),
+        ("金额口径", amount_label),
+        ("执行口径", "人工复核后分批推进"),
+        ("复核重点", "调出理由、订单/毛利率、竞争格局"),
+    ]
 
-    related_stock_items = []
-    if add_leg:
-        related_stock_items.append(
-            f"<li>调入对象：<a href='{research_detail_href(add_leg.get('ts_code'))}'>{escape(add_leg.get('name') or add_leg.get('ts_code') or '-')}</a><div class='muted'>{escape(add_leg.get('ts_code') or '-')} · {escape(code_label(add_leg.get('sector')))}</div></li>"
+    if report_sections:
+        body = f"{render_action_deep_report_panel(state, action)}{report_sections}"
+    else:
+        body = (
+            f"{render_action_deep_report_panel(state, action)}"
+            f"{render_action_operation_report(state, action, add_item, remove_item, subject_item)}"
+            f"{render_action_logic_report(state, action, add_item, remove_item, subject_item)}"
+            f"{render_action_technical_report(state, action, add_item, remove_item, subject_item)}"
         )
-    if remove_leg:
-        related_stock_items.append(
-            f"<li>调出对象：<a href='{research_detail_href(remove_leg.get('ts_code'))}'>{escape(remove_leg.get('name') or remove_leg.get('ts_code') or '-')}</a><div class='muted'>{escape(remove_leg.get('ts_code') or '-')} · {escape(code_label(remove_leg.get('sector')))}</div></li>"
-        )
-    if subject:
-        related_stock_items.append(
-            f"<li>复核对象：<a href='{research_detail_href(subject.get('ts_code'))}'>{escape(subject.get('name') or subject.get('ts_code') or '-')}</a><div class='muted'>{escape(subject.get('ts_code') or '-')} · {escape(code_label(subject.get('sector')))}</div></li>"
-        )
-    related_stock_html = f"<ul class='summary-list'>{''.join(related_stock_items)}</ul>" if related_stock_items else "<div class='empty'>当前没有直接关联标的。</div>"
-
-    rationale_items = "".join(f"<li>{escape(business_text(item))}</li>" for item in (action.get("rationale") or []))
-    next_checks = "".join(f"<li>{escape(business_text(item))}</li>" for item in (action.get("next_checks") or []))
-    risk_flags = "".join(f"<li>{escape(business_text(item))}</li>" for item in (action.get("risk_flags") or []))
-    source_refs = list(action.get("source_refs") or [])
-    source_refs.extend(
-        [
-            ((state.get("portfolio_action") or {}).get("artifact") or {}).get("rel_path"),
-            ((state.get("rotation") or {}).get("execution_plan_artifact") or {}).get("rel_path"),
-        ]
-    )
-    management_quote_rows = action_management_quote_rows(state, action)
-    management_quote_table_rows = []
-    for row in management_quote_rows:
-        management_quote_table_rows.append(
-            [
-                escape(row["role_label"]),
-                (
-                    f"<strong>{escape(row['name'])}</strong>"
-                    f"<div class='muted'>{escape(row['ts_code'])}</div>"
-                ),
-                badge(row["status"], "neutral"),
-                escape(row["status_text"]),
-                link_for_rel_path(row["source_rel_path"], "查看电话会文字稿")
-                if row.get("source_rel_path")
-                else "<span class='muted'>暂无原文</span>",
-            ]
-        )
-    compare_section = (
-        render_symbol_compare_panel(
-            "换入换出对比",
-            add_leg.get("name") or add_leg.get("ts_code") or "调入腿",
-            add_item,
-            remove_leg.get("name") or remove_leg.get("ts_code") or "调出腿",
-            remove_item,
-            state,
-        )
-        if add_leg and remove_leg
-        else ""
-    )
-    subject_context = detail_context_for_symbol(state, subject.get("ts_code")) if subject_item else {}
-    subject_upcoming_events = (subject_context.get("upcoming_events") or []) if subject_item else []
-    subject_context_section = (
-        "<section class='grid-3'>"
-        f"{render_symbol_events_panel(subject_upcoming_events, '对象未来催化')}"
-        f"{render_symbol_events_panel(subject_context.get('recent_events') or [], '对象最近事件')}"
-        f"{render_symbol_capital_flow_panel(subject_context)}"
-        f"{render_symbol_risk_panel(subject_context)}"
-        "</section>"
-        if subject_item
-        else ""
-    )
-
-    body = (
-        "<section class='grid-2'>"
-        "<article class='panel'>"
-        "<h2>动作结论</h2>"
-        f"<div class='section-intro'>{escape(business_text(action.get('summary') or '-'))}</div>"
-        f"<div class='muted'>当前阶段：{escape(code_label(action.get('gate_status')))}</div>"
-        f"<div class='muted'>参照金额：{escape(fmt_money_cn(action.get('trade_amount')))} / 占比：{escape(fmt_ratio(action.get('trade_amount_pct')))}</div>"
-        "</article>"
-        "<article class='panel'>"
-        "<h2>关联标的</h2>"
-        "<div class='section-intro'>从这里可以继续点进调入腿、调出腿或复核对象的研究详情。</div>"
-        f"{related_stock_html}"
-        "</article>"
-        "</section>"
-        "<section class='panel'>"
-        "<h2>管理层原话状态</h2>"
-        "<div class='section-intro'>这层只回答这条动作有没有足够新的管理层原话可以核对，避免把二手解读误当一手表述。</div>"
-        f"{render_html_table(['角色', '对象', '原话状态', '这代表什么', '原文'], management_quote_table_rows, '当前没有关联到可判断原话状态的标的。')}"
-        "</section>"
-        f"{compare_section}"
-        f"{subject_context_section}"
-        "<section class='grid-2'>"
-        "<article class='panel'>"
-        "<h2>动作依据</h2>"
-        f"<ul>{rationale_items or '<li>-</li>'}</ul>"
-        "</article>"
-        "<article class='panel'>"
-        "<h2>主要风险</h2>"
-        f"<ul>{risk_flags or '<li>-</li>'}</ul>"
-        "</article>"
-        "</section>"
-        "<section class='panel'>"
-        "<h2>执行前检查</h2>"
-        "<div class='section-intro'>这里只放真正需要你在推进前再核对一遍的事项。</div>"
-        f"<ul>{next_checks or '<li>-</li>'}</ul>"
-        "</section>"
-        "<section class='panel'>"
-        "<h2>支撑材料</h2>"
-        "<div class='section-intro'>执行计划、组合动作备忘和关联研究原文都从这里进入。</div>"
-        f"{render_source_list(source_refs, '当前没有关联文件。')}"
-        "</section>"
-    )
     return (
         200,
         render_shell(
             page_title=f"SMR 动作详情 - {action.get('title') or action_id}",
             current_path="/portfolio",
             hero_title=action.get("title") or "动作详情",
-            hero_subtitle="单动作详情页。先看动作结论和阶段，再看依据、风险、执行前检查与支撑材料。",
+            hero_subtitle="这页只保留三件事：怎么操作、为什么这么调、技术证据是否支持。",
             body=body,
             refresh_seconds=refresh_seconds,
-            hero_facts=[
-                ("动作类型", code_label(action.get("action_type"))),
-                ("优先级", code_label(action.get("priority"))),
-                ("当前阶段", code_label(action.get("gate_status"))),
-                ("参照金额", fmt_money_cn(action.get("trade_amount"))),
-                ("原话状态", action_management_quote_fact(state, action)),
-            ],
+            hero_facts=hero_facts,
+            show_status_strip=False,
             **shell_state_kwargs(state),
         ),
     )
@@ -5075,17 +6649,225 @@ def render_artifact_page(path_value: str) -> tuple[int, str]:
     return 200, body
 
 
+def safe_json(raw: str | None, default):
+    try:
+        return json.loads(raw or "")
+    except (TypeError, json.JSONDecodeError):
+        return default
+
+
+def review_db_rows(limit: int = 80) -> list[dict]:
+    conn = sqlite3.connect(DB_PATH)
+    try:
+        ensure_decision_tables(conn)
+        rows = conn.execute(
+            """
+            SELECT recommendation_id, ticker, market, theme, action, status, decision_time,
+                   suggested_position_pct, max_position_pct, thesis_summary, data_health_snapshot_json,
+                   evidence_check_snapshot_json, lint_snapshot_json, risk_snapshot_json,
+                   human_review_status, reviewer, review_comment, metadata_json, updated_at
+            FROM decision_ledger
+            ORDER BY datetime(updated_at) DESC
+            LIMIT ?
+            """,
+            (limit,),
+        ).fetchall()
+    finally:
+        conn.close()
+    return [
+        {
+            "recommendation_id": row[0],
+            "ticker": row[1],
+            "market": row[2],
+            "theme": row[3],
+            "action": row[4],
+            "status": row[5],
+            "decision_time": row[6],
+            "suggested_position_pct": row[7],
+            "max_position_pct": row[8],
+            "thesis_summary": row[9],
+            "data_health_snapshot": safe_json(row[10], {}),
+            "evidence_check_snapshot": safe_json(row[11], {}),
+            "lint_snapshot": safe_json(row[12], {}),
+            "risk_snapshot": safe_json(row[13], {}),
+            "human_review_status": row[14],
+            "reviewer": row[15],
+            "review_comment": row[16],
+            "metadata": safe_json(row[17], {}),
+            "updated_at": row[18],
+        }
+        for row in rows
+    ]
+
+
+def review_db_row(recommendation_id: str) -> dict | None:
+    matches = [row for row in review_db_rows(limit=300) if row.get("recommendation_id") == recommendation_id]
+    return matches[0] if matches else None
+
+
+def render_snapshot_pretty(value: dict | list | None, limit: int = 1800) -> str:
+    text = json.dumps(value or {}, ensure_ascii=False, indent=2, default=str)
+    if len(text) > limit:
+        text = text[:limit].rstrip() + "\n..."
+    return f"<pre class='artifact-pre'>{escape(text)}</pre>"
+
+
+def review_status_label(row: dict, key: str) -> str:
+    if key == "data":
+        status = row.get("data_health_snapshot", {}).get("overall_status")
+    elif key == "evidence":
+        status = row.get("evidence_check_snapshot", {}).get("severity")
+    elif key == "lint":
+        status = row.get("lint_snapshot", {}).get("max_severity")
+    else:
+        status = row.get("status")
+    return str(status or "-")
+
+
+def render_review_queue(state: dict, refresh_seconds: int) -> str:
+    rows = review_db_rows()
+    body_rows = []
+    for row in rows:
+        rec_id = row.get("recommendation_id")
+        href = f"/recommendation/review?id={quote(rec_id or '')}"
+        body_rows.append(
+            [
+                escape(str(row.get("updated_at") or row.get("decision_time") or "-")),
+                f"<a href='{href}'>{escape(str(row.get('ticker') or row.get('recommendation_id') or '-'))}</a>",
+                escape(compact_text(row.get("theme") or "-", 30)),
+                escape(compact_text(row.get("action") or "-", 56)),
+                badge(row.get("status"), status_tone(row.get("status"))),
+                badge(review_status_label(row, "data"), status_tone(review_status_label(row, "data"))),
+                badge(review_status_label(row, "evidence"), status_tone(review_status_label(row, "evidence"))),
+                badge(review_status_label(row, "lint"), status_tone(review_status_label(row, "lint"))),
+            ]
+        )
+    body = (
+        "<section class='panel'>"
+        "<h2>人工审核队列</h2>"
+        "<div class='section-intro'>只处理候选、观察、阻断和已审核状态；交易型建议在通过人工审核前不会进入正式 paper 结论。</div>"
+        + render_html_table(
+            ["更新时间", "标的/建议", "主题", "动作", "状态", "数据", "证据", "Lint"],
+            body_rows,
+            empty_text="当前没有进入 ledger 的建议。",
+        )
+        + "</section>"
+    )
+    return render_shell(
+        page_title="SMR 审核队列",
+        current_path="/review-queue",
+        hero_title="投研审核队列",
+        hero_subtitle="候选建议必须先看数据健康、证据图谱、lint 和风险信息，再进入人工审核动作。",
+        body=body,
+        refresh_seconds=refresh_seconds,
+        hero_facts=[("待处理", sum(1 for row in rows if row.get("status") == "pending_human_review")), ("总数", len(rows))],
+        **shell_state_kwargs(state),
+    )
+
+
+def render_review_action_form(row: dict) -> str:
+    disabled_approval = str(row.get("status") or "").startswith("blocked")
+    approve_note = "阻断状态不能 approve，只能归档或要求补研究。" if disabled_approval else "审核通过后进入 approved_paper。"
+    return f"""
+    <form class='review-form' method='post' action='/recommendation/review'>
+      <input type='hidden' name='recommendation_id' value='{escape(str(row.get("recommendation_id") or ""), quote=True)}'>
+      <label>Reviewer <input name='reviewer' value='human_reviewer'></label>
+      <label>Action
+        <select name='action'>
+          <option value='approve_paper'>approve_paper</option>
+          <option value='reject'>reject</option>
+          <option value='request_more_research'>request_more_research</option>
+          <option value='downgrade_to_observation'>downgrade_to_observation</option>
+          <option value='reduce_position_size'>reduce_position_size</option>
+          <option value='archive'>archive</option>
+        </select>
+      </label>
+      <label>新仓位（reduce_position_size 时必填）<input name='suggested_position_pct' placeholder='例如 0.03'></label>
+      <label>审核意见 <textarea name='comment' required placeholder='说明通过、拒绝或要求补研究的理由'></textarea></label>
+      <p class='muted'>{escape(approve_note)}</p>
+      <button type='submit'>提交审核动作</button>
+    </form>
+    """
+
+
+def render_recommendation_review_page(
+    state: dict,
+    recommendation_id: str,
+    refresh_seconds: int,
+    message: str | None = None,
+) -> tuple[int, str]:
+    row = review_db_row(recommendation_id)
+    if not row:
+        return 404, "<h1>Review item not found</h1>"
+    metadata = row.get("metadata") or {}
+    claim_summary = metadata.get("claim_evidence_summary") or row.get("evidence_check_snapshot", {}).get("claim_evidence_summary")
+    valuation = metadata.get("valuation_snapshot")
+    consensus_proxy = metadata.get("consensus_revision_proxy")
+    bear_case = metadata.get("bear_case_result")
+    message_html = f"<div class='notice'>{escape(message)}</div>" if message else ""
+    audit_body = (
+        "<section class='grid-2'>"
+        "<article class='panel'><h2>建议摘要</h2>"
+        + render_kv_chips(
+            [
+                ("状态", row.get("status")),
+                ("标的", row.get("ticker")),
+                ("市场", row.get("market")),
+                ("建议仓位", row.get("suggested_position_pct")),
+                ("最大仓位", row.get("max_position_pct")),
+            ]
+        )
+        + f"<p>{escape(row.get('thesis_summary') or row.get('action') or '-')}</p>"
+        + "</article>"
+        "<article class='panel'><h2>审核动作</h2>"
+        + render_review_action_form(row)
+        + "</article>"
+        "</section>"
+        "<section class='grid-2'>"
+        "<article class='panel'><h2>Data Health</h2>"
+        + render_snapshot_pretty(row.get("data_health_snapshot"), 1600)
+        + "</article>"
+        "<article class='panel'><h2>Evidence / Lint</h2>"
+        + render_snapshot_pretty({"evidence": row.get("evidence_check_snapshot"), "lint": row.get("lint_snapshot")}, 1800)
+        + "</article>"
+        "</section>"
+        "<section class='grid-2'>"
+        "<article class='panel'><h2>Claim-Evidence Summary</h2>"
+        + render_snapshot_pretty(claim_summary, 1600)
+        + "</article>"
+        "<article class='panel'><h2>Bear / Valuation / Proxy</h2>"
+        + render_snapshot_pretty({"bear_case": bear_case, "valuation": valuation, "consensus_proxy": consensus_proxy}, 1800)
+        + "</article>"
+        "</section>"
+        "<section class='panel'><h2>Ledger Metadata</h2>"
+        + render_snapshot_pretty(metadata, 2600)
+        + "</section>"
+    )
+    body = message_html + audit_body
+    return 200, render_shell(
+        page_title="SMR 建议审核",
+        current_path="/review-queue",
+        hero_title=f"审核 {row.get('ticker') or recommendation_id}",
+        hero_subtitle="这里是候选建议进入 paper 结论前的审计入口：先看状态、证据、反方和缺口，再做审核动作。",
+        body=body,
+        refresh_seconds=refresh_seconds,
+        hero_facts=[("状态", row.get("status")), ("证据", review_status_label(row, "evidence")), ("Lint", review_status_label(row, "lint"))],
+        **shell_state_kwargs(state),
+    )
+
+
 PAGE_RENDERERS = {
     "/": render_home,
-    "/reports": render_reports_page,
-    "/opportunities": render_opportunities_page,
-    "/analysis": render_analysis_page,
-    "/operations": render_operations_page,
-    "/research": render_research_page,
-    "/portfolio": render_portfolio_page,
-    "/risk": render_risk_page,
-    "/capital-flow": render_capital_flow_page,
-    "/events": render_events_page,
+    "/reports": render_home,
+    "/opportunities": render_home,
+    "/analysis": render_home,
+    "/operations": render_home,
+    "/research": render_home,
+    "/portfolio": render_home,
+    "/risk": render_home,
+    "/capital-flow": render_home,
+    "/events": render_home,
+    "/review-queue": render_review_queue,
 }
 
 
@@ -5126,6 +6908,12 @@ def build_handler(refresh_seconds: int):
                 status, body = render_action_detail_page(state, action_id, refresh_seconds)
                 self._send(status, body)
                 return
+            if parsed.path == "/recommendation/review":
+                state = build_dashboard_state()
+                recommendation_id = parse_qs(parsed.query).get("id", [""])[0]
+                status, body = render_recommendation_review_page(state, recommendation_id, refresh_seconds)
+                self._send(status, body)
+                return
             if parsed.path == "/artifact":
                 path_value = parse_qs(parsed.query).get("path", [""])[0]
                 status, body = render_artifact_page(path_value)
@@ -5141,6 +6929,46 @@ def build_handler(refresh_seconds: int):
                 return
             self._send(404, "<h1>Not Found</h1>")
 
+        def do_POST(self) -> None:
+            parsed = urlparse(self.path)
+            if parsed.path != "/recommendation/review":
+                self._send(404, "<h1>Not Found</h1>")
+                return
+            length = int(self.headers.get("Content-Length") or 0)
+            raw = self.rfile.read(length).decode("utf-8") if length else ""
+            form = parse_qs(raw)
+            recommendation_id = (form.get("recommendation_id") or [""])[0]
+            action = (form.get("action") or [""])[0]
+            reviewer = (form.get("reviewer") or [""])[0] or "human_reviewer"
+            comment = (form.get("comment") or [""])[0]
+            overrides = {}
+            position = (form.get("suggested_position_pct") or [""])[0].strip()
+            if position:
+                try:
+                    overrides["suggested_position_pct"] = float(position)
+                except ValueError:
+                    overrides["suggested_position_pct"] = position
+            conn = sqlite3.connect(DB_PATH)
+            try:
+                result = review_recommendation(
+                    conn,
+                    recommendation_id=recommendation_id,
+                    reviewer=reviewer,
+                    action=action,
+                    comment=comment,
+                    overrides=overrides,
+                )
+                conn.commit()
+                message = f"审核动作已记录：{result.get('previous_status')} -> {result.get('new_status')}"
+            except Exception as exc:
+                conn.rollback()
+                message = f"审核动作失败：{exc}"
+            finally:
+                conn.close()
+            state = build_dashboard_state()
+            status, body = render_recommendation_review_page(state, recommendation_id, refresh_seconds, message=message)
+            self._send(status, body)
+
         def do_HEAD(self) -> None:
             parsed = urlparse(self.path)
             if parsed.path == "/api/state":
@@ -5155,6 +6983,10 @@ def build_handler(refresh_seconds: int):
                 state = build_dashboard_state()
                 action_id = parse_qs(parsed.query).get("id", [""])[0]
                 self._send_head(200 if find_action(state, action_id) else 404)
+                return
+            if parsed.path == "/recommendation/review":
+                recommendation_id = parse_qs(parsed.query).get("id", [""])[0]
+                self._send_head(200 if review_db_row(recommendation_id) else 404)
                 return
             if parsed.path == "/artifact":
                 path_value = parse_qs(parsed.query).get("path", [""])[0]

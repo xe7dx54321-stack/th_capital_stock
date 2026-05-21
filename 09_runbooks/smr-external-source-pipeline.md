@@ -90,6 +90,61 @@ python3 08_scripts/wiki/fetch_external_source.py \
 - `python3 08_scripts/wiki/fetch_eastmoney_news_articles.py`
   - A 股资讯正文页快照
 
+### Scrapling 增强抓取层
+
+通用网页快照和部分专用适配器已接入统一抓取层：
+
+- 配置文件：`00_control/source_fetch_policy.json`
+- 代码入口：`08_scripts/lib/smr_fetch.py`
+- 默认模式：`--fetch-mode auto`
+
+`auto` 模式会按域名策略选择抓取方式：
+
+- 普通公开网页：优先 `scrapling_static`，失败或疑似被拦截时回退 `urllib`
+- MarketScreener 等更脆弱网页：允许从 `scrapling_static` 升级到 `scrapling_dynamic`
+- CNINFO / HKEX / SEC 等稳定官方来源：仍优先 legacy `urllib`，避免引入不必要复杂度
+
+通用网页快照可手动指定模式：
+
+```bash
+python3 08_scripts/wiki/fetch_external_source.py \
+  --url "https://example.com" \
+  --entity-type topic \
+  --entity-id smoke \
+  --source-kind news \
+  --fetch-mode auto
+```
+
+可选模式：
+
+- `auto`
+  - 使用 `source_fetch_policy.json`，推荐默认值
+- `urllib`
+  - 强制使用旧抓取链路，适合排查兼容性
+- `scrapling-static`
+  - 强制使用 Scrapling 轻量 HTTP 抓取
+- `dynamic`
+  - 使用浏览器渲染，适合 JS 加载页面
+- `stealth`
+  - 使用更强浏览器指纹和反拦截能力，只用于公开、合规、低频来源
+
+每条落盘来源的 `.meta.json` 会记录：
+
+- `fetch_engine`
+- `fetch_policy`
+- `fallback_chain`
+- `fetch_warning`
+- `rendered`
+- `content_hash`
+
+这让后续 source manifest、失败诊断和 agent 工程改进都能看到抓取质量，而不只是看到“有/没有抓到”。
+
+依赖说明：
+
+- `requirements.txt` 已加入 `scrapling[fetchers]==0.4.8`
+- 这台 Mac 已检测到本机 Chrome，`dynamic`/`stealth` 默认优先使用 `real_chrome`
+- 如果换机器后浏览器渲染失败，再执行 `python3 -m playwright install chromium`
+
 这些专用适配器当前统一支持的扩量参数：
 
 - `--profile`
@@ -157,8 +212,8 @@ python3 08_scripts/wiki/create_ingest_draft.py --include-raw-external
 
 ## 7. 当前已知限制
 
-- 通用抓取器当前优先支持普通网页 HTML 快照
-- 强反爬、纯 JS 渲染、登录后内容，仍可能需要专门适配层
+- 通用抓取器已支持 Scrapling static/dynamic/stealth fallback，但默认只对少数域名打开浏览器渲染
+- 强反爬、纯 JS 渲染、登录后内容，仍可能需要专门适配层和人工合规确认
 - 公告专用适配器已经支持 `PDF / HTM` 原件，但还没有统一全文抽取层
 - 东方财富新闻搜索页、资讯正文页、公开研报列表快照、公开研报正文详情页、PDF 原件、PDF 文本抽取、基础结构化快照和首版表格结构化快照已经落地，但覆盖率还不完整，事实校验也还没有统一抽取层
 

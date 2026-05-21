@@ -1,0 +1,102 @@
+{
+  "version": 1,
+  "data_freshness_rules": {
+    "daily_bar": {
+      "A": {
+        "source_key": "daily_bar",
+        "stale_after_minutes": 1440,
+        "blocking_level_when_stale": "block",
+        "affected_modules": ["opportunity_radar", "market_signal", "paper_watch", "risk_agent", "report_generation"]
+      },
+      "H": {
+        "source_key": "daily_bar",
+        "stale_after_minutes": 1440,
+        "blocking_level_when_stale": "block",
+        "affected_modules": ["opportunity_radar", "market_signal", "paper_watch", "risk_agent", "report_generation"]
+      },
+      "US": {
+        "source_key": "daily_bar",
+        "stale_after_minutes": 1440,
+        "blocking_level_when_stale": "block",
+        "affected_modules": ["opportunity_radar", "market_signal", "paper_watch", "risk_agent", "report_generation"]
+      }
+    },
+    "news": {
+      "global": {
+        "source_key": "eastmoney_news_article",
+        "stale_after_minutes": 360,
+        "blocking_level_when_stale": "degrade",
+        "affected_modules": ["deep_market_scan", "opportunity_radar", "report_generation"]
+      }
+    },
+    "filings": {
+      "global": {
+        "source_key": "official_filings",
+        "stale_after_minutes": 1440,
+        "blocking_level_when_stale": "warn",
+        "affected_modules": ["deep_market_scan", "opportunity_radar", "report_generation"]
+      }
+    },
+    "fundamentals": {
+      "global": {
+        "source_key": "fundamental_factor",
+        "stale_after_minutes": 10080,
+        "blocking_level_when_stale": "warn",
+        "affected_modules": ["deep_market_scan", "risk_agent", "report_generation"]
+      }
+    },
+    "consensus_revision": {
+      "global": {
+        "source_key": "consensus_revision",
+        "freshness_status": "planned",
+        "blocking_level_when_missing": "degrade",
+        "affected_modules": ["report_generation", "investment_research", "opportunity_radar"]
+      }
+    }
+  },
+  "module_dependencies": {
+    "opportunity_radar": ["daily_bar", "news", "filings", "consensus_revision"],
+    "deep_market_scan": ["news", "filings", "fundamentals"],
+    "paper_watch": ["daily_bar"],
+    "market_signal": ["daily_bar"],
+    "risk_agent": ["daily_bar", "fundamentals"],
+    "report_generation": ["daily_bar", "filings", "fundamentals", "consensus_revision"],
+    "investment_research": ["filings", "fundamentals", "consensus_revision"]
+  },
+  "capability_matrix": {
+    "static_company_research": {
+      "required_data_types": ["filings", "fundamentals"],
+      "optional_data_types": ["daily_bar", "consensus_revision"],
+      "on_daily_bar_stale": "allow_with_warning",
+      "on_filings_stale": "degrade",
+      "on_consensus_revision_missing": "allow_with_warning"
+    },
+    "opportunity_radar": {
+      "required_data_types": ["daily_bar", "news"],
+      "optional_data_types": ["filings", "consensus_revision"],
+      "on_daily_bar_stale": "block",
+      "on_news_stale": "degrade",
+      "on_consensus_revision_missing": "degrade"
+    },
+    "market_signal": {
+      "required_data_types": ["daily_bar"],
+      "on_daily_bar_stale": "block"
+    },
+    "valuation_snapshot": {
+      "required_data_types": ["daily_bar", "fundamentals"],
+      "optional_data_types": ["consensus_revision"],
+      "on_daily_bar_stale": "degrade",
+      "on_consensus_revision_missing": "allow_with_warning"
+    },
+    "recommendation_candidate": {
+      "required_data_types": ["daily_bar", "evidence_package"],
+      "optional_data_types": ["filings", "fundamentals", "consensus_revision"],
+      "on_daily_bar_stale": "block",
+      "on_consensus_revision_missing": "degrade"
+    },
+    "paper_performance": {
+      "required_data_types": ["daily_bar"],
+      "on_daily_bar_stale": "block"
+    }
+  }
+}

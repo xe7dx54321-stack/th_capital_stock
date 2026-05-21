@@ -7,7 +7,6 @@ import re
 import sqlite3
 import sys
 import urllib.parse
-import urllib.request
 from datetime import datetime
 from html import unescape
 from pathlib import Path
@@ -17,6 +16,7 @@ if str(LIB_DIR) not in sys.path:
     sys.path.insert(0, str(LIB_DIR))
 
 from smr_external_sources import html_snapshot, persist_external_snapshot, truncate_text
+from smr_fetch import fetch_url, response_extension
 from smr_paths import env_or_project_path, project_path
 from smr_registry import register_snapshot
 from smr_runlog import log_run
@@ -75,28 +75,19 @@ def article_snapshot_exists_on_disk(ts_code, article_code):
     return any(entity_dir.glob(pattern))
 
 
-def fetch_article(url):
-    request = urllib.request.Request(
+def fetch_article(url, fetch_mode="auto", timeout=20):
+    result = fetch_url(
         url,
-        headers={
-            "User-Agent": "Mozilla/5.0",
-            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-            "Referer": "https://so.eastmoney.com/",
-        },
-        method="GET",
+        timeout=timeout,
+        mode=fetch_mode,
+        user_agent="Mozilla/5.0",
+        accept="text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        extra_headers={"Referer": "https://so.eastmoney.com/"},
     )
-    with urllib.request.urlopen(request, timeout=20) as response:
-        raw_bytes = response.read()
-        content_type = response.headers.get("Content-Type", "")
-        charset = response.headers.get_content_charset() or "utf-8"
-        text = raw_bytes.decode(charset, errors="replace")
-        return {
-            "raw_bytes": raw_bytes,
-            "text": text,
-            "content_type": content_type,
-            "final_url": response.geturl(),
-            "status_code": response.getcode(),
-        }
+    return {
+        **result,
+        "raw_bytes": result["bytes"],
+    }
 
 
 def extract_article(html_text, fallback_title="", fallback_date="", fallback_media="", fallback_summary=""):
@@ -254,7 +245,7 @@ def persist_article_snapshot(target, search_meta, article_item, page_result, pag
         source_domain=urllib.parse.urlparse(final_url).netloc,
         content_type=page_result["content_type"] or "text/html; charset=utf-8",
         raw_bytes=page_result["raw_bytes"],
-        raw_extension=".html",
+        raw_extension=response_extension(page_result),
         note=f"eastmoney news article for {target['name']}",
         tags=clean_tags("eastmoney", "public_news", "article_detail"),
         body_text=build_body_text(
@@ -271,6 +262,13 @@ def persist_article_snapshot(target, search_meta, article_item, page_result, pag
             "requested_url": article_item.get("url"),
             "search_snapshot_meta_rel_path": str(search_meta.get("_meta_rel_path") or ""),
             "status_code": page_result["status_code"],
+            "fetch_engine": page_result.get("fetch_engine"),
+            "fetch_mode": page_result.get("fetch_mode"),
+            "fetch_policy": page_result.get("fetch_policy"),
+            "fallback_chain": page_result.get("fallback_chain"),
+            "fetch_warning": page_result.get("fetch_warning"),
+            "rendered": page_result.get("rendered"),
+            "content_hash": page_result.get("content_hash"),
             "article_code": article_code,
             "published_at": published_at,
             "media_name": page_fields["source_name"] or article_item.get("mediaName"),
@@ -295,6 +293,13 @@ def main():
     parser.add_argument("--pool-type", action="append", help="Override pool type; can be repeated")
     parser.add_argument("--limit", type=int, help="Override maximum number of target symbols")
     parser.add_argument("--article-limit", type=int, default=2, help="Maximum article detail pages to persist for each symbol")
+    parser.add_argument(
+        "--fetch-mode",
+        default="auto",
+        choices=["auto", "urllib", "scrapling-static", "dynamic", "stealth"],
+        help="Fetch engine policy. auto uses 00_control/source_fetch_policy.json",
+    )
+    parser.add_argument("--timeout", type=int, default=20)
     parser.add_argument("--force", action="store_true", help="Fetch even if the article already exists in source_manifest")
     args = parser.parse_args()
 
@@ -328,7 +333,8 @@ def main():
                 continue
             try:
                 if article_url not in page_cache:
-                    page_cache[article_url] = fetch_article(article_url)
+                    page_cache[article_url] = fetch_article(article_url, fetch_mode=args.fetch_mode, timeout=args.timeout)
+                    page_cache[article_url]["fetch_mode"] = args.fetch_mode
                 page_result = page_cache[article_url]
                 final_url = page_result["final_url"]
                 if "eastmoney.com" not in urllib.parse.urlparse(final_url).netloc:

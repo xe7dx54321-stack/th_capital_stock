@@ -15,6 +15,8 @@ if str(LIB_DIR) not in sys.path:
 
 from smr_flow_event_digest import latest_margin_hit, ordered_unique, parse_date_value
 from smr_paths import env_or_project_path, relative_to_project
+from smr_data_health import blocked_payload_for_gate, check_freshness_gate, gate_to_dict
+from smr_decision import record_agent_run
 from smr_registry import register_snapshot
 from smr_runlog import log_run
 from smr_universe import combined_name_map
@@ -415,6 +417,14 @@ def write_markdown(output_path, payload):
     ]
     for line in payload.get("overview_lines") or []:
         lines.append(f"- {line}")
+    if payload.get("blocked_by_data"):
+        gate = payload.get("freshness_gate_result") or {}
+        lines.extend(["", "## Data Health Gate", ""])
+        lines.append(f"- gate_status: `{gate.get('status') or '-'}`")
+        for reason in gate.get("reasons") or []:
+            lines.append(f"- {reason}")
+        output_path.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
+        return
     lines.append("")
     for market in MARKET_CODE_ORDER:
         lines.extend(render_market_section(MARKET_LABELS.get(market, market), payload["markets"].get(market) or []))
@@ -429,6 +439,70 @@ def main():
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     try:
+        gate = check_freshness_gate(
+            conn,
+            module_name="market_signal",
+            required_data_types=["daily_bar"],
+            allow_degraded=False,
+        )
+        if gate.status == "block":
+            payload = blocked_payload_for_gate("market_signal", gate)
+            payload.update(
+                {
+                    "batch_date": batch_date,
+                    "coverage_summary": {
+                        "scope_label": "当前系统已覆盖库实时扫描",
+                        "scope_note": "行情数据过期，资金异动扫描已阻断。",
+                        "a_share_count": 0,
+                        "hk_count": 0,
+                        "us_count": 0,
+                        "a_share_trade_date": None,
+                        "hk_trade_date": None,
+                        "us_trade_date": None,
+                    },
+                    "markets": {market: [] for market in MARKET_CODE_ORDER},
+                    "freshness_gate_result": gate_to_dict(gate),
+                    "data_health_snapshot": gate.data_health_snapshot,
+                }
+            )
+            output_path = OUTPUT_DIR / f"{batch_date}_market_flow_anomaly_snapshot.md"
+            write_markdown(output_path, payload)
+            registry_entry = register_snapshot(
+                conn,
+                entity_type="market_flow_anomaly_snapshot",
+                entity_id=batch_date,
+                status="blocked_by_data",
+                source=SCRIPT_NAME,
+                relationships={"summary_rel_path": relative_to_project(output_path)},
+                payload={**payload, "summary_rel_path": relative_to_project(output_path)},
+                created_at=generated_at,
+            )
+            record_agent_run(
+                conn,
+                agent_or_script=SCRIPT_NAME,
+                status="blocked",
+                entity_type="market_flow_anomaly_snapshot",
+                entity_id=batch_date,
+                data_health_snapshot=gate.data_health_snapshot,
+                freshness_gate_result=gate_to_dict(gate),
+                output_status="blocked_by_data",
+                block_reasons=gate.reasons,
+            )
+            conn.commit()
+            log_run(
+                SCRIPT_NAME,
+                "success",
+                "market flow anomaly blocked by freshness gate",
+                {
+                    "registry_entry_id": registry_entry["id"],
+                    "summary_rel_path": relative_to_project(output_path),
+                    "freshness_gate_status": gate.status,
+                    "block_reasons": gate.reasons,
+                },
+            )
+            print(f"Market flow anomaly snapshot: {relative_to_project(output_path)}")
+            print("  status=blocked_by_data")
+            return
         name_map = combined_name_map(conn)
         pool_types_map = load_pool_types(conn)
         event_map = latest_event_by_symbol(conn)
@@ -436,6 +510,8 @@ def main():
             "generated_at": generated_at,
             "batch_date": batch_date,
             "coverage_summary": coverage_summary(conn),
+            "freshness_gate_result": gate_to_dict(gate),
+            "data_health_snapshot": gate.data_health_snapshot,
             "markets": {
                 "A": build_market_items(conn, "A", load_a_h_rows(conn), name_map, pool_types_map, event_map),
                 "H": build_market_items(
@@ -471,6 +547,16 @@ def main():
             relationships={"summary_rel_path": relative_to_project(output_path)},
             payload={**payload, "summary_rel_path": relative_to_project(output_path)},
             created_at=generated_at,
+        )
+        record_agent_run(
+            conn,
+            agent_or_script=SCRIPT_NAME,
+            status="success",
+            entity_type="market_flow_anomaly_snapshot",
+            entity_id=batch_date,
+            data_health_snapshot=gate.data_health_snapshot,
+            freshness_gate_result=gate_to_dict(gate),
+            output_status="generated",
         )
         conn.commit()
     finally:

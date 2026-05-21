@@ -14,6 +14,8 @@ if str(LIB_DIR) not in sys.path:
     sys.path.insert(0, str(LIB_DIR))
 
 from smr_external_research import latest_external_research_snapshot
+from smr_data_health import check_freshness_gate, gate_to_dict
+from smr_decision import record_agent_run
 from smr_official_materials import summarize_official_materials
 from smr_paths import env_or_project_path, relative_to_project
 from smr_public_analyst_digest import summarize_public_analyst_signal
@@ -726,6 +728,12 @@ def main():
     conn = sqlite3.connect(DB_PATH)
     try:
         conn.row_factory = sqlite3.Row
+        freshness_gate = check_freshness_gate(
+            conn,
+            module_name="deep_market_scan",
+            required_data_types=["news", "filings", "fundamentals"],
+            allow_degraded=True,
+        )
         theme_registry = parse_deep_analysis_theme_registry()
         theme_map = theme_registry.get("themes") or {}
         target_rows = theme_registry.get("targets") or []
@@ -785,6 +793,8 @@ def main():
             "a_share_candidates": a_share_candidates,
             "us_candidates": us_candidates,
             "coverage_gaps": coverage_gaps[:10],
+            "freshness_gate_result": gate_to_dict(freshness_gate),
+            "data_health_snapshot": freshness_gate.data_health_snapshot,
         }
 
         output_path = OUTPUT_DIR / f"{generated_at[:10]}_{generated_at[11:13]}{generated_at[14:16]}{generated_at[17:19]}_deep_market_analysis.md"
@@ -805,6 +815,17 @@ def main():
                 "summary_rel_path": relative_to_project(output_path),
             },
             created_at=generated_at,
+        )
+        record_agent_run(
+            conn,
+            agent_or_script=SCRIPT_NAME,
+            status="success",
+            entity_type="deep_market_analysis_snapshot",
+            entity_id=batch_date,
+            data_health_snapshot=freshness_gate.data_health_snapshot,
+            freshness_gate_result=gate_to_dict(freshness_gate),
+            output_status=registry_entry["status"],
+            block_reasons=freshness_gate.reasons if freshness_gate.status == "block" else [],
         )
         conn.commit()
     finally:

@@ -3,6 +3,7 @@
 
 import argparse
 import json
+import os
 import re
 import sqlite3
 import sys
@@ -14,6 +15,8 @@ if str(LIB_DIR) not in sys.path:
     sys.path.insert(0, str(LIB_DIR))
 
 from smr_agents import DB_PATH, get_handoff, get_latest_registry_entry, get_profile, profile_workspace_path
+from smr_data_health import check_freshness_gate, gate_to_dict, get_system_data_health
+from smr_decision import record_agent_run
 from smr_llm import (
     call_anthropic_messages_api,
     call_minimax_chat_completions_api,
@@ -26,6 +29,7 @@ from smr_llm import (
 from smr_paths import relative_to_project
 from smr_registry import register_snapshot
 from smr_runlog import log_run
+from smr_source_registry import source_registry_snapshot
 
 ROUTE_AUDIT_FIELDS = [
     "route_status",
@@ -177,17 +181,39 @@ def render_task_input(packet, route):
             lines.append("```")
             lines.append("")
 
-    lines.extend(
-        [
-            "## Requested Output Shape",
-            "",
-            "- 使用中文输出。",
-            "- 按下面 4 段组织内容：`事实`、`解释`、`建议动作`、`不确定性`。",
-            "- 所有结论都必须能回溯到上面的 source documents（源文档）。",
-            "- 如果证据不足，要明确写不确定性，不要补脑。",
-            "",
-        ]
-    )
+    output_contract = route.get("output_contract")
+    lines.extend(["## Requested Output Shape", "", "- 使用中文输出。"])
+    if output_contract == "investment_research_synthesis_candidate":
+        lines.extend(
+            [
+                "- 按下面 9 段组织内容：`研究结论`、`核心投资问题`、`共识地图`、`分歧地图`、`SMR 自主判断`、`证据链`、`反方与证伪`、`组合含义`、`后续研究任务`。",
+                "- 重点是从多来源抽取观点、找到共识/分歧，并形成 SMR 自己的预期差判断。",
+                "- 不要把任何单篇研报、评级、目标价或盈利预测直接当作系统结论。",
+                "- 如果证据不足，明确标记为 `素材型假设` 或 `中等置信假设`。",
+                "- 所有结论都必须能回溯到上面的 source documents（源文档）。",
+                "",
+            ]
+        )
+    elif output_contract == "investment_report_candidate":
+        lines.extend(
+            [
+                "- 按完整报告写作，不要用问答体或系统状态摘要。",
+                "- 必须包含：`执行摘要`、`调仓操作`、`核心投资问题`、`逻辑分析`、`共识与分歧`、`证据链`、`技术分析`、`情景与估值`、`操作计划`、`风险与证伪`、`后续跟踪`。",
+                "- 关键变量部分应写成 `关键变量判断与证伪清单`，围绕已确认事实、合理推断、待补证据和证伪条件展开；不要输出以“证据等级”“材料状态”“接入数量”为列名或标题的后台式表格。",
+                "- 最后输出一段 `dashboard_summary_json`，标题必须且只能出现一次，独占一行，格式固定为 `## dashboard_summary_json`，后面紧跟一个 fenced `json` 代码块；字段覆盖 action、action_detail、confidence、variant_view、portfolio_action_plan、kill_triggers、evidence_gap_tasks、follow_up_tasks。",
+                "- 报告必须区分事实、推断和 SMR 判断；不得堆砌后台状态。",
+                "",
+            ]
+        )
+    else:
+        lines.extend(
+            [
+                "- 按下面 4 段组织内容：`事实`、`解释`、`建议动作`、`不确定性`。",
+                "- 所有结论都必须能回溯到上面的 source documents（源文档）。",
+                "- 如果证据不足，要明确写不确定性，不要补脑。",
+                "",
+            ]
+        )
     return "\n".join(lines)
 
 
@@ -248,6 +274,7 @@ def build_openai_request_payload(packet, route, prompt_pack_text, task_input_tex
         "input": task_input_text,
         "store": False,
         "stream": True,
+        "max_output_tokens": max_output_tokens(route),
         "metadata": {
             "smr_packet_id": safe_metadata_value(packet.get("packet_id")),
             "smr_handoff_id": safe_metadata_value(packet["handoff"]["handoff_id"]),
@@ -264,6 +291,27 @@ def build_openai_request_payload(packet, route, prompt_pack_text, task_input_tex
     return payload
 
 
+def max_output_tokens(route):
+    output_contract = route.get("output_contract")
+    if output_contract == "investment_report_candidate":
+        return 12000
+    if output_contract == "investment_research_synthesis_candidate":
+        return 9000
+    return 4096
+
+
+def model_request_timeout_seconds(route):
+    raw_value = os.getenv("SMR_MODEL_SHADOW_TIMEOUT_SECONDS")
+    if raw_value:
+        try:
+            return max(30, int(raw_value))
+        except ValueError:
+            pass
+    if route.get("output_contract") in {"investment_report_candidate", "investment_research_synthesis_candidate"}:
+        return 900
+    return 180
+
+
 def build_anthropic_request_payload(route, prompt_pack_text, task_input_text):
     instructions = (
         prompt_pack_text.strip()
@@ -278,7 +326,7 @@ def build_anthropic_request_payload(route, prompt_pack_text, task_input_text):
                 "content": task_input_text,
             }
         ],
-        "max_tokens": 4096,
+        "max_tokens": max_output_tokens(route),
         "stream": False,
     }
 
@@ -300,7 +348,7 @@ def build_chat_completions_request_payload(route, prompt_pack_text, task_input_t
                 "content": task_input_text,
             },
         ],
-        "max_tokens": 4096,
+        "max_tokens": max_output_tokens(route),
         "stream": False,
     }
 
@@ -499,6 +547,7 @@ def build_response_record(
     response_text_rel_path,
     route_drift_info,
     api_result,
+    request_timeout,
 ):
     api_result = api_result or {}
     error_detail = provider_error_detail(api_result)
@@ -531,6 +580,7 @@ def build_response_record(
         "provider_error_reason": error_detail.get("reason"),
         "route_drift": route_drift_info,
         "provider_readiness": route.get("provider_readiness") or {},
+        "request_timeout_seconds": request_timeout,
         "response_payload": api_result.get("payload"),
     }
 
@@ -579,6 +629,7 @@ def main():
     )
     gate_status = shadow_execution_status(route)
     request_payload = build_provider_request_payload(packet, route, prompt_pack_text, task_input_text)
+    request_timeout = model_request_timeout_seconds(route)
 
     if args.dry_run:
         print(
@@ -617,12 +668,14 @@ def main():
                     request_payload,
                     route.get("provider_readiness") or {},
                     client_request_id=packet.get("packet_id"),
+                    timeout=request_timeout,
                 )
             elif provider == "anthropic":
                 api_result = call_anthropic_messages_api(
                     request_payload,
                     route.get("provider_readiness") or {},
                     client_request_id=packet.get("packet_id"),
+                    timeout=request_timeout,
                 )
             elif provider == "minimax":
                 readiness = route.get("provider_readiness") or {}
@@ -631,12 +684,14 @@ def main():
                         request_payload,
                         readiness,
                         client_request_id=packet.get("packet_id"),
+                        timeout=request_timeout,
                     )
                 else:
                     api_result = call_minimax_chat_completions_api(
                         request_payload,
                         readiness,
                         client_request_id=packet.get("packet_id"),
+                        timeout=request_timeout,
                     )
             else:
                 api_result = {
@@ -674,6 +729,7 @@ def main():
         response_text_rel_path,
         route_drift_info,
         api_result,
+        request_timeout,
     )
     response_json_path.write_text(json.dumps(response_record, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     response_json_rel_path = relative_to_project(response_json_path)
@@ -718,11 +774,53 @@ def main():
             "provider": route.get("provider"),
             "model": route.get("model"),
             "packet_mode": route.get("packet_mode"),
+            "request_timeout_seconds": request_timeout,
             "attempted_call": gate_status == "ready_for_shadow_call",
             "http_status": api_result.get("status_code"),
             "response_id": response_payload_id(api_result),
             "provider_error_code": provider_error_detail(api_result).get("code"),
             "provider_error_reason": provider_error_detail(api_result).get("reason"),
+        },
+    )
+    output_contract = route.get("output_contract")
+    if output_contract == "investment_report_candidate":
+        quality_gate = check_freshness_gate(
+            conn,
+            module_name="report_generation",
+            required_data_types=["daily_bar", "filings", "fundamentals", "consensus_revision"],
+            allow_degraded=True,
+        )
+        data_health_snapshot = quality_gate.data_health_snapshot
+        gate_result = gate_to_dict(quality_gate)
+    elif output_contract == "investment_research_synthesis_candidate":
+        quality_gate = check_freshness_gate(
+            conn,
+            module_name="investment_research",
+            required_data_types=["filings", "fundamentals", "consensus_revision"],
+            allow_degraded=True,
+        )
+        data_health_snapshot = quality_gate.data_health_snapshot
+        gate_result = gate_to_dict(quality_gate)
+    else:
+        data_health_snapshot = get_system_data_health(conn, refresh=True)
+        gate_result = {}
+    record_agent_run(
+        conn,
+        agent_or_script="run_model_shadow.py",
+        status=execution_status,
+        entity_type="model_shadow_execution",
+        entity_id=handoff["handoff_id"],
+        data_health_snapshot=data_health_snapshot,
+        freshness_gate_result=gate_result,
+        source_registry_snapshot=source_registry_snapshot(),
+        output_status=execution_status,
+        block_reasons=[] if gate_status == "ready_for_shadow_call" else [blocked_reason(gate_status)],
+        metadata={
+            "provider": route.get("provider"),
+            "model": route.get("model"),
+            "task_kind": route.get("task_kind"),
+            "output_contract": output_contract,
+            "registry_entry_id": registry_entry["id"],
         },
     )
     conn.commit()

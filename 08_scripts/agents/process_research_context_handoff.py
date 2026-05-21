@@ -25,7 +25,10 @@ from smr_registry import register_snapshot
 from smr_runlog import log_run
 
 SUPPORTED_ENTITY_TYPES = {
+    "current_state_snapshot",
+    "data_freshness_snapshot",
     "dynamic_pool_snapshot",
+    "opportunity_evidence_gap_snapshot",
     "opportunity_radar_snapshot",
     "opportunity_lifecycle_snapshot",
     "paper_trade_watchlist_snapshot",
@@ -261,6 +264,120 @@ def render_us_signal_note(handoff, entry):
         "- 如果影响持续存在，再把联动结论补进行业页或时间线。",
         "",
     ]
+    return "\n".join(lines)
+
+
+def render_current_state_note(handoff, entry):
+    payload = entry.get("payload", {})
+    p0_actions = payload.get("p0_actions") or []
+    source_ids = payload.get("source_entry_ids") or {}
+    lines = [
+        f"# 研究上下文草稿：{handoff['entity_type']} / {handoff['entity_id']}",
+        "",
+        f"- handoff_id: `{handoff['handoff_id']}`",
+        f"- source_entry_id: `{entry['id']}`",
+        f"- current_state_rel_path: `{payload.get('current_state_rel_path') or ''}`",
+        f"- summary_rel_path: `{payload.get('summary_rel_path') or ''}`",
+        f"- operating_status: `{payload.get('operating_status') or ''}`",
+        "",
+        "## 当前状态",
+        "",
+        f"- paper_watch_count: `{len(payload.get('paper_watch') or [])}`",
+        f"- evidence_gap_count: `{len(payload.get('evidence_gaps') or [])}`",
+        f"- freshness_problem_count: `{len(payload.get('freshness_problems') or [])}`",
+        f"- source_entry_ids: `{source_ids}`",
+        "",
+        "## 建议动作",
+        "",
+    ]
+    if p0_actions:
+        lines.extend(f"- {item}" for item in p0_actions[:8])
+    else:
+        lines.append("- 当前状态面板没有生成 P0 动作。")
+    lines.extend(
+        [
+            "- 这份 current_state 是今日操作口径的优先入口；旧 dispatch_board 仅作历史背景。",
+            "- 不把纸面观察单解释为真实交易指令，真实动作仍需人工批准和风控门禁。",
+            "",
+        ]
+    )
+    return "\n".join(lines)
+
+
+def render_data_freshness_note(handoff, entry):
+    payload = entry.get("payload", {})
+    problem_items = [
+        item
+        for item in payload.get("items") or []
+        if item.get("status") in {"missing", "warn", "stale"}
+    ]
+    lines = [
+        f"# 研究上下文草稿：{handoff['entity_type']} / {handoff['entity_id']}",
+        "",
+        f"- handoff_id: `{handoff['handoff_id']}`",
+        f"- source_entry_id: `{entry['id']}`",
+        f"- summary_rel_path: `{payload.get('summary_rel_path') or ''}`",
+        f"- overall_status: `{payload.get('overall_status') or ''}`",
+        "",
+        "## 新鲜度概览",
+        "",
+        f"- status_counts: `{payload.get('status_counts') or {}}`",
+        f"- problem_count: `{payload.get('problem_count') or 0}`",
+        "",
+        "## 建议动作",
+        "",
+    ]
+    if problem_items:
+        for item in problem_items[:8]:
+            lines.append(
+                f"- {item.get('component')} 当前 `{item.get('status')}`，最新时间 `{item.get('latest') or '-'}`；{item.get('next_action') or ''}"
+            )
+    else:
+        lines.append("- 关键数据和产物均在可用窗口内，保持当前调度频率。")
+    lines.append("- 若行情数据 stale，应先修复数据采集，再解释机会雷达结果。")
+    lines.append("")
+    return "\n".join(lines)
+
+
+def render_opportunity_evidence_gap_note(handoff, entry):
+    payload = entry.get("payload", {})
+    gap_items = [
+        item
+        for item in payload.get("items") or []
+        if item.get("evidence_state") in {"price_only", "stale_evidence", "overheated_without_fresh_evidence"}
+    ]
+    lines = [
+        f"# 研究上下文草稿：{handoff['entity_type']} / {handoff['entity_id']}",
+        "",
+        f"- handoff_id: `{handoff['handoff_id']}`",
+        f"- source_entry_id: `{entry['id']}`",
+        f"- summary_rel_path: `{payload.get('summary_rel_path') or ''}`",
+        f"- source_radar_entry_id: `{payload.get('source_radar_entry_id') or ''}`",
+        "",
+        "## 机会证据缺口",
+        "",
+        f"- candidate_count: `{payload.get('candidate_count') or 0}`",
+        f"- gap_count: `{payload.get('gap_count') or 0}`",
+        f"- state_counts: `{payload.get('state_counts') or {}}`",
+        f"- fetch_targets: `{preview_list(payload.get('fetch_targets'))}`",
+        "",
+        "## 建议动作",
+        "",
+    ]
+    if gap_items:
+        for item in gap_items[:8]:
+            lines.append(
+                f"- {item.get('name') or item.get('ts_code')} / {item.get('ts_code')}：`{item.get('evidence_state')}`；{item.get('recommended_action')}"
+            )
+    else:
+        lines.append("- 高优先级机会当前没有明显证据缺口，可继续进入攻防和纸面复盘。")
+    lines.extend(
+        [
+            "- 对 `price_only` 机会，不允许仅凭雷达分数升级。",
+            "- 对 `overheated_without_fresh_evidence` 机会，优先补来源和降温观察。",
+            "",
+        ]
+    )
     return "\n".join(lines)
 
 
@@ -756,7 +873,9 @@ def render_rotation_candidate_note(handoff, entry):
         [
             "## 建议动作",
             "",
+            "- 生成任何轮动解释前，先加载 `09_runbooks/skills/smr-research-synthesis/SKILL.md`，按多源综合标准判断证据等级。",
             "- 先把轮动候选当成“结构优化观察单”，不要直接把它当成自动交易指令。",
+            "- 不允许把单篇研报、单个电话会摘要或单条新闻直接写成系统结论；必须说明共识、分歧、验证和缺口。",
             "- 真正执行前，仍要叠加开仓门禁、风险集中度和真实仓位约束。",
             "- 如果同主线内出现更强机会，优先考虑做强换弱，而不是无边界加新票。",
             "",
@@ -894,7 +1013,9 @@ def render_portfolio_action_memo_note(handoff, entry, conn):
         [
             "## 建议动作",
             "",
+            "- 生成动作解释前，先加载 `09_runbooks/skills/smr-research-synthesis/SKILL.md`，按研报级证据标准重写调仓逻辑。",
             "- 这层负责把已有快照收敛成“今天先做什么”的优先清单。",
+            "- 若证据只来自单篇研报或单一二手来源，只能写成素材型假设，不能写成业务改善/恶化结论。",
             "- 如果仍是 `reference_only`，只把它当组合观察和计划草案，不当成真实下单指令。",
             "- 等真实持仓主表补齐后，这层可以继续升级成更正式的执行前决策单。",
             "",
@@ -905,8 +1026,14 @@ def render_portfolio_action_memo_note(handoff, entry, conn):
 
 def render_note(handoff, entry, conn):
     entity_type = handoff["entity_type"]
+    if entity_type == "current_state_snapshot":
+        return render_current_state_note(handoff, entry)
+    if entity_type == "data_freshness_snapshot":
+        return render_data_freshness_note(handoff, entry)
     if entity_type == "dynamic_pool_snapshot":
         return render_dynamic_pool_note(handoff, entry)
+    if entity_type == "opportunity_evidence_gap_snapshot":
+        return render_opportunity_evidence_gap_note(handoff, entry)
     if entity_type == "opportunity_radar_snapshot":
         return render_opportunity_radar_note(handoff, entry)
     if entity_type == "opportunity_lifecycle_snapshot":

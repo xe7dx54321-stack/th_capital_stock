@@ -5,6 +5,7 @@ import html
 import io
 import json
 import re
+import ssl
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -193,6 +194,15 @@ def build_request(url, user_agent=None, accept=None, extra_headers=None):
     return urllib.request.Request(url, headers=headers)
 
 
+def default_ssl_context():
+    try:
+        import certifi
+
+        return ssl.create_default_context(cafile=certifi.where())
+    except Exception:
+        return ssl.create_default_context()
+
+
 def decode_body(raw_bytes, content_type):
     charset = None
     match = re.search(r"charset=([A-Za-z0-9._-]+)", str(content_type or ""), flags=re.I)
@@ -211,7 +221,7 @@ def decode_body(raw_bytes, content_type):
 
 def fetch_url(url, timeout=30, user_agent=None, accept=None, extra_headers=None):
     request = build_request(sanitize_url(url), user_agent=user_agent, accept=accept, extra_headers=extra_headers)
-    with urllib.request.urlopen(request, timeout=timeout) as response:
+    with urllib.request.urlopen(request, timeout=timeout, context=default_ssl_context()) as response:
         raw_bytes = response.read()
         content_type = response.headers.get("Content-Type", "")
         return {

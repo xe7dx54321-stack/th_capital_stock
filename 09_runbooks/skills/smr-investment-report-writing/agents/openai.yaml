@@ -1,0 +1,4 @@
+interface:
+  display_name: "SMR Investment Report Writing"
+  short_description: "Institutional-style investment report writing for SMR"
+  default_prompt: "Write a full institutional-style SMR investment report from synthesis outputs, evidence packs, technical evidence, risks, and portfolio action context."

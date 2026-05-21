@@ -13,7 +13,8 @@
   },
   "notes": [
     "负责研究知识治理、review queue、wiki draft、知识页维护。",
-    "以 wiki governance 和结构化 reason code 为主要输出。"
+    "以 wiki governance 和结构化 reason code 为主要输出。",
+    "生成研究判断、轮动解释、调仓逻辑前必须加载 09_runbooks/skills/smr-research-synthesis/SKILL.md；禁止把单篇研报直接当系统结论。"
   ],
   "priority": 120,
   "profile_id": "hermes_research_curator",

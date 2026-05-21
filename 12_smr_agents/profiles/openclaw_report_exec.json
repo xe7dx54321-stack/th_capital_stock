@@ -8,6 +8,8 @@
     "entity_types": [
       "daily_report_candidate",
       "daily_reporting_snapshot",
+      "current_state_snapshot",
+      "data_freshness_snapshot",
       "review_queue",
       "source_manifest",
       "ingest_draft_batch",
@@ -24,6 +26,8 @@
   "suggested_handoffs": {
     "daily_report_candidate": "hermes_reporting_editor",
     "daily_reporting_snapshot": "hermes_reporting_editor",
+    "current_state_snapshot": "hermes_research_curator",
+    "data_freshness_snapshot": "hermes_research_curator",
     "ingest_draft_batch": "hermes_research_curator",
     "ingest_draft_scan": "hermes_research_curator",
     "review_queue": "hermes_research_curator",

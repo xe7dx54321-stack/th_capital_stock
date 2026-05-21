@@ -17,6 +17,8 @@ if str(LIB_DIR) not in sys.path:
 
 from smr_paths import env_or_project_path, project_path, relative_to_project
 from smr_agents import ensure_auto_handoff
+from smr_data_health import blocked_payload_for_gate, check_freshness_gate, gate_to_dict
+from smr_decision import record_agent_run
 from smr_registry import register_snapshot
 from smr_runlog import log_run
 from smr_universe import combined_name_map
@@ -638,6 +640,17 @@ def write_markdown(path, payload):
     ]
     for line in payload.get("overview_lines") or []:
         lines.append(f"- {line}")
+    if payload.get("blocked_by_data"):
+        gate = payload.get("freshness_gate_result") or {}
+        lines.extend(["", "## Data Health Gate", ""])
+        lines.append(f"- gate_status: `{gate.get('status') or '-'}`")
+        for reason in gate.get("reasons") or []:
+            lines.append(f"- {reason}")
+        lines.extend(["", "## Allowed Actions", ""])
+        for action in gate.get("allowed_actions") or []:
+            lines.append(f"- `{action}`")
+        path.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
+        return
     lines.extend(["", "## 主题/赛道热度", ""])
     if payload.get("sector_heatmap"):
         lines.extend(["| 赛道 | 候选数 | 平均分 | 代表标的 |", "| --- | ---: | ---: | --- |"])
@@ -666,6 +679,67 @@ def main():
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     try:
+        gate = check_freshness_gate(
+            conn,
+            module_name="opportunity_radar",
+            required_data_types=["daily_bar", "news", "filings", "consensus_revision"],
+            allow_degraded=False,
+        )
+        if gate.status == "block":
+            payload = blocked_payload_for_gate("opportunity_radar", gate)
+            payload.update(
+                {
+                    "batch_date": batch_date,
+                    "mode": "paper_only",
+                    "coverage_summary": {market: 0 for market in MARKET_ORDER},
+                    "scored_count": 0,
+                    "skipped_count": 0,
+                    "candidate_count": 0,
+                    "paper_watch_candidate_count": 0,
+                    "candidate_items": [],
+                    "markets": {market: [] for market in MARKET_ORDER},
+                    "top_candidates": [],
+                    "sector_heatmap": [],
+                    "policy_rel_path": relative_to_project(POLICY_PATH),
+                }
+            )
+            write_markdown(output_path, payload)
+            registry_entry = register_snapshot(
+                conn,
+                entity_type="opportunity_radar_snapshot",
+                entity_id=batch_date,
+                status="blocked_by_data",
+                source=SCRIPT_NAME,
+                relationships={"summary_rel_path": relative_to_project(output_path)},
+                payload={**payload, "summary_rel_path": relative_to_project(output_path)},
+                created_at=generated_at,
+            )
+            record_agent_run(
+                conn,
+                agent_or_script=SCRIPT_NAME,
+                status="blocked",
+                entity_type="opportunity_radar_snapshot",
+                entity_id=batch_date,
+                data_health_snapshot=gate.data_health_snapshot,
+                freshness_gate_result=gate_to_dict(gate),
+                output_status="blocked_by_data",
+                block_reasons=gate.reasons,
+            )
+            handoff_result = {"reason": "freshness_gate_block", "handoff": None}
+            conn.commit()
+            log_payload = {
+                "registry_entry_id": registry_entry["id"],
+                "summary_rel_path": relative_to_project(output_path),
+                "candidate_count": 0,
+                "paper_watch_candidate_count": 0,
+                "freshness_gate_status": gate.status,
+                "block_reasons": gate.reasons,
+            }
+            log_run(SCRIPT_NAME, "success", "opportunity radar blocked by freshness gate", log_payload)
+            print(f"Opportunity radar snapshot: {relative_to_project(output_path)}")
+            print("  status=blocked_by_data")
+            print(f"  freshness_gate_status={gate.status}")
+            return
         name_map = combined_name_map(conn)
         factors_map = load_factor_map(conn)
         pool_map = load_pool_types(conn)
@@ -702,6 +776,8 @@ def main():
             "top_candidates": scored_items[:20],
             "sector_heatmap": sector_heatmap(candidate_items),
             "policy_rel_path": relative_to_project(POLICY_PATH),
+            "freshness_gate_result": gate_to_dict(gate),
+            "data_health_snapshot": gate.data_health_snapshot,
         }
         payload["overview_lines"] = overview_lines(payload)
         write_markdown(output_path, payload)
@@ -721,6 +797,16 @@ def main():
             registry_entry,
             note="主动机会雷达已生成，自动转交研究代理做候选解释和下一步检查。",
             created_by=SCRIPT_NAME,
+        )
+        record_agent_run(
+            conn,
+            agent_or_script=SCRIPT_NAME,
+            status="success",
+            entity_type="opportunity_radar_snapshot",
+            entity_id=batch_date,
+            data_health_snapshot=gate.data_health_snapshot,
+            freshness_gate_result=gate_to_dict(gate),
+            output_status=registry_entry["status"],
         )
         conn.commit()
     finally:

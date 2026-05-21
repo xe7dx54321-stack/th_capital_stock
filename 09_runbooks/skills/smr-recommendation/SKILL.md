@@ -21,6 +21,7 @@ Its job is:
 
 ## Load order
 
+0. Read `/Users/apple/Documents/同行资本二级市场/09_runbooks/skills/smr-research-synthesis/SKILL.md`
 1. Read relevant industry research from `/Users/apple/Documents/同行资本二级市场/02_research/industry/`
 2. Read relevant stock research from `/Users/apple/Documents/同行资本二级市场/02_research/stock/`
 3. Read trend analysis from `/Users/apple/Documents/同行资本二级市场/01_data/factor/`
@@ -40,6 +41,7 @@ Its job is:
    - Restate the core thesis in 2-3 sentences
    - Confirm the thesis is still intact (no thesis-breaking events since research)
    - Rate thesis strength: strong / moderate / speculative
+   - Show consensus, divergence, first-party verification, and what SMR independently believes
 
 3. **Entry plan design**:
    - Never recommend all-in at one price
@@ -83,6 +85,7 @@ Its job is:
 ## Hard constraints
 
 - Do not recommend without a completed research report.
+- Do not recommend from a single sell-side report or a copied external conclusion.
 - Do not recommend without confirmed trend (3+ factors).
 - Do not recommend single-tranche all-in entry.
 - Do not recommend with risk/reward < 2:1.

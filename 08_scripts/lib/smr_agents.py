@@ -21,11 +21,17 @@ ACTIVE_HANDOFF_STATUSES = {"pending", "accepted"}
 DEFAULT_REQUIRED_ACTIONS = {
     "daily_report_candidate": "review_daily_candidate",
     "daily_reporting_snapshot": "review_daily_surface",
+    "current_state_snapshot": "review_current_state",
+    "data_freshness_snapshot": "review_data_freshness",
     "dynamic_pool_snapshot": "explain_pool_changes",
     "ingest_draft_batch": "triage_ingest_drafts",
     "ingest_draft_scan": "resolve_blocked_drafts",
+    "investment_evidence_pack_snapshot": "produce_investment_research_synthesis",
+    "investment_research_synthesis_snapshot": "write_investment_report",
+    "investment_report_snapshot": "review_investment_report",
     "portfolio_pnl_snapshot": "review_portfolio_snapshot",
     "opportunity_radar_snapshot": "review_opportunity_radar",
+    "opportunity_evidence_gap_snapshot": "review_opportunity_evidence_gaps",
     "opportunity_lifecycle_snapshot": "review_opportunity_lifecycle",
     "paper_trade_watchlist_snapshot": "review_paper_watchlist",
     "paper_watch_performance_snapshot": "review_paper_watch_performance",
@@ -54,11 +60,17 @@ DEFAULT_REQUIRED_ACTIONS = {
 DEFAULT_HANDOFF_TYPES = {
     "daily_report_candidate": "report_review",
     "daily_reporting_snapshot": "report_review",
+    "current_state_snapshot": "research_review",
+    "data_freshness_snapshot": "research_review",
     "dynamic_pool_snapshot": "research_review",
     "ingest_draft_batch": "research_review",
     "ingest_draft_scan": "research_review",
+    "investment_evidence_pack_snapshot": "investment_research",
+    "investment_research_synthesis_snapshot": "investment_report_writing",
+    "investment_report_snapshot": "investment_report_review",
     "portfolio_pnl_snapshot": "risk_review",
     "opportunity_radar_snapshot": "research_review",
+    "opportunity_evidence_gap_snapshot": "research_review",
     "opportunity_lifecycle_snapshot": "research_review",
     "paper_trade_watchlist_snapshot": "research_review",
     "paper_watch_performance_snapshot": "research_review",
@@ -473,6 +485,21 @@ def default_expected_outputs(entry, to_profile_id):
             "dispatch_update": True,
             "knowledge_candidate": True,
         }
+    if to_profile_id == "hermes_investment_analyst":
+        return {
+            "investment_research_synthesis": True,
+            "consensus_map": True,
+            "divergence_map": True,
+            "variant_view": True,
+            "falsification_plan": True,
+        }
+    if to_profile_id == "hermes_investment_report_writer":
+        return {
+            "investment_report_markdown": True,
+            "dashboard_summary_json": True,
+            "portfolio_action_plan": True,
+            "source_trace": True,
+        }
     return {
         "structured_summary": True,
         "reason_code": True,
@@ -499,6 +526,10 @@ def should_suggest_handoff(entry):
             or bool(active_codes.get("recommended"))
             or bool(active_codes.get("candidate"))
         )
+    if entity_type == "current_state_snapshot":
+        return bool(payload.get("p0_actions")) or bool(payload.get("top_opportunities"))
+    if entity_type == "data_freshness_snapshot":
+        return (payload.get("problem_count") or 0) > 0 or payload.get("overall_status") != "fresh"
     if entity_type == "stock_objective_monitor_snapshot":
         return (payload.get("focus_count") or 0) > 0
     if entity_type == "strategy_watch_batch":
@@ -515,6 +546,8 @@ def should_suggest_handoff(entry):
         return (payload.get("plan_count") or 0) > 0
     if entity_type == "opportunity_radar_snapshot":
         return (payload.get("candidate_count") or 0) > 0
+    if entity_type == "opportunity_evidence_gap_snapshot":
+        return (payload.get("candidate_count") or 0) > 0
     if entity_type == "opportunity_lifecycle_snapshot":
         return (payload.get("current_candidate_count") or 0) > 0 or bool(payload.get("state_counts"))
     if entity_type == "strategy_evidence_snapshot":
@@ -527,6 +560,12 @@ def should_suggest_handoff(entry):
         return (payload.get("evaluated_ticket_count") or 0) > 0
     if entity_type == "portfolio_action_memo_snapshot":
         return (payload.get("action_count") or 0) > 0
+    if entity_type == "investment_evidence_pack_snapshot":
+        return bool(payload.get("pack_md_rel_path") or payload.get("pack_json_rel_path"))
+    if entity_type == "investment_research_synthesis_snapshot":
+        return bool(payload.get("synthesis_md_rel_path") or payload.get("model_response_text_rel_path"))
+    if entity_type == "investment_report_snapshot":
+        return bool(payload.get("report_md_rel_path") or payload.get("model_response_text_rel_path"))
     if entity_type == "portfolio_pnl_snapshot":
         return (payload.get("open_position_count") or 0) > 0 and (
             (payload.get("losing_positions") or 0) > 0

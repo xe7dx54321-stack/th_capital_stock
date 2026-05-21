@@ -2,6 +2,9 @@
 .DS_Store
 *.swp
 *.swo
+*.tmp
+*.bak
+*.orig
 
 # Python runtime
 __pycache__/
@@ -9,23 +12,42 @@ __pycache__/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+.cache/
 .venv/
 venv/
+
+# Node / frontend runtime
+node_modules/
+dist/
+build/
 
 # Runtime logs and process files
 10_logs/
 *.log
 *.pid
+.env
+.env.*
+!.env.example
 .smr_env.local
+.smr_env.*
 *.local.env
+secrets/
+*.pem
+*.key
 
 # Local databases and generated market data
 *.db
 *.sqlite
 *.sqlite3
 01_data/
+00_control/*.sqlite
+00_control/*.sqlite3
 
 # Generated research/reporting/portfolio/risk artifacts
+00_control/current_state.md
 00_control/next_day_plan.md
 02_research/
 03_stock_pool/
@@ -43,6 +65,8 @@ venv/
 .smr_sandboxes/
 
 # Imported reference repos are managed independently
+12_agent_references/*
+!12_agent_references/README.md
 12_agent_references/openclaw/
 12_agent_references/hermes-agent/
 

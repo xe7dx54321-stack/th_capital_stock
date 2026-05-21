@@ -1,0 +1,76 @@
+{
+  "version": 1,
+  "description": "Domain-level fetch policy for public source acquisition. Auto mode tries lightweight Scrapling first, keeps urllib as a compatibility fallback, and only uses browser rendering for domains listed here.",
+  "default": {
+    "fetch_order": [
+      "scrapling_static",
+      "urllib"
+    ],
+    "impersonate": "chrome",
+    "stealthy_headers": true,
+    "follow_redirects": "safe",
+    "retries": 2,
+    "retry_delay": 1,
+    "blocked_markers": [
+      "access denied",
+      "request blocked",
+      "too many requests",
+      "verify you are human",
+      "checking your browser",
+      "enable javascript and cookies",
+      "cf-chl",
+      "cf-browser-verification",
+      "cloudflare ray id",
+      "captcha"
+    ]
+  },
+  "domains": {
+    "marketscreener.com": {
+      "fetch_order": [
+        "scrapling_static",
+        "scrapling_dynamic",
+        "urllib"
+      ],
+      "real_chrome": true,
+      "network_idle": true,
+      "disable_resources": true,
+      "wait_selector": "body",
+      "min_text_chars": 500
+    },
+    "eastmoney.com": {
+      "fetch_order": [
+        "scrapling_static",
+        "urllib"
+      ],
+      "referer": "https://www.eastmoney.com/"
+    },
+    "dfcfw.com": {
+      "fetch_order": [
+        "scrapling_static",
+        "urllib"
+      ],
+      "referer": "https://data.eastmoney.com/"
+    },
+    "sec.gov": {
+      "fetch_order": [
+        "urllib",
+        "scrapling_static"
+      ],
+      "stealthy_headers": false
+    },
+    "hkexnews.hk": {
+      "fetch_order": [
+        "urllib",
+        "scrapling_static"
+      ],
+      "stealthy_headers": false
+    },
+    "cninfo.com.cn": {
+      "fetch_order": [
+        "urllib",
+        "scrapling_static"
+      ],
+      "stealthy_headers": false
+    }
+  }
+}

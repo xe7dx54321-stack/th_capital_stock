@@ -10,8 +10,10 @@
       "dynamic_pool_snapshot",
       "opportunity_radar_snapshot",
       "opportunity_lifecycle_snapshot",
+      "opportunity_evidence_gap_snapshot",
       "strategy_evidence_snapshot",
       "thesis_attack_defense_snapshot",
+      "investment_evidence_pack_snapshot",
       "paper_trade_watchlist_snapshot",
       "paper_watch_performance_snapshot",
       "portfolio_action_memo_snapshot",
@@ -24,14 +26,18 @@
   },
   "notes": [
     "负责趋势研究批量生成、研究质量快照和动态池重建。",
-    "当池子变化需要解释或研究结论需要压缩时，交给研究知识代理。"
+    "当池子变化需要解释或研究结论需要压缩时，交给研究知识代理。",
+    "只负责生成结构化原料和候选，不把外部研报口径直接写成 SMR 结论；研报级判断交给 smr-research-synthesis 标准。",
+    "investment_evidence_pack_snapshot 是深度投研入口，必须交给 hermes_investment_analyst，而不是由脚本直接下研究结论。"
   ],
   "profile_id": "openclaw_pool_exec",
   "role": "研究与池子执行代理",
   "suggested_handoffs": {
     "dynamic_pool_snapshot": "hermes_research_curator",
+    "investment_evidence_pack_snapshot": "hermes_investment_analyst",
     "opportunity_radar_snapshot": "hermes_research_curator",
     "opportunity_lifecycle_snapshot": "hermes_research_curator",
+    "opportunity_evidence_gap_snapshot": "hermes_research_curator",
     "paper_trade_watchlist_snapshot": "hermes_research_curator",
     "paper_watch_performance_snapshot": "hermes_research_curator",
     "portfolio_action_memo_snapshot": "hermes_research_curator",

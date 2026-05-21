@@ -1,0 +1,4 @@
+interface:
+  display_name: "SMR Research Synthesis"
+  short_description: "Institutional-style secondary-market research synthesis"
+  default_prompt: "Apply SMR research synthesis standards to turn raw reports, calls, filings, news, and market data into a clear investment judgment with evidence, disagreement, and falsification conditions."

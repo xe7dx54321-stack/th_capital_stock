@@ -4,9 +4,10 @@ akshare==1.18.54
 beautifulsoup4==4.14.3
 certifi==2026.02.25
 chardet==5.2.0
-lxml==5.4.0
+lxml==6.1.1
 openai==2.24.0
 pandas==2.3.3
 pdfminer.six==20260107
 requests==2.32.5
+scrapling[fetchers]==0.4.8
 yfinance==1.2.1

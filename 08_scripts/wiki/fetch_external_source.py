@@ -2,11 +2,8 @@
 """Fetch and persist raw external web sources for SMR research provenance."""
 
 import argparse
-import re
 import sys
-import urllib.error
 import urllib.parse
-import urllib.request
 from datetime import datetime
 from pathlib import Path
 
@@ -14,37 +11,15 @@ LIB_DIR = Path(__file__).resolve().parents[1] / "lib"
 if str(LIB_DIR) not in sys.path:
     sys.path.insert(0, str(LIB_DIR))
 
-from smr_paths import project_path, relative_to_project
 from smr_external_sources import html_snapshot, persist_external_snapshot, truncate_text
+from smr_fetch import DEFAULT_BROWSER_USER_AGENT, fetch_url, response_extension
+from smr_paths import project_path
 from smr_registry import register_snapshot
 from smr_runlog import log_run
 from smr_wiki import slugify
 
 DB_PATH = project_path("01_data", "db", "smr.db")
 
-
-def fetch_url(url, timeout):
-    request = urllib.request.Request(
-        url,
-        headers={
-            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X) AppleWebKit/537.36 "
-            "(KHTML, like Gecko) Chrome/124.0 Safari/537.36",
-            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        },
-    )
-    with urllib.request.urlopen(request, timeout=timeout) as response:
-        raw_bytes = response.read()
-        content_type = response.headers.get("Content-Type", "")
-        charset = response.headers.get_content_charset() or "utf-8"
-        text = raw_bytes.decode(charset, errors="replace")
-        return {
-            "text": text,
-            "bytes": raw_bytes,
-            "content_type": content_type,
-            "final_url": response.geturl(),
-            "status_code": response.getcode(),
-            "headers": dict(response.headers.items()),
-        }
 
 def main():
     parser = argparse.ArgumentParser(description="Fetch external source snapshots into SMR raw storage")
@@ -56,13 +31,27 @@ def main():
     parser.add_argument("--tag", action="append", default=[], help="Extra tag; can be repeated")
     parser.add_argument("--note", help="Optional note to store in snapshot")
     parser.add_argument("--timeout", type=int, default=30)
+    parser.add_argument(
+        "--fetch-mode",
+        default="auto",
+        choices=["auto", "urllib", "scrapling-static", "dynamic", "stealth"],
+        help="Fetch engine policy. auto uses 00_control/source_fetch_policy.json",
+    )
+    parser.add_argument("--wait-selector", help="Optional CSS selector to wait for in dynamic/stealth mode")
+    parser.add_argument("--user-agent", default=DEFAULT_BROWSER_USER_AGENT)
     args = parser.parse_args()
 
     fetched_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     outputs = []
 
     for index, url in enumerate(args.url, start=1):
-        result = fetch_url(url, args.timeout)
+        result = fetch_url(
+            url,
+            timeout=args.timeout,
+            mode=args.fetch_mode,
+            user_agent=args.user_agent,
+            wait_selector=args.wait_selector,
+        )
         title = args.title if args.title and len(args.url) == 1 else ""
         content_type = result["content_type"] or "text/html"
         source_domain = urllib.parse.urlparse(result["final_url"]).netloc
@@ -87,11 +76,18 @@ def main():
             tags=args.tag,
             body_text=body_text,
             raw_bytes=result["bytes"],
-            raw_extension=".html",
+            raw_extension=response_extension(result),
             metadata={
                 "requested_url": url,
                 "status_code": result["status_code"],
                 "headers": result["headers"],
+                "fetch_engine": result.get("fetch_engine"),
+                "fetch_mode": args.fetch_mode,
+                "fetch_policy": result.get("fetch_policy"),
+                "fallback_chain": result.get("fallback_chain"),
+                "fetch_warning": result.get("fetch_warning"),
+                "rendered": result.get("rendered"),
+                "content_hash": result.get("content_hash"),
             },
         )
         outputs.append({"url": result["final_url"], **snapshot})

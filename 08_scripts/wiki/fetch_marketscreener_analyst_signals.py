@@ -12,14 +12,12 @@ if str(LIB_DIR) not in sys.path:
     sys.path.insert(0, str(LIB_DIR))
 
 from smr_external_sources import persist_external_snapshot
+from smr_fetch import fetch_url, response_domain, response_extension
 from smr_paths import project_path
 from smr_public_analyst_signals import (
     DEFAULT_BROWSER_USER_AGENT,
     extract_marketscreener_consensus,
-    fetch_url,
     parse_public_analyst_signal_target_registry,
-    response_domain,
-    response_extension,
     select_target_rows,
 )
 from smr_registry import register_snapshot
@@ -98,6 +96,13 @@ def persist_snapshot(target, response, extracted, fetched_at):
             "symbol": target.get("symbol") or target["entity_id"],
             "market": target.get("market"),
             "provider": "marketscreener",
+            "fetch_engine": response.get("fetch_engine"),
+            "fetch_mode": response.get("fetch_mode"),
+            "fetch_policy": response.get("fetch_policy"),
+            "fallback_chain": response.get("fallback_chain"),
+            "fetch_warning": response.get("fetch_warning"),
+            "rendered": response.get("rendered"),
+            "content_hash": response.get("content_hash"),
             "snapshot_date": snapshot_date,
             "published_at": snapshot_date,
             "mean_consensus": extracted.get("mean_consensus"),
@@ -138,6 +143,18 @@ def main():
     parser.add_argument("--entity-id", action="append", help="Local entity id from public_analyst_signal_target_registry.md")
     parser.add_argument("--timeout", type=int, default=30)
     parser.add_argument("--user-agent", default=DEFAULT_BROWSER_USER_AGENT)
+    parser.add_argument(
+        "--fetch-mode",
+        default="auto",
+        choices=["auto", "urllib", "scrapling-static", "dynamic", "stealth"],
+        help="Fetch engine policy. auto uses 00_control/source_fetch_policy.json",
+    )
+    parser.add_argument("--wait-selector", default="body", help="CSS selector to wait for in dynamic/stealth mode")
+    parser.add_argument(
+        "--no-dynamic-retry-on-parse-failure",
+        action="store_true",
+        help="Disable dynamic retry when the static page fetched but required fields were not found",
+    )
     parser.add_argument("--include-disabled", action="store_true", help="Allow disabled target rows from registry")
     args = parser.parse_args()
 
@@ -153,10 +170,30 @@ def main():
             response = fetch_url(
                 target["consensus_url"],
                 timeout=args.timeout,
+                mode=args.fetch_mode,
                 user_agent=args.user_agent,
                 accept="text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+                wait_selector=args.wait_selector,
             )
-            extracted = extract_marketscreener_consensus(response, target)
+            response["fetch_mode"] = args.fetch_mode
+            try:
+                extracted = extract_marketscreener_consensus(response, target)
+            except ValueError as exc:
+                if args.fetch_mode == "auto" and not args.no_dynamic_retry_on_parse_failure:
+                    retry_response = fetch_url(
+                        target["consensus_url"],
+                        timeout=max(args.timeout, 45),
+                        mode="dynamic",
+                        user_agent=args.user_agent,
+                        accept="text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+                        wait_selector=args.wait_selector,
+                    )
+                    retry_response["fetch_mode"] = "dynamic_retry_after_parse_failure"
+                    retry_response["parse_retry_reason"] = str(exc)
+                    response = retry_response
+                    extracted = extract_marketscreener_consensus(response, target)
+                else:
+                    raise
             snapshot = persist_snapshot(target, response, extracted, fetched_at)
             outputs.append(
                 {

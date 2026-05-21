@@ -27,7 +27,10 @@
 5. `08_scripts/opportunity/build_paper_trade_watchlist.py`
 6. `08_scripts/opportunity/build_opportunity_lifecycle_snapshot.py`
 7. `08_scripts/opportunity/build_paper_watch_performance_snapshot.py`
-8. `08_scripts/agents/run_agent_control_loop.py --research-governance-mode skip --build-dispatch`
+8. `08_scripts/opportunity/build_opportunity_evidence_gap_snapshot.py --fetch-a-share-news`
+9. `08_scripts/reporting/build_data_freshness_snapshot.py`
+10. `08_scripts/reporting/build_current_state_snapshot.py`
+11. `08_scripts/agents/run_agent_control_loop.py --research-governance-mode skip --build-dispatch`
 
 正式 schedule:
 
@@ -44,6 +47,9 @@
 - `paper_trade_watchlist_snapshot`: 纸面观察单，输出 paper-only ticket。
 - `opportunity_lifecycle_snapshot`: 机会生命周期，输出新进、强化、降温、降级、退出和纸面观察中的机会。
 - `paper_watch_performance_snapshot`: 纸面表现复盘，输出触发、失效、运行中和等待新行情的结果。
+- `opportunity_evidence_gap_snapshot`: 机会证据缺口，判断高分机会是 `event_backed`、`stale_evidence` 还是 `price_only`，并可对 A 股缺口自动补抓东方财富资讯。
+- `data_freshness_snapshot`: 数据与产物新鲜度，约束机会判断能否依赖最新行情、来源和快照。
+- `current_state_snapshot`: 当前作战状态，聚合机会、纸面观察、证据缺口和新鲜度，写入 `00_control/current_state.md`。
 
 ## Policy
 
@@ -72,3 +78,5 @@
 
 - 生命周期层回答“机会是否还在变强”，避免每天只看一张新的候选清单。
 - 纸面复盘层回答“纸面观察是否被后续行情验证”，用于沉淀信号质量，不用于自动实盘。
+- 证据缺口层回答“价格信号是否有新鲜事件支撑”，避免高分但无证据的机会被误升级。
+- 当前状态层回答“今天先处理什么”，正式调度板滞后时优先看 `00_control/current_state.md`。
