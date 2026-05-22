@@ -585,12 +585,24 @@ def build_live_consensus_proxy(conn: sqlite3.Connection, ticker: str, limit: int
             "evidence_ids": [],
             "note": "no live proxy signals extracted; internal proxy only",
         }
+    independent_source_count = int(
+        proxy.get("independent_source_count")
+        or len({row.get("source_key") for row in evidence_rows if row.get("source_key")})
+        or 0
+    )
     proxy.update(
         {
             "is_official_consensus": False,
             "official_consensus_active": False,
             "proxy_signals": signals,
             "proxy_signal_count": len(signals),
+            "independent_source_count": independent_source_count,
+            "aggregation_metadata": {
+                "evidence_count": len(selected_evidence_ids),
+                "independent_source_count": independent_source_count,
+                "selected_evidence_ids": selected_evidence_ids,
+                "selected_source_keys": sorted({row.get("source_key") for row in evidence_rows if row.get("source_key")}),
+            },
             "quality_reason": proxy.get("quality_reason") or quality_reason,
             "source": "smr_proxy_extraction",
             "note": "internal consensus proxy only; not official sell-side consensus",

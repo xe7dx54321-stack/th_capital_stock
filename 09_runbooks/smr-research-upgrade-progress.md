@@ -179,3 +179,22 @@ Next engineering focus:
 - Improve filing chunk selection so SEC/HKEX/CNINFO evidence prioritizes business/financial sections over manifest headers and administrative 8-K content.
 - Expand A/H fundamentals extraction from HKEX/CNINFO parsed tables and official financial statements.
 - Add a live paper-portfolio smoke path once a true live candidate reaches `pending_human_review`; until then paper lifecycle remains unit-tested and ready but not live-triggered.
+
+# 2026-05-22 Phase 5b Checkpoint
+
+Phase 5 is now a live candidate generation partial pass and has been frozen as a reproducible checkpoint.
+
+- Commit: `381ec98 phase5: enable live evidence promotion and paper portfolio smoke test`
+- Phase state: `Phase 5: Live candidate generation partial pass`
+- NVDA live E2E: `partial_pass`
+- NVDA status: `pending_human_review`
+- NVDA action: `small_candidate`
+- NVDA proxy quality: `strong`
+- NVDA live evidence: `live_news_evidence=4`, `live_filing_evidence=4`
+- NVDA fundamentals: `fresh`
+- NVDA ledger: `written=true`
+- NVDA review queue: `visible=true`
+- Human approval: `approve_paper` executed
+- Paper order: `paper_order__phase4_live__NVDA` created and executed
+- Paper position: opened with `reference_price=219.51`
+- Validation note: the live checkpoint remains conservative and auditable; the system did not need rule relaxation to reach `pending_human_review`

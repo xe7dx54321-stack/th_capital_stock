@@ -102,6 +102,11 @@ class Phase5LiveEvidenceExtractionTests(unittest.TestCase):
         self.assertFalse(proxy["is_official_consensus"])
         self.assertIn(proxy["proxy_quality"], {"medium", "strong"})
         self.assertGreaterEqual(proxy["proxy_signal_count"], 2)
+        self.assertGreaterEqual(proxy.get("independent_source_count", 0), 1)
+        self.assertEqual(
+            proxy.get("proxy_metadata", {}).get("independent_source_count"),
+            proxy.get("independent_source_count"),
+        )
         self.assertGreaterEqual(row[0], 2)
 
     def test_news_export_preserves_ticker_metadata_for_proxy(self):

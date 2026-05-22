@@ -222,6 +222,16 @@ def build_consensus_revision_proxy(
             1 if usable_for_promotion else 0,
         ),
     )
+    proxy_metadata = {
+        "note": "internal consensus revision proxy only; not official sell-side consensus",
+        "raw_excerpt": raw[:500],
+        "evidence_count": evidence_count,
+        "independent_source_count": independent_source_count,
+        "proxy_quality": proxy_quality,
+        "usable_for_promotion": usable_for_promotion,
+        "revision_window_days": 30,
+        "proxy_method": method,
+    }
     return {
         "ticker": detected_ticker,
         "market": market,
@@ -240,5 +250,6 @@ def build_consensus_revision_proxy(
         "independent_source_count": independent_source_count,
         "proxy_quality": proxy_quality,
         "usable_for_promotion": usable_for_promotion,
+        "proxy_metadata": proxy_metadata,
         "note": "internal consensus revision proxy only; not official sell-side consensus",
     }
