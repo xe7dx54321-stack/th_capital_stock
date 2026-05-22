@@ -12,7 +12,7 @@ if str(LIB_DIR) not in sys.path:
 from smr_claim_graph import ensure_claim_graph_tables
 from smr_data_health import ensure_data_health_tables
 from smr_filings_ingestion import seed_filing_document, update_filings_health_rows
-from smr_news_ingestion import seed_news_item, update_news_health_rows
+from smr_news_ingestion import seed_news_item, update_news_health_rows, upsert_news_item
 
 
 def memory_conn() -> sqlite3.Connection:
@@ -23,6 +23,42 @@ def memory_conn() -> sqlite3.Connection:
 
 
 class NewsFilingsFreshnessTests(unittest.TestCase):
+    def test_news_upsert_dedupes_canonical_urls(self):
+        conn = memory_conn()
+        first = upsert_news_item(
+            conn,
+            {
+                "news_id": "news-1",
+                "source_key": "yahoo_finance_rss",
+                "title": "NVDA guidance update",
+                "body": "NVDA revenue outlook improved.",
+                "url": "https://finance.example.com/story?id=1&utm_source=feed",
+                "published_at": "2026-05-21 09:30:00",
+                "tickers": ["NVDA"],
+                "metadata": {"live": True},
+            },
+        )
+        second = upsert_news_item(
+            conn,
+            {
+                "news_id": "news-2",
+                "source_key": "news_article",
+                "title": "NVDA guidance update",
+                "body": "NVDA revenue outlook improved.",
+                "url": "https://FINANCE.example.com/story/?id=1&utm_medium=social",
+                "published_at": "2026-05-21 09:30:00",
+                "tickers": ["NVDA"],
+                "metadata": {"live": True, "provider": "mirror"},
+            },
+        )
+
+        row = conn.execute("SELECT COUNT(*), MIN(url) FROM news_items").fetchone()
+
+        self.assertFalse(first["deduped"])
+        self.assertTrue(second["deduped"])
+        self.assertEqual(row[0], 1)
+        self.assertEqual(row[1], "https://finance.example.com/story?id=1")
+
     def test_news_health_keeps_source_market_rows(self):
         conn = memory_conn()
         seed_news_item(conn, "NVDA AI demand update", ticker="NVDA", market="US")

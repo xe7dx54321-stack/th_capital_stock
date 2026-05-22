@@ -11,6 +11,7 @@ from datetime import datetime
 from typing import Any
 
 from smr_claim_graph import ensure_claim_graph_tables, upsert_evidence
+from smr_filing_chunk_selector import update_document_chunk_relevance
 from smr_paths import normalize_project_path, relative_to_project
 from smr_wiki import generate_execution_id, loads_json, now_ts, read_markdown
 
@@ -321,6 +322,7 @@ def upsert_document_chunks(conn: sqlite3.Connection, document: dict[str, Any], b
                 json.dumps({"filing_type": document.get("filing_type")}, ensure_ascii=False, sort_keys=True),
             ),
         )
+    update_document_chunk_relevance(conn, document_id=document["filing_id"], limit=max(len(chunks), 1))
     return len(chunks)
 
 
@@ -667,6 +669,7 @@ def update_filings_health_rows(
 def export_filings_to_evidence(conn: sqlite3.Connection, limit: int = 80) -> dict[str, Any]:
     ensure_filings_tables(conn)
     ensure_claim_graph_tables(conn)
+    update_document_chunk_relevance(conn, limit=max(limit * 4, 200))
     rows = conn.execute(
         """
         SELECT
@@ -682,9 +685,24 @@ def export_filings_to_evidence(conn: sqlite3.Connection, limit: int = 80) -> dic
             f.source_url,
             f.filing_type,
             f.title,
-            f.metadata_json
+            f.metadata_json,
+            c.chunk_section_type,
+            c.investment_relevance_score,
+            c.financial_table_score,
+            c.guidance_relevance_score,
+            c.risk_relevance_score,
+            c.business_update_score,
+            c.exclude_reason,
+            c.usable_for_core_claim,
+            c.usable_for_proxy_signal
         FROM document_chunks c
         JOIN filing_documents f ON f.filing_id=c.document_id
+        WHERE COALESCE(c.exclude_reason, '') = ''
+          AND (
+            COALESCE(c.usable_for_core_claim, 0)=1
+            OR COALESCE(c.usable_for_proxy_signal, 0)=1
+            OR COALESCE(c.investment_relevance_score, 0) >= 0.55
+          )
         ORDER BY datetime(COALESCE(f.published_at, f.ingested_at)) DESC, c.chunk_index
         LIMIT ?
         """,
@@ -714,6 +732,15 @@ def export_filings_to_evidence(conn: sqlite3.Connection, limit: int = 80) -> dic
                     "market": row[4],
                     "filing_type": row[10],
                     "title": row[11],
+                    "chunk_section_type": row[13],
+                    "investment_relevance_score": row[14],
+                    "financial_table_score": row[15],
+                    "guidance_relevance_score": row[16],
+                    "risk_relevance_score": row[17],
+                    "business_update_score": row[18],
+                    "exclude_reason": row[19],
+                    "usable_for_core_claim": bool(row[20]),
+                    "usable_for_proxy_signal": bool(row[21]),
                     "exporter": "smr_filings_ingestion",
                 },
             },

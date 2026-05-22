@@ -25,12 +25,13 @@ if str(LIB_DIR) not in sys.path:
 from smr_agents import DB_PATH
 from smr_bear_case import build_bear_case
 from smr_claim_graph import claim_graph_summary, link_claim_evidence, upsert_claim
-from smr_consensus_proxy import build_consensus_revision_proxy
 from smr_data_health import refresh_system_data_health
 from smr_decision import ensure_decision_tables
 from smr_evidence_quality import update_evidence_quality_scores
 from smr_fundamentals import build_fundamentals_snapshot
 from smr_paper_portfolio import ensure_paper_portfolio_tables
+from smr_promotion_debugger import explain_promotion_result
+from smr_proxy_extraction import build_live_consensus_proxy
 from smr_recommendation_candidate import build_recommendation_candidate
 from smr_recommendation_promotion import evaluate_promotion, promotion_to_dict
 from smr_registry import register_snapshot
@@ -313,15 +314,11 @@ def evidence_check_from_rows(evidence_rows: list[dict[str, Any]]) -> dict[str, A
 
 
 def proxy_from_live_evidence(conn: sqlite3.Connection, ticker: str, evidence_rows: list[dict[str, Any]]) -> dict[str, Any]:
-    excerpts = " ".join(str(row.get("text_excerpt") or "")[:400] for row in evidence_rows[:4])
-    method = "guidance_change" if any(row.get("source_type") == "filing" for row in evidence_rows) else "news_language_proxy"
-    return build_consensus_revision_proxy(
-        conn,
-        excerpts,
-        evidence_ids=[row["evidence_id"] for row in evidence_rows[:4]],
-        ticker=ticker,
-        method=method,
-    )
+    proxy = build_live_consensus_proxy(conn, ticker, limit=max(len(evidence_rows), 8))
+    if proxy.get("proxy_quality") != "invalid" or not evidence_rows:
+        return proxy
+    proxy["fallback_evidence_ids"] = [row["evidence_id"] for row in evidence_rows[:4]]
+    return proxy
 
 
 def annotate_ledger(conn: sqlite3.Connection, recommendation_id: str, metadata_updates: dict[str, Any]) -> None:
@@ -417,6 +414,16 @@ def evaluate_ticker(
         lint_result={"max_severity": "info", "issues": []},
         write_ledger=True,
     )
+    promotion_debugger = explain_promotion_result(
+        ticker,
+        promotion_to_dict(promotion),
+        proxy=proxy,
+        fundamentals=fundamentals,
+        valuation=valuation,
+        evidence_check=evidence_check,
+        claim_graph=claim_graph,
+        data_health=data_health,
+    )
     candidate = build_recommendation_candidate(
         conn,
         recommendation_id=f"phase4_live__{ticker}",
@@ -441,6 +448,7 @@ def evaluate_ticker(
             "live_filing_evidence": live_filing_count,
             "live_news_evidence": live_news_count,
             "fundamentals_snapshot_id": fundamentals.get("snapshot_id"),
+            "promotion_debugger": promotion_debugger,
         },
     )
     return {
@@ -457,11 +465,13 @@ def evaluate_ticker(
         "fundamentals_missing_fields": fundamentals.get("missing_fields") or [],
         "valuation_usage": valuation.get("allowed_usage"),
         "proxy_quality": proxy.get("proxy_quality"),
+        "proxy_signal_count": proxy.get("proxy_signal_count"),
         "bear_case_strength": bear_case.get("bear_case_strength"),
         "ledger_written": bool(conn.execute("SELECT 1 FROM decision_ledger WHERE recommendation_id=?", (f"phase4_live__{ticker}",)).fetchone()),
         "review_queue_visible": review_queue_visible(conn, f"phase4_live__{ticker}"),
         "missing_requirements": promotion.missing_requirements,
         "required_fixes": promotion.required_fixes,
+        "promotion_debugger": promotion_debugger,
     }
 
 
@@ -503,11 +513,17 @@ def compact_ticker_result(item: dict[str, Any]) -> dict[str, Any]:
         "fundamentals_missing_fields": item.get("fundamentals_missing_fields"),
         "valuation_usage": item.get("valuation_usage"),
         "proxy_quality": item.get("proxy_quality"),
+        "proxy_signal_count": item.get("proxy_signal_count"),
         "bear_case_strength": item.get("bear_case_strength"),
         "ledger_written": item.get("ledger_written"),
         "review_queue_visible": item.get("review_queue_visible"),
         "missing_requirements": item.get("missing_requirements") or promotion.get("missing_requirements") or [],
         "required_fixes": item.get("required_fixes") or promotion.get("required_fixes") or [],
+        "promotion_debugger": {
+            "blocking_factors": (item.get("promotion_debugger") or {}).get("blocking_factors") or [],
+            "near_pass_items": (item.get("promotion_debugger") or {}).get("near_pass_items") or [],
+            "minimum_fix_path": (item.get("promotion_debugger") or {}).get("minimum_fix_path") or [],
+        },
     }
 
 

@@ -122,6 +122,29 @@ def stable_hash(*parts: Any) -> str:
     return hashlib.sha1(raw.encode("utf-8")).hexdigest()
 
 
+def canonical_news_url(url: Any) -> str:
+    text = normalize_text(url, limit=1200)
+    if not text:
+        return ""
+    parsed = urllib.parse.urlsplit(text)
+    if not parsed.scheme and not parsed.netloc:
+        return text
+    scheme = (parsed.scheme or "https").lower()
+    netloc = parsed.netloc.lower()
+    path = re.sub(r"/{2,}", "/", parsed.path or "/")
+    if path != "/" and path.endswith("/"):
+        path = path.rstrip("/")
+    query_items = urllib.parse.parse_qsl(parsed.query, keep_blank_values=True)
+    filtered_query = [
+        (key, value)
+        for key, value in query_items
+        if not key.lower().startswith("utm_")
+        and key.lower() not in {"spm", "ref", "from", "source", "cfrom", "cmpid", "share"}
+    ]
+    query = urllib.parse.urlencode(filtered_query, doseq=True)
+    return urllib.parse.urlunsplit((scheme, netloc, path or "/", query, ""))
+
+
 def title_fingerprint(title: str) -> str:
     compact = re.sub(r"[^0-9A-Za-z\u4e00-\u9fff]+", "", normalize_text(title).lower())
     return stable_hash(compact[:160])
@@ -239,7 +262,7 @@ def normalize_news_item(raw: dict[str, Any]) -> dict[str, Any]:
     if not title:
         raise ValueError("news title is required")
     body = normalize_text(raw.get("body") or raw.get("summary") or raw.get("description"), limit=12000)
-    url = normalize_text(raw.get("url") or raw.get("source_url"), limit=1200)
+    url = canonical_news_url(raw.get("url") or raw.get("source_url"))
     published_at = normalize_dt(raw.get("published_at") or raw.get("publish_time") or raw.get("date"))
     source_key = normalize_text(raw.get("source_key") or raw.get("source_kind") or "news_article", limit=120)
     source_name = normalize_text(raw.get("source_name") or raw.get("provider") or raw.get("media"), limit=240)
@@ -248,7 +271,7 @@ def normalize_news_item(raw: dict[str, Any]) -> dict[str, Any]:
     entities = raw.get("entities") if isinstance(raw.get("entities"), list) else []
     market = infer_market(tickers, raw.get("market"))
     fingerprint = title_fingerprint(title)
-    dedupe_hash = raw.get("dedupe_hash") or stable_hash(title, source_key, published_at or url)
+    dedupe_hash = raw.get("dedupe_hash") or stable_hash(title, source_key, published_at or url or body[:240])
     news_id = raw.get("news_id") or f"news_{dedupe_hash[:20]}"
     return {
         "news_id": news_id,
@@ -272,6 +295,33 @@ def normalize_news_item(raw: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _merge_existing_news_item(
+    conn: sqlite3.Connection,
+    normalized: dict[str, Any],
+    existing: sqlite3.Row | tuple[Any, ...],
+) -> dict[str, Any]:
+    source_list = loads_json(existing[1], [])
+    for source_key in normalized["source_list"]:
+        if source_key not in source_list:
+            source_list.append(source_key)
+    conn.execute(
+        """
+        UPDATE news_items
+        SET source_list_json=?, ingested_at=?, metadata_json=?
+        WHERE news_id=?
+        """,
+        (
+            json.dumps(source_list, ensure_ascii=False),
+            normalized["ingested_at"],
+            json.dumps(normalized["metadata"], ensure_ascii=False, sort_keys=True),
+            existing[0],
+        ),
+    )
+    normalized["news_id"] = existing[0]
+    normalized["deduped"] = True
+    return normalized
+
+
 def upsert_news_item(conn: sqlite3.Connection, item: dict[str, Any]) -> dict[str, Any]:
     ensure_news_tables(conn)
     normalized = normalize_news_item(item)
@@ -288,59 +338,56 @@ def upsert_news_item(conn: sqlite3.Connection, item: dict[str, Any]) -> dict[str
         (normalized["dedupe_hash"], normalized["url"], normalized["title_fingerprint"], publish_day),
     ).fetchone()
     if existing:
-        source_list = loads_json(existing[1], [])
-        for source_key in normalized["source_list"]:
-            if source_key not in source_list:
-                source_list.append(source_key)
+        return _merge_existing_news_item(conn, normalized, existing)
+
+    try:
         conn.execute(
             """
-            UPDATE news_items
-            SET source_list_json=?, ingested_at=?, metadata_json=?
-            WHERE news_id=?
+            INSERT INTO news_items (
+                news_id, source_key, source_name, title, body, url, published_at, ingested_at,
+                tickers_json, themes_json, entities_json, language, market, credibility,
+                dedupe_hash, title_fingerprint, source_list_json, metadata_json
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
-                json.dumps(source_list, ensure_ascii=False),
+                normalized["news_id"],
+                normalized["source_key"],
+                normalized["source_name"],
+                normalized["title"],
+                normalized["body"],
+                normalized["url"],
+                normalized["published_at"],
                 normalized["ingested_at"],
+                json.dumps(normalized["tickers"], ensure_ascii=False),
+                json.dumps(normalized["themes"], ensure_ascii=False),
+                json.dumps(normalized["entities"], ensure_ascii=False),
+                normalized["language"],
+                normalized["market"],
+                normalized["credibility"],
+                normalized["dedupe_hash"],
+                normalized["title_fingerprint"],
+                json.dumps(normalized["source_list"], ensure_ascii=False),
                 json.dumps(normalized["metadata"], ensure_ascii=False, sort_keys=True),
-                existing[0],
             ),
         )
-        normalized["news_id"] = existing[0]
-        normalized["deduped"] = True
+        normalized["deduped"] = False
         return normalized
-
-    conn.execute(
-        """
-        INSERT INTO news_items (
-            news_id, source_key, source_name, title, body, url, published_at, ingested_at,
-            tickers_json, themes_json, entities_json, language, market, credibility,
-            dedupe_hash, title_fingerprint, source_list_json, metadata_json
-        )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """,
-        (
-            normalized["news_id"],
-            normalized["source_key"],
-            normalized["source_name"],
-            normalized["title"],
-            normalized["body"],
-            normalized["url"],
-            normalized["published_at"],
-            normalized["ingested_at"],
-            json.dumps(normalized["tickers"], ensure_ascii=False),
-            json.dumps(normalized["themes"], ensure_ascii=False),
-            json.dumps(normalized["entities"], ensure_ascii=False),
-            normalized["language"],
-            normalized["market"],
-            normalized["credibility"],
-            normalized["dedupe_hash"],
-            normalized["title_fingerprint"],
-            json.dumps(normalized["source_list"], ensure_ascii=False),
-            json.dumps(normalized["metadata"], ensure_ascii=False, sort_keys=True),
-        ),
-    )
-    normalized["deduped"] = False
-    return normalized
+    except sqlite3.IntegrityError:
+        existing = conn.execute(
+            """
+            SELECT news_id, source_list_json
+            FROM news_items
+            WHERE dedupe_hash=?
+               OR (url IS NOT NULL AND url != '' AND url=?)
+               OR (title_fingerprint=? AND substr(COALESCE(published_at, ingested_at), 1, 10)=?)
+            LIMIT 1
+            """,
+            (normalized["dedupe_hash"], normalized["url"], normalized["title_fingerprint"], publish_day),
+        ).fetchone()
+        if not existing:
+            raise
+        return _merge_existing_news_item(conn, normalized, existing)
 
 
 def count_live_news_for_ticker(conn: sqlite3.Connection, ticker: str, since_date: str | None = None) -> int:
@@ -623,6 +670,10 @@ def export_news_to_evidence(
             continue
         source_key = row[1] or "news_article"
         evidence_id = "ev_" + stable_hash(source_key, row[0], text)[:16]
+        tickers = loads_json(row[9], [])
+        metadata = loads_json(row[8], {})
+        if tickers and not metadata.get("ticker"):
+            metadata["ticker"] = tickers[0]
         upsert_evidence(
             conn,
             {
@@ -636,10 +687,10 @@ def export_news_to_evidence(
                 "text_excerpt": text,
                 "url_or_doc_id": row[4] or row[0],
                 "metadata": {
-                    **loads_json(row[8], {}),
+                    **metadata,
                     "news_id": row[0],
                     "credibility": row[7],
-                    "tickers": loads_json(row[9], []),
+                    "tickers": tickers,
                     "market": row[10],
                     "exporter": "smr_news_ingestion",
                 },

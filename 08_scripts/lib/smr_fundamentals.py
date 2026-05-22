@@ -10,6 +10,7 @@ from datetime import datetime
 from typing import Any
 
 from smr_claim_graph import ensure_claim_graph_tables, upsert_evidence
+from smr_filing_chunk_selector import select_relevant_document_chunks
 from smr_wiki import generate_execution_id, now_ts
 
 
@@ -334,6 +335,39 @@ def infer_from_filing_text(conn: sqlite3.Connection, ticker: str) -> tuple[dict[
     return values, {"source": "filing_chunks", "matched_chunks": len(rows), "evidence_ids": [row[1] for row in rows if row[1]][:6]}
 
 
+def infer_from_relevant_filing_text(conn: sqlite3.Connection, ticker: str) -> tuple[dict[str, Any], dict[str, Any]]:
+    chunks = select_relevant_document_chunks(conn, ticker=ticker, limit=32, min_investment_relevance=0.45)
+    if not chunks:
+        return {}, {"source": "relevant_filing_chunks", "matched_chunks": 0, "selector_used": True}
+    text = "\n".join(str(row.get("text") or "") for row in chunks)
+    evidence_ids = [row.get("evidence_id") for row in chunks if row.get("evidence_id")]
+    patterns = {
+        "revenue": r"(?:revenue|net sales|total revenue|营业收入|收入|收益)[^\d]{0,50}([0-9][0-9,\.]+)",
+        "net_income": r"(?:net income|profit attributable|归母净利润|净利润|本公司拥有人应占利润)[^\d]{0,50}([0-9][0-9,\.]+)",
+        "eps_basic": r"(?:basic EPS|diluted EPS|EPS|每股收益|基本每股收益|摊薄每股收益)[^\d]{0,50}([0-9][0-9,\.]+)",
+        "gross_margin": r"(?:gross margin|毛利率|gross profit margin)[^\d]{0,50}([0-9][0-9,\.]+)%",
+        "operating_cash_flow": r"(?:net cash provided by operating activities|operating cash flow|经营活动产生的现金流量净额|经营活动现金流)[^\d]{0,60}([0-9][0-9,\.]+)",
+        "free_cash_flow": r"(?:free cash flow|自由现金流)[^\d]{0,60}([0-9][0-9,\.]+)",
+        "cash_and_equivalents": r"(?:cash and cash equivalents|cash|现金及现金等价物|现金及等价物)[^\d]{0,60}([0-9][0-9,\.]+)",
+        "total_debt": r"(?:total debt|borrowings|债务|借款)[^\d]{0,60}([0-9][0-9,\.]+)",
+    }
+    values: dict[str, Any] = {}
+    for field, pattern in patterns.items():
+        match = re.search(pattern, text, flags=re.I)
+        if match:
+            value = normalize_numeric(match.group(1))
+            if value is not None:
+                values[field] = value / 100.0 if field.endswith("margin") and value > 1 else value
+    return values, {
+        "source": "relevant_filing_chunks",
+        "matched_chunks": len(chunks),
+        "selector_used": True,
+        "section_types": sorted({str(row.get("chunk_section_type")) for row in chunks if row.get("chunk_section_type")}),
+        "evidence_ids": evidence_ids[:8],
+        "field_missing_reasons": {field: "field_not_found" for field in patterns if values.get(field) is None},
+    }
+
+
 def upsert_fundamentals_evidence(conn: sqlite3.Connection, ticker: str, snapshot: dict[str, Any]) -> str:
     ensure_claim_graph_tables(conn)
     text = (
@@ -358,6 +392,7 @@ def upsert_fundamentals_evidence(conn: sqlite3.Connection, ticker: str, snapshot
                 "ticker": ticker,
                 "snapshot_id": snapshot["snapshot_id"],
                 "missing_fields": snapshot.get("missing_fields") or [],
+                "live": bool(snapshot.get("source_quality") == "primary"),
             },
         },
     )
@@ -385,7 +420,14 @@ def build_fundamentals_snapshot(
             errors.append(f"sec_companyfacts_failed: {exc}")
     if not values:
         values, metadata = build_factor_fundamentals(conn, ticker)
-    filing_values, filing_metadata = infer_from_filing_text(conn, ticker)
+    filing_values, filing_metadata = infer_from_relevant_filing_text(conn, ticker)
+    if not filing_values:
+        filing_values, fallback_filing_metadata = infer_from_filing_text(conn, ticker)
+        filing_metadata = {
+            **fallback_filing_metadata,
+            "relevant_selector": filing_metadata,
+            "fallback_used": True,
+        }
     values = {**filing_values, **{key: value for key, value in values.items() if value is not None}}
     metadata = {**metadata, "filing_inference": filing_metadata, "errors": errors}
     source_evidence_ids = latest_filing_evidence_ids(conn, ticker)

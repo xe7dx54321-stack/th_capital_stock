@@ -63,6 +63,9 @@ def ensure_evidence_quality_columns(conn: sqlite3.Connection) -> None:
         "ticker_relevance": "REAL",
         "theme_relevance": "REAL",
         "quote_specificity": "REAL",
+        "investment_relevance_score": "REAL",
+        "section_type_score": "REAL",
+        "usable_for_proxy_signal": "INTEGER",
         "usable_for_core_claim": "INTEGER",
         "usable_for_promotion": "INTEGER",
         "quality_metadata_json": "TEXT NOT NULL DEFAULT '{}'",
@@ -145,6 +148,35 @@ def directness_for(score: float) -> str:
     return "low"
 
 
+def _float_or_none(value: Any) -> float | None:
+    if value in (None, ""):
+        return None
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def section_type_score(section_type: str | None) -> float:
+    value = str(section_type or "unknown").lower()
+    return {
+        "financial_statement": 1.0,
+        "guidance_outlook": 0.96,
+        "management_discussion": 0.82,
+        "segment_performance": 0.78,
+        "liquidity_capital": 0.76,
+        "business_update": 0.72,
+        "shareholder_return": 0.68,
+        "risk_factor": 0.64,
+        "unknown": 0.38,
+        "legal_boilerplate": 0.1,
+        "cover_page": 0.04,
+        "exhibit_index": 0.04,
+        "administrative": 0.03,
+        "signature": 0.0,
+    }.get(value, 0.35)
+
+
 def score_evidence_row(row: sqlite3.Row | dict[str, Any], ticker: str | None = None, theme: str | None = None) -> dict[str, Any]:
     if isinstance(row, dict):
         data = row
@@ -173,13 +205,59 @@ def score_evidence_row(row: sqlite3.Row | dict[str, Any], ticker: str | None = N
     ticker_score = ticker_relevance_score(text, metadata, ticker or metadata.get("ticker"))
     theme_score = theme_relevance_score(text, metadata, theme)
     specificity = quote_specificity_score(text)
+    has_selector_metadata = any(
+        key in metadata
+        for key in (
+            "chunk_section_type",
+            "investment_relevance_score",
+            "usable_for_core_claim",
+            "usable_for_proxy_signal",
+            "exclude_reason",
+        )
+    )
+    investment_relevance = _float_or_none(metadata.get("investment_relevance_score"))
+    if investment_relevance is None:
+        if source_type == "filing" and not has_selector_metadata:
+            investment_relevance = max(0.55, specificity * 0.82)
+        else:
+            investment_relevance = 0.5 if source_type != "filing" else 0.38
+    section_score = section_type_score(metadata.get("chunk_section_type"))
     directness_value = (ticker_score * 0.45) + (specificity * 0.4) + (theme_score * 0.15)
-    score = (base * 0.46 + recency * 0.18 + ticker_score * 0.16 + specificity * 0.14 + theme_score * 0.06) * status_mult
+    score = (
+        base * 0.34
+        + recency * 0.16
+        + ticker_score * 0.14
+        + specificity * 0.12
+        + theme_score * 0.05
+        + investment_relevance * 0.13
+        + section_score * 0.06
+    ) * status_mult
     if source_type in {"filing", "fundamentals"}:
         score += 0.04
+    if source_type == "filing" and investment_relevance < 0.35:
+        score = min(score, 0.45)
+    if metadata.get("exclude_reason"):
+        score = min(score, 0.32)
     quality_score = round(max(0.0, min(score, 1.0)), 3)
-    usable_for_core = quality_score >= 0.62 and source_quality in {"primary", "secondary"} and status_mult > 0.5
-    usable_for_promotion = quality_score >= 0.68 and status_mult > 0.5
+    metadata_core_flag = metadata.get("usable_for_core_claim")
+    metadata_proxy_flag = metadata.get("usable_for_proxy_signal")
+    if source_type == "filing":
+        usable_for_core = (
+            quality_score >= 0.62
+            and source_quality in {"primary", "secondary"}
+            and status_mult > 0.5
+            and (not has_selector_metadata or metadata_core_flag is not False)
+            and investment_relevance >= 0.55
+        )
+        usable_for_promotion = (
+            quality_score >= 0.68
+            and status_mult > 0.5
+            and (not has_selector_metadata or metadata_core_flag is True or metadata_proxy_flag is True)
+            and (not has_selector_metadata or investment_relevance >= 0.6)
+        )
+    else:
+        usable_for_core = quality_score >= 0.62 and source_quality in {"primary", "secondary"} and status_mult > 0.5
+        usable_for_promotion = quality_score >= 0.68 and status_mult > 0.5
     return {
         "evidence_id": data.get("evidence_id"),
         "quality_score": quality_score,
@@ -189,12 +267,19 @@ def score_evidence_row(row: sqlite3.Row | dict[str, Any], ticker: str | None = N
         "ticker_relevance": round(ticker_score, 3),
         "theme_relevance": round(theme_score, 3),
         "quote_specificity": round(specificity, 3),
+        "investment_relevance_score": round(investment_relevance, 3),
+        "section_type_score": round(section_score, 3),
+        "usable_for_proxy_signal": bool(metadata_proxy_flag) if source_type == "filing" else usable_for_promotion,
         "usable_for_core_claim": usable_for_core,
         "usable_for_promotion": usable_for_promotion,
         "metadata": {
             "source_quality": source_quality,
             "source_type": source_type,
             "source_status_multiplier": status_mult,
+            "chunk_section_type": metadata.get("chunk_section_type"),
+            "investment_relevance_score": round(investment_relevance, 3),
+            "section_type_score": round(section_score, 3),
+            "usable_for_proxy_signal": bool(metadata_proxy_flag) if source_type == "filing" else usable_for_promotion,
         },
     }
 
@@ -226,6 +311,7 @@ def update_evidence_quality_scores(
             UPDATE evidence_items
             SET quality_score=?, directness=?, independence=?, recency_score=?,
                 ticker_relevance=?, theme_relevance=?, quote_specificity=?,
+                investment_relevance_score=?, section_type_score=?, usable_for_proxy_signal=?,
                 usable_for_core_claim=?, usable_for_promotion=?, quality_metadata_json=?
             WHERE evidence_id=?
             """,
@@ -237,6 +323,9 @@ def update_evidence_quality_scores(
                 scored["ticker_relevance"],
                 scored["theme_relevance"],
                 scored["quote_specificity"],
+                scored["investment_relevance_score"],
+                scored["section_type_score"],
+                1 if scored["usable_for_proxy_signal"] else 0,
                 1 if scored["usable_for_core_claim"] else 0,
                 1 if scored["usable_for_promotion"] else 0,
                 json.dumps(scored["metadata"], ensure_ascii=False, sort_keys=True),
