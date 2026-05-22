@@ -12,6 +12,8 @@ if str(LIB_DIR) not in sys.path:
 from smr_decision import review_recommendation, upsert_decision_ledger
 from smr_paper_portfolio import apply_approved_recommendations, mark_open_positions_to_market
 
+import validate_phase5_paper_portfolio_smoke as paper_smoke
+
 
 def make_conn() -> sqlite3.Connection:
     conn = sqlite3.connect(":memory:")
@@ -109,6 +111,31 @@ class PaperPortfolioTests(unittest.TestCase):
         self.assertEqual(result["paper_positions_marked"], 1)
         metadata = conn.execute("SELECT metadata_json FROM paper_portfolio_positions WHERE source_recommendation_id='rec-mark'").fetchone()[0]
         self.assertIn("mark_to_market", metadata)
+
+    def test_smoke_accepts_traceable_chain_after_replay_pending_status(self):
+        conn = make_conn()
+        today = datetime.now().strftime("%Y-%m-%d")
+        conn.execute("INSERT INTO us_daily_bar VALUES ('NVDA', ?, 100.0)", (today,))
+        upsert_decision_ledger(
+            conn,
+            "rec-replayed",
+            "pending_human_review",
+            dashboard_summary={"action": "buy NVDA", "suggested_position_pct": 2.0, "max_position_pct": 5.0},
+        )
+        review_recommendation(conn, "rec-replayed", "tester", "approve_paper", "approved for paper trading")
+        apply_approved_recommendations(conn)
+        upsert_decision_ledger(
+            conn,
+            "rec-replayed",
+            "pending_human_review",
+            dashboard_summary={"action": "buy NVDA", "suggested_position_pct": 2.0, "max_position_pct": 5.0},
+        )
+
+        result = paper_smoke.inspect_chain(conn, "rec-replayed")
+
+        self.assertEqual(result["current_status"], "pending_human_review")
+        self.assertEqual(result["chain_status"], "complete")
+        self.assertEqual(result["missing_stages"], [])
 
 
 if __name__ == "__main__":

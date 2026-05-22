@@ -101,6 +101,7 @@ def evidence_requirements(
     evidence_check: dict[str, Any],
     claim_graph: dict[str, Any],
     action: str,
+    bear_case: dict[str, Any] | None = None,
 ) -> tuple[list[str], list[str], list[str]]:
     reasons: list[str] = []
     missing: list[str] = []
@@ -132,7 +133,12 @@ def evidence_requirements(
     if is_buy_or_add(action) and primary_count < 1:
         missing.append("primary_evidence_for_fundamental_claims")
         fixes.append("export filing/official IR evidence and link it to core company claims")
-    counter_count = claim_graph.get("counter_evidence_count") or evidence_check.get("counter_evidence_count") or 0
+    counter_count = (
+        claim_graph.get("counter_evidence_count")
+        or evidence_check.get("counter_evidence_count")
+        or len((bear_case or {}).get("bear_case_claims") or [])
+        or 0
+    )
     if is_buy_or_add(action) and counter_count < 1:
         missing.append("counter_evidence_or_bear_case_claim")
         fixes.append("add contradicts/contextual bear-case evidence before promotion")
@@ -291,7 +297,7 @@ def evaluate_promotion(
     }
     for check in (
         data_health_requirements(data_health_snapshot or {}, ticker, action),
-        evidence_requirements(evidence_check_snapshot or {}, claim_graph_snapshot or {}, action),
+        evidence_requirements(evidence_check_snapshot or {}, claim_graph_snapshot or {}, action, bear_case or {}),
         valuation_requirements(valuation_snapshot or {}, action),
         fundamentals_requirements(
             fundamentals_snapshot or ((valuation_snapshot or {}).get("fundamentals_snapshot") or {}),

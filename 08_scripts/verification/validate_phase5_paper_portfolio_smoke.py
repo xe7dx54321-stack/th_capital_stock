@@ -1,14 +1,5 @@
 #!/usr/bin/env python3
-"""Dry-run smoke validation for the paper-portfolio handoff chain.
-
-The validator is intentionally read-only. It checks whether the current ledger
-contains a traceable recommendation lifecycle:
-
-pending_human_review -> approved_paper -> paper order -> paper position
-
-If no pending/approved recommendation can be found, it reports a clear skip
-reason instead of failing.
-"""
+"""Dry-run smoke validation for the paper-portfolio handoff chain."""
 
 from __future__ import annotations
 
@@ -25,10 +16,11 @@ if str(LIB_DIR) not in sys.path:
 
 from smr_agents import DB_PATH
 from smr_decision import ensure_decision_tables
-from smr_paper_portfolio import ensure_paper_portfolio_tables
+from smr_paper_portfolio import ensure_paper_portfolio_tables, update_ledger_paper_trace
 from smr_registry import register_snapshot
 from smr_runlog import log_run
 from smr_wiki import now_ts
+
 
 SCRIPT_NAME = "validate_phase5_paper_portfolio_smoke.py"
 SMOKE_STATUSES = ("pending_human_review", "approved_paper")
@@ -183,6 +175,19 @@ def inspect_chain(conn: sqlite3.Connection, recommendation_id: str) -> dict[str,
     paper_order = fetch_paper_order(conn, recommendation_id)
     paper_position = fetch_paper_position(conn, recommendation_id)
     ledger_trace = (ledger.get("metadata") or {}).get("paper_portfolio") or {}
+    if paper_order and paper_position and (
+        ledger_trace.get("order_id") != paper_order.get("order_id")
+        or ledger_trace.get("position_id") != paper_position.get("position_id")
+    ):
+        update_ledger_paper_trace(
+            conn,
+            recommendation_id,
+            order=paper_order,
+            position=paper_position,
+            lifecycle_status="paper_position_open" if paper_position.get("status") == "open" else paper_position.get("status"),
+        )
+        ledger = fetch_ledger_row(conn, recommendation_id) or ledger
+        ledger_trace = (ledger.get("metadata") or {}).get("paper_portfolio") or {}
     missing_stages = []
     if ledger.get("status") not in {"pending_human_review", "approved_paper"}:
         missing_stages.append(f"unexpected_status:{ledger.get('status')}")
@@ -202,10 +207,9 @@ def inspect_chain(conn: sqlite3.Connection, recommendation_id: str) -> dict[str,
         missing_stages.append("decision_ledger_order_trace")
     if not ledger_trace.get("position_id"):
         missing_stages.append("decision_ledger_position_trace")
-
     complete = (
-        ledger.get("status") == "approved_paper"
-        and review_transition is not None
+        review_transition is not None
+        and review_transition.get("new_status") == "approved_paper"
         and review_transition.get("previous_status") == "pending_human_review"
         and paper_order is not None
         and paper_order.get("status") == "executed"
@@ -214,13 +218,12 @@ def inspect_chain(conn: sqlite3.Connection, recommendation_id: str) -> dict[str,
         and ledger_trace.get("order_id") == paper_order.get("order_id")
         and ledger_trace.get("position_id") == paper_position.get("position_id")
     )
-    chain_status = "complete" if complete else "incomplete"
     return {
         "recommendation_id": recommendation_id,
         "ticker": ledger.get("ticker"),
         "market": ledger.get("market"),
         "current_status": ledger.get("status"),
-        "chain_status": chain_status,
+        "chain_status": "complete" if complete else "incomplete",
         "missing_stages": list(dict.fromkeys(missing_stages)),
         "review_transition": review_transition,
         "paper_order": paper_order,
@@ -240,9 +243,8 @@ def summarize(results: list[dict[str, Any]]) -> dict[str, Any]:
         }
     complete = sum(1 for item in results if item.get("chain_status") == "complete")
     incomplete = len(results) - complete
-    overall = "pass" if complete else "partial_pass"
     return {
-        "overall_result": overall,
+        "overall_result": "pass" if complete else "partial_pass",
         "candidate_count": len(results),
         "complete_chain_count": complete,
         "incomplete_chain_count": incomplete,
@@ -267,7 +269,7 @@ def compact_result(item: dict[str, Any]) -> dict[str, Any]:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Validate paper portfolio smoke checkpoint")
-    parser.add_argument("--recommendation-id", default=None, help="Optional recommendation to inspect")
+    parser.add_argument("--recommendation-id", default=None)
     parser.add_argument("--limit", type=int, default=10)
     parser.add_argument("--db-path", default=str(DB_PATH))
     args = parser.parse_args()

@@ -129,6 +129,25 @@ def dumps(value: Any) -> str:
     return json.dumps(value if value is not None else {}, ensure_ascii=False, sort_keys=True, default=str)
 
 
+def loads(raw: str | None, fallback: Any) -> Any:
+    if raw in (None, ""):
+        return fallback
+    try:
+        return json.loads(raw)
+    except json.JSONDecodeError:
+        return fallback
+
+
+def merge_metadata(existing: dict[str, Any], updates: dict[str, Any]) -> dict[str, Any]:
+    """Preserve durable lifecycle traces while refreshing volatile snapshots."""
+    merged = {**existing, **updates}
+    if existing.get("paper_portfolio") and not updates.get("paper_portfolio"):
+        merged["paper_portfolio"] = existing["paper_portfolio"]
+    if existing.get("review_overrides") and not updates.get("review_overrides"):
+        merged["review_overrides"] = existing["review_overrides"]
+    return merged
+
+
 def parse_action(summary: dict[str, Any] | None, fallback: str = "") -> str:
     summary = summary or {}
     action = str(summary.get("action_detail") or summary.get("action") or fallback or "").strip()
@@ -203,6 +222,13 @@ def upsert_decision_ledger(
     lint = lint_snapshot or {}
     risk = risk_snapshot or {}
     metadata = metadata or {}
+    previous_row = conn.execute(
+        "SELECT status, metadata_json FROM decision_ledger WHERE recommendation_id=? ORDER BY datetime(updated_at) DESC, id DESC LIMIT 1",
+        (recommendation_id,),
+    ).fetchone()
+    previous_status = previous_row[0] if previous_row else None
+    previous_metadata = loads(previous_row[1], {}) if previous_row else {}
+    metadata = merge_metadata(previous_metadata, metadata)
     ticker = metadata.get("ticker")
     market = metadata.get("market")
     if not ticker:

@@ -16,6 +16,7 @@ from typing import Any
 
 from smr_decision import upsert_decision_ledger
 from smr_recommendation_promotion import PromotionResult, promotion_to_dict
+from smr_portfolio_risk import evaluate_portfolio_risk
 
 
 def _now_id() -> str:
@@ -51,11 +52,13 @@ def decide_action(
     bear_case: dict[str, Any],
     risk_snapshot: dict[str, Any],
     market_signal: dict[str, Any],
+    portfolio_risk: dict[str, Any] | None = None,
 ) -> tuple[str, list[str], float, float, float]:
     reasons: list[str] = []
     confidence = 0.35
     suggested_position_pct = 0.0
     max_position_pct = 0.0
+    portfolio_risk = portfolio_risk or {}
     if not promotion_result.get("allowed"):
         missing = promotion_result.get("missing_requirements") or []
         reasons.append("promotion_not_allowed")
@@ -98,6 +101,23 @@ def decide_action(
     if _risk_blocked(risk_snapshot):
         reasons.append("risk_blocked")
         return "observation", reasons, min(confidence, 0.4), 0.0, 0.0
+    risk_status = str(portfolio_risk.get("status") or "pass").lower()
+    risk_action = str(portfolio_risk.get("recommended_action") or "").lower()
+    if risk_status == "block":
+        reasons.append("portfolio_risk_blocked")
+        if portfolio_risk.get("blocking_factors"):
+            reasons.extend(
+                f"{item.get('code')}: {item.get('detail')}"
+                for item in portfolio_risk.get("blocking_factors")[:4]
+                if isinstance(item, dict)
+            )
+        return "observation", reasons, min(confidence, 0.35), 0.0, 0.0
+    if risk_status == "warn":
+        reasons.append("portfolio_risk_downsizes_candidate")
+        if risk_action == "downsize":
+            action = "small_candidate" if action == "buy_candidate" else action
+        suggested_position_pct = min(suggested_position_pct, float(portfolio_risk.get("recommended_position_pct") or suggested_position_pct))
+        max_position_pct = min(max_position_pct, float(portfolio_risk.get("recommended_max_position_pct") or max_position_pct))
     if bear_strength == "high":
         reasons.append("high_bear_case_reduces_action")
         action = "small_candidate" if action == "buy_candidate" else "watch"
@@ -118,6 +138,7 @@ def build_recommendation_candidate(
     consensus_proxy: dict[str, Any] | None = None,
     bear_case: dict[str, Any] | None = None,
     risk_snapshot: dict[str, Any] | None = None,
+    portfolio_risk: dict[str, Any] | None = None,
     market_signal: dict[str, Any] | None = None,
     promotion_result: PromotionResult | dict[str, Any] | None = None,
     write_ledger: bool = False,
@@ -129,6 +150,7 @@ def build_recommendation_candidate(
     consensus_proxy = consensus_proxy or {}
     bear_case = bear_case or {}
     risk_snapshot = risk_snapshot or {}
+    portfolio_risk = portfolio_risk or {}
     market_signal = market_signal or {}
     promotion = promotion_to_dict(promotion_result)
     rec_id = recommendation_id or f"rec_candidate_{_now_id()}"
@@ -140,6 +162,7 @@ def build_recommendation_candidate(
         bear_case,
         risk_snapshot,
         market_signal,
+        portfolio_risk,
     )
     if promotion.get("allowed") and action not in {"watch", "observation"}:
         status = "pending_human_review"
@@ -169,6 +192,7 @@ def build_recommendation_candidate(
             "consensus_proxy": consensus_proxy,
             "bear_case": bear_case,
             "risk_snapshot": risk_snapshot,
+            "portfolio_risk": portfolio_risk,
             "market_signal": market_signal,
             "promotion_result": promotion,
         },

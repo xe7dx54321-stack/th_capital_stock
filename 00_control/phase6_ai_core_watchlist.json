@@ -1,0 +1,89 @@
+{
+  "watchlist_id": "ai_core",
+  "name": "AI Core Live Watchlist",
+  "description": "Phase 6 multi-ticker watchlist for live reliability and portfolio risk validation.",
+  "generated_at": "2026-05-22",
+  "tickers": [
+    {
+      "ticker": "NVDA",
+      "market": "US",
+      "theme": "semiconductor_compute",
+      "sector": "semiconductor_compute",
+      "priority": "high",
+      "max_position_pct": 2.5,
+      "data_requirements": ["daily_bar", "news", "filings", "fundamentals", "proxy", "valuation", "bear_case"]
+    },
+    {
+      "ticker": "AVGO",
+      "market": "US",
+      "theme": "semiconductor_compute",
+      "sector": "semiconductor_compute",
+      "priority": "high",
+      "max_position_pct": 2.0,
+      "data_requirements": ["daily_bar", "news", "filings", "fundamentals", "proxy", "valuation", "bear_case"]
+    },
+    {
+      "ticker": "MSFT",
+      "market": "US",
+      "theme": "ai_platform",
+      "sector": "cloud_platform",
+      "priority": "high",
+      "max_position_pct": 2.0,
+      "data_requirements": ["daily_bar", "news", "filings", "fundamentals", "proxy", "valuation", "bear_case"]
+    },
+    {
+      "ticker": "AMZN",
+      "market": "US",
+      "theme": "cloud_infra",
+      "sector": "cloud_platform",
+      "priority": "medium",
+      "max_position_pct": 1.5,
+      "data_requirements": ["daily_bar", "news", "filings", "fundamentals", "proxy", "valuation", "bear_case"]
+    },
+    {
+      "ticker": "09988.HK",
+      "market": "H",
+      "theme": "internet_platform",
+      "sector": "internet_platform",
+      "priority": "high",
+      "max_position_pct": 1.5,
+      "data_requirements": ["daily_bar", "news", "filings", "fundamentals", "proxy", "valuation", "bear_case"]
+    },
+    {
+      "ticker": "00700.HK",
+      "market": "H",
+      "theme": "ai_platform",
+      "sector": "internet_platform",
+      "priority": "medium",
+      "max_position_pct": 1.5,
+      "data_requirements": ["daily_bar", "news", "filings", "fundamentals", "proxy", "valuation", "bear_case"]
+    },
+    {
+      "ticker": "300308.SZ",
+      "market": "A",
+      "theme": "semiconductor_photonics",
+      "sector": "semiconductor_photonics",
+      "priority": "high",
+      "max_position_pct": 1.5,
+      "data_requirements": ["daily_bar", "news", "filings", "fundamentals", "proxy", "valuation", "bear_case"]
+    },
+    {
+      "ticker": "688041.SH",
+      "market": "A",
+      "theme": "semiconductor_compute",
+      "sector": "semiconductor_compute",
+      "priority": "high",
+      "max_position_pct": 1.5,
+      "data_requirements": ["daily_bar", "news", "filings", "fundamentals", "proxy", "valuation", "bear_case"]
+    },
+    {
+      "ticker": "002230.SZ",
+      "market": "A",
+      "theme": "ai_application",
+      "sector": "ai_agent",
+      "priority": "medium",
+      "max_position_pct": 1.0,
+      "data_requirements": ["daily_bar", "news", "filings", "fundamentals", "proxy", "valuation", "bear_case"]
+    }
+  ]
+}

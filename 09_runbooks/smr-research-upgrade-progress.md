@@ -198,3 +198,30 @@ Phase 5 is now a live candidate generation partial pass and has been frozen as a
 - Paper order: `paper_order__phase4_live__NVDA` created and executed
 - Paper position: opened with `reference_price=219.51`
 - Validation note: the live checkpoint remains conservative and auditable; the system did not need rule relaxation to reach `pending_human_review`
+
+# 2026-05-22 Phase 6 Kickoff
+
+Phase 6 goal: expand from a single live NVDA checkpoint to multi-ticker live reliability with portfolio risk limits.
+
+- Watchlist foundation: `ai_core` watchlist added for A/H/US live validation.
+- Validation focus: batch live E2E across 5-10 real tickers with per-ticker blockers and fix paths.
+- Risk focus: single-name, theme, market, sector, and daily new-position limits now need to shape candidate sizing.
+- Reporting focus: daily live summary and paper portfolio summary should explain why each ticker did or did not progress.
+- Guardrail: no new complex agents, no relaxed promotion rules, no forced pending review.
+
+# 2026-05-22 Phase 6 Checkpoint
+
+Phase 6 is now a multi-ticker live reliability partial pass with portfolio risk v1 wired into candidate sizing.
+
+- Phase state: `Phase 6: Multi-ticker live reliability partial pass`
+- Watchlist: `ai_core`, 9 real A/H/US tickers: `NVDA`, `AVGO`, `MSFT`, `AMZN`, `09988.HK`, `00700.HK`, `300308.SZ`, `688041.SH`, `002230.SZ`
+- Multi-ticker live validation: `validate_phase6_multi_ticker_live.py --watchlist ai_core --timeout 240` returned `partial_pass`
+- Status counts: `pending_human_review=1`, `candidate_shadow=3`, `observation_only=5`
+- Pending item: `NVDA`, `action=small_candidate`, `promotion_allowed=true`, `proxy_quality=strong`, `proxy_independent_source_count=2`, `live_news_evidence=4`, `live_filing_evidence=4`, `fundamentals_status=fresh`, `ledger_written=true`, `review_queue_visible=true`
+- Candidate shadow items: `AVGO`, `MSFT`, `09988.HK`; all remain blocked by explicit bear/data-quality or filings freshness requirements rather than rule relaxation.
+- A/H field-level gaps are visible: `09988.HK` has fresh fundamentals with missing fields including `gross_profit`, `operating_income`, `eps_basic`, `eps_diluted`, `capex`, `free_cash_flow`, `shareholders_equity`, `gross_margin`; A-share names expose missing revenue/net income/EPS/OCF/cash/debt fields at ticker level.
+- Daily summary: `build_phase6_daily_live_summary.py` emits a compact per-ticker reason table and registers `phase6_daily_live_summary`.
+- Paper portfolio summary: `build_paper_portfolio_summary.py` shows one open NVDA paper position with `price_status=fresh`, `position_pct=1.5`, `theme_exposure.semiconductor_compute=1.5`, `market_exposure.US=1.5`, `sector_exposure.semiconductor_compute=1.5`.
+- Portfolio risk v1: `smr_portfolio_risk.py` checks single-name, theme, market, sector, and daily new-position limits; candidate builder now consumes `portfolio_risk` and can downsize or downgrade candidates before writing ledger.
+- Smoke validation: `validate_phase5_paper_portfolio_smoke.py` still finds the complete `phase4_live__NVDA` chain: `pending_human_review -> approved_paper -> paper_order__phase4_live__NVDA -> open paper position`.
+- Guardrail kept: Phase 6 did not add new complex agents and did not relax promotion rules to force additional pending candidates.
