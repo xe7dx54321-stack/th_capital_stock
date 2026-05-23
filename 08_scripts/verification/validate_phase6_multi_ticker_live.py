@@ -24,6 +24,7 @@ from smr_data_health import refresh_system_data_health
 from smr_decision import ensure_decision_tables
 from smr_evidence_quality import update_evidence_quality_scores
 from smr_fundamentals import build_fundamentals_snapshot
+from smr_live_run_history import compare_live_run_history, latest_live_run_history, record_live_run_history
 from smr_news_ingestion import export_news_to_evidence, ingest_yahoo_finance_news, update_news_health_rows
 from smr_filings_ingestion import export_filings_to_evidence, update_filings_health_rows
 from smr_paper_portfolio import ensure_paper_portfolio_tables
@@ -420,6 +421,46 @@ def build_ticker_result(
     }
 
 
+def compare_with_previous_run(previous: dict[str, Any], current_results: list[dict[str, Any]]) -> dict[str, Any]:
+    previous_status = (previous.get("per_ticker_status") or {}) if previous else {}
+    current_status = {
+        str(item.get("ticker") or "").upper(): {
+            "status": item.get("status"),
+            "action": item.get("action"),
+            "summary_bucket": item.get("summary_bucket"),
+            "blocking_factors": (item.get("promotion_debugger") or {}).get("blocking_factors") or [],
+        }
+        for item in current_results
+    }
+    improved: list[str] = []
+    worsened: list[str] = []
+    repeated_blockers: dict[str, list[str]] = {}
+    for ticker, current_item in current_status.items():
+        previous_item = previous_status.get(ticker) or {}
+        current_bucket = str(current_item.get("summary_bucket") or current_item.get("status") or "")
+        previous_bucket = str(previous_item.get("summary_bucket") or previous_item.get("status") or "")
+        if previous_bucket and previous_bucket != current_bucket:
+            if current_bucket == "pending_human_review":
+                improved.append(ticker)
+            elif previous_bucket == "pending_human_review":
+                worsened.append(ticker)
+            elif current_bucket in {"candidate_shadow", "observation_only"} and previous_bucket not in {"candidate_shadow", "observation_only"}:
+                worsened.append(ticker)
+            else:
+                improved.append(ticker)
+        blockers = [str(item.get("code") or item.get("detail") or "").strip() for item in current_item.get("blocking_factors") or [] if item]
+        if blockers and ticker in previous_status:
+            repeated_blockers[ticker] = blockers
+    return {
+        "previous_run_id": previous.get("run_id"),
+        "improved": improved,
+        "worsened": worsened,
+        "repeated_blockers": repeated_blockers,
+        "ticker_count": len(current_results),
+        "previous_ticker_count": previous.get("ticker_count") if previous else None,
+    }
+
+
 def summarize(results: list[dict[str, Any]]) -> dict[str, Any]:
     pending = [item for item in results if item.get("status") == "pending_human_review"]
     pending_with_live = [item for item in pending if item.get("live_filing_evidence", 0) >= 1 or item.get("live_news_evidence", 0) >= 1]
@@ -501,6 +542,8 @@ def main() -> int:
     parser.add_argument("--tickers", default=None)
     parser.add_argument("--days", type=int, default=180)
     parser.add_argument("--skip-fetch", action="store_true")
+    parser.add_argument("--save-run-history", action="store_true")
+    parser.add_argument("--compare-last-run", action="store_true")
     parser.add_argument("--timeout", type=int, default=240)
     parser.add_argument("--db-path", default=str(DB_PATH))
     parser.add_argument("--full-output", action="store_true")
@@ -577,6 +620,8 @@ def main() -> int:
         for item in results:
             item["summary_bucket"] = bucket_result(item)
         summary = summarize(results)
+        previous_history = latest_live_run_history(conn, watchlist_id=watchlist_name) if args.compare_last_run or args.save_run_history else {}
+        comparison = compare_with_previous_run(previous_history, results) if previous_history else {}
         payload = {
             "run_id": run_id,
             "generated_at": now_ts(),
@@ -586,7 +631,23 @@ def main() -> int:
             "ingestion": compact_ingestion(ingestion),
             "summary": summary,
             "tickers": results,
+            "run_history": {},
         }
+        if args.compare_last_run:
+            payload["run_history"]["compare_last_run"] = comparison
+            payload["run_history"]["previous_run"] = previous_history
+        if args.save_run_history:
+            run_history_record = record_live_run_history(
+                conn,
+                run_id=run_id,
+                watchlist_id=watchlist_name,
+                ticker_rows=results,
+                comparison=comparison,
+                summary=summary,
+            )
+            payload["run_history"]["current_run"] = run_history_record
+        elif comparison:
+            payload["run_history"]["compare_last_run"] = comparison
         register_snapshot(
             conn,
             entity_type="phase6_multi_ticker_live_validation",

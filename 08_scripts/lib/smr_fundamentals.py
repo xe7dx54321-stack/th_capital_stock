@@ -11,6 +11,7 @@ from typing import Any
 
 from smr_claim_graph import ensure_claim_graph_tables, upsert_evidence
 from smr_filing_chunk_selector import select_relevant_document_chunks
+from smr_financial_table_extraction import FIELD_ORDER, default_currency_for_market, extract_field_level_fundamentals
 from smr_wiki import generate_execution_id, now_ts
 
 
@@ -68,6 +69,8 @@ def ensure_fundamentals_tables(conn: sqlite3.Connection) -> None:
             freshness_status TEXT,
             confidence REAL,
             missing_fields_json TEXT NOT NULL DEFAULT '[]',
+            field_details_json TEXT NOT NULL DEFAULT '{}',
+            field_missing_reasons_json TEXT NOT NULL DEFAULT '{}',
             created_at TEXT NOT NULL,
             metadata_json TEXT NOT NULL DEFAULT '{}'
         );
@@ -76,6 +79,14 @@ def ensure_fundamentals_tables(conn: sqlite3.Connection) -> None:
         ON fundamentals_snapshot(ticker, created_at DESC);
         """
     )
+    columns = {row[1] for row in conn.execute("PRAGMA table_info(fundamentals_snapshot)").fetchall()}
+    additions = {
+        "field_details_json": "TEXT NOT NULL DEFAULT '{}'",
+        "field_missing_reasons_json": "TEXT NOT NULL DEFAULT '{}'",
+    }
+    for column, ddl in additions.items():
+        if column not in columns:
+            conn.execute(f"ALTER TABLE fundamentals_snapshot ADD COLUMN {column} {ddl}")
 
 
 def relation_exists(conn: sqlite3.Connection, name: str) -> bool:
@@ -305,6 +316,127 @@ def build_factor_fundamentals(conn: sqlite3.Connection, ticker: str) -> tuple[di
     return values, {"source": "factor_daily", "factor_trade_date": values["period"]}
 
 
+def _normalize_extract_value(value: Any) -> float | None:
+    if value in (None, "", "None", "-", "--", "nan"):
+        return None
+    if isinstance(value, (int, float)):
+        return float(value)
+    text = str(value).replace(",", "").strip()
+    try:
+        return float(text)
+    except ValueError:
+        return None
+
+
+def _field_detail_defaults(field: str, market: str | None, period: str | None, missing_reason: str) -> dict[str, Any]:
+    return {
+        "field": field,
+        "extracted_value": None,
+        "unit": default_currency_for_market(market),
+        "currency": default_currency_for_market(market),
+        "period": period,
+        "source_evidence_id": None,
+        "source_evidence_ids": [],
+        "confidence": 0.0,
+        "missing_reason": missing_reason,
+        "source_text": "",
+        "chunk_id": None,
+        "chunk_section_type": None,
+        "method": "table_window",
+        "warnings": [],
+    }
+
+
+def _merge_field_details(
+    market: str | None,
+    base_period: str | None,
+    extracted: dict[str, Any] | None,
+    existing_values: dict[str, Any],
+) -> tuple[dict[str, Any], dict[str, Any], list[str], dict[str, str], list[str], float, str]:
+    field_details: dict[str, Any] = {}
+    field_values: dict[str, Any] = {}
+    missing_fields: list[str] = []
+    missing_reasons: dict[str, str] = {}
+    evidence_ids: list[str] = []
+    confidence_buckets: list[float] = []
+    source_quality = "secondary"
+    freshness_status = "missing"
+    extracted = extracted or {}
+    extracted_details = extracted.get("field_details") or {}
+    extracted_values = extracted.get("field_values") or {}
+    field_missing_reasons = extracted.get("field_missing_reasons") or {}
+
+    for field in FUNDAMENTAL_FIELDS:
+        detail = extracted_details.get(field)
+        if detail is None:
+            detail = _field_detail_defaults(field, market, base_period, field_missing_reasons.get(field, "field_not_found"))
+        detail = dict(detail)
+        if detail.get("extracted_value") is None and existing_values.get(field) is not None:
+            detail["extracted_value"] = existing_values[field]
+            detail["unit"] = detail.get("unit") or default_currency_for_market(market)
+            detail["currency"] = detail.get("currency") or default_currency_for_market(market)
+            detail["confidence"] = max(float(detail.get("confidence") or 0.0), 0.35)
+            detail["missing_reason"] = None
+            if detail.get("source_evidence_id"):
+                evidence_ids.append(str(detail["source_evidence_id"]))
+        if detail.get("extracted_value") is not None:
+            field_values[field] = _normalize_extract_value(detail.get("extracted_value"))
+            if field_values[field] is None:
+                detail["missing_reason"] = "parse_failed"
+                missing_fields.append(field)
+                missing_reasons[field] = "parse_failed"
+            else:
+                confidence_buckets.append(float(detail.get("confidence") or 0.0))
+                source_quality = "primary"
+                if detail.get("source_evidence_id"):
+                    evidence_ids.append(str(detail["source_evidence_id"]))
+        else:
+            missing_fields.append(field)
+            missing_reasons[field] = detail.get("missing_reason") or field_missing_reasons.get(field) or "field_not_found"
+        field_details[field] = detail
+
+    evidence_ids = list(dict.fromkeys(item for item in evidence_ids if item))
+    present_count = len([field for field in FUNDAMENTAL_FIELDS if field_values.get(field) is not None])
+    if extracted and extracted.get("freshness_status") == "fresh":
+        freshness_status = "fresh"
+    elif present_count >= 4:
+        freshness_status = "fresh"
+    elif present_count >= 1:
+        freshness_status = "degraded"
+    elif extracted and extracted.get("freshness_status") == "degraded":
+        freshness_status = "degraded"
+    elif extracted and extracted.get("freshness_status") == "stale":
+        freshness_status = "stale"
+    else:
+        freshness_status = "missing"
+    confidence = round(min(0.95, max(confidence_buckets or [0.0]) if confidence_buckets else 0.0), 3) if confidence_buckets else 0.0
+    if not confidence and extracted:
+        confidence = float(extracted.get("confidence") or 0.0)
+    if present_count:
+        confidence = round(min(0.95, max(confidence, 0.25 + present_count / len(FUNDAMENTAL_FIELDS) * 0.5)), 3)
+    return field_details, field_values, missing_fields, missing_reasons, evidence_ids, confidence, freshness_status
+
+
+def _annotate_snapshot_with_relationships(snapshot: dict[str, Any]) -> None:
+    revenue = snapshot.get("revenue")
+    gross_profit = snapshot.get("gross_profit")
+    operating_income = snapshot.get("operating_income")
+    net_income = snapshot.get("net_income")
+    equity = snapshot.get("shareholders_equity")
+    if revenue not in (None, 0) and gross_profit not in (None, 0):
+        snapshot["gross_margin"] = gross_profit / revenue
+    if revenue not in (None, 0) and operating_income not in (None, 0):
+        snapshot["operating_margin"] = operating_income / revenue
+    if revenue not in (None, 0) and net_income not in (None, 0):
+        snapshot["net_margin"] = net_income / revenue
+    if equity not in (None, 0) and net_income not in (None, 0):
+        snapshot["roe"] = net_income / equity
+    if equity not in (None, 0) and operating_income not in (None, 0):
+        snapshot["roic"] = operating_income / equity
+    if snapshot.get("operating_cash_flow") not in (None, 0) and snapshot.get("capex") not in (None, 0):
+        snapshot["free_cash_flow"] = snapshot["operating_cash_flow"] - abs(snapshot["capex"])
+
+
 def infer_from_filing_text(conn: sqlite3.Connection, ticker: str) -> tuple[dict[str, Any], dict[str, Any]]:
     if not relation_exists(conn, "document_chunks"):
         return {}, {"source": "filing_chunks", "matched_chunks": 0}
@@ -428,15 +560,42 @@ def build_fundamentals_snapshot(
             "relevant_selector": filing_metadata,
             "fallback_used": True,
         }
-    values = {**filing_values, **{key: value for key, value in values.items() if value is not None}}
-    metadata = {**metadata, "filing_inference": filing_metadata, "errors": errors}
-    source_evidence_ids = latest_filing_evidence_ids(conn, ticker)
+    filing_field_snapshot = extract_field_level_fundamentals(
+        conn,
+        ticker,
+        market=market,
+        limit=32,
+        stale_after_days=365,
+    )
+    existing_values = {field: value for field, value in values.items() if value is not None}
+    field_details, field_values, missing_fields, missing_reasons, source_evidence_ids, confidence, freshness_status = _merge_field_details(
+        market,
+        filing_metadata.get("period") or values.get("period") or filing_field_snapshot.get("latest_anchor"),
+        filing_field_snapshot,
+        existing_values,
+    )
+    for field, value in filing_values.items():
+        if value is not None and field_values.get(field) is None:
+            field_values[field] = value
+            field_details[field]["extracted_value"] = value
+            field_details[field]["confidence"] = max(float(field_details[field].get("confidence") or 0.0), 0.35)
+            field_details[field]["missing_reason"] = None
+    values = {**field_values, **{key: value for key, value in values.items() if value is not None}}
+    _annotate_snapshot_with_relationships(values)
+    metadata = {
+        **metadata,
+        "filing_inference": filing_metadata,
+        "field_extraction": filing_field_snapshot,
+        "errors": errors,
+    }
     if filing_metadata.get("evidence_ids"):
         source_evidence_ids = list(dict.fromkeys(list(filing_metadata["evidence_ids"]) + source_evidence_ids))
-    missing_fields = [field for field in FUNDAMENTAL_FIELDS[:13] if values.get(field) is None]
-    present_count = len([field for field in FUNDAMENTAL_FIELDS[:13] if values.get(field) is not None])
-    confidence = round(min(0.95, 0.25 + present_count / 13 * 0.65 + (0.05 if source_evidence_ids else 0.0)), 3)
-    freshness_status = "fresh" if present_count >= 4 else ("degraded" if present_count >= 1 else "missing")
+    source_evidence_ids = list(dict.fromkeys(source_evidence_ids))
+    present_count = len([field for field in FUNDAMENTAL_FIELDS if values.get(field) is not None])
+    confidence = round(min(0.95, max(confidence, 0.25 + present_count / len(FUNDAMENTAL_FIELDS) * 0.5 + (0.05 if source_evidence_ids else 0.0))), 3)
+    if freshness_status == "missing" and present_count >= 1:
+        freshness_status = "degraded"
+    effective_source_quality = "primary" if source_evidence_ids else source_quality
     snapshot_id = generate_execution_id("fundamentals")
     created_at = now_ts()
     snapshot = {
@@ -448,10 +607,12 @@ def build_fundamentals_snapshot(
         "fiscal_quarter": values.get("fiscal_quarter"),
         **{field: values.get(field) for field in FUNDAMENTAL_FIELDS},
         "source_evidence_ids": source_evidence_ids,
-        "source_quality": source_quality if present_count else "missing",
+        "source_quality": effective_source_quality if present_count else "missing",
         "freshness_status": freshness_status,
         "confidence": confidence if present_count else 0.0,
         "missing_fields": missing_fields,
+        "field_details": field_details,
+        "field_missing_reasons": missing_reasons,
         "created_at": created_at,
         "metadata": metadata,
     }
@@ -461,12 +622,12 @@ def build_fundamentals_snapshot(
             snapshot_id, ticker, market, period, fiscal_year, fiscal_quarter,
             {', '.join(FUNDAMENTAL_FIELDS)},
             source_evidence_ids_json, source_quality, freshness_status, confidence,
-            missing_fields_json, created_at, metadata_json
+            missing_fields_json, field_details_json, field_missing_reasons_json, created_at, metadata_json
         )
         VALUES (
             ?, ?, ?, ?, ?, ?,
             {', '.join('?' for _ in FUNDAMENTAL_FIELDS)},
-            ?, ?, ?, ?, ?, ?, ?
+            ?, ?, ?, ?, ?, ?, ?, ?, ?
         )
         """,
         (
@@ -482,6 +643,8 @@ def build_fundamentals_snapshot(
             snapshot["freshness_status"],
             snapshot["confidence"],
             json.dumps(missing_fields, ensure_ascii=False),
+            json.dumps(field_details, ensure_ascii=False, sort_keys=True, default=str),
+            json.dumps(missing_reasons, ensure_ascii=False, sort_keys=True, default=str),
             created_at,
             json.dumps(metadata, ensure_ascii=False, sort_keys=True, default=str),
         ),
@@ -498,7 +661,7 @@ def latest_fundamentals_snapshot(conn: sqlite3.Connection, ticker: str) -> dict[
         SELECT snapshot_id, ticker, market, period, fiscal_year, fiscal_quarter,
                {', '.join(FUNDAMENTAL_FIELDS)},
                source_evidence_ids_json, source_quality, freshness_status, confidence,
-               missing_fields_json, created_at, metadata_json
+               missing_fields_json, field_details_json, field_missing_reasons_json, created_at, metadata_json
         FROM fundamentals_snapshot
         WHERE ticker=?
         ORDER BY datetime(created_at) DESC, id DESC
@@ -521,11 +684,15 @@ def latest_fundamentals_snapshot(conn: sqlite3.Connection, ticker: str) -> dict[
         "freshness_status",
         "confidence",
         "missing_fields_json",
+        "field_details_json",
+        "field_missing_reasons_json",
         "created_at",
         "metadata_json",
     ]
     data = dict(zip(keys, row))
     data["source_evidence_ids"] = loads_json(data.pop("source_evidence_ids_json"), [])
     data["missing_fields"] = loads_json(data.pop("missing_fields_json"), [])
+    data["field_details"] = loads_json(data.pop("field_details_json"), {})
+    data["field_missing_reasons"] = loads_json(data.pop("field_missing_reasons_json"), {})
     data["metadata"] = loads_json(data.pop("metadata_json"), {})
     return data

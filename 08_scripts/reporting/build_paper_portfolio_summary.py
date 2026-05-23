@@ -139,6 +139,23 @@ def summarize_exposure(rows: list[dict[str, Any]], key: str) -> dict[str, float]
     return {bucket: round(value, 4) for bucket, value in totals.items()}
 
 
+def summarize_total_exposure(rows: list[dict[str, Any]]) -> float:
+    return round(sum(float(row.get("position_pct") or 0.0) for row in rows), 4)
+
+
+def summarize_pending_exposure(conn: sqlite3.Connection) -> float:
+    if not _table_exists(conn, "decision_ledger"):
+        return 0.0
+    row = conn.execute(
+        """
+        SELECT SUM(COALESCE(suggested_position_pct, 0))
+        FROM decision_ledger
+        WHERE status='pending_human_review'
+        """
+    ).fetchone()
+    return round(float(row[0] or 0.0), 4) if row else 0.0
+
+
 def render_markdown(payload: dict[str, Any]) -> str:
     lines = [
         "# Paper Portfolio Summary",
@@ -146,6 +163,9 @@ def render_markdown(payload: dict[str, Any]) -> str:
         f"- generated_at: `{payload.get('generated_at')}`",
         f"- stale_price_count: `{payload.get('stale_price_count')}`",
         f"- open_position_count: `{len(payload.get('positions') or [])}`",
+        f"- current_exposure: `{payload.get('current_exposure')}`",
+        f"- pending_exposure_if_all_approved: `{payload.get('pending_exposure_if_all_approved')}`",
+        f"- exposure_after_risk_adjusted_sizing: `{payload.get('exposure_after_risk_adjusted_sizing')}`",
         "",
         "## Exposures",
         "",
@@ -190,6 +210,9 @@ def main() -> int:
             "market": summarize_exposure(positions, "market"),
             "sector": summarize_exposure(positions, "sector"),
         }
+        current_exposure = summarize_total_exposure(positions)
+        pending_exposure_if_all_approved = summarize_pending_exposure(conn)
+        exposure_after_risk_adjusted_sizing = round(current_exposure + pending_exposure_if_all_approved, 4)
         stale_price_count = sum(1 for row in positions if row.get("price_status") == "stale")
         payload = {
             "generated_at": now_ts(),
@@ -197,6 +220,9 @@ def main() -> int:
             "stale_price_count": stale_price_count,
             "positions": positions,
             "exposures": exposures,
+            "current_exposure": current_exposure,
+            "pending_exposure_if_all_approved": pending_exposure_if_all_approved,
+            "exposure_after_risk_adjusted_sizing": exposure_after_risk_adjusted_sizing,
             "price_status_counts": dict(Counter(row.get("price_status") or "missing" for row in positions)),
         }
         output_dir = project_path("06_reports", "adhoc", "phase6")

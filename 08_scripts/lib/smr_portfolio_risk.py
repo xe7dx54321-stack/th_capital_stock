@@ -207,6 +207,16 @@ def _group_exposure(rows: list[dict[str, Any]], key: str) -> dict[str, float]:
     return {bucket: round(value, 4) for bucket, value in totals.items()}
 
 
+def _projected_bucket_map(
+    current_map: dict[str, float],
+    bucket: str,
+    added_pct: float,
+) -> dict[str, float]:
+    projected = dict(current_map)
+    projected[bucket] = round(projected.get(bucket, 0.0) + added_pct, 4)
+    return projected
+
+
 def evaluate_portfolio_risk(
     conn: sqlite3.Connection,
     ticker: str,
@@ -267,6 +277,7 @@ def evaluate_portfolio_risk(
     minimum_fix_path: list[str] = []
     status = "pass"
     recommended_action = "keep"
+    risk_adjusted_sizing = round(base_suggested, 4)
     if new_position_count >= new_position_limit:
         status = "block"
         recommended_action = "degrade"
@@ -320,6 +331,7 @@ def evaluate_portfolio_risk(
     elif allowed_position_pct < base_suggested:
         status = "warn"
         recommended_action = "downsize"
+        risk_adjusted_sizing = round(allowed_position_pct, 4)
         blocking_factors.append(
             {
                 "code": "RISK_HEADROOM",
@@ -343,6 +355,12 @@ def evaluate_portfolio_risk(
         "market": round(market_pct + base_suggested, 4),
         "sector": round(sector_pct + base_suggested, 4),
     }
+    projected_risk_adjusted = {
+        "single_name": round(single_name_pct + risk_adjusted_sizing, 4),
+        "theme": round(theme_pct + risk_adjusted_sizing, 4),
+        "market": round(market_pct + risk_adjusted_sizing, 4),
+        "sector": round(sector_pct + risk_adjusted_sizing, 4),
+    }
     limits = {
         "single_name": float(policy["max_single_name_exposure_pct"]),
         "theme": float(policy["max_theme_exposure_pct"]),
@@ -363,6 +381,13 @@ def evaluate_portfolio_risk(
         if allowed_position_pct <= 0.0:
             allowed_position_pct = 0.0
             recommended_max_position_pct = 0.0
+            risk_adjusted_sizing = 0.0
+    projected_after_sizing = projected_risk_adjusted if status != "block" else {
+        "single_name": round(single_name_pct, 4),
+        "theme": round(theme_pct, 4),
+        "market": round(market_pct, 4),
+        "sector": round(sector_pct, 4),
+    }
     return {
         "ticker": ticker,
         "market": market,
@@ -374,10 +399,12 @@ def evaluate_portfolio_risk(
         "recommended_action": recommended_action,
         "recommended_position_pct": allowed_position_pct,
         "recommended_max_position_pct": recommended_max_position_pct,
+        "risk_adjusted_sizing": risk_adjusted_sizing,
         "base_position_pct": round(base_suggested, 4),
         "base_max_position_pct": round(base_max, 4),
         "exposure": exposure,
         "projected_exposure": projected,
+        "projected_exposure_after_sizing": projected_after_sizing,
         "limits": limits,
         "blocking_factors": blocking_factors,
         "minimum_fix_path": minimum_fix_path,
