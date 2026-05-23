@@ -19,6 +19,7 @@ if str(LIB_DIR) not in sys.path:
 
 from smr_agents import DB_PATH
 from smr_bear_case import build_bear_case
+from smr_blocker_taxonomy import minimum_fix_path_from_blockers, normalize_blockers
 from smr_claim_graph import claim_graph_summary, link_claim_evidence, upsert_claim
 from smr_data_health import refresh_system_data_health
 from smr_decision import ensure_decision_tables
@@ -363,6 +364,19 @@ def build_ticker_result(
         claim_graph=claim_graph,
         data_health=data_health,
     )
+    structured_blockers = normalize_blockers(
+        promotion_debugger.get("blocking_factors") or [],
+        context={
+            "proxy_quality": proxy.get("proxy_quality"),
+            "fundamentals_missing_fields": fundamentals.get("missing_fields") or [],
+        },
+    )
+    if not structured_blockers:
+        structured_blockers = normalize_blockers(
+            portfolio_risk.get("blocking_factors") or [],
+            context={"proxy_quality": proxy.get("proxy_quality")},
+        )
+    structured_fix_path = minimum_fix_path_from_blockers(structured_blockers)
     candidate = build_recommendation_candidate(
         conn,
         recommendation_id=f"phase6_live__{ticker}",
@@ -416,6 +430,8 @@ def build_ticker_result(
         "review_queue_visible": review_queue_visible(conn, f"phase6_live__{ticker}"),
         "missing_requirements": promotion.missing_requirements,
         "required_fixes": promotion.required_fixes,
+        "blocking_factors": structured_blockers,
+        "minimum_fix_path": structured_fix_path,
         "promotion_debugger": promotion_debugger,
         "summary_bucket": None,
     }
@@ -428,7 +444,7 @@ def compare_with_previous_run(previous: dict[str, Any], current_results: list[di
             "status": item.get("status"),
             "action": item.get("action"),
             "summary_bucket": item.get("summary_bucket"),
-            "blocking_factors": (item.get("promotion_debugger") or {}).get("blocking_factors") or [],
+            "blocking_factors": item.get("blocking_factors") or (item.get("promotion_debugger") or {}).get("blocking_factors") or [],
         }
         for item in current_results
     }
@@ -528,6 +544,8 @@ def compact_ticker_result(item: dict[str, Any]) -> dict[str, Any]:
         "review_queue_visible": item.get("review_queue_visible"),
         "missing_requirements": item.get("missing_requirements") or promotion.get("missing_requirements") or [],
         "required_fixes": item.get("required_fixes") or promotion.get("required_fixes") or [],
+        "blocking_factors": item.get("blocking_factors") or [],
+        "minimum_fix_path": item.get("minimum_fix_path") or [],
         "promotion_debugger": {
             "blocking_factors": (item.get("promotion_debugger") or {}).get("blocking_factors") or [],
             "near_pass_items": (item.get("promotion_debugger") or {}).get("near_pass_items") or [],

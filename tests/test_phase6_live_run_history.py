@@ -52,6 +52,27 @@ class Phase6LiveRunHistoryTests(unittest.TestCase):
         self.assertEqual(current["pending_count"], 1)
         self.assertEqual(current["candidate_shadow_count"], 1)
 
+    def test_history_stores_structured_stable_blockers(self):
+        conn = self.make_conn()
+        current = record_live_run_history(
+            conn,
+            run_id="run-structured",
+            watchlist_id="ai_core",
+            ticker_rows=[
+                {
+                    "ticker": "09988.HK",
+                    "status": "candidate_shadow",
+                    "promotion_debugger": {"blocking_factors": [{"code": "consensus_proxy_quality"}]},
+                    "fundamentals_missing_fields": ["gross_profit"],
+                }
+            ],
+        )
+
+        blocker = current["blocking_factors"]["09988.HK"][0]
+
+        self.assertEqual(blocker["code"], "PROXY_INVALID")
+        self.assertIn("minimum_fix_path", current["per_ticker_status"]["09988.HK"])
+
 
 if __name__ == "__main__":
     unittest.main()

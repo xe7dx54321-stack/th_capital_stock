@@ -11,6 +11,7 @@ if str(LIB_DIR) not in sys.path:
 
 from smr_claim_graph import ensure_claim_graph_tables
 from smr_filings_ingestion import seed_filing_document
+from smr_financial_table_extraction import extract_field_level_fundamentals
 from smr_fundamentals import build_fundamentals_snapshot, latest_fundamentals_snapshot
 from smr_paper_portfolio import ensure_paper_portfolio_tables
 from smr_portfolio_risk import evaluate_portfolio_risk
@@ -130,6 +131,65 @@ class Phase7FinancialTableExtractionTests(unittest.TestCase):
         self.assertIn("projected_exposure_after_sizing", result)
         self.assertIn("risk_adjusted_sizing", result)
         self.assertGreaterEqual(result["projected_exposure"]["single_name"], 0.0)
+
+    def test_phase8_hk_synonyms_extract_real_chinese_fields(self):
+        conn = self.make_conn()
+        today = datetime.now().strftime("%Y-%m-%d")
+        seed_filing_document(
+            conn,
+            ticker="09988.HK",
+            title="09988.HK annual results",
+            body=(
+                "单位：人民币百万元\n"
+                "客户合同收入 941,168\n"
+                "毛利 365,022\n"
+                "经营利润 165,028\n"
+                "本公司权益持有人应占盈利 130,123\n"
+                "每股基本盈利 8.21\n"
+                "每股摊薄盈利 8.05\n"
+                "经营活动所得现金净额 198,000\n"
+                "银行结余及现金 600,000\n"
+                "借款 180,000\n"
+                "本公司权益持有人应占权益 1,200,000\n"
+            ),
+            source_key="hkex_announcement",
+            market="H",
+            filing_type="annual_results",
+            published_at=today,
+        )
+
+        extracted = extract_field_level_fundamentals(conn, "09988.HK", market="H")
+
+        self.assertIsNotNone(extracted["field_values"].get("revenue"))
+        self.assertIsNotNone(extracted["field_values"].get("net_income"))
+        self.assertIsNotNone(extracted["field_values"].get("eps_basic"))
+        self.assertEqual(extracted["field_details"]["revenue"]["currency"], "CNY")
+        self.assertTrue(extracted["field_details"]["revenue"]["source_evidence_id"])
+
+    def test_phase8_percent_not_amount_sanity_check(self):
+        conn = self.make_conn()
+        today = datetime.now().strftime("%Y-%m-%d")
+        seed_filing_document(
+            conn,
+            ticker="00700.HK",
+            title="00700.HK results",
+            body=(
+                "单位：港币百万元\n"
+                "毛利率 48%\n"
+                "收入 660,000\n"
+                "本公司拥有人应占利润 115,000\n"
+            ),
+            source_key="hkex_announcement",
+            market="H",
+            filing_type="annual_results",
+            published_at=today,
+        )
+
+        extracted = extract_field_level_fundamentals(conn, "00700.HK", market="H")
+
+        self.assertIsNone(extracted["field_values"].get("gross_profit"))
+        self.assertIn(extracted["field_missing_reasons"]["gross_profit"], {"field_not_found", "parse_failed"})
+        self.assertIsNotNone(extracted["field_values"].get("revenue"))
 
 
 if __name__ == "__main__":

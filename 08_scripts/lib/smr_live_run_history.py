@@ -8,6 +8,7 @@ import sqlite3
 from datetime import datetime
 from typing import Any
 
+from smr_blocker_taxonomy import minimum_fix_path_from_blockers, normalize_blockers
 from smr_registry import ensure_task_registry_tables, register_snapshot
 from smr_wiki import now_ts
 
@@ -65,34 +66,47 @@ def record_live_run_history(
 ) -> dict[str, Any]:
     ensure_live_run_history_tables(conn)
     run_time = now_ts()
+    normalized_rows: list[dict[str, Any]] = []
+    for item in ticker_rows:
+        context = {
+            "proxy_quality": item.get("proxy_quality"),
+            "fundamentals_missing_fields": item.get("fundamentals_missing_fields") or item.get("missing_fields") or [],
+        }
+        raw_factors = item.get("blocking_factors")
+        if raw_factors is None:
+            raw_factors = (item.get("promotion_debugger") or {}).get("blocking_factors") or []
+        if not raw_factors:
+            raw_factors = (item.get("portfolio_risk") or {}).get("blocking_factors") or []
+        factors = normalize_blockers(raw_factors, context=context)
+        item_copy = dict(item)
+        item_copy["blocking_factors"] = factors
+        item_copy["minimum_fix_path"] = item.get("minimum_fix_path") or minimum_fix_path_from_blockers(factors)
+        normalized_rows.append(item_copy)
     per_ticker_status = {
         str(item.get("ticker") or f"ticker_{index}"): {
             "status": item.get("status"),
             "action": item.get("action"),
             "summary_bucket": item.get("summary_bucket"),
-            "blocking_factors": (item.get("promotion_debugger") or {}).get("blocking_factors") or [],
-            "minimum_fix_path": (item.get("promotion_debugger") or {}).get("minimum_fix_path") or [],
+            "blocking_factors": item.get("blocking_factors") or [],
+            "minimum_fix_path": item.get("minimum_fix_path") or [],
             "missing_requirements": item.get("missing_requirements") or [],
         }
-        for index, item in enumerate(ticker_rows, start=1)
+        for index, item in enumerate(normalized_rows, start=1)
     }
     blocking_factors: dict[str, list[dict[str, Any]]] = {}
-    for item in ticker_rows:
+    for item in normalized_rows:
         ticker = str(item.get("ticker") or "").upper()
-        factors = (item.get("promotion_debugger") or {}).get("blocking_factors") or []
-        if not factors:
-            factors = (item.get("portfolio_risk") or {}).get("blocking_factors") or []
-        blocking_factors[ticker] = factors
-    pending_count = _count_bucket(ticker_rows, "pending_human_review")
-    candidate_shadow_count = _count_bucket(ticker_rows, "candidate_shadow")
-    observation_count = _count_bucket(ticker_rows, "observation_only", "observation", "watch")
-    blocked_count = _count_bucket(ticker_rows, "blocked_by_data", "blocked_by_evidence")
-    failed_count = _count_bucket(ticker_rows, "failed")
+        blocking_factors[ticker] = item.get("blocking_factors") or []
+    pending_count = _count_bucket(normalized_rows, "pending_human_review")
+    candidate_shadow_count = _count_bucket(normalized_rows, "candidate_shadow")
+    observation_count = _count_bucket(normalized_rows, "observation_only", "observation", "watch")
+    blocked_count = _count_bucket(normalized_rows, "blocked_by_data", "blocked_by_evidence")
+    failed_count = _count_bucket(normalized_rows, "failed")
     payload = {
         "run_id": run_id,
         "run_time": run_time,
         "watchlist_id": watchlist_id,
-        "ticker_count": len(ticker_rows),
+        "ticker_count": len(normalized_rows),
         "pending_count": pending_count,
         "candidate_shadow_count": candidate_shadow_count,
         "observation_count": observation_count,
@@ -130,7 +144,7 @@ def record_live_run_history(
             run_id,
             run_time,
             watchlist_id,
-            len(ticker_rows),
+            len(normalized_rows),
             pending_count,
             candidate_shadow_count,
             observation_count,

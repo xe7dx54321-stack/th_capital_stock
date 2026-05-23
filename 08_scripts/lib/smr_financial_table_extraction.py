@@ -45,11 +45,37 @@ FIELD_SYNONYMS: dict[str, list[str]] = {
     "shareholders_equity": ["股东权益", "所有者权益", "归属于母公司股东权益", "equity attributable to owners", "shareholders' equity", "stockholders' equity", "total equity", "本公司擁有人應佔權益"],
 }
 
+HK_CN_FIELD_SYNONYMS: dict[str, list[str]] = {
+    "revenue": ["收益", "收入", "营业收入", "客户合同收入", "主营业务收入", "營業收入", "收益總額", "收入总额"],
+    "gross_profit": ["毛利", "毛利润", "毛利额", "毛利總額", "毛利总额"],
+    "operating_income": ["经营盈利", "经营利润", "營業利潤", "经营溢利", "经营活动利润", "除税前利润"],
+    "net_income": ["本公司权益持有人应占盈利", "本公司拥有人应占利润", "归属于公司股东的利润", "归母净利润", "净利润", "純利", "淨利潤"],
+    "eps_basic": ["每股基本盈利", "基本每股收益", "每股基本收益", "基本每股盈利"],
+    "eps_diluted": ["每股摊薄盈利", "摊薄每股收益", "稀释每股收益", "每股攤薄盈利"],
+    "operating_cash_flow": ["经营活动所得现金净额", "经营活动产生的现金流量净额", "经营活动现金流量净额", "经营活动所得现金流量净额"],
+    "capex": ["购买物业及设备", "购买物业、厂房及设备", "购建固定资产、无形资产和其他长期资产支付的现金", "资本开支", "资本支出", "购买固定资产"],
+    "cash_and_equivalents": ["现金及现金等价物", "现金及现金等价物项目", "银行结余及现金", "现金及银行结余", "货币资金"],
+    "total_debt": ["借款", "有息负债", "债务总额", "总债务", "银行借款", "计息借款"],
+    "shareholders_equity": ["权益总额", "本公司权益持有人应占权益", "股东权益", "所有者权益", "归属于母公司股东权益"],
+}
+
+for _field, _synonyms in HK_CN_FIELD_SYNONYMS.items():
+    FIELD_SYNONYMS.setdefault(_field, [])
+    for _synonym in _synonyms:
+        if _synonym not in FIELD_SYNONYMS[_field]:
+            FIELD_SYNONYMS[_field].append(_synonym)
+
 DEFAULT_CURRENCY_BY_MARKET = {"A": "CNY", "H": "HKD", "US": "USD"}
 NUMERIC_RE = re.compile(r"(?<![\w.])-?\(?\d{1,3}(?:,\d{3})*(?:\.\d+)?\)?|-?\d+(?:\.\d+)?")
 YEAR_RE = re.compile(r"^20\d{2}$")
 
 UNIT_PATTERNS: list[tuple[re.Pattern[str], float, str]] = [
+    (re.compile(r"人民币百万元|港币百万元|美元百万元|rmb\s*million|hkd\s*million|us\$?\s*million", re.I), 1_000_000.0, "million"),
+    (re.compile(r"人民币千元|港币千元|美元千元", re.I), 1_000.0, "thousand"),
+    (re.compile(r"百万元|百万", re.I), 1_000_000.0, "million"),
+    (re.compile(r"亿元|億", re.I), 100_000_000.0, "hundred_million"),
+    (re.compile(r"万元|萬", re.I), 10_000.0, "ten_thousand"),
+    (re.compile(r"千元", re.I), 1_000.0, "thousand"),
     (re.compile(r"百万元|million", re.I), 1_000_000.0, "million"),
     (re.compile(r"亿元|billion", re.I), 100_000_000.0, "hundred_million"),
     (re.compile(r"万元|ten\s*thousand", re.I), 10_000.0, "ten_thousand"),
@@ -115,11 +141,11 @@ def detect_unit_context(text: str, market: str | None = None) -> dict[str, Any]:
             multiplier = factor
             break
     currency = default_currency_for_market(market)
-    if "港" in text or "hkd" in lower:
+    if any(token in text for token in ("港", "港币", "港幣", "港元")) or "hkd" in lower:
         currency = "HKD"
-    elif "美元" in text or "usd" in lower or re.search(r"(?<![A-Za-z])\$(?!\d)", text or ""):
+    elif any(token in text for token in ("美元", "美金")) or "usd" in lower or "us$" in lower or re.search(r"(?<![A-Za-z])\$(?!\d)", text or ""):
         currency = "USD"
-    elif "人民币" in text or "rmb" in lower or "cny" in lower:
+    elif any(token in text for token in ("人民币", "人民幣")) or "rmb" in lower or "cny" in lower:
         currency = "CNY"
     if unit_label == "per_share":
         unit = f"{currency}/share"
@@ -149,7 +175,29 @@ def _is_year_like(token: str) -> bool:
 
 def _contains_percentage_noise(text: str) -> bool:
     lower = text.lower()
-    return any(token in lower for token in ("同比", "环比", "yoy", "mom", "%", "百分比", "增长率", "rate"))
+    return any(token in lower for token in ("同比", "环比", "毛利率", "净利率", "利润率", "收益率", "yoy", "mom", "%", "百分比", "增长率", "percentage", "margin", "rate"))
+
+
+def _ratio_line_not_amount(field: str, line: str, window: str, token_match: re.Match[str]) -> bool:
+    if field in {"eps_basic", "eps_diluted", "gross_margin", "operating_margin", "net_margin", "roe", "roic"}:
+        return False
+    prefix = window[: token_match.start()]
+    after_last_percent = prefix.rsplit("%", 1)[-1] if "%" in prefix else prefix
+    has_field_anchor_after_percent = any(
+        syn and syn.lower() in after_last_percent.lower()
+        for syn in FIELD_SYNONYMS.get(field, [])
+    )
+    token_tail = window[token_match.end() : token_match.end() + 4]
+    lower_line = line.lower()
+    if "%" in token_tail:
+        return True
+    if "%" in prefix and any(term in lower_line for term in ("毛利率", "净利率", "利润率", "收益率", "margin", "rate")):
+        return not has_field_anchor_after_percent
+    if field == "gross_profit" and any(term in lower_line for term in ("毛利率", "gross margin")):
+        return not has_field_anchor_after_percent
+    ratio_terms = ("毛利率", "净利率", "利润率", "收益率", "percentage", "margin", "rate", "roe", "roic")
+    amount_terms = ("毛利 ", "gross profit", "经营利润", "营业利润", "净利润", "收入", "revenue")
+    return any(term in lower_line for term in ratio_terms) and not any(term in lower_line for term in amount_terms)
 
 
 def _field_detail_defaults(field: str, market: str | None, period: str | None, missing_reason: str) -> dict[str, Any]:
@@ -201,6 +249,8 @@ def _candidate_from_window(field: str, chunk: dict[str, Any], window: str, line:
     token = token_match.group(0)
     raw_value = _token_value(token)
     if raw_value is None:
+        return None
+    if _ratio_line_not_amount(field, line, window, token_match):
         return None
     if field not in {"eps_basic", "eps_diluted"}:
         if _is_year_like(token) or "%" in token:
@@ -420,4 +470,3 @@ def extract_field_level_fundamentals(
             "market": market,
         },
     }
-

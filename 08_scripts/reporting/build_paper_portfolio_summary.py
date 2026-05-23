@@ -19,6 +19,7 @@ from smr_agents import DB_PATH
 from smr_paper_portfolio import ensure_paper_portfolio_tables, is_price_fresh, latest_price_info, mark_open_positions_to_market
 from smr_phase6_watchlists import watchlist_map
 from smr_paths import project_path
+from smr_portfolio_risk import DEFAULT_PHASE6_RISK_POLICY
 from smr_registry import register_snapshot
 from smr_runlog import log_run
 from smr_wiki import now_ts
@@ -156,6 +157,101 @@ def summarize_pending_exposure(conn: sqlite3.Connection) -> float:
     return round(float(row[0] or 0.0), 4) if row else 0.0
 
 
+def pending_candidate_rows(conn: sqlite3.Connection, watchlist_lookup: dict[str, dict[str, Any]]) -> list[dict[str, Any]]:
+    if not _table_exists(conn, "decision_ledger"):
+        return []
+    rows = conn.execute(
+        """
+        SELECT recommendation_id, ticker, market, action, status, suggested_position_pct,
+               max_position_pct, metadata_json, updated_at
+        FROM decision_ledger
+        WHERE status IN ('pending_human_review', 'candidate_shadow')
+        ORDER BY datetime(updated_at) DESC, id DESC
+        """
+    ).fetchall()
+    results = []
+    for row in rows:
+        metadata = loads_json(row[7], {})
+        candidate = metadata.get("candidate") or {}
+        portfolio_risk = metadata.get("portfolio_risk") or (candidate.get("snapshots") or {}).get("portfolio_risk") or {}
+        ticker = str(row[1] or candidate.get("ticker") or "").upper()
+        watchlist_item = watchlist_lookup.get(ticker) or {}
+        base_pct = float(row[5] if row[5] is not None else candidate.get("suggested_position_pct") or 0.0)
+        if base_pct <= 0.0:
+            base_pct = float(
+                portfolio_risk.get("base_position_pct")
+                if portfolio_risk.get("base_position_pct") is not None
+                else candidate.get("suggested_position_pct")
+                or 0.0
+            )
+        risk_adjusted_pct = float(
+            portfolio_risk.get("recommended_position_pct")
+            if portfolio_risk.get("recommended_position_pct") is not None
+            else portfolio_risk.get("risk_adjusted_sizing")
+            if portfolio_risk.get("risk_adjusted_sizing") is not None
+            else base_pct
+        )
+        results.append(
+            {
+                "recommendation_id": row[0],
+                "ticker": ticker,
+                "market": row[2] or metadata.get("market") or portfolio_risk.get("market") or watchlist_item.get("market") or "unknown",
+                "action": row[3],
+                "status": row[4],
+                "position_pct": base_pct,
+                "risk_adjusted_position_pct": risk_adjusted_pct,
+                "max_position_pct": float(row[6] or candidate.get("max_position_pct") or 0.0),
+                "theme": metadata.get("theme") or candidate.get("theme") or portfolio_risk.get("theme") or watchlist_item.get("theme") or "unknown",
+                "sector": metadata.get("sector") or candidate.get("sector") or portfolio_risk.get("sector") or watchlist_item.get("sector") or "unknown",
+                "portfolio_risk": portfolio_risk,
+                "updated_at": row[8],
+            }
+        )
+    return results
+
+
+def _add_exposure_maps(base: dict[str, dict[str, float]], rows: list[dict[str, Any]], pct_key: str = "position_pct") -> dict[str, dict[str, float]]:
+    projected = {dimension: dict(values) for dimension, values in base.items()}
+    for row in rows:
+        pct = float(row.get(pct_key) or 0.0)
+        for dimension in ("theme", "market", "sector"):
+            bucket = str(row.get(dimension) or "unknown")
+            projected.setdefault(dimension, {})
+            projected[dimension][bucket] = round(projected[dimension].get(bucket, 0.0) + pct, 4)
+    return projected
+
+
+def _exposure_warnings(projected: dict[str, dict[str, float]], *, prefix: str = "PROJECTED") -> list[dict[str, str]]:
+    limits = {
+        "theme": float(DEFAULT_PHASE6_RISK_POLICY["max_theme_exposure_pct"]),
+        "market": float(DEFAULT_PHASE6_RISK_POLICY["max_market_exposure_pct"]),
+        "sector": float(DEFAULT_PHASE6_RISK_POLICY["max_sector_exposure_pct"]),
+    }
+    warnings = []
+    for dimension, buckets in projected.items():
+        limit = limits.get(dimension)
+        if limit is None:
+            continue
+        for bucket, value in buckets.items():
+            if value > limit:
+                warnings.append(
+                    {
+                        "code": f"{dimension.upper()}_EXPOSURE_LIMIT",
+                        "message": f"{bucket} {dimension} projected exposure {value:.2f}% exceeds limit {limit:.2f}%",
+                        "suggested_action": "downsize or delay one or more pending candidates",
+                    }
+                )
+            elif value >= limit * 0.85:
+                warnings.append(
+                    {
+                        "code": f"{dimension.upper()}_EXPOSURE_WARNING",
+                        "message": f"{bucket} {dimension} projected exposure {value:.2f}% approaches limit {limit:.2f}%",
+                        "suggested_action": "prefer risk-adjusted sizing",
+                    }
+                )
+    return warnings
+
+
 def render_markdown(payload: dict[str, Any]) -> str:
     lines = [
         "# Paper Portfolio Summary",
@@ -163,15 +259,27 @@ def render_markdown(payload: dict[str, Any]) -> str:
         f"- generated_at: `{payload.get('generated_at')}`",
         f"- stale_price_count: `{payload.get('stale_price_count')}`",
         f"- open_position_count: `{len(payload.get('positions') or [])}`",
-        f"- current_exposure: `{payload.get('current_exposure')}`",
+        f"- current_exposure_total: `{payload.get('current_exposure_total')}`",
         f"- pending_exposure_if_all_approved: `{payload.get('pending_exposure_if_all_approved')}`",
         f"- exposure_after_risk_adjusted_sizing: `{payload.get('exposure_after_risk_adjusted_sizing')}`",
         "",
-        "## Exposures",
+        "## Current Exposure",
         "",
     ]
-    for label, values in (payload.get("exposures") or {}).items():
+    for label, values in (payload.get("current_exposure") or {}).items():
         lines.append(f"- {label}: `{values}`")
+    pending = payload.get("pending_approval_scenario") or {}
+    lines.extend(["", "## Pending Approval Scenario", ""])
+    lines.append(f"- candidate_count: `{pending.get('candidate_count') or 0}`")
+    lines.append(f"- gross_new_position_pct: `{pending.get('gross_new_position_pct') or 0}`")
+    lines.append(f"- projected_exposure_if_all_approved: `{pending.get('projected_exposure_if_all_approved') or {}}`")
+    risk_adjusted = payload.get("risk_adjusted_scenario") or {}
+    lines.extend(["", "## Risk-adjusted Scenario", ""])
+    lines.append(f"- gross_new_position_pct: `{risk_adjusted.get('gross_new_position_pct') or 0}`")
+    lines.append(f"- risk_adjusted_exposure: `{risk_adjusted.get('risk_adjusted_exposure') or {}}`")
+    lines.extend(["", "## Warnings", ""])
+    for warning in payload.get("warnings") or []:
+        lines.append(f"- `{warning.get('code')}` {warning.get('message')} Suggested: {warning.get('suggested_action')}")
     lines.extend(["", "## Positions", "", "| ticker | market | pct | avg_cost | latest_price | pnl | price_status | theme | sector |", "|---|---|---:|---:|---:|---:|---|---|---|"])
     for row in payload.get("positions") or []:
         lines.append(
@@ -210,9 +318,14 @@ def main() -> int:
             "market": summarize_exposure(positions, "market"),
             "sector": summarize_exposure(positions, "sector"),
         }
-        current_exposure = summarize_total_exposure(positions)
-        pending_exposure_if_all_approved = summarize_pending_exposure(conn)
-        exposure_after_risk_adjusted_sizing = round(current_exposure + pending_exposure_if_all_approved, 4)
+        pending_rows = pending_candidate_rows(conn, watchlist_lookup)
+        current_exposure_total = summarize_total_exposure(positions)
+        pending_exposure_if_all_approved = round(sum(float(row.get("position_pct") or 0.0) for row in pending_rows), 4)
+        risk_adjusted_new_position_pct = round(sum(float(row.get("risk_adjusted_position_pct") or 0.0) for row in pending_rows), 4)
+        exposure_after_risk_adjusted_sizing = round(current_exposure_total + risk_adjusted_new_position_pct, 4)
+        projected_all = _add_exposure_maps(exposures, pending_rows, "position_pct")
+        projected_risk_adjusted = _add_exposure_maps(exposures, pending_rows, "risk_adjusted_position_pct")
+        warnings = _exposure_warnings(projected_all) + _exposure_warnings(projected_risk_adjusted, prefix="RISK_ADJUSTED")
         stale_price_count = sum(1 for row in positions if row.get("price_status") == "stale")
         payload = {
             "generated_at": now_ts(),
@@ -220,9 +333,22 @@ def main() -> int:
             "stale_price_count": stale_price_count,
             "positions": positions,
             "exposures": exposures,
-            "current_exposure": current_exposure,
+            "current_exposure": exposures,
+            "current_exposure_total": current_exposure_total,
             "pending_exposure_if_all_approved": pending_exposure_if_all_approved,
             "exposure_after_risk_adjusted_sizing": exposure_after_risk_adjusted_sizing,
+            "pending_approval_scenario": {
+                "candidate_count": len(pending_rows),
+                "gross_new_position_pct": pending_exposure_if_all_approved,
+                "projected_exposure_if_all_approved": projected_all,
+                "candidates": pending_rows,
+            },
+            "risk_adjusted_scenario": {
+                "candidate_count": len(pending_rows),
+                "gross_new_position_pct": risk_adjusted_new_position_pct,
+                "risk_adjusted_exposure": projected_risk_adjusted,
+            },
+            "warnings": warnings,
             "price_status_counts": dict(Counter(row.get("price_status") or "missing" for row in positions)),
         }
         output_dir = project_path("06_reports", "adhoc", "phase6")

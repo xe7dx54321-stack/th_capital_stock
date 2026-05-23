@@ -100,3 +100,91 @@ Phase 7 focuses on continuous live reliability and A/H data-quality hardening.
 | 2026-05-23 00:00:00 | Phase 7 continuous reliability work started | In progress |
 | 2026-05-23 18:02:50 | Phase 7 run history summary | Pass: 2 ai_core runs, 9 tickers per run, repeated blockers visible |
 | 2026-05-23 18:02:50 | Phase 7 regression suite | Pass: 50 unit tests, 209 Python files compiled, Phase 3 E2E pass |
+
+## Stage 8 Goal
+
+Phase 8 focuses on repeated blocker triage and A/H candidate recovery.
+
+Current Phase 7 state:
+
+- Commit: `16a8904 phase7: add live run history and A/H fundamentals hardening`
+- Stage: `Phase 7: Continuous live reliability partial pass`
+- Watchlist: `ai_core`
+- Result: `candidate_shadow=5`, `observation_only=4`, `pending_human_review=0`
+- Promotion rules remain conservative.
+
+### Goals
+
+1. Read recent `phase_live_run_history` rows.
+2. Normalize repeated blockers into stable blocker codes.
+3. Rank blockers by frequency, affected tickers, severity, fixability, and expected impact.
+4. Convert repeated blockers into `phase_blocker_repair_queue` tasks.
+5. Run a focused `09988.HK` A/H candidate recovery validator.
+6. Continue hardening HK/CN fundamentals field extraction.
+7. Show current, pending, and risk-adjusted portfolio exposure.
+8. Keep all promotion rules unchanged.
+
+### Non-goals
+
+- Do not add Industry Chain Agent.
+- Do not add Investment Committee Agent.
+- Do not execute real trades.
+- Do not expand the watchlist beyond the current `ai_core` scope.
+- Do not add large new data-source integrations.
+- Do not manufacture new `pending_human_review` by lowering gates.
+- Do not mark internal proxy as official consensus.
+- Do not use low-quality evidence for core claims.
+- Do not silently ignore missing fundamentals.
+
+### New Artifacts
+
+- `08_scripts/lib/smr_blocker_taxonomy.py`
+- `08_scripts/lib/smr_blocker_repair_queue.py`
+- `08_scripts/reporting/build_phase8_blocker_triage.py`
+- `08_scripts/verification/validate_phase8_ah_candidate_recovery.py`
+- `docs/plans/2026-05-23-phase8-repeated-blocker-triage.md`
+
+### Acceptance Criteria
+
+- `build_phase8_blocker_triage.py --limit 10 --upsert-repair-queue` outputs top repeated blockers.
+- Repair queue creates at least 3 open tasks from recent live run history.
+- `validate_phase8_ah_candidate_recovery.py --ticker 09988.HK --days 365 --upsert-repair-queue` reports field-level extraction and blockers.
+- `09988.HK` either advances using live evidence or reports exact missing fields and repair tasks.
+- HK/CN extraction handles revenue, gross profit, operating income, net income, EPS, OCF, capex, cash, debt, and equity with explicit missing reasons.
+- Paper portfolio summary reports current exposure, pending approval scenario, and risk-adjusted scenario.
+- Unit tests cover taxonomy, repair queue upsert, recovery payloads, HK synonym extraction, ambiguous percentage handling, and projected exposure.
+- No promotion rule relaxation is used.
+
+### Phase 8 Status
+
+Status: `Phase 8: Repeated blocker triage and A/H recovery partial pass`
+
+Completion commit:
+
+- `phase8: add blocker triage and A/H candidate recovery`
+
+### Phase 8 Validation Results
+
+- Python compilation: `compiled 217 files`
+- Unit tests: `59 tests OK`
+- Phase 3 controlled E2E: `partial_pass`, controlled `NVDA` still reaches `pending_human_review`
+- Phase 4 NVDA live E2E: command completed; current live result is `candidate_shadow` because live data quality, valuation, and bear-case blockers remain conservative
+- Phase 5 paper portfolio smoke: `partial_pass`; latest smoke target is a controlled Phase 3 pending item and the script reports the incomplete approval/order/position trace clearly
+- Phase 6 multi-ticker live: command completed with saved run history for 9 `ai_core` tickers
+- Phase 7 run history summary: `run_count=4`
+- Phase 8 blocker triage: top repeated blockers are `DATA_QUALITY_RISK`, `VALUATION_NOT_PROMOTION_ELIGIBLE`, and `HIGH_BEAR_CASE`
+- Phase 8 repair queue: `repair_queue_open_count=48`
+- Phase 8 `09988.HK` recovery: `candidate_shadow`, `proxy_quality=strong`, `fundamentals_status=fresh`, `valuation_usage=blocked_due_to_stale_price`
+- `09988.HK` missing fields: `gross_profit`, `eps_basic`, `capex`, `free_cash_flow`, `shareholders_equity`
+- `09988.HK` repair tasks created: `4`
+- Paper portfolio summary: `current_exposure_total=1.5`, `pending_exposure_if_all_approved=11.0`, `exposure_after_risk_adjusted_sizing=12.5`, `open_position_count=1`
+- Runbook line count: `189`
+- Promotion rules: unchanged; no new `pending_human_review` was manufactured by lowering gates
+
+### Phase 8 Current Interpretation
+
+Phase 8 upgrades the project from passively recording repeated blockers to
+turning them into a repair queue. The first A/H recovery target, `09988.HK`,
+does not force promotion; it now reports field-level fundamentals gaps, stale
+price valuation blockage, structured blockers, and repair tasks that can be
+re-run after extraction fixes.
