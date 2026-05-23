@@ -220,6 +220,14 @@ def bear_case_requirements(bear_case: dict[str, Any], action: str) -> tuple[list
     if bear_case.get("bear_case_strength") == "high" and not bear_case.get("thesis_response"):
         missing.append("high_bear_case_answered")
         fixes.append("answer high-strength bear case or downgrade to observation")
+    response = bear_case.get("bear_case_response") or {}
+    response_status = response.get("overall_response_status")
+    if bear_case.get("bear_case_strength") == "high" and response_status in {"unresolved", "needs_manual_review"}:
+        missing.append("high_bear_case_unresolved")
+        fixes.append("resolve or mitigate high bear case with live evidence before pending review")
+    elif bear_case.get("bear_case_strength") == "high" and response_status == "partially_mitigated":
+        missing.append("high_bear_case_partially_mitigated")
+        fixes.append("fully mitigate high bear case before pending review; keep reduced candidate below pending review")
     if bear_case.get("data_quality_risk") == "high":
         missing.append("data_quality_risk_not_high")
         fixes.append("repair data quality risk before promotion")

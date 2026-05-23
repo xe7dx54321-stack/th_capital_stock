@@ -65,11 +65,44 @@ for _field, _synonyms in HK_CN_FIELD_SYNONYMS.items():
         if _synonym not in FIELD_SYNONYMS[_field]:
             FIELD_SYNONYMS[_field].append(_synonym)
 
+PHASE9_FIELD_SYNONYMS: dict[str, list[str]] = {
+    "gross_profit": ["毛利", "毛利额", "毛利總額", "毛利总额", "gross profit"],
+    "eps_basic": ["基本每股收益", "每股基本盈利", "basic EPS", "basic earnings per share"],
+    "capex": [
+        "购建固定资产、无形资产和其他长期资产支付的现金",
+        "购买物业及设备",
+        "购买固定资产",
+        "资本开支",
+        "capital expenditures",
+        "purchase of property and equipment",
+        "payments for property, plant and equipment",
+    ],
+    "free_cash_flow": ["自由现金流", "free cash flow"],
+    "shareholders_equity": [
+        "权益总额",
+        "股东权益",
+        "本公司权益持有人应占权益",
+        "归属于母公司股东权益",
+        "total equity",
+        "shareholders' equity",
+        "equity attributable to owners",
+    ],
+}
+
+for _field, _synonyms in PHASE9_FIELD_SYNONYMS.items():
+    FIELD_SYNONYMS.setdefault(_field, [])
+    for _synonym in _synonyms:
+        if _synonym not in FIELD_SYNONYMS[_field]:
+            FIELD_SYNONYMS[_field].append(_synonym)
+
 DEFAULT_CURRENCY_BY_MARKET = {"A": "CNY", "H": "HKD", "US": "USD"}
-NUMERIC_RE = re.compile(r"(?<![\w.])-?\(?\d{1,3}(?:,\d{3})*(?:\.\d+)?\)?|-?\d+(?:\.\d+)?")
+NUMERIC_RE = re.compile(r"(?<![.\d])-?\(?\d{1,3}(?:,\d{3})*(?:\.\d+)?\)?|-?\d+(?:\.\d+)?")
 YEAR_RE = re.compile(r"^20\d{2}$")
 
 UNIT_PATTERNS: list[tuple[re.Pattern[str], float, str]] = [
+    (re.compile(r"\bbillion\b", re.I), 1_000_000_000.0, "billion"),
+    (re.compile(r"\bmillion\b", re.I), 1_000_000.0, "million"),
+    (re.compile(r"\bthousand\b", re.I), 1_000.0, "thousand"),
     (re.compile(r"人民币百万元|港币百万元|美元百万元|rmb\s*million|hkd\s*million|us\$?\s*million", re.I), 1_000_000.0, "million"),
     (re.compile(r"人民币千元|港币千元|美元千元", re.I), 1_000.0, "thousand"),
     (re.compile(r"百万元|百万", re.I), 1_000_000.0, "million"),
@@ -156,6 +189,29 @@ def detect_unit_context(text: str, market: str | None = None) -> dict[str, Any]:
     return {"unit": unit, "currency": currency, "multiplier": multiplier, "unit_label": unit_label}
 
 
+def detect_unit_context_for_token(window: str, token_match: re.Match[str], market: str | None = None) -> dict[str, Any]:
+    start = max(0, token_match.start() - 24)
+    end = min(len(window), token_match.end() + 40)
+    local_context = window[start:end]
+    local_unit = detect_unit_context(local_context, market)
+    global_unit = detect_unit_context(window, market)
+    prefix = window[max(0, token_match.start() - 12) : token_match.start()].lower()
+    currency = local_unit.get("currency") or default_currency_for_market(market)
+    if "rmb" in prefix or "cny" in prefix:
+        currency = "CNY"
+    elif "hkd" in prefix:
+        currency = "HKD"
+    elif "usd" in prefix or "us$" in prefix:
+        currency = "USD"
+    elif local_unit.get("unit_label") or local_unit.get("currency") != default_currency_for_market(market):
+        return local_unit
+    elif global_unit.get("unit_label") and not local_unit.get("unit_label"):
+        return {**local_unit, "unit": global_unit.get("unit"), "multiplier": global_unit.get("multiplier"), "unit_label": global_unit.get("unit_label")}
+    unit_label = local_unit.get("unit_label") or ""
+    unit = f"{unit_label} {currency}" if unit_label else currency
+    return {**local_unit, "currency": currency, "unit": unit}
+
+
 def _token_value(token: str) -> float | None:
     cleaned = token.strip().replace(",", "")
     if not cleaned:
@@ -198,6 +254,42 @@ def _ratio_line_not_amount(field: str, line: str, window: str, token_match: re.M
     ratio_terms = ("毛利率", "净利率", "利润率", "收益率", "percentage", "margin", "rate", "roe", "roic")
     amount_terms = ("毛利 ", "gross profit", "经营利润", "营业利润", "净利润", "收入", "revenue")
     return any(term in lower_line for term in ratio_terms) and not any(term in lower_line for term in amount_terms)
+
+
+def _nearest_field_anchor_end(field: str, window: str, token_start: int) -> int | None:
+    lower_window = (window or "").lower()
+    anchor_ends: list[int] = []
+    for synonym in FIELD_SYNONYMS.get(field, []):
+        synonym_text = str(synonym or "").lower()
+        if not synonym_text:
+            continue
+        search_from = 0
+        while True:
+            index = lower_window.find(synonym_text, search_from)
+            if index < 0:
+                break
+            if index <= token_start:
+                anchor_ends.append(index + len(synonym_text))
+            search_from = index + max(len(synonym_text), 1)
+    if not anchor_ends:
+        return None
+    return max(anchor_ends)
+
+
+def _token_is_after_field_anchor(field: str, window: str, token_match: re.Match[str]) -> bool:
+    anchor_end = _nearest_field_anchor_end(field, window, token_match.start())
+    if anchor_end is None:
+        return False
+    between = window[anchor_end : token_match.start()]
+    # Prevent paragraph-leading numbers or prior currency translations from
+    # becoming a field value just because the field name appears later.
+    lower_between = between.lower()
+    for other_field, synonyms in FIELD_SYNONYMS.items():
+        if other_field == field:
+            continue
+        if any(str(synonym or "").lower() in lower_between for synonym in synonyms):
+            return False
+    return len(between) <= 60
 
 
 def _field_detail_defaults(field: str, market: str | None, period: str | None, missing_reason: str) -> dict[str, Any]:
@@ -250,6 +342,16 @@ def _candidate_from_window(field: str, chunk: dict[str, Any], window: str, line:
     raw_value = _token_value(token)
     if raw_value is None:
         return None
+    token_tail = window[token_match.end() : token_match.end() + 1]
+    token_prefix = window[max(0, token_match.start() - 2) : token_match.start()]
+    line_prefix = line[: max(0, token_match.start())]
+    if token_tail == "%" and field in {"eps_basic", "eps_diluted"}:
+        return None
+    if token_tail == "." and (not token_prefix.strip() or not line_prefix.strip()):
+        return None
+    anchor_end = _nearest_field_anchor_end(field, window, token_match.start())
+    if not _token_is_after_field_anchor(field, window, token_match):
+        return None
     if _ratio_line_not_amount(field, line, window, token_match):
         return None
     if field not in {"eps_basic", "eps_diluted"}:
@@ -257,12 +359,14 @@ def _candidate_from_window(field: str, chunk: dict[str, Any], window: str, line:
             return None
         if _contains_percentage_noise(window) and not any(marker in window.lower() for marker in ("百万元", "亿元", "万元", "million", "billion", "元", "rmb", "cny", "hkd", "usd")):
             return None
-    unit_info = detect_unit_context(window, market)
+    unit_info = detect_unit_context_for_token(window, token_match, market)
     value = raw_value
-    if field in {"revenue", "gross_profit", "operating_income", "net_income", "operating_cash_flow", "capex", "cash_and_equivalents", "total_debt", "shareholders_equity"}:
+    if field in {"revenue", "gross_profit", "operating_income", "net_income", "operating_cash_flow", "capex", "free_cash_flow", "cash_and_equivalents", "total_debt", "shareholders_equity"}:
         value = abs(value) * float(unit_info.get("multiplier") or 1.0)
     elif field in {"eps_basic", "eps_diluted"}:
-        value = value * float(unit_info.get("multiplier") or 1.0)
+        unit_info = {**unit_info, "unit": f"{unit_info.get('currency') or default_currency_for_market(market)}/share"}
+        # EPS is already a per-share value; statement amount units must not scale it.
+        value = value
     confidence = _score_candidate(
         field=field,
         line=line,
@@ -284,6 +388,8 @@ def _candidate_from_window(field: str, chunk: dict[str, Any], window: str, line:
         "source_evidence_ids": [chunk.get("evidence_id")] if chunk.get("evidence_id") else [],
         "confidence": confidence,
         "missing_reason": None,
+        "raw_value": raw_value,
+        "anchor_distance": token_match.start() - anchor_end if anchor_end is not None else 9999,
         "source_text": window[:320],
         "chunk_id": chunk.get("chunk_id"),
         "chunk_section_type": chunk.get("chunk_section_type"),
@@ -329,11 +435,34 @@ def _best_chunk_for_field(field: str, chunks: list[dict[str, Any]], market: str 
         if not synonym_seen:
             return None, "stale_filing" if stale else "field_not_found"
         return None, "parse_failed" if parse_failure_seen else ("stale_filing" if stale else "field_not_found")
-    candidates.sort(key=lambda item: (float(item.get("confidence") or 0.0), 1 if item.get("unit") else 0, 1 if item.get("currency") else 0), reverse=True)
+    candidates.sort(
+        key=lambda item: (
+            float(item.get("confidence") or 0.0),
+            -float(item.get("anchor_distance") if item.get("anchor_distance") is not None else 9999),
+            1 if item.get("unit") else 0,
+            1 if item.get("currency") else 0,
+        ),
+        reverse=True,
+    )
     best = candidates[0]
+    near_candidates = [
+        item
+        for item in candidates
+        if abs(float(item.get("anchor_distance") or 9999) - float(best.get("anchor_distance") or 9999)) <= 8
+    ]
+    near_currencies = {str(item.get("currency") or "") for item in near_candidates if item.get("currency")}
+    if len(near_currencies) > 1 and field not in {"eps_basic", "eps_diluted"}:
+        best["warnings"] = list(best.get("warnings") or []) + ["ambiguous_unit"]
+        best["confidence"] = round(max(0.0, float(best.get("confidence") or 0.0) - 0.1), 3)
+        best["missing_reason"] = "ambiguous_unit"
+        return best, None
     if len(candidates) > 1:
         second = candidates[1]
-        if best.get("unit") != second.get("unit") and abs(float(best.get("confidence") or 0.0) - float(second.get("confidence") or 0.0)) <= 0.12:
+        if (
+            best.get("unit") != second.get("unit")
+            and abs(float(best.get("confidence") or 0.0) - float(second.get("confidence") or 0.0)) <= 0.12
+            and abs(float(best.get("anchor_distance") or 9999) - float(second.get("anchor_distance") or 9999)) <= 8
+        ):
             best["warnings"] = list(best.get("warnings") or []) + ["ambiguous_unit"]
             best["confidence"] = round(max(0.0, float(best.get("confidence") or 0.0) - 0.1), 3)
             best["missing_reason"] = "ambiguous_unit"
@@ -415,11 +544,15 @@ def extract_field_level_fundamentals(
 
     for field in FIELD_ORDER:
         candidate, reason = _best_chunk_for_field(field, chunks, market, stale)
-        if candidate and candidate.get("extracted_value") is not None:
+        if candidate and candidate.get("extracted_value") is not None and not candidate.get("missing_reason"):
             field_details[field] = candidate
             field_values[field] = candidate["extracted_value"]
             if candidate.get("source_evidence_id"):
                 evidence_ids.append(str(candidate["source_evidence_id"]))
+        elif candidate:
+            field_details[field] = candidate
+            missing_fields.append(field)
+            missing_reasons[field] = candidate.get("missing_reason") or reason or "parse_failed"
         else:
             field_details[field] = _field_detail_defaults(field, market, latest_anchor.strftime("%Y-%m-%d") if latest_anchor else None, reason or ("stale_filing" if stale else "field_not_found"))
             missing_fields.append(field)
@@ -429,10 +562,21 @@ def extract_field_level_fundamentals(
         derived = _derive_metric("free_cash_flow", field_details["operating_cash_flow"], field_details["capex"], "operating_cash_flow - abs(capex)")
         if derived:
             derived["extracted_value"] = float(field_values["operating_cash_flow"]) - abs(float(field_values["capex"]))
+            derived["extraction_method"] = "derived"
             field_details["free_cash_flow"] = derived
             field_values["free_cash_flow"] = derived["extracted_value"]
             if derived.get("source_evidence_id"):
                 evidence_ids.extend(derived.get("source_evidence_ids") or [derived["source_evidence_id"]])
+    elif field_values.get("free_cash_flow") is None:
+        missing_inputs = [
+            field
+            for field in ("operating_cash_flow", "capex")
+            if field_values.get(field) is None
+        ]
+        field_details["free_cash_flow"]["missing_reason"] = "derived_field_missing_inputs"
+        field_details["free_cash_flow"]["warnings"] = list(field_details["free_cash_flow"].get("warnings") or []) + [
+            f"missing_inputs:{','.join(missing_inputs)}"
+        ]
 
     for field, numerator_field, denominator_field in [
         ("gross_margin", "gross_profit", "revenue"),

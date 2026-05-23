@@ -17,6 +17,15 @@ def _dumps(value: Any) -> str:
     return json.dumps(value if value is not None else {}, ensure_ascii=False, sort_keys=True, default=str)
 
 
+def _loads(raw: str | None, fallback: Any) -> Any:
+    if raw in (None, ""):
+        return fallback
+    try:
+        return json.loads(raw)
+    except json.JSONDecodeError:
+        return fallback
+
+
 def ensure_valuation_table(conn: sqlite3.Connection) -> None:
     conn.execute(
         """
@@ -143,6 +152,60 @@ def latest_fundamentals(conn: sqlite3.Connection, ticker: str) -> dict[str, Any]
         return latest_fundamentals_snapshot(conn, ticker)
     except Exception:
         return {}
+
+
+def latest_valuation_snapshot(conn: sqlite3.Connection, ticker: str) -> dict[str, Any]:
+    ensure_valuation_table(conn)
+    row = conn.execute(
+        """
+        SELECT ticker, market, generated_at, valuation_available, current_price, market_cap,
+               pe_ttm, ps_ttm, pb, historical_percentile, peer_comparison_json,
+               valuation_status, missing_data_json, allowed_usage, metadata_json,
+               ev_ebitda_ttm, historical_percentile_1y, historical_percentile_3y,
+               historical_percentile_5y, peer_set_json, peer_percentile,
+               broker_target_price, broker_forward_eps_proxy, valuation_confidence
+        FROM valuation_snapshot
+        WHERE ticker=?
+        ORDER BY datetime(generated_at) DESC, id DESC
+        LIMIT 1
+        """,
+        (ticker,),
+    ).fetchone()
+    if not row:
+        return {}
+    keys = [
+        "ticker",
+        "market",
+        "generated_at",
+        "valuation_available",
+        "current_price",
+        "market_cap",
+        "pe_ttm",
+        "ps_ttm",
+        "pb",
+        "historical_percentile",
+        "peer_comparison_json",
+        "valuation_status",
+        "missing_data_json",
+        "allowed_usage",
+        "metadata_json",
+        "ev_ebitda_ttm",
+        "historical_percentile_1y",
+        "historical_percentile_3y",
+        "historical_percentile_5y",
+        "peer_set_json",
+        "peer_percentile",
+        "broker_target_price",
+        "broker_forward_eps_proxy",
+        "valuation_confidence",
+    ]
+    data = dict(zip(keys, row))
+    data["valuation_available"] = bool(data.get("valuation_available"))
+    data["peer_comparison"] = _loads(data.pop("peer_comparison_json"), {})
+    data["missing_data"] = _loads(data.pop("missing_data_json"), [])
+    data["metadata"] = _loads(data.pop("metadata_json"), {})
+    data["peer_set"] = _loads(data.pop("peer_set_json"), [])
+    return data
 
 
 def _daily_rows_for_market(health: dict[str, Any], market: str | None) -> list[dict[str, Any]]:
@@ -285,3 +348,78 @@ def build_valuation_snapshot(
         ),
     )
     return snapshot
+
+
+def valuation_sub_blockers(snapshot: dict[str, Any] | None, fundamentals: dict[str, Any] | None = None) -> list[dict[str, Any]]:
+    snapshot = snapshot or {}
+    fundamentals = fundamentals or snapshot.get("fundamentals_snapshot") or {}
+    missing = set(snapshot.get("missing_data") or [])
+    blockers: list[dict[str, Any]] = []
+    if not snapshot:
+        blockers.append({"code": "VALUATION_EVIDENCE_MISSING", "message": "valuation snapshot is missing"})
+        return blockers
+    if snapshot.get("allowed_usage") == "blocked_due_to_stale_price" or "fresh_price" in missing:
+        blockers.append({"code": "PRICE_STALE", "message": "latest price is stale or daily_bar freshness gate failed"})
+    if snapshot.get("valuation_status") in {"stale", "stale_price"}:
+        blockers.append({"code": "VALUATION_STALE", "message": "valuation snapshot is stale and must be recomputed"})
+    if fundamentals and fundamentals.get("freshness_status") not in {"fresh", "degraded", "explainable_missing"}:
+        blockers.append({"code": "FUNDAMENTALS_STALE_FOR_VALUATION", "message": "fundamentals are stale or missing for valuation"})
+    if not snapshot.get("broker_forward_eps_proxy") or "forward_eps" in missing:
+        blockers.append({"code": "FORWARD_EPS_MISSING", "message": "forward EPS proxy is missing; do not compute forward PE"})
+    if not snapshot.get("historical_percentile") and "historical_percentile" in missing:
+        blockers.append({"code": "HISTORICAL_PERCENTILE_MISSING", "message": "historical valuation percentile is missing"})
+    if not snapshot.get("peer_set") and "peer_set" in missing:
+        blockers.append({"code": "PEER_SET_MISSING", "message": "auditable peer set is missing"})
+    if not any(snapshot.get(key) is not None for key in ("current_price", "pe_ttm", "ps_ttm", "pb", "broker_forward_eps_proxy")):
+        blockers.append({"code": "VALUATION_EVIDENCE_MISSING", "message": "valuation has no usable price, multiple, or EPS evidence"})
+    if float(snapshot.get("valuation_confidence") or 0.0) < 0.45:
+        blockers.append({"code": "VALUATION_CONFIDENCE_LOW", "message": "valuation confidence is below supporting-evidence threshold"})
+    return blockers
+
+
+def diagnose_valuation_snapshot(
+    conn: sqlite3.Connection,
+    ticker: str,
+    data_health_snapshot: dict[str, Any] | None = None,
+    before: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    market = market_for_ticker(ticker)
+    before_snapshot = before if before is not None else latest_valuation_snapshot(conn, ticker)
+    fundamentals = latest_fundamentals(conn, ticker)
+    current_price, price_date = latest_daily_price(conn, ticker, market)
+    health = data_health_snapshot or {}
+    daily_rows = _daily_rows_for_market(health, market)
+    price_status = "missing" if current_price is None else "fresh"
+    if any(row.get("freshness_status") in {"stale", "missing"} for row in daily_rows):
+        price_status = "stale"
+    snapshot_age_days = None
+    if before_snapshot.get("generated_at"):
+        try:
+            snapshot_age_days = max(0.0, (datetime.now() - datetime.fromisoformat(str(before_snapshot["generated_at"]).replace("T", " ")[:19])).total_seconds() / 86400)
+        except ValueError:
+            snapshot_age_days = None
+    temp_snapshot = dict(before_snapshot)
+    temp_snapshot.setdefault("missing_data", [])
+    sub_blockers = valuation_sub_blockers(temp_snapshot, fundamentals)
+    missing_inputs = sorted(
+        {
+            "forward_eps" if item["code"] == "FORWARD_EPS_MISSING" else
+            "historical_percentile" if item["code"] == "HISTORICAL_PERCENTILE_MISSING" else
+            "peer_set" if item["code"] == "PEER_SET_MISSING" else
+            "fresh_price" if item["code"] == "PRICE_STALE" else
+            "valuation_evidence" if item["code"] == "VALUATION_EVIDENCE_MISSING" else
+            item["code"].lower()
+            for item in sub_blockers
+        }
+    )
+    return {
+        "price_status": price_status,
+        "price_trade_date": price_date,
+        "current_price": current_price,
+        "fundamentals_status": fundamentals.get("freshness_status") or "missing",
+        "valuation_snapshot_age_days": round(snapshot_age_days, 2) if snapshot_age_days is not None else None,
+        "missing_inputs": missing_inputs,
+        "sub_blockers": [item["code"] for item in sub_blockers],
+        "sub_blocker_details": sub_blockers,
+        "fundamentals_snapshot_id": fundamentals.get("snapshot_id"),
+    }

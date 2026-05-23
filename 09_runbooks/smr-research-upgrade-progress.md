@@ -188,3 +188,84 @@ turning them into a repair queue. The first A/H recovery target, `09988.HK`,
 does not force promotion; it now reports field-level fundamentals gaps, stale
 price valuation blockage, structured blockers, and repair tasks that can be
 re-run after extraction fixes.
+
+## Stage 9 Goal
+
+Phase 9 focuses on repair execution and candidate recovery. It starts executing
+the highest-priority Phase 8 repair tasks instead of adding more triage layers.
+
+Current Phase 8 checkpoint:
+
+- Commit: `437a48f57888b09644ad9b71ae7a84d696159d5c`
+- Stage: `Phase 8: Repeated blocker triage and A/H recovery partial pass`
+- Open repair tasks: `48`
+- Top blockers: `DATA_QUALITY_RISK`, `VALUATION_NOT_PROMOTION_ELIGIBLE`, `HIGH_BEAR_CASE`
+- Focus ticker: `09988.HK`
+- Current `09988.HK` state: `candidate_shadow`, `proxy_quality=strong`, `fundamentals_status=fresh`
+
+### Phase 9 Goals
+
+1. Execute repair queue tasks in dry-run and execute modes.
+2. Split valuation blockers into stale price, stale valuation, missing forward EPS, missing historical percentile, missing peer set, and low-confidence valuation.
+3. Split data-quality risk into field, source, and evidence-level root causes.
+4. Continue A/H fundamentals repair for `gross_profit`, `eps_basic`, `capex`, `free_cash_flow`, and `shareholders_equity`.
+5. Add structured bear-case responses without bypassing risk gates.
+6. Re-run `09988.HK` candidate validation with before/after blocker output.
+7. Keep promotion rules unchanged.
+
+### Phase 9 Non-goals
+
+- Do not add Industry Chain Agent.
+- Do not add Investment Committee Agent.
+- Do not execute real trades.
+- Do not expand the watchlist.
+- Do not add large new data-source integrations.
+- Do not lower promotion thresholds to manufacture pending review.
+- Do not treat internal proxy as official consensus.
+- Do not bypass bear-case, evidence, freshness, or portfolio-risk gates.
+
+### Phase 9 New Artifacts
+
+- `08_scripts/jobs/repair_valuation_snapshot.py`
+- `08_scripts/reporting/build_phase9_data_quality_diagnostics.py`
+- `08_scripts/lib/smr_bear_case_response.py`
+- `08_scripts/jobs/run_phase9_repair_queue.py`
+- `08_scripts/verification/validate_phase9_repaired_candidate.py`
+- `docs/plans/2026-05-23-phase9-repair-execution.md`
+
+### Phase 9 Acceptance Criteria
+
+- `repair_valuation_snapshot.py --ticker 09988.HK --dry-run` outputs valuation diagnostics and specific sub-blockers.
+- `build_phase9_data_quality_diagnostics.py --ticker 09988.HK --json` outputs root causes and field quality.
+- `run_phase9_repair_queue.py --ticker 09988.HK --dry-run` shows planned repair actions without writing database changes.
+- `validate_phase9_repaired_candidate.py --ticker 09988.HK --days 365 --json` outputs before/after candidate status.
+- Unresolved high bear cases continue to block `pending_human_review`.
+- No promotion rule relaxation is used.
+
+### Phase 9 Validation Results
+
+- Python compilation: `compiled 92 phase script files`
+- Unit tests: `73 tests OK`
+- Phase 3 controlled E2E: `partial_pass`; controlled `NVDA` still reaches `pending_human_review`
+- Phase 4 NVDA live E2E: command completed with `NVDA.status=candidate_shadow`, `proxy_quality=strong`, `live_news_evidence=4`, `live_filing_evidence=4`, and conservative blockers for stale price, valuation, data quality, and high bear case
+- Phase 5 paper portfolio smoke: `partial_pass`; current smoke target is a controlled pending item and the script reports missing approval/order/position trace stages clearly
+- Phase 6 multi-ticker live: command completed for 9 `ai_core` tickers with `candidate_shadow=5`, `observation_only=4`, `pending_human_review=0`
+- Phase 8 blocker triage: `run_count=6`; top blockers are `DATA_QUALITY_RISK`, `VALUATION_NOT_PROMOTION_ELIGIBLE`, and `HIGH_BEAR_CASE`
+- Repair queue dry-run for `09988.HK`: `tasks_selected=3`, `tasks_executed=0`; planned actions are data-quality diagnostics, valuation repair, and fundamentals snapshot repair
+- `09988.HK` valuation repair dry-run: `valuation_status=stale_price`, `allowed_usage=blocked_due_to_stale_price`, remaining sub-blockers are `PRICE_STALE`, `VALUATION_STALE`, `FORWARD_EPS_MISSING`, `HISTORICAL_PERCENTILE_MISSING`, and `PEER_SET_MISSING`
+- `09988.HK` data quality diagnostics: `overall_data_quality_status=degraded`; root causes include `AMBIGUOUS_UNIT`, `FIELD_NOT_FOUND`, `FIELD_MAPPING_MISSING`, and `derived_field_missing_inputs`
+- `09988.HK` bear-case response: `unresolved`, `action_effect=block_pending_review`
+- `09988.HK` repaired candidate validation: `before_status=candidate_shadow`, `after_status=candidate_shadow`, `promotion_allowed=false`, `candidate_action=watch`, `decision_ledger_written=true`
+- `09988.HK` fields still missing or unusable: `revenue` due to `ambiguous_unit`, `gross_profit`, `eps_basic`, `capex`, `free_cash_flow`, `shareholders_equity`, plus other lower-priority margin/return fields
+- Promotion rules: unchanged; Phase 9 did not manufacture a new `pending_human_review`
+
+### Phase 9 Current Interpretation
+
+Phase 9 upgrades the project from "repair tasks exist" to "repair tasks can be
+selected, diagnosed, and executed safely." The first A/H recovery target,
+`09988.HK`, remains `candidate_shadow`, but the blockers are now more precise:
+stale price and valuation, missing forward EPS, missing historical percentile,
+missing peer set, unresolved high bear case, and field-level fundamentals
+quality issues. A/H extraction was also hardened to reject paragraph numbers,
+percent-change EPS noise, ambiguous currencies, and field values too far from
+their field anchor.

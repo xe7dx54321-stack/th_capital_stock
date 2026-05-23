@@ -379,7 +379,7 @@ def _merge_field_details(
             detail["missing_reason"] = None
             if detail.get("source_evidence_id"):
                 evidence_ids.append(str(detail["source_evidence_id"]))
-        if detail.get("extracted_value") is not None:
+        if detail.get("extracted_value") is not None and not detail.get("missing_reason"):
             field_values[field] = _normalize_extract_value(detail.get("extracted_value"))
             if field_values[field] is None:
                 detail["missing_reason"] = "parse_failed"
@@ -435,6 +435,30 @@ def _annotate_snapshot_with_relationships(snapshot: dict[str, Any]) -> None:
         snapshot["roic"] = operating_income / equity
     if snapshot.get("operating_cash_flow") not in (None, 0) and snapshot.get("capex") not in (None, 0):
         snapshot["free_cash_flow"] = snapshot["operating_cash_flow"] - abs(snapshot["capex"])
+
+
+def _sync_derived_field_details(field_details: dict[str, Any], values: dict[str, Any]) -> None:
+    if values.get("free_cash_flow") is not None and field_details.get("free_cash_flow", {}).get("extracted_value") is None:
+        ocf = field_details.get("operating_cash_flow") or {}
+        capex = field_details.get("capex") or {}
+        evidence_ids = [item for item in [ocf.get("source_evidence_id"), capex.get("source_evidence_id")] if item]
+        field_details["free_cash_flow"] = {
+            "field": "free_cash_flow",
+            "extracted_value": values.get("free_cash_flow"),
+            "unit": ocf.get("unit") or capex.get("unit"),
+            "currency": ocf.get("currency") or capex.get("currency"),
+            "period": ocf.get("period") or capex.get("period"),
+            "source_evidence_id": evidence_ids[0] if evidence_ids else None,
+            "source_evidence_ids": evidence_ids,
+            "confidence": round(min(float(ocf.get("confidence") or 0.0), float(capex.get("confidence") or 0.0)) * 0.9, 3) if evidence_ids else 0.0,
+            "missing_reason": None,
+            "source_text": "operating_cash_flow - abs(capex)",
+            "chunk_id": ocf.get("chunk_id") or capex.get("chunk_id"),
+            "chunk_section_type": ocf.get("chunk_section_type") or capex.get("chunk_section_type"),
+            "method": "derived",
+            "extraction_method": "derived",
+            "warnings": [],
+        }
 
 
 def infer_from_filing_text(conn: sqlite3.Connection, ticker: str) -> tuple[dict[str, Any], dict[str, Any]]:
@@ -575,13 +599,19 @@ def build_fundamentals_snapshot(
         existing_values,
     )
     for field, value in filing_values.items():
-        if value is not None and field_values.get(field) is None:
+        if value is not None and field_values.get(field) is None and field_details[field].get("missing_reason") != "ambiguous_unit":
             field_values[field] = value
             field_details[field]["extracted_value"] = value
             field_details[field]["confidence"] = max(float(field_details[field].get("confidence") or 0.0), 0.35)
             field_details[field]["missing_reason"] = None
     values = {**field_values, **{key: value for key, value in values.items() if value is not None}}
     _annotate_snapshot_with_relationships(values)
+    _sync_derived_field_details(field_details, values)
+    missing_fields = [field for field in FUNDAMENTAL_FIELDS if values.get(field) is None]
+    missing_reasons = {
+        field: (field_details.get(field) or {}).get("missing_reason") or "field_not_found"
+        for field in missing_fields
+    }
     metadata = {
         **metadata,
         "filing_inference": filing_metadata,

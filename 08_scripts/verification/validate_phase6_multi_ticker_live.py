@@ -19,6 +19,7 @@ if str(LIB_DIR) not in sys.path:
 
 from smr_agents import DB_PATH
 from smr_bear_case import build_bear_case
+from smr_bear_case_response import attach_bear_case_response, respond_to_bear_case
 from smr_blocker_taxonomy import minimum_fix_path_from_blockers, normalize_blockers
 from smr_claim_graph import claim_graph_summary, link_claim_evidence, upsert_claim
 from smr_data_health import refresh_system_data_health
@@ -328,6 +329,14 @@ def build_ticker_result(
         missing_data=fundamentals.get("missing_fields") or valuation.get("missing_data") or [],
         evidence_ids=[row["evidence_id"] for row in evidence_rows[:4]],
     )
+    bear_case_response = respond_to_bear_case(
+        ticker,
+        bear_case,
+        evidence_rows=evidence_rows,
+        fundamentals_snapshot=fundamentals,
+        valuation_snapshot=valuation,
+    )
+    bear_case = attach_bear_case_response(bear_case, bear_case_response)
     portfolio_risk = evaluate_portfolio_risk(
         conn,
         ticker=ticker,
@@ -425,6 +434,8 @@ def build_ticker_result(
         "proxy_signal_count": proxy.get("proxy_signal_count"),
         "proxy_independent_source_count": proxy.get("independent_source_count"),
         "bear_case_strength": bear_case.get("bear_case_strength"),
+        "bear_case_response_status": bear_case_response.get("overall_response_status"),
+        "bear_case_response": bear_case_response,
         "portfolio_risk": portfolio_risk,
         "ledger_written": bool(conn.execute("SELECT 1 FROM decision_ledger WHERE recommendation_id=?", (f"phase6_live__{ticker}",)).fetchone()),
         "review_queue_visible": review_queue_visible(conn, f"phase6_live__{ticker}"),

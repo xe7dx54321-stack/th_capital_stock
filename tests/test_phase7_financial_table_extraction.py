@@ -191,6 +191,100 @@ class Phase7FinancialTableExtractionTests(unittest.TestCase):
         self.assertIn(extracted["field_missing_reasons"]["gross_profit"], {"field_not_found", "parse_failed"})
         self.assertIsNotNone(extracted["field_values"].get("revenue"))
 
+    def test_phase9_ignores_numbers_before_field_anchor(self):
+        conn = self.make_conn()
+        today = datetime.now().strftime("%Y-%m-%d")
+        seed_filing_document(
+            conn,
+            ticker="09988.HK",
+            title="09988.HK annual results",
+            body=(
+                "25. Free cash flow was an outflow of RMB17,300 million (US$2,508 million). "
+                "As of March 31, cash and other liquid investments were RMB520,824 million. "
+                "Revenue was RMB1,023,670 million (US$148,401 million)."
+            ),
+            source_key="sec_earnings_material",
+            market="H",
+            filing_type="annual_results",
+            published_at=today,
+        )
+
+        extracted = extract_field_level_fundamentals(conn, "09988.HK", market="H")
+
+        self.assertEqual(extracted["field_values"].get("free_cash_flow"), 17_300_000_000.0)
+        self.assertEqual(extracted["field_values"].get("revenue"), 1_023_670_000_000.0)
+        self.assertEqual(extracted["field_details"]["free_cash_flow"]["currency"], "CNY")
+        self.assertEqual(extracted["field_details"]["revenue"]["currency"], "CNY")
+        self.assertNotEqual(extracted["field_values"].get("free_cash_flow"), 25.0)
+        self.assertNotEqual(extracted["field_values"].get("revenue"), 25_000_000.0)
+
+    def test_phase9_ignores_paragraph_number_as_amount(self):
+        conn = self.make_conn()
+        today = datetime.now().strftime("%Y-%m-%d")
+        seed_filing_document(
+            conn,
+            ticker="09988.HK",
+            title="09988.HK annual results",
+            body=(
+                "25. Free cash flow was an outflow of RMB17,300 million. "
+                "Revenue was RMB1,023,670 million."
+            ),
+            source_key="sec_earnings_material",
+            market="H",
+            filing_type="annual_results",
+            published_at=today,
+        )
+
+        extracted = extract_field_level_fundamentals(conn, "09988.HK", market="H")
+
+        self.assertNotEqual(extracted["field_values"].get("revenue"), 25_000_000.0)
+        self.assertNotEqual(extracted["field_values"].get("free_cash_flow"), 25_000_000.0)
+
+    def test_phase9_ambiguous_unit_candidate_is_not_usable_value(self):
+        conn = self.make_conn()
+        today = datetime.now().strftime("%Y-%m-%d")
+        seed_filing_document(
+            conn,
+            ticker="09988.HK",
+            title="09988.HK annual results",
+            body=(
+                "financial statement management discussion liquidity capital. "
+                "Revenue was RMB1,023,670 million (US$148,401 million). "
+                "Revenue was HK$999,999 million."
+            ),
+            source_key="sec_earnings_material",
+            market="H",
+            filing_type="annual_results",
+            published_at=today,
+        )
+
+        extracted = extract_field_level_fundamentals(conn, "09988.HK", market="H")
+
+        self.assertIsNone(extracted["field_values"].get("revenue"))
+        self.assertEqual(extracted["field_details"]["revenue"]["missing_reason"], "ambiguous_unit")
+        self.assertEqual(extracted["field_missing_reasons"]["revenue"], "ambiguous_unit")
+
+    def test_phase9_eps_does_not_use_percent_change(self):
+        conn = self.make_conn()
+        today = datetime.now().strftime("%Y-%m-%d")
+        seed_filing_document(
+            conn,
+            ticker="09988.HK",
+            title="09988.HK annual results",
+            body=(
+                "Diluted earnings per share was RMB3.35 (US$0.49 or HK$3.79), "
+                "a decrease of 59% year-over-year."
+            ),
+            source_key="sec_earnings_material",
+            market="H",
+            filing_type="annual_results",
+            published_at=today,
+        )
+
+        extracted = extract_field_level_fundamentals(conn, "09988.HK", market="H")
+
+        self.assertNotEqual(extracted["field_values"].get("eps_diluted"), 59.0)
+
 
 if __name__ == "__main__":
     unittest.main()

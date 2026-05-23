@@ -290,3 +290,30 @@ def update_repair_task_status(
         (status, owner, now_ts(), resolved_at, dumps_json(metadata), repair_id),
     )
     return get_repair_task(conn, repair_id)
+
+
+def update_repair_task_metadata(
+    conn: sqlite3.Connection,
+    repair_id: str,
+    metadata_updates: dict[str, Any] | None = None,
+    note: str | None = None,
+) -> dict[str, Any]:
+    """Merge repair execution metadata without changing task status."""
+
+    ensure_blocker_repair_queue_tables(conn)
+    current = get_repair_task(conn, repair_id)
+    if not current:
+        raise ValueError(f"Unknown repair task: {repair_id}")
+    metadata = dict(current.get("metadata") or {})
+    metadata.update(metadata_updates or {})
+    if note:
+        metadata.setdefault("execution_notes", []).append({"at": now_ts(), "note": note})
+    conn.execute(
+        """
+        UPDATE phase_blocker_repair_queue
+        SET updated_at=?, metadata_json=?
+        WHERE repair_id=?
+        """,
+        (now_ts(), dumps_json(metadata), repair_id),
+    )
+    return get_repair_task(conn, repair_id)
