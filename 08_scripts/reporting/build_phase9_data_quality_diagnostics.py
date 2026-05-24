@@ -62,11 +62,22 @@ def field_quality_from_snapshot(snapshot: dict[str, Any]) -> dict[str, Any]:
             "status": status,
             "extracted_value": value,
             "confidence": float(detail.get("confidence") or 0.0),
+            "confidence_breakdown": detail.get("confidence_breakdown") or {},
+            "confidence_level": detail.get("confidence_level"),
+            "allowed_usage": detail.get("allowed_usage"),
             "missing_reason": None if status == "extracted" else (missing_reason or "field_not_found"),
             "unit": detail.get("unit"),
             "currency": detail.get("currency"),
+            "unit_confidence": detail.get("unit_confidence"),
+            "unit_warning": detail.get("unit_warning"),
             "period": detail.get("period") or snapshot.get("period"),
             "source_evidence_id": detail.get("source_evidence_id"),
+            "source_evidence_ids": detail.get("source_evidence_ids") or [],
+            "source_filing_id": detail.get("source_filing_id"),
+            "source_chunk_id": detail.get("source_chunk_id") or detail.get("chunk_id"),
+            "source_section_type": detail.get("source_section_type") or detail.get("chunk_section_type"),
+            "source_url": detail.get("source_url"),
+            "published_at": detail.get("published_at"),
             "warnings": detail.get("warnings") or [],
         }
     return result
@@ -88,7 +99,21 @@ def root_causes_from_field_quality(field_quality: dict[str, Any]) -> list[dict[s
                     }
                 )
             )
-        elif float(detail.get("confidence") or 0.0) < 0.5:
+        elif detail.get("allowed_usage") == "blocked" and (
+            detail.get("unit_warning") in {"ambiguous_unit", "percentage_not_amount"}
+            or "ambiguous_unit" in set(detail.get("warnings") or [])
+        ):
+            causes.append(
+                normalize_blocker(
+                    {
+                        "code": "AMBIGUOUS_UNIT",
+                        "message": f"{field} has blocked or ambiguous unit",
+                        "affected_fields": [field],
+                        "suggested_fix": suggested_field_fix(field, "ambiguous_unit"),
+                    }
+                )
+            )
+        elif float(detail.get("confidence") or 0.0) < 0.5 or detail.get("confidence_level") in {"low", "blocked"}:
             causes.append(
                 normalize_blocker(
                     {
@@ -147,6 +172,21 @@ def field_changes(before_fields: dict[str, Any], after_fields: dict[str, Any]) -
                 "after": after_status,
                 "before_missing_reason": before_reason,
                 "missing_reason": after_reason,
+                "before_allowed_usage": before.get("allowed_usage"),
+                "after_allowed_usage": after.get("allowed_usage"),
+                "before_confidence": before.get("confidence"),
+                "after_confidence": after.get("confidence"),
+            }
+        elif before.get("allowed_usage") != after.get("allowed_usage") or before.get("confidence") != after.get("confidence"):
+            changes[field] = {
+                "before": before_status,
+                "after": after_status,
+                "before_missing_reason": before_reason,
+                "missing_reason": after_reason,
+                "before_allowed_usage": before.get("allowed_usage"),
+                "after_allowed_usage": after.get("allowed_usage"),
+                "before_confidence": before.get("confidence"),
+                "after_confidence": after.get("confidence"),
             }
     return changes
 

@@ -10,8 +10,12 @@ from datetime import datetime
 from typing import Any
 
 from smr_claim_graph import ensure_claim_graph_tables, upsert_evidence
+from smr_derived_fundamentals import derive_free_cash_flow, derive_gross_margin
+from smr_field_evidence_linkage import collect_field_evidence_ids, link_field_evidence
 from smr_filing_chunk_selector import select_relevant_document_chunks
 from smr_financial_table_extraction import FIELD_ORDER, default_currency_for_market, extract_field_level_fundamentals
+from smr_financial_units import normalize_financial_unit
+from smr_fundamentals_confidence import score_fundamental_field
 from smr_wiki import generate_execution_id, now_ts
 
 
@@ -463,6 +467,9 @@ def _field_detail_defaults(field: str, market: str | None, period: str | None, m
         "chunk_section_type": None,
         "method": "table_window",
         "warnings": [],
+        "confidence_breakdown": {},
+        "confidence_level": "blocked",
+        "allowed_usage": "blocked",
     }
 
 
@@ -557,27 +564,123 @@ def _annotate_snapshot_with_relationships(snapshot: dict[str, Any]) -> None:
 
 
 def _sync_derived_field_details(field_details: dict[str, Any], values: dict[str, Any]) -> None:
-    if values.get("free_cash_flow") is not None and field_details.get("free_cash_flow", {}).get("extracted_value") is None:
-        ocf = field_details.get("operating_cash_flow") or {}
-        capex = field_details.get("capex") or {}
-        evidence_ids = [item for item in [ocf.get("source_evidence_id"), capex.get("source_evidence_id")] if item]
-        field_details["free_cash_flow"] = {
-            "field": "free_cash_flow",
-            "extracted_value": values.get("free_cash_flow"),
-            "unit": ocf.get("unit") or capex.get("unit"),
-            "currency": ocf.get("currency") or capex.get("currency"),
-            "period": ocf.get("period") or capex.get("period"),
-            "source_evidence_id": evidence_ids[0] if evidence_ids else None,
-            "source_evidence_ids": evidence_ids,
-            "confidence": round(min(float(ocf.get("confidence") or 0.0), float(capex.get("confidence") or 0.0)) * 0.9, 3) if evidence_ids else 0.0,
-            "missing_reason": None,
-            "source_text": "operating_cash_flow - abs(capex)",
-            "chunk_id": ocf.get("chunk_id") or capex.get("chunk_id"),
-            "chunk_section_type": ocf.get("chunk_section_type") or capex.get("chunk_section_type"),
-            "method": "derived",
-            "extraction_method": "derived",
-            "warnings": [],
-        }
+    if (
+        (field_details.get("gross_profit") or {}).get("extracted_value") is not None
+        and (field_details.get("revenue") or {}).get("extracted_value") not in (None, 0)
+    ):
+        derived = derive_gross_margin(field_details)
+        if derived.get("extracted_value") is not None:
+            values["gross_margin"] = derived["extracted_value"]
+        field_details["gross_margin"] = derived
+    if values.get("free_cash_flow") is not None and (
+        field_details.get("free_cash_flow", {}).get("extracted_value") is None
+        or not field_details.get("free_cash_flow", {}).get("input_evidence_ids")
+    ):
+        derived = derive_free_cash_flow(field_details)
+        if derived.get("extracted_value") is not None:
+            values["free_cash_flow"] = derived["extracted_value"]
+        field_details["free_cash_flow"] = derived
+
+
+def _factor_evidence_id(ticker: str, period: str | None, field: str) -> str | None:
+    if not period:
+        return None
+    return f"factor_daily_{ticker.replace('.', '_')}_{period}_{field}"
+
+
+def _phase12_field_source_map(
+    ticker: str,
+    values: dict[str, Any],
+    metadata: dict[str, Any],
+    filing_values: dict[str, Any],
+    filing_metadata: dict[str, Any],
+    cross_filled_fields: list[str],
+    cross_metadata: dict[str, Any],
+) -> dict[str, str]:
+    field_source_map: dict[str, str] = {}
+    period = values.get("period") or metadata.get("factor_trade_date")
+    if metadata.get("source") == "factor_daily":
+        for field in FUNDAMENTAL_FIELDS:
+            if values.get(field) is not None:
+                evidence_id = _factor_evidence_id(ticker, period, field)
+                if evidence_id:
+                    field_source_map[field] = evidence_id
+    filing_evidence_ids = [str(item) for item in filing_metadata.get("evidence_ids") or [] if item]
+    if filing_evidence_ids:
+        for field in filing_values:
+            field_source_map.setdefault(field, filing_evidence_ids[0])
+    cross_evidence_id = cross_metadata.get("source_evidence_id")
+    if cross_evidence_id:
+        for field in cross_filled_fields:
+            field_source_map[field] = str(cross_evidence_id)
+    return field_source_map
+
+
+def _clear_resolved_unit_warning(detail: dict[str, Any], unit_info: dict[str, Any]) -> None:
+    if unit_info.get("unit_warning") in {"ambiguous_unit", "percentage_not_amount"}:
+        return
+    if detail.get("missing_reason") == "ambiguous_unit" and float(unit_info.get("unit_confidence") or 0.0) >= 0.6:
+        detail["missing_reason"] = None
+    warnings = list(detail.get("warnings") or [])
+    if "ambiguous_unit" in warnings and float(unit_info.get("unit_confidence") or 0.0) >= 0.6:
+        detail["warnings"] = [warning for warning in warnings if warning != "ambiguous_unit"]
+
+
+def _harden_field_details(
+    ticker: str,
+    market: str | None,
+    field_details: dict[str, Any],
+    values: dict[str, Any],
+    *,
+    field_source_map: dict[str, str] | None,
+    source_metadata: dict[str, Any] | None,
+    source_quality: str | None,
+) -> dict[str, Any]:
+    for field in FUNDAMENTAL_FIELDS:
+        detail = dict(field_details.get(field) or _field_detail_defaults(field, market, values.get("period"), "field_not_found"))
+        mapped_evidence_id = (field_source_map or {}).get(field)
+        if values.get(field) is not None and mapped_evidence_id and detail.get("method") != "derived":
+            detail["extracted_value"] = values[field]
+            detail["source_evidence_id"] = mapped_evidence_id
+            detail["source_evidence_ids"] = [mapped_evidence_id]
+            detail["method"] = detail.get("method") if detail.get("method") in {"factor_daily", "cross_listed_official_fundamentals"} else "factor_daily"
+            detail["missing_reason"] = None
+        elif detail.get("extracted_value") is None and values.get(field) is not None:
+            detail["extracted_value"] = values[field]
+            detail["missing_reason"] = None
+        field_details[field] = detail
+    field_details = link_field_evidence(
+        field_details,
+        field_source_map=field_source_map,
+        source_metadata=source_metadata,
+    )
+    for field, detail in field_details.items():
+        unit_info = normalize_financial_unit(
+            detail.get("extracted_value"),
+            detail.get("unit"),
+            field=field,
+            market=market,
+            table_header=detail.get("source_text"),
+            context=detail.get("source_text"),
+        )
+        detail["unit_confidence"] = unit_info.get("unit_confidence")
+        detail["unit_inferred"] = unit_info.get("unit_inferred")
+        detail["unit_warning"] = unit_info.get("unit_warning")
+        detail["normalized_unit"] = unit_info.get("normalized_unit")
+        detail["scale"] = unit_info.get("scale")
+        if unit_info.get("currency"):
+            detail["currency"] = detail.get("currency") or unit_info.get("currency")
+        _clear_resolved_unit_warning(detail, unit_info)
+        score = score_fundamental_field(field, detail, source_quality=source_quality)
+        detail["confidence"] = score["confidence"]
+        detail["confidence_breakdown"] = score["confidence_breakdown"]
+        detail["confidence_level"] = score["confidence_level"]
+        detail["allowed_usage"] = score["allowed_usage"]
+        if values.get(field) is None and detail.get("extracted_value") is not None and not detail.get("missing_reason"):
+            normalized_value = _normalize_extract_value(detail.get("extracted_value"))
+            if normalized_value is not None:
+                values[field] = normalized_value
+    return field_details
 
 
 def infer_from_filing_text(conn: sqlite3.Connection, ticker: str) -> tuple[dict[str, Any], dict[str, Any]]:
@@ -738,6 +841,39 @@ def build_fundamentals_snapshot(
     values = {**field_values, **{key: value for key, value in values.items() if value is not None}}
     _annotate_snapshot_with_relationships(values)
     _sync_derived_field_details(field_details, values)
+    field_source_map = _phase12_field_source_map(
+        ticker,
+        values,
+        metadata,
+        filing_values,
+        filing_metadata,
+        cross_filled_fields,
+        cross_metadata,
+    )
+    source_metadata = {
+        "source_snapshot_id": cross_metadata.get("source_snapshot_id"),
+        "source_url": metadata.get("source_url"),
+        "published_at": values.get("period") or filing_metadata.get("period"),
+    }
+    field_details = _harden_field_details(
+        ticker,
+        market,
+        field_details,
+        values,
+        field_source_map=field_source_map,
+        source_metadata=source_metadata,
+        source_quality=source_quality,
+    )
+    _sync_derived_field_details(field_details, values)
+    field_details = _harden_field_details(
+        ticker,
+        market,
+        field_details,
+        values,
+        field_source_map=field_source_map,
+        source_metadata=source_metadata,
+        source_quality=source_quality,
+    )
     missing_fields = [field for field in FUNDAMENTAL_FIELDS if values.get(field) is None]
     missing_reasons = {
         field: (field_details.get(field) or {}).get("missing_reason") or "field_not_found"
@@ -755,7 +891,7 @@ def build_fundamentals_snapshot(
         source_evidence_ids.append(cross_metadata["source_evidence_id"])
     if filing_metadata.get("evidence_ids"):
         source_evidence_ids = list(dict.fromkeys(list(filing_metadata["evidence_ids"]) + source_evidence_ids))
-    source_evidence_ids = list(dict.fromkeys(source_evidence_ids))
+    source_evidence_ids = list(dict.fromkeys(source_evidence_ids + collect_field_evidence_ids(field_details)))
     present_count = len([field for field in FUNDAMENTAL_FIELDS if values.get(field) is not None])
     confidence = round(min(0.95, max(confidence, 0.25 + present_count / len(FUNDAMENTAL_FIELDS) * 0.5 + (0.05 if source_evidence_ids else 0.0))), 3)
     if freshness_status == "missing" and present_count >= 1:

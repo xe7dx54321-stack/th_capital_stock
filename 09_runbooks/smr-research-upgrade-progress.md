@@ -410,3 +410,89 @@ python 08_scripts/jobs/build_peer_valuation_data.py --ticker 09988.HK --json
 python 08_scripts/jobs/build_historical_valuation_snapshot.py --ticker 09988.HK --json
 python 08_scripts/verification/validate_phase11_peer_historical_repaired_candidate.py --ticker 09988.HK --days 365 --json
 ```
+
+## Stage 12 Goal
+
+Phase 12 focuses on A/H evidence quality and field confidence hardening. Phase
+11 made `09988.HK` peer and historical valuation inputs available; Phase 12
+raises the quality of the underlying fundamentals fields so valuation and bear
+case responses are traceable and confidence-scored.
+
+Current Phase 11 checkpoint:
+
+- Commit: `332a32aa70f7e0c32eed60c4d92bc85bb54c4869`
+- Stage: `Phase 11: Peer Data & Historical Valuation Completion`
+- `09988.HK`: still `candidate_shadow`, `promotion_allowed=false`
+- Peer set: `hk_internet_platforms`, `peer_count_available=4/2`
+- Historical valuation: `available`, with `pb` and `pe_ttm`
+- Bear-case response: `partially_mitigated`
+- Main remaining blockers: `DATA_QUALITY_RISK`, `AMBIGUOUS_UNIT`,
+  `MISSING_SOURCE_EVIDENCE_ID`, field confidence, and partially mitigated high
+  bear case
+
+### Phase 12 Goals
+
+1. Link key A/H fundamentals fields to source evidence where justified.
+2. Normalize A/H financial units with explicit confidence and blocked handling
+   for ambiguous units.
+3. Add field-level confidence breakdowns and allowed usage.
+4. Ensure derived fields inherit input evidence and never outrank their inputs.
+5. Add Phase 12 data-quality before/after reporting.
+6. Recalculate bear-case response with evidence-quality awareness.
+7. Revalidate `09988.HK` without relaxing promotion rules.
+
+### Phase 12 Non-goals
+
+- Do not add new complex agents.
+- Do not execute real trades.
+- Do not expand the watchlist.
+- Do not add a broad new data-source program.
+- Do not label proxy EPS as official consensus.
+- Do not allow fields without `source_evidence_id` to support promotion.
+- Do not force ambiguous units into valuation or core bear-case responses.
+- Do not delete high bear case claims to manufacture `pending_human_review`.
+
+### Phase 12 New Artifacts
+
+- `08_scripts/lib/smr_financial_units.py`
+- `08_scripts/lib/smr_field_evidence_linkage.py`
+- `08_scripts/lib/smr_fundamentals_confidence.py`
+- `08_scripts/lib/smr_derived_fundamentals.py`
+- `08_scripts/reporting/build_phase12_data_quality_before_after.py`
+- `08_scripts/verification/validate_phase12_evidence_quality_repaired_candidate.py`
+- `docs/plans/2026-05-23-phase12-ah-evidence-quality.md`
+
+### Phase 12 Checkpoint Results
+
+- `09988.HK` fields with source evidence: at least 15 after hardening.
+- `MISSING_SOURCE_EVIDENCE_ID`: reduced from field-level root causes to zero
+  in the Phase 12 before/after report.
+- `AMBIGUOUS_UNIT`: reduced from field-level root causes to zero in the Phase
+  12 before/after report.
+- Field confidence now includes breakdowns for mapping, unit, source evidence,
+  section type, period match, and sanity checks.
+- `gross_margin` is derived from hardened `gross_profit` and `revenue` inputs
+  with inherited evidence.
+- `free_cash_flow` remains blocked because `capex` is still missing; the
+  missing input is explicit.
+- Bear-case response remains `partially_mitigated`; valuation/data-quality
+  evidence improves, but high bear case still prevents pending review.
+- Candidate status remains `candidate_shadow`.
+- Promotion rules remain unchanged; no `pending_human_review` was manufactured.
+
+### Phase 12 Validation Commands
+
+```bash
+python -m py_compile 08_scripts/lib/*.py 08_scripts/jobs/*.py 08_scripts/verification/*.py 08_scripts/reporting/*.py
+python -m unittest discover -s tests -v
+python 08_scripts/verification/validate_phase3_e2e.py
+python 08_scripts/verification/validate_phase4_live_e2e.py --tickers NVDA --days 180 --timeout 240
+python 08_scripts/verification/validate_phase5_paper_portfolio_smoke.py
+python 08_scripts/verification/validate_phase6_multi_ticker_live.py --watchlist ai_core --save-run-history --compare-last-run --timeout 240
+python 08_scripts/reporting/build_phase8_blocker_triage.py --limit 10 --upsert-repair-queue
+python 08_scripts/jobs/repair_valuation_snapshot.py --ticker 09988.HK --execute --json
+python 08_scripts/jobs/build_peer_valuation_data.py --ticker 09988.HK --json
+python 08_scripts/jobs/build_historical_valuation_snapshot.py --ticker 09988.HK --json
+python 08_scripts/verification/validate_phase11_peer_historical_repaired_candidate.py --ticker 09988.HK --days 365 --json
+python 08_scripts/verification/validate_phase12_evidence_quality_repaired_candidate.py --ticker 09988.HK --days 365 --json
+```

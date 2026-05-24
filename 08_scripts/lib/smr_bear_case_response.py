@@ -14,6 +14,7 @@ class BearCaseResponse:
     bear_case_text: str
     response_status: str
     response_evidence_ids: list[str]
+    evidence_quality: str
     response_summary: str
     action_effect: str
     confidence: float
@@ -28,6 +29,7 @@ VALID_ACTION_EFFECTS = {
     "downgrade_to_observation",
     "block_pending_review",
     "needs_manual_review",
+    "reduced_size_candidate_allowed",
 }
 
 
@@ -56,6 +58,18 @@ def _valuation_support_evidence(ticker: str, valuation_snapshot: dict[str, Any])
     return evidence
 
 
+def _field_quality_support(fundamentals_snapshot: dict[str, Any]) -> tuple[int, int]:
+    supporting = 0
+    promotion = 0
+    for detail in (fundamentals_snapshot.get("field_details") or {}).values():
+        usage = detail.get("allowed_usage")
+        if usage in {"supporting_evidence", "promotion_evidence"} and detail.get("source_evidence_id"):
+            supporting += 1
+        if usage == "promotion_evidence" and detail.get("source_evidence_id"):
+            promotion += 1
+    return supporting, promotion
+
+
 def respond_to_bear_case(
     ticker: str,
     bear_case: dict[str, Any] | None,
@@ -81,6 +95,7 @@ def respond_to_bear_case(
     live_count, usable_count = _quality_counts(evidence_rows)
     fundamentals_missing = fundamentals_snapshot.get("missing_fields") or []
     valuation_usage = valuation_snapshot.get("allowed_usage")
+    field_supporting_count, field_promotion_count = _field_quality_support(fundamentals_snapshot)
     responses: list[BearCaseResponse] = []
     for index, claim in enumerate(claims, start=1):
         text = str(claim.get("claim_text") or claim.get("text") or "")
@@ -88,6 +103,7 @@ def respond_to_bear_case(
         evidence_ids = [row.get("evidence_id") for row in evidence_rows if row.get("evidence_id")][:3]
         valuation_blocked = valuation_usage in {"context_only", "blocked_due_to_stale_price"}
         core_valuation_risk = any(token in text.lower() for token in ("valuation", "rerating", "multiple", "price"))
+        data_quality_risk = any(token in text.lower() for token in ("data quality", "fundamentals", "field quality", "evidence quality"))
         valuation_evidence_ids = _valuation_support_evidence(ticker, valuation_snapshot)
         if severity == "high" and core_valuation_risk and valuation_blocked:
             status = "unresolved"
@@ -95,33 +111,61 @@ def respond_to_bear_case(
             confidence = 0.25
             summary = "high bear case remains unresolved because valuation/data quality gates are still blocking"
             evidence_ids = []
+            evidence_quality = "missing"
         elif severity == "high" and core_valuation_risk and valuation_evidence_ids:
             status = "partially_mitigated"
             action_effect = "reduce_position_size"
             confidence = 0.61
             summary = "peer or historical valuation support partially addresses valuation rerating risk, but it remains supporting-only"
             evidence_ids = valuation_evidence_ids[:3]
+            evidence_quality = "supporting"
+        elif severity == "high" and data_quality_risk and field_promotion_count >= 5:
+            status = "partially_mitigated"
+            action_effect = "reduce_position_size"
+            confidence = 0.63
+            summary = "field-level source evidence and confidence improved, but high bear-case risk remains only partially mitigated"
+            evidence_ids = [
+                detail.get("source_evidence_id")
+                for detail in (fundamentals_snapshot.get("field_details") or {}).values()
+                if detail.get("allowed_usage") == "promotion_evidence" and detail.get("source_evidence_id")
+            ][:3]
+            evidence_quality = "promotion_evidence"
+        elif severity == "high" and data_quality_risk and field_supporting_count >= 5:
+            status = "partially_mitigated"
+            action_effect = "reduce_position_size"
+            confidence = 0.58
+            summary = "supporting field evidence improves data-quality risk, but promotion-grade evidence remains incomplete"
+            evidence_ids = [
+                detail.get("source_evidence_id")
+                for detail in (fundamentals_snapshot.get("field_details") or {}).values()
+                if detail.get("allowed_usage") in {"supporting_evidence", "promotion_evidence"} and detail.get("source_evidence_id")
+            ][:3]
+            evidence_quality = "supporting"
         elif severity == "high" and (valuation_blocked or len(fundamentals_missing) >= 3) and (usable_count >= 1 or live_count >= 2):
             status = "partially_mitigated"
             action_effect = "reduce_position_size"
             confidence = 0.56
             summary = "live evidence addresses part of the risk, but valuation or fundamentals gaps still prevent pending review"
+            evidence_quality = "supporting" if usable_count else "context_only"
         elif usable_count >= 2 and live_count >= 2 and len(fundamentals_missing) <= 2:
             status = "mitigated"
             action_effect = "keep_status"
             confidence = 0.72
             summary = "live evidence and fundamentals reduce the bear-case risk enough for normal review gates"
+            evidence_quality = "promotion_evidence"
         elif usable_count >= 1 or live_count >= 2:
             status = "partially_mitigated"
             action_effect = "reduce_position_size"
             confidence = 0.58
             summary = "some live evidence mitigates the risk, but unresolved valuation/fundamentals gaps remain"
+            evidence_quality = "supporting" if usable_count else "context_only"
         else:
             status = "unresolved"
             action_effect = "block_pending_review"
             confidence = 0.3
             summary = "insufficient live evidence to answer the bear case"
             evidence_ids = []
+            evidence_quality = "missing"
         responses.append(
             BearCaseResponse(
                 ticker=ticker,
@@ -129,6 +173,7 @@ def respond_to_bear_case(
                 bear_case_text=text,
                 response_status=status,
                 response_evidence_ids=[str(item) for item in evidence_ids if item],
+                evidence_quality=evidence_quality,
                 response_summary=summary,
                 action_effect=action_effect,
                 confidence=confidence,
