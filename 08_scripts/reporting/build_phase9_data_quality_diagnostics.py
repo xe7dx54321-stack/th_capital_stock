@@ -112,6 +112,45 @@ def root_causes_from_field_quality(field_quality: dict[str, Any]) -> list[dict[s
     return causes
 
 
+def data_quality_status(root_causes: list[dict[str, Any]], evidence_issues: list[dict[str, Any]] | None = None) -> str:
+    evidence_issues = evidence_issues or []
+    if root_causes or any(issue.get("issue_code") in {"EVIDENCE_QUALITY_LOW", "FILING_CHUNK_RELEVANCE_LOW"} for issue in evidence_issues):
+        return "degraded"
+    if any(cause.get("severity") == "high" for cause in root_causes):
+        return "degraded"
+    return "pass"
+
+
+def root_cause_keys(root_causes: list[dict[str, Any]]) -> list[str]:
+    keys = []
+    for cause in root_causes:
+        fields = cause.get("affected_fields") or []
+        if fields:
+            keys.extend(f"{cause.get('code')}:{field}" for field in fields)
+        else:
+            keys.append(str(cause.get("code") or "UNKNOWN"))
+    return sorted(set(keys))
+
+
+def field_changes(before_fields: dict[str, Any], after_fields: dict[str, Any]) -> dict[str, Any]:
+    changes: dict[str, Any] = {}
+    for field in sorted(set(before_fields) | set(after_fields)):
+        before = before_fields.get(field) or {}
+        after = after_fields.get(field) or {}
+        before_status = before.get("status")
+        after_status = after.get("status")
+        before_reason = before.get("missing_reason")
+        after_reason = after.get("missing_reason")
+        if before_status != after_status or before_reason != after_reason:
+            changes[field] = {
+                "before": before_status,
+                "after": after_status,
+                "before_missing_reason": before_reason,
+                "missing_reason": after_reason,
+            }
+    return changes
+
+
 def suggested_field_fix(field: str, reason: str) -> str:
     if reason == "mapping_missing":
         return f"add HK/CN synonyms for {field}"
@@ -176,19 +215,16 @@ def evidence_issues(conn: sqlite3.Connection, ticker: str, limit: int = 20) -> l
 
 
 def build_diagnostics(conn: sqlite3.Connection, ticker: str, *, refresh_fundamentals: bool = False, limit: int = 20) -> dict[str, Any]:
+    before_snapshot = latest_fundamentals_snapshot(conn, ticker)
     if refresh_fundamentals:
         snapshot = build_fundamentals_snapshot(conn, ticker, prefer_live=True)
     else:
-        snapshot = latest_fundamentals_snapshot(conn, ticker) or build_fundamentals_snapshot(conn, ticker, prefer_live=True)
+        snapshot = before_snapshot or build_fundamentals_snapshot(conn, ticker, prefer_live=True)
     fields = field_quality_from_snapshot(snapshot)
     root_causes = root_causes_from_field_quality(fields)
     issues = evidence_issues(conn, ticker, limit=limit)
-    status = "pass"
-    if root_causes or any(issue.get("issue_code") in {"EVIDENCE_QUALITY_LOW", "FILING_CHUNK_RELEVANCE_LOW"} for issue in issues):
-        status = "degraded"
-    if any(cause.get("severity") == "high" for cause in root_causes):
-        status = "degraded"
-    return {
+    status = data_quality_status(root_causes, issues)
+    payload = {
         "generated_at": now_ts(),
         "ticker": ticker.upper(),
         "market": market_for_ticker(ticker),
@@ -199,6 +235,22 @@ def build_diagnostics(conn: sqlite3.Connection, ticker: str, *, refresh_fundamen
         "evidence_issues": issues,
         "field_quality": fields,
     }
+    if refresh_fundamentals and before_snapshot:
+        before_fields = field_quality_from_snapshot(before_snapshot)
+        before_causes = root_causes_from_field_quality(before_fields)
+        before_keys = root_cause_keys(before_causes)
+        after_keys = root_cause_keys(root_causes)
+        payload["before"] = {
+            "status": data_quality_status(before_causes),
+            "root_causes": before_keys,
+        }
+        payload["after"] = {
+            "status": status,
+            "root_causes": after_keys,
+            "resolved_root_causes": sorted(set(before_keys) - set(after_keys)),
+        }
+        payload["field_changes"] = field_changes(before_fields, fields)
+    return payload
 
 
 def render_markdown(payload: dict[str, Any]) -> str:

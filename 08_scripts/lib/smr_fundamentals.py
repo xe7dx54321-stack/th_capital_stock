@@ -35,6 +35,10 @@ FUNDAMENTAL_FIELDS = [
     "roic",
 ]
 
+CROSS_LISTED_FUNDAMENTAL_SOURCE = {
+    "09988.HK": "BABA",
+}
+
 
 def ensure_fundamentals_tables(conn: sqlite3.Connection) -> None:
     conn.executescript(
@@ -305,15 +309,130 @@ def build_us_fundamentals(symbol: str, timeout: int = 30) -> tuple[dict[str, Any
 def build_factor_fundamentals(conn: sqlite3.Connection, ticker: str) -> tuple[dict[str, Any], dict[str, Any]]:
     values = {
         "revenue": factor_value(conn, ticker, ["revenue"]),
+        "gross_profit": factor_value(conn, ticker, ["gross_profit"]),
         "net_income": factor_value(conn, ticker, ["net_profit", "holder_profit"]),
         "eps_basic": factor_value(conn, ticker, ["basic_eps_reported", "eps_ttm"]),
+        "eps_diluted": factor_value(conn, ticker, ["eps_ttm"]),
         "gross_margin": factor_value(conn, ticker, ["gross_margin"]),
         "operating_cash_flow": factor_value(conn, ticker, ["ocf_per_share"]),
         "cash_and_equivalents": None,
         "total_debt": None,
     }
     values["period"] = latest_factor_date(conn, ticker)
-    return values, {"source": "factor_daily", "factor_trade_date": values["period"]}
+    return values, {"source": "factor_daily", "factor_trade_date": values["period"], "book_value_per_share": factor_value(conn, ticker, ["bps_reported"])}
+
+
+def historical_fundamental_support(conn: sqlite3.Connection, ticker: str, *, limit: int = 4) -> list[dict[str, Any]]:
+    """Return auditable period-level revenue/equity support for historical valuation."""
+
+    rows = []
+    if relation_exists(conn, "factor_daily"):
+        columns = table_columns(conn, "factor_daily")
+        if {"factor_name", "factor_value", "trade_date", "ts_code"}.issubset(columns):
+            rows = conn.execute(
+                """
+                SELECT trade_date, factor_name, factor_value
+                FROM factor_daily
+                WHERE ts_code=?
+                  AND factor_name IN ('revenue', 'shareholders_equity', 'total_equity', 'bps_reported')
+                ORDER BY trade_date DESC
+                """,
+                (ticker,),
+            ).fetchall()
+    grouped: dict[str, dict[str, float]] = {}
+    for period, name, value in rows:
+        grouped.setdefault(str(period), {})[str(name)] = normalize_numeric(value)
+    market = market_for_ticker(ticker)
+    currency = default_currency_for_market(market)
+    support: list[dict[str, Any]] = []
+    for period in list(grouped.keys())[: max(1, int(limit or 4))]:
+        values = grouped[period]
+        revenue = values.get("revenue")
+        equity = values.get("shareholders_equity") or values.get("total_equity")
+        item = {
+            "ticker": ticker.upper(),
+            "period": period,
+            "revenue": {
+                "value": revenue,
+                "currency": currency,
+                "unit": currency,
+                "source_evidence_id": f"factor_daily_{ticker.replace('.', '_')}_{period}_revenue" if revenue is not None else None,
+                "confidence": 0.68 if revenue is not None else 0.0,
+                "missing_reason": None if revenue is not None else "field_not_found",
+            },
+            "shareholders_equity": {
+                "value": equity,
+                "currency": currency,
+                "unit": currency,
+                "source_evidence_id": f"factor_daily_{ticker.replace('.', '_')}_{period}_shareholders_equity" if equity is not None else None,
+                "confidence": 0.62 if equity is not None else 0.0,
+                "missing_reason": None if equity is not None else ("derived_field_missing_inputs" if values.get("bps_reported") is not None else "field_not_found"),
+            },
+        }
+        if equity is None and values.get("bps_reported") is not None:
+            item["shareholders_equity"]["book_value_per_share"] = values.get("bps_reported")
+            item["shareholders_equity"]["note"] = "book value per share exists but shares outstanding is missing"
+        support.append(item)
+    if support:
+        return support
+
+    snapshot = latest_fundamentals_snapshot(conn, ticker)
+    if not snapshot:
+        return []
+    period = str(snapshot.get("period") or snapshot.get("created_at") or "latest")
+    return [
+        {
+            "ticker": ticker.upper(),
+            "period": period,
+            "revenue": {
+                "value": snapshot.get("revenue"),
+                "currency": currency,
+                "unit": currency,
+                "source_evidence_id": (snapshot.get("source_evidence_ids") or [None])[0],
+                "confidence": float(snapshot.get("confidence") or 0.0) if snapshot.get("revenue") is not None else 0.0,
+                "missing_reason": None if snapshot.get("revenue") is not None else "field_not_found",
+            },
+            "shareholders_equity": {
+                "value": snapshot.get("shareholders_equity"),
+                "currency": currency,
+                "unit": currency,
+                "source_evidence_id": (snapshot.get("source_evidence_ids") or [None])[0],
+                "confidence": float(snapshot.get("confidence") or 0.0) if snapshot.get("shareholders_equity") is not None else 0.0,
+                "missing_reason": None if snapshot.get("shareholders_equity") is not None else "field_not_found",
+            },
+        }
+    ]
+
+
+def cross_listed_fundamentals(conn: sqlite3.Connection, ticker: str, timeout: int = 30) -> tuple[dict[str, Any], dict[str, Any]]:
+    source_ticker = CROSS_LISTED_FUNDAMENTAL_SOURCE.get(str(ticker or "").upper())
+    if not source_ticker:
+        return {}, {}
+    source_snapshot = latest_fundamentals_snapshot(conn, source_ticker)
+    if not source_snapshot:
+        source_snapshot = build_fundamentals_snapshot(conn, source_ticker, timeout=timeout, prefer_live=True)
+    allowed_fields = [
+        "revenue",
+        "gross_profit",
+        "operating_income",
+        "net_income",
+        "operating_cash_flow",
+        "cash_and_equivalents",
+        "total_debt",
+        "shareholders_equity",
+    ]
+    values = {field: source_snapshot.get(field) for field in allowed_fields if source_snapshot.get(field) is not None}
+    evidence_id = None
+    if source_snapshot.get("snapshot_id"):
+        evidence_id = f"ev_fundamentals_{source_ticker.replace('.', '_')}_{str(source_snapshot['snapshot_id'])[-12:]}"
+    return values, {
+        "source": "cross_listed_official_fundamentals",
+        "source_ticker": source_ticker,
+        "source_snapshot_id": source_snapshot.get("snapshot_id"),
+        "source_evidence_id": evidence_id,
+        "source_period": source_snapshot.get("period"),
+        "note": "same-issuer cross-listing fundamentals; per-share fields are intentionally not copied",
+    }
 
 
 def _normalize_extract_value(value: Any) -> float | None:
@@ -576,6 +695,12 @@ def build_fundamentals_snapshot(
             errors.append(f"sec_companyfacts_failed: {exc}")
     if not values:
         values, metadata = build_factor_fundamentals(conn, ticker)
+    cross_values, cross_metadata = cross_listed_fundamentals(conn, ticker, timeout=timeout)
+    cross_filled_fields = []
+    for field, value in cross_values.items():
+        if values.get(field) is None and value is not None:
+            values[field] = value
+            cross_filled_fields.append(field)
     filing_values, filing_metadata = infer_from_relevant_filing_text(conn, ticker)
     if not filing_values:
         filing_values, fallback_filing_metadata = infer_from_filing_text(conn, ticker)
@@ -604,6 +729,12 @@ def build_fundamentals_snapshot(
             field_details[field]["extracted_value"] = value
             field_details[field]["confidence"] = max(float(field_details[field].get("confidence") or 0.0), 0.35)
             field_details[field]["missing_reason"] = None
+    if cross_filled_fields and cross_metadata.get("source_evidence_id"):
+        for field in cross_filled_fields:
+            if field in field_details and field_values.get(field) is not None:
+                field_details[field]["source_evidence_id"] = cross_metadata["source_evidence_id"]
+                field_details[field]["source_evidence_ids"] = [cross_metadata["source_evidence_id"]]
+                field_details[field]["method"] = "cross_listed_official_fundamentals"
     values = {**field_values, **{key: value for key, value in values.items() if value is not None}}
     _annotate_snapshot_with_relationships(values)
     _sync_derived_field_details(field_details, values)
@@ -616,8 +747,12 @@ def build_fundamentals_snapshot(
         **metadata,
         "filing_inference": filing_metadata,
         "field_extraction": filing_field_snapshot,
+        "cross_listed_fundamentals": cross_metadata if cross_filled_fields else {},
+        "cross_filled_fields": cross_filled_fields,
         "errors": errors,
     }
+    if cross_metadata.get("source_evidence_id"):
+        source_evidence_ids.append(cross_metadata["source_evidence_id"])
     if filing_metadata.get("evidence_ids"):
         source_evidence_ids = list(dict.fromkeys(list(filing_metadata["evidence_ids"]) + source_evidence_ids))
     source_evidence_ids = list(dict.fromkeys(source_evidence_ids))

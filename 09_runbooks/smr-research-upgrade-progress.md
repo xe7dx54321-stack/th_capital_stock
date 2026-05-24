@@ -326,3 +326,87 @@ Current Phase 9 checkpoint:
 - Repair queue resolution marks `resolved` only after validation proves the
   original blocker disappeared.
 - Promotion rules remain unchanged.
+
+## Stage 11 Goal
+
+Phase 11 focuses on peer data and historical valuation completion. Phase 10
+fixed price and valuation freshness for `09988.HK`; Phase 11 makes the peer and
+historical valuation inputs usable or explicitly explainable.
+
+Current Phase 10 checkpoint:
+
+- Commit: `a1acbf1569897f1f814b602b8f2276c075dab94c`
+- Stage: `Phase 10: Repair Resolution & Valuation Input Hardening`
+- `09988.HK`: `candidate_shadow`, `price_status=fresh`,
+  `valuation_status=partial`, `allowed_usage=supporting_evidence`
+- Peer set: `hk_internet_platforms`, previously configured but unavailable
+- Historical valuation: previously `missing`
+- Forward EPS: `internal_proxy`, supporting evidence only, not official
+  consensus
+- Main remaining blockers: `DATA_QUALITY_RISK`, peer/historical data gaps, and
+  high bear case blockers
+
+### Phase 11 Goals
+
+1. Complete peer data for `hk_internet_platforms`.
+2. Raise `09988.HK` peer availability from `0/2` toward at least `2/2`.
+3. Add peer multiples and metric-level missing reasons.
+4. Build historical valuation data v1, prioritizing `ps_ttm` or `pb`.
+5. Add A/H historical fundamentals support for revenue and equity attempts.
+6. Reduce `09988.HK` field-level data-quality root causes where possible.
+7. Recalculate valuation-related bear-case response from live or stored
+   valuation evidence.
+8. Revalidate `09988.HK` without relaxing promotion rules.
+
+### Phase 11 Non-goals
+
+- Do not add Industry Chain Agent.
+- Do not add Investment Committee Agent.
+- Do not execute real trades.
+- Do not expand the watchlist.
+- Do not add large new data sources.
+- Do not label proxy EPS as official consensus.
+- Do not write strong cheap/expensive conclusions from partial peer data.
+- Do not write historical high/low conclusions when percentile data is missing.
+- Do not bypass portfolio risk, data quality, or high bear case gates.
+
+### Phase 11 New Artifacts
+
+- `08_scripts/jobs/build_peer_valuation_data.py`
+- `08_scripts/jobs/build_historical_valuation_snapshot.py`
+- `08_scripts/verification/validate_phase11_peer_historical_repaired_candidate.py`
+- `docs/plans/2026-05-23-phase11-peer-historical-valuation.md`
+
+### Phase 11 Checkpoint Results
+
+- `09988.HK` peer set: `hk_internet_platforms`
+- Peer count: `0/2` baseline to `4/2` after Phase 11 peer data completion
+- Peer comparison: `supporting`
+- Historical valuation: `available`
+- Available historical metrics: `pb`, `pe_ttm`
+- Historical fundamentals support: revenue is available from `factor_daily`;
+  shareholders equity is attempted, with `book_value_per_share` present but
+  shares outstanding still missing for period-level equity derivation
+- Data-quality root causes reduced: `gross_profit`, `eps_basic`,
+  `shareholders_equity`, and `gross_margin` moved from missing to extracted
+  or confidence-review states
+- Bear-case response: valuation rerating risk moves from `unresolved` to
+  `partially_mitigated`, with action effect `reduce_position_size`
+- Candidate status: still `candidate_shadow`
+- Promotion rules: unchanged; no `pending_human_review` was manufactured
+
+### Phase 11 Validation Commands
+
+```bash
+python -m py_compile 08_scripts/lib/*.py 08_scripts/jobs/*.py 08_scripts/verification/*.py 08_scripts/reporting/*.py
+python -m unittest discover -s tests -v
+python 08_scripts/verification/validate_phase3_e2e.py
+python 08_scripts/verification/validate_phase4_live_e2e.py --tickers NVDA --days 180 --timeout 240
+python 08_scripts/verification/validate_phase5_paper_portfolio_smoke.py
+python 08_scripts/verification/validate_phase6_multi_ticker_live.py --watchlist ai_core --save-run-history --compare-last-run --timeout 240
+python 08_scripts/reporting/build_phase8_blocker_triage.py --limit 10 --upsert-repair-queue
+python 08_scripts/jobs/repair_valuation_snapshot.py --ticker 09988.HK --execute --json
+python 08_scripts/jobs/build_peer_valuation_data.py --ticker 09988.HK --json
+python 08_scripts/jobs/build_historical_valuation_snapshot.py --ticker 09988.HK --json
+python 08_scripts/verification/validate_phase11_peer_historical_repaired_candidate.py --ticker 09988.HK --days 365 --json
+```

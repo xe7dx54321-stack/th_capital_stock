@@ -43,6 +43,19 @@ def _quality_counts(evidence_rows: list[dict[str, Any]]) -> tuple[int, int]:
     return live, usable
 
 
+def _valuation_support_evidence(ticker: str, valuation_snapshot: dict[str, Any]) -> list[str]:
+    generated_at = str(valuation_snapshot.get("generated_at") or "").replace(" ", "_").replace(":", "")
+    suffix = generated_at or "latest"
+    evidence = []
+    peer = valuation_snapshot.get("peer_comparison") or {}
+    historical = valuation_snapshot.get("historical_valuation") or {}
+    if peer.get("peer_comparison_status") in {"supporting", "promotion_supporting"}:
+        evidence.append(f"valuation_peer_snapshot_{ticker}_{suffix}")
+    if historical.get("status") in {"partial", "available"}:
+        evidence.append(f"historical_valuation_{ticker}_{suffix}")
+    return evidence
+
+
 def respond_to_bear_case(
     ticker: str,
     bear_case: dict[str, Any] | None,
@@ -75,12 +88,19 @@ def respond_to_bear_case(
         evidence_ids = [row.get("evidence_id") for row in evidence_rows if row.get("evidence_id")][:3]
         valuation_blocked = valuation_usage in {"context_only", "blocked_due_to_stale_price"}
         core_valuation_risk = any(token in text.lower() for token in ("valuation", "rerating", "multiple", "price"))
+        valuation_evidence_ids = _valuation_support_evidence(ticker, valuation_snapshot)
         if severity == "high" and core_valuation_risk and valuation_blocked:
             status = "unresolved"
             action_effect = "block_pending_review"
             confidence = 0.25
             summary = "high bear case remains unresolved because valuation/data quality gates are still blocking"
             evidence_ids = []
+        elif severity == "high" and core_valuation_risk and valuation_evidence_ids:
+            status = "partially_mitigated"
+            action_effect = "reduce_position_size"
+            confidence = 0.61
+            summary = "peer or historical valuation support partially addresses valuation rerating risk, but it remains supporting-only"
+            evidence_ids = valuation_evidence_ids[:3]
         elif severity == "high" and (valuation_blocked or len(fundamentals_missing) >= 3) and (usable_count >= 1 or live_count >= 2):
             status = "partially_mitigated"
             action_effect = "reduce_position_size"

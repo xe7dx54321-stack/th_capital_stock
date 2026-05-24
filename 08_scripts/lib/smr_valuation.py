@@ -6,6 +6,7 @@ from __future__ import annotations
 import json
 import sqlite3
 from datetime import datetime
+from statistics import median
 from typing import Any
 
 from smr_paths import project_path
@@ -31,6 +32,7 @@ def _loads(raw: str | None, fallback: Any) -> Any:
 VALUATION_PEER_SET_PATH = project_path("00_control", "valuation_peer_sets.json")
 HISTORICAL_METRIC_PRIORITY = ("ps_ttm", "pb", "pe_ttm", "ev_ebitda_ttm")
 HISTORICAL_MIN_SAMPLE = 60
+VALUATION_METRICS = ("pe_ttm", "ps_ttm", "pb", "ev_ebitda_ttm")
 
 
 def _as_float(value: Any) -> float | None:
@@ -52,6 +54,13 @@ def _parse_trade_date(value: Any) -> datetime | None:
         except ValueError:
             continue
     return None
+
+
+def _percentile_rank(value: float, samples: list[float]) -> float | None:
+    usable = [item for item in samples if item is not None]
+    if not usable:
+        return None
+    return round(sum(1 for item in usable if item <= value) / len(usable), 4)
 
 
 def load_peer_set_config(path: Any | None = None) -> dict[str, Any]:
@@ -152,9 +161,80 @@ def latest_daily_price(conn: sqlite3.Connection, ticker: str, market: str | None
     return None, None
 
 
-def latest_factor(conn: sqlite3.Connection, ticker: str) -> dict[str, Any]:
+def _latest_long_factor_values(conn: sqlite3.Connection, ticker: str) -> dict[str, Any]:
     if not relation_exists(conn, "factor_daily"):
         return {}
+    columns = table_columns(conn, "factor_daily")
+    if not {"factor_name", "factor_value", "trade_date", "ts_code"}.issubset(columns):
+        return {}
+    rows = conn.execute(
+        """
+        SELECT factor_name, factor_value, trade_date
+        FROM factor_daily
+        WHERE ts_code=?
+        ORDER BY trade_date DESC
+        """,
+        (ticker,),
+    ).fetchall()
+    if not rows:
+        return {}
+    latest_date = rows[0][2]
+    values: dict[str, Any] = {"factor_trade_date": latest_date}
+    for name, value, trade_date in rows:
+        if trade_date != latest_date:
+            continue
+        key = str(name or "").lower()
+        numeric = _as_float(value)
+        if numeric is not None:
+            values[key] = numeric
+    return values
+
+
+def _derive_factor_multiples(conn: sqlite3.Connection, ticker: str, values: dict[str, Any]) -> dict[str, Any]:
+    values = dict(values or {})
+    market = market_for_ticker(ticker)
+    price, price_date = latest_daily_price(conn, ticker, market)
+    fundamentals: dict[str, Any] = {}
+    try:
+        fundamentals = latest_fundamentals(conn, ticker)
+    except Exception:
+        fundamentals = {}
+
+    eps = _as_float(values.get("eps_ttm")) or _as_float(values.get("basic_eps_reported"))
+    eps = eps or _as_float(fundamentals.get("eps_diluted")) or _as_float(fundamentals.get("eps_basic"))
+    bps = _as_float(values.get("bps_reported")) or _as_float(values.get("book_value_per_share"))
+    revenue = _as_float(values.get("revenue")) or _as_float(fundamentals.get("revenue"))
+    market_cap = _as_float(values.get("market_cap")) or _as_float(values.get("total_mv"))
+    equity = _as_float(fundamentals.get("shareholders_equity"))
+
+    if price is not None and eps and eps > 0 and values.get("pe_ttm") is None:
+        values["pe_ttm"] = round(price / eps, 4)
+        values.setdefault("pe_ttm_source", "price_over_eps_ttm")
+    if price is not None and bps and bps > 0 and values.get("pb") is None:
+        values["pb"] = round(price / bps, 4)
+        values.setdefault("pb_source", "price_over_bps")
+    if market_cap and revenue and revenue > 0 and values.get("ps_ttm") is None:
+        values["ps_ttm"] = round(market_cap / revenue, 4)
+        values.setdefault("ps_ttm_source", "market_cap_over_revenue")
+    if market_cap and equity and equity > 0 and values.get("pb") is None:
+        values["pb"] = round(market_cap / equity, 4)
+        values.setdefault("pb_source", "market_cap_over_equity")
+    if eps is not None:
+        values.setdefault("eps_ttm", eps)
+    if bps is not None:
+        values.setdefault("bps_reported", bps)
+    if revenue is not None:
+        values.setdefault("revenue", revenue)
+    if market_cap is not None:
+        values.setdefault("market_cap", market_cap)
+    if values.get("factor_trade_date") is None:
+        values["factor_trade_date"] = price_date or fundamentals.get("period")
+    return values
+
+
+def latest_factor(conn: sqlite3.Connection, ticker: str) -> dict[str, Any]:
+    if not relation_exists(conn, "factor_daily"):
+        return _derive_factor_multiples(conn, ticker, {})
     columns = table_columns(conn, "factor_daily")
     wanted = [col for col in ("pe_ttm", "ps_ttm", "pb", "total_mv", "market_cap", "ev_ebitda_ttm") if col in columns]
     if wanted:
@@ -163,32 +243,13 @@ def latest_factor(conn: sqlite3.Connection, ticker: str) -> dict[str, Any]:
             (ticker,),
         ).fetchone()
         if not row:
-            return {}
+            return _derive_factor_multiples(conn, ticker, {})
         values = {wanted[index]: row[index] for index in range(len(wanted))}
         values["factor_trade_date"] = row[len(wanted)]
-        return values
+        return _derive_factor_multiples(conn, ticker, values)
     if {"factor_name", "factor_value", "trade_date", "ts_code"}.issubset(columns):
-        rows = conn.execute(
-            """
-            SELECT factor_name, factor_value, trade_date
-            FROM factor_daily
-            WHERE ts_code=?
-            ORDER BY trade_date DESC
-            """,
-            (ticker,),
-        ).fetchall()
-        if not rows:
-            return {}
-        latest_date = rows[0][2]
-        values = {"factor_trade_date": latest_date}
-        for name, value, trade_date in rows:
-            if trade_date != latest_date:
-                continue
-            key = str(name or "").lower()
-            if key in {"pe_ttm", "ps_ttm", "pb", "total_mv", "market_cap", "ev_ebitda_ttm"}:
-                values[key] = value
-        return values
-    return {}
+        return _derive_factor_multiples(conn, ticker, _latest_long_factor_values(conn, ticker))
+    return _derive_factor_multiples(conn, ticker, {})
 
 
 def historical_factor_values(conn: sqlite3.Connection, ticker: str, metric: str, limit: int = 900) -> list[float]:
@@ -241,6 +302,42 @@ def historical_price_count(conn: sqlite3.Connection, ticker: str, market: str | 
     return 0
 
 
+def historical_external_valuation_values(ticker: str, metric: str, *, lookback_years: int = 3) -> dict[str, Any]:
+    market = market_for_ticker(ticker)
+    code = str(ticker or "").split(".", 1)[0]
+    period = "\u8fd1\u4e09\u5e74" if lookback_years >= 3 else "\u8fd1\u4e00\u5e74"
+    values: list[float] = []
+    source = None
+    error = None
+    try:
+        import akshare as ak
+
+        if market == "H" and metric in {"pe_ttm", "pb"}:
+            indicator = "\u5e02\u76c8\u7387" if metric == "pe_ttm" else "\u5e02\u51c0\u7387"
+            df = ak.stock_hk_indicator_eniu(symbol=f"hk{code}", indicator=indicator)
+            column = "pe" if metric == "pe_ttm" else "pb"
+            if column in df.columns:
+                values = [_as_float(item) for item in df[column].tolist()]
+                source = "akshare_stock_hk_indicator_eniu"
+        elif market == "US" and metric in {"pe_ttm", "pb"}:
+            indicator = "\u5e02\u76c8\u7387(TTM)" if metric == "pe_ttm" else "\u5e02\u51c0\u7387"
+            df = ak.stock_us_valuation_baidu(symbol=code, indicator=indicator, period=period)
+            value_columns = [col for col in df.columns if col not in {"date", "\u65e5\u671f"}]
+            if value_columns:
+                values = [_as_float(item) for item in df[value_columns[-1]].tolist()]
+                source = "akshare_stock_us_valuation_baidu"
+    except Exception as exc:
+        error = str(exc)
+    usable = [value for value in values if value is not None and value > 0]
+    return {
+        "metric": metric,
+        "source": source,
+        "values": usable,
+        "sample_count": len(usable),
+        "error": error,
+    }
+
+
 def build_historical_valuation(conn: sqlite3.Connection, ticker: str, factor: dict[str, Any], *, lookback_years: int = 3) -> dict[str, Any]:
     market = market_for_ticker(ticker)
     limit = max(60, lookback_years * 252)
@@ -258,25 +355,35 @@ def build_historical_valuation(conn: sqlite3.Connection, ticker: str, factor: di
             metrics[metric] = {"current": current, "status": "not_meaningful", "reason": "negative_or_missing_earnings"}
             missing_reasons.append("pe_ttm_not_meaningful")
             continue
+        source = "factor_daily"
         samples = [value for value in historical_factor_values(conn, ticker, metric, limit=limit) if value is not None]
         if metric == "pe_ttm":
             samples = [value for value in samples if value > 0]
+        external = {}
+        if len(samples) < HISTORICAL_MIN_SAMPLE:
+            external = historical_external_valuation_values(ticker, metric, lookback_years=lookback_years)
+            external_samples = external.get("values") or []
+            if len(external_samples) > len(samples):
+                samples = external_samples[:limit]
+                source = external.get("source") or "external_valuation_series"
         if len(samples) < HISTORICAL_MIN_SAMPLE:
             metrics[metric] = {
                 "current": current,
                 "sample_count": len(samples),
                 "status": "missing",
                 "reason": "sample_insufficient",
+                "source": source,
+                "source_error": external.get("error"),
             }
             missing_reasons.append(f"{metric}_sample_insufficient")
             continue
-        below_or_equal = sum(1 for value in samples if value <= current)
-        percentile = round(below_or_equal / len(samples), 4)
+        percentile = _percentile_rank(current, samples)
         metrics[metric] = {
             "current": current,
             "percentile": percentile,
             "sample_count": len(samples),
             "status": "available",
+            "source": source,
         }
         available_percentiles.append(percentile)
     if available_percentiles:
@@ -375,6 +482,42 @@ def build_forward_eps_snapshot(conn: sqlite3.Connection, ticker: str, fundamenta
     }
 
 
+def _metric_status(value: Any, metric: str) -> tuple[float | None, str | None]:
+    numeric = _as_float(value)
+    if numeric is None:
+        return None, f"{metric}_missing"
+    if metric in {"pe_ttm", "ev_ebitda_ttm"} and numeric <= 0:
+        return None, "earnings_not_available_or_not_meaningful"
+    return numeric, None
+
+
+def _peer_metric_summary(target_value: Any, peer_rows: list[dict[str, Any]], metric: str, required: int) -> dict[str, Any]:
+    target, target_reason = _metric_status(target_value, metric)
+    values = []
+    for row in peer_rows:
+        value, _reason = _metric_status(row.get(metric), metric)
+        if value is not None:
+            values.append(value)
+    if target is None:
+        return {"status": "missing", "reason": target_reason or f"{metric}_target_missing"}
+    if len(values) < required:
+        return {
+            "target_value": target,
+            "peer_sample_count": len(values),
+            "status": "missing",
+            "reason": "peer_metric_sample_insufficient",
+        }
+    return {
+        "target_value": target,
+        "peer_median": round(float(median(values)), 4),
+        "peer_min": round(min(values), 4),
+        "peer_max": round(max(values), 4),
+        "target_percentile_vs_peers": _percentile_rank(target, values),
+        "peer_sample_count": len(values),
+        "status": "available",
+    }
+
+
 def build_peer_set_snapshot(conn: sqlite3.Connection, ticker: str, factor: dict[str, Any]) -> dict[str, Any]:
     peer_set_id, peer_set = peer_set_definition(ticker)
     if not peer_set_id:
@@ -396,35 +539,59 @@ def build_peer_set_snapshot(conn: sqlite3.Connection, ticker: str, factor: dict[
         peer_market = market_for_ticker(peer)
         peer_price, peer_price_date = latest_daily_price(conn, peer, peer_market)
         peer_factor = latest_factor(conn, peer)
+        metrics = peer_set.get("metrics") or list(VALUATION_METRICS)
+        available_multiples = []
+        missing_multiples = []
+        missing_by_metric: dict[str, str] = {}
+        for metric in metrics:
+            value, reason = _metric_status(peer_factor.get(metric), metric)
+            if value is not None:
+                peer_factor[metric] = value
+                available_multiples.append(metric)
+            else:
+                missing_multiples.append(metric)
+                missing_by_metric[metric] = reason or f"{metric}_missing"
         data_status = "available"
         reasons = []
         if peer_price is None:
             reasons.append("peer_price_missing")
-        if not any(peer_factor.get(metric) is not None for metric in peer_set.get("metrics") or []):
+        if not available_multiples:
             reasons.append("peer_fundamentals_missing")
+            reasons.append("peer_multiples_missing")
         if reasons:
             data_status = "missing"
             missing_reasons.extend(reasons)
         peer_multiples.append(
             {
                 "ticker": peer,
+                "market": peer_market,
                 "price": peer_price,
+                "price_status": "fresh" if peer_price is not None else "missing",
                 "price_trade_date": peer_price_date,
                 "pe_ttm": peer_factor.get("pe_ttm"),
                 "ps_ttm": peer_factor.get("ps_ttm"),
                 "pb": peer_factor.get("pb"),
                 "ev_ebitda_ttm": peer_factor.get("ev_ebitda_ttm"),
+                "available_multiples": available_multiples,
+                "missing_multiples": missing_multiples,
+                "missing_reasons_by_metric": missing_by_metric,
+                "fundamentals_status": "fresh" if available_multiples else "missing",
                 "data_status": data_status,
                 "missing_reasons": reasons,
             }
         )
     available = [item for item in peer_multiples if item["data_status"] == "available"]
+    metric_summary = {
+        metric: _peer_metric_summary(factor.get(metric), available, metric, required)
+        for metric in (peer_set.get("metrics") or list(VALUATION_METRICS))
+    }
+    available_metric_count = len([item for item in metric_summary.values() if item.get("status") == "available"])
     if len(available) >= required:
         status = "available"
-        comparison_status = "supporting"
+        comparison_status = "supporting" if available_metric_count else "partial"
     elif available and peer_set.get("fallback_allowed"):
         status = "partial"
-        comparison_status = "supporting"
+        comparison_status = "partial"
         missing_reasons.append("peer_count_insufficient")
     else:
         status = "missing"
@@ -436,6 +603,7 @@ def build_peer_set_snapshot(conn: sqlite3.Connection, ticker: str, factor: dict[
         "peer_count_available": len(available),
         "peer_count_required": required,
         "peer_multiples": peer_multiples,
+        "metrics": metric_summary,
         "peer_comparison_status": comparison_status,
         "peer_missing_reasons": sorted(set(missing_reasons)),
     }
@@ -725,30 +893,40 @@ def valuation_sub_blockers(snapshot: dict[str, Any] | None, fundamentals: dict[s
         blockers.append({"code": "HISTORICAL_PERCENTILE_PARTIAL", "message": "historical percentile is partial and supporting-only"})
     elif not snapshot.get("historical_percentile") and "historical_percentile" in missing:
         blockers.append({"code": "HISTORICAL_PERCENTILE_MISSING", "message": "historical valuation percentile is missing"})
-    for reason in historical.get("missing_reasons") or []:
-        if "price_history_missing" in reason:
-            blockers.append({"code": "HISTORICAL_PRICE_HISTORY_MISSING", "message": "historical price history is missing"})
-        elif "sample_insufficient" in reason:
-            blockers.append({"code": "HISTORICAL_SAMPLE_INSUFFICIENT", "message": "historical valuation sample is insufficient"})
-        elif "not_meaningful" in reason:
-            blockers.append({"code": "HISTORICAL_METRIC_NOT_MEANINGFUL", "message": "historical metric is not meaningful"})
-        elif "missing" in reason:
-            blockers.append({"code": "HISTORICAL_FUNDAMENTALS_MISSING", "message": "historical valuation factor is missing"})
+    if historical_status != "available":
+        for reason in historical.get("missing_reasons") or []:
+            if "price_history_missing" in reason:
+                blockers.append({"code": "HISTORICAL_PRICE_HISTORY_MISSING", "message": "historical price history is missing"})
+            elif "revenue" in reason or str(reason).startswith("ps_ttm"):
+                blockers.append({"code": "HISTORICAL_REVENUE_MISSING", "message": "historical revenue or PS support is missing"})
+            elif "equity" in reason or "pb" in reason:
+                blockers.append({"code": "HISTORICAL_EQUITY_MISSING", "message": "historical equity or PB support is missing"})
+            elif "sample_insufficient" in reason:
+                blockers.append({"code": "HISTORICAL_SAMPLE_INSUFFICIENT", "message": "historical valuation sample is insufficient"})
+            elif "not_meaningful" in reason:
+                blockers.append({"code": "HISTORICAL_METRIC_NOT_MEANINGFUL", "message": "historical metric is not meaningful"})
+            elif "missing" in reason:
+                blockers.append({"code": "HISTORICAL_FUNDAMENTALS_MISSING", "message": "historical valuation factor is missing"})
     peer_status = peer_comparison.get("peer_set_status") or snapshot.get("peer_set_status")
     peer_reasons = peer_comparison.get("peer_missing_reasons") or []
     if peer_status == "partial":
-        blockers.append({"code": "PEER_COUNT_INSUFFICIENT", "message": "peer set is partial and supporting-only"})
+        blockers.append({"code": "PEER_PARTIAL_DATA", "message": "peer set is partial and supporting-only"})
+        if int(peer_comparison.get("peer_count_available") or 0) < int(peer_comparison.get("peer_count_required") or 0):
+            blockers.append({"code": "PEER_COUNT_INSUFFICIENT", "message": "peer count is below required minimum"})
     elif (not snapshot.get("peer_set") and "peer_set" in missing) or peer_status == "missing":
         blockers.append({"code": "PEER_SET_MISSING", "message": "auditable peer set is missing"})
-    for reason in peer_reasons:
-        code = {
-            "peer_set_config_missing": "PEER_SET_CONFIG_MISSING",
-            "peer_price_missing": "PEER_PRICE_MISSING",
-            "peer_fundamentals_missing": "PEER_FUNDAMENTALS_MISSING",
-            "peer_count_insufficient": "PEER_COUNT_INSUFFICIENT",
-            "peer_data_missing": "PEER_DATA_MISSING",
-        }.get(str(reason), "PEER_DATA_MISSING")
-        blockers.append({"code": code, "message": f"peer set issue: {reason}"})
+    if peer_status != "available":
+        for reason in peer_reasons:
+            code = {
+                "peer_set_config_missing": "PEER_SET_CONFIG_MISSING",
+                "peer_price_missing": "PEER_PRICE_MISSING",
+                "peer_fundamentals_missing": "PEER_FUNDAMENTALS_MISSING",
+                "peer_multiples_missing": "PEER_MULTIPLES_MISSING",
+                "peer_count_insufficient": "PEER_COUNT_INSUFFICIENT",
+                "peer_data_missing": "PEER_DATA_MISSING",
+                "peer_partial_data": "PEER_PARTIAL_DATA",
+            }.get(str(reason), "PEER_DATA_MISSING")
+            blockers.append({"code": code, "message": f"peer set issue: {reason}"})
     if not any(snapshot.get(key) is not None for key in ("current_price", "pe_ttm", "ps_ttm", "pb", "broker_forward_eps_proxy")):
         blockers.append({"code": "VALUATION_EVIDENCE_MISSING", "message": "valuation has no usable price, multiple, or EPS evidence"})
     if float(snapshot.get("valuation_confidence") or 0.0) < 0.45:
