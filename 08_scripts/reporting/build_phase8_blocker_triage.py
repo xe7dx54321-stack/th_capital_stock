@@ -196,6 +196,8 @@ def render_markdown(payload: dict[str, Any]) -> str:
         f"- Most affected market: `{payload.get('most_affected_market') or '-'}`",
         f"- Highest priority repair: {payload.get('highest_priority_repair') or '-'}",
         f"- Repair tasks upserted: `{payload.get('repair_tasks_upserted') or 0}`",
+        f"- Core blocker count: `{payload.get('core_blocker_count') or 0}`",
+        f"- Non-core warning count: `{payload.get('non_core_warning_count') or 0}`",
         "",
         "## Top Repeated Blockers",
         "",
@@ -255,6 +257,26 @@ def main() -> int:
             payload["repair_queue_open_count"] = len(list_repair_tasks(conn, status="open", watchlist_id=args.watchlist, limit=500))
         else:
             payload["repair_tasks_upserted"] = 0
+        non_blocking_tasks = [
+            task for task in repair_tasks
+            if (task.get("metadata") or {}).get("non_blocking_warning")
+        ]
+        payload["core_blocker_count"] = sum(
+            1
+            for task in repair_tasks
+            if not (task.get("metadata") or {}).get("non_blocking_warning")
+            and (task.get("severity") in {"high", "blocker"} or task.get("status") == "open")
+        )
+        payload["non_core_warning_count"] = len(non_blocking_tasks)
+        payload["repair_queue_updates"] = {
+            "optional_missing_marked_warning": sum(
+                1
+                for task in non_blocking_tasks
+                if (task.get("metadata") or {}).get("warning_classification") == "optional_missing"
+            ),
+            "core_missing_still_open": payload["core_blocker_count"],
+            "non_blocking_warning_tasks": len(non_blocking_tasks),
+        }
         payload["repair_tasks"] = repair_tasks[:20]
         output_dir = project_path("06_reports", "adhoc", "phase8")
         output_dir.mkdir(parents=True, exist_ok=True)

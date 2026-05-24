@@ -24,6 +24,7 @@ from build_phase9_data_quality_diagnostics import (
     root_causes_from_field_quality,
 )
 from smr_agents import DB_PATH
+from smr_data_quality_gate import build_data_quality_gate
 from smr_fundamentals import FUNDAMENTAL_FIELDS, build_fundamentals_snapshot, latest_fundamentals_snapshot
 from smr_registry import register_snapshot
 from smr_runlog import log_run
@@ -146,6 +147,7 @@ def build_phase12_data_quality_report(
     ticker: str,
     *,
     refresh_fundamentals: bool = True,
+    thesis_types: list[str] | None = None,
 ) -> dict[str, Any]:
     ticker = ticker.upper()
     before_latest = latest_fundamentals_snapshot(conn, ticker)
@@ -158,6 +160,15 @@ def build_phase12_data_quality_report(
     before_fields = before.get("field_quality") or {}
     after_fields = after.get("field_quality") or {}
     changes = field_changes(before_fields, after_fields)
+    data_quality_gate = None
+    if thesis_types:
+        data_quality_gate = build_data_quality_gate(
+            ticker=ticker,
+            thesis_types=thesis_types,
+            root_causes=after.get("root_causes") or [],
+            field_quality=after_fields,
+            before_status=after.get("overall_data_quality_status"),
+        )
     payload = {
         "generated_at": now_ts(),
         "ticker": ticker,
@@ -188,6 +199,8 @@ def build_phase12_data_quality_report(
         "before_field_quality": before_fields,
         "after_field_quality": after_fields,
     }
+    if data_quality_gate:
+        payload["data_quality_gate"] = data_quality_gate
     register_snapshot(
         conn,
         entity_type="phase12_data_quality_before_after",
@@ -230,12 +243,18 @@ def main() -> int:
     parser.add_argument("--json", action="store_true")
     parser.add_argument("--markdown", action="store_true")
     parser.add_argument("--no-refresh", action="store_true")
+    parser.add_argument("--thesis", action="append", default=None)
     args = parser.parse_args()
 
     conn = sqlite3.connect(args.db_path)
     conn.row_factory = sqlite3.Row
     try:
-        payload = build_phase12_data_quality_report(conn, args.ticker, refresh_fundamentals=not args.no_refresh)
+        payload = build_phase12_data_quality_report(
+            conn,
+            args.ticker,
+            refresh_fundamentals=not args.no_refresh,
+            thesis_types=args.thesis,
+        )
         conn.commit()
     finally:
         conn.close()

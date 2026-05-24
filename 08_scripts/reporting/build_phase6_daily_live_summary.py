@@ -84,6 +84,10 @@ def summary_lines(rows: list[dict[str, Any]]) -> list[str]:
 def compact_ticker_row(item: dict[str, Any]) -> dict[str, Any]:
     debugger = item.get("promotion_debugger") or {}
     portfolio_risk = item.get("portfolio_risk") or {}
+    promotion = item.get("promotion") or {}
+    snapshots = promotion.get("snapshots") or {}
+    field_gate = item.get("promotion_evidence_gate") or snapshots.get("promotion_evidence_gate") or {}
+    data_quality_gate = item.get("data_quality_gate") or snapshots.get("data_quality_gate") or {}
     return {
         "ticker": item.get("ticker"),
         "market": item.get("market"),
@@ -110,6 +114,11 @@ def compact_ticker_row(item: dict[str, Any]) -> dict[str, Any]:
         "missing_requirements": item.get("missing_requirements") or [],
         "required_fixes": item.get("required_fixes") or [],
         "minimum_fix_path": debugger.get("minimum_fix_path") or item.get("minimum_fix_path") or [],
+        "core_blocker_count": len(field_gate.get("core_blockers") or []),
+        "non_core_warning_count": len(field_gate.get("supporting_warnings") or []) + len(field_gate.get("optional_warnings") or []),
+        "promotion_mode": snapshots.get("promotion_mode") or item.get("promotion_mode"),
+        "position_policy": snapshots.get("position_policy") or item.get("position_policy"),
+        "data_quality_gate_status": data_quality_gate.get("status") or data_quality_gate.get("after_status"),
     }
 
 
@@ -120,6 +129,9 @@ def render_markdown(payload: dict[str, Any]) -> str:
         f"- generated_at: `{payload.get('generated_at')}`",
         f"- watchlist: `{payload.get('watchlist_id')}`",
         f"- overall_result: `{payload.get('overall_result')}`",
+        f"- core_blocker_count: `{payload.get('core_blocker_count') or 0}`",
+        f"- non_core_warning_count: `{payload.get('non_core_warning_count') or 0}`",
+        f"- reduced_size_pending_candidates: `{', '.join(payload.get('reduced_size_pending_candidates') or []) or '-'}`",
         "",
         "## Status Counts",
         "",
@@ -157,6 +169,7 @@ def main() -> int:
                 row["summary_bucket"] = bucket_for_result(row)
                 rows.append(row)
             counts = Counter(row["summary_bucket"] for row in rows)
+            compact_rows = [compact_ticker_row(row) for row in rows]
             payload = {
                 "generated_at": now_ts(),
                 "watchlist_id": validation.get("watchlist_id") or args.watchlist,
@@ -164,7 +177,19 @@ def main() -> int:
                 "watchlist_meta": validation.get("watchlist_meta") or {},
                 "status_counts": dict(counts),
                 "summary_lines": summary_lines(rows),
-                "tickers": [compact_ticker_row(row) for row in rows],
+                "core_blocker_count": sum(int(row.get("core_blocker_count") or 0) for row in compact_rows),
+                "non_core_warning_count": sum(int(row.get("non_core_warning_count") or 0) for row in compact_rows),
+                "reduced_size_pending_candidates": [
+                    row.get("ticker")
+                    for row in compact_rows
+                    if row.get("status") == "pending_human_review" and row.get("promotion_mode") == "reduced_size_pending"
+                ],
+                "still_blocked_by_core_fields": [
+                    row.get("ticker")
+                    for row in compact_rows
+                    if int(row.get("core_blocker_count") or 0) > 0
+                ],
+                "tickers": compact_rows,
             }
         output_dir = project_path("06_reports", "adhoc", "phase6")
         output_dir.mkdir(parents=True, exist_ok=True)

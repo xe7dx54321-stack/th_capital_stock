@@ -496,3 +496,80 @@ python 08_scripts/jobs/build_historical_valuation_snapshot.py --ticker 09988.HK 
 python 08_scripts/verification/validate_phase11_peer_historical_repaired_candidate.py --ticker 09988.HK --days 365 --json
 python 08_scripts/verification/validate_phase12_evidence_quality_repaired_candidate.py --ticker 09988.HK --days 365 --json
 ```
+
+## Stage 13 Goal
+
+Phase 13 adds a thesis-aware core vs non-core evidence gate. Phase 12 fixed
+field traceability, unit ambiguity, and confidence scoring; Phase 13 decides
+whether a remaining field gap is actually core to the current investment
+thesis.
+
+Current Phase 12 checkpoint:
+
+- Commit: `15f8d34d2e3932c452463b9767010e35b498cfd4`
+- Stage: `Phase 12: A/H Evidence Quality & Field Confidence Hardening`
+- Source evidence id gaps: reduced to zero for the tracked Phase 12 fields
+- Ambiguous unit root causes: reduced to zero
+- Remaining blockers: `DATA_QUALITY_RISK`, `FIELD_NOT_FOUND`, and
+  `HIGH_BEAR_CASE_PARTIALLY_MITIGATED`
+- Remaining missing fields for `09988.HK`: `capex` and `free_cash_flow`
+- Candidate status: still `candidate_shadow`, with promotion rules unchanged
+
+### Phase 13 Goals
+
+1. Add a thesis dependency map for required, supporting, and optional fields.
+2. Classify missing fields as `core_blocker`, `supporting_warning`,
+   `optional_warning`, or `unknown_warning`.
+3. Recalibrate `DATA_QUALITY_RISK` into core and non-core severities.
+4. Add bear-case severity metadata: category, core-to-thesis flag, residual
+   risk level, and action effect.
+5. Add a strict reduced-size pending policy for cases with no core blocker.
+6. Revalidate `09988.HK` under both `valuation_rerating` and
+   `cash_flow_improvement` theses.
+7. Keep optional missing fields in warnings and repair queue metadata rather
+   than treating them as resolved.
+
+### Phase 13 Non-goals
+
+- Do not loosen promotion rules globally.
+- Do not ignore optional missing fields.
+- Do not downgrade core missing fields to warnings.
+- Do not delete or weaken high bear cases.
+- Do not treat internal proxy EPS as official consensus.
+- Do not bypass portfolio risk or human review.
+
+### Phase 13 New Artifacts
+
+- `00_control/thesis_evidence_requirements.json`
+- `08_scripts/lib/smr_thesis_dependency.py`
+- `08_scripts/lib/smr_data_quality_gate.py`
+- `08_scripts/verification/validate_phase13_core_gate_repaired_candidate.py`
+- `docs/plans/2026-05-23-phase13-core-vs-noncore-gate.md`
+
+### Phase 13 Expected 09988.HK Behavior
+
+- Under `valuation_rerating`, `capex` and `free_cash_flow` are
+  `optional_warning`; they do not block reduced-size human review, but remain
+  visible in warnings and repair queue metadata.
+- Under `cash_flow_improvement`, `capex` and `free_cash_flow` are
+  `core_blocker`; they continue to block `pending_human_review`.
+- `DATA_QUALITY_RISK` can become `degraded_non_core` only when remaining
+  issues are not thesis-core.
+- Partially mitigated bear cases can reduce position size, but unresolved core
+  risks still block pending review.
+
+### Phase 13 Validation Commands
+
+```bash
+python -m py_compile 08_scripts/lib/*.py 08_scripts/jobs/*.py 08_scripts/verification/*.py 08_scripts/reporting/*.py
+python -m unittest discover -s tests -v
+python 08_scripts/verification/validate_phase3_e2e.py
+python 08_scripts/verification/validate_phase4_live_e2e.py --tickers NVDA --days 180 --timeout 240
+python 08_scripts/verification/validate_phase5_paper_portfolio_smoke.py
+python 08_scripts/verification/validate_phase6_multi_ticker_live.py --watchlist ai_core --save-run-history --compare-last-run --timeout 240
+python 08_scripts/reporting/build_phase8_blocker_triage.py --limit 10 --upsert-repair-queue
+python 08_scripts/verification/validate_phase11_peer_historical_repaired_candidate.py --ticker 09988.HK --days 365 --json
+python 08_scripts/verification/validate_phase12_evidence_quality_repaired_candidate.py --ticker 09988.HK --days 365 --json
+python 08_scripts/verification/validate_phase13_core_gate_repaired_candidate.py --ticker 09988.HK --days 365 --thesis valuation_rerating --json
+python 08_scripts/verification/validate_phase13_core_gate_repaired_candidate.py --ticker 09988.HK --days 365 --thesis cash_flow_improvement --json
+```

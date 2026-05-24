@@ -1,0 +1,95 @@
+{
+  "version": "phase13_v1",
+  "default_thesis_types": ["valuation_rerating"],
+  "reduced_size_policy": {
+    "default_multiplier": 0.5,
+    "max_reduced_size_pct": 1.0,
+    "requires_human_review": true
+  },
+  "thesis_requirements": {
+    "valuation_rerating": {
+      "core_fields": ["revenue", "net_income", "shareholders_equity", "market_cap", "price"],
+      "supporting_fields": ["gross_profit", "gross_margin", "eps_basic", "eps_diluted"],
+      "optional_fields": ["capex", "free_cash_flow", "operating_cash_flow"],
+      "required_evidence_types": ["valuation_snapshot", "peer_comparison", "historical_valuation"],
+      "required_bear_case_responses": ["valuation_risk", "data_quality_risk"]
+    },
+    "earnings_revision": {
+      "core_fields": ["revenue", "net_income", "eps_basic", "eps_diluted"],
+      "supporting_fields": ["gross_profit", "gross_margin", "operating_income"],
+      "optional_fields": ["capex", "free_cash_flow"],
+      "required_evidence_types": ["fundamentals_snapshot", "earnings_proxy"],
+      "required_bear_case_responses": ["earnings_quality_risk"]
+    },
+    "revenue_growth": {
+      "core_fields": ["revenue"],
+      "supporting_fields": ["gross_profit", "gross_margin", "operating_income", "net_income"],
+      "optional_fields": ["capex", "free_cash_flow"],
+      "required_evidence_types": ["fundamentals_snapshot"],
+      "required_bear_case_responses": ["growth_durability_risk"]
+    },
+    "margin_improvement": {
+      "core_fields": ["revenue", "gross_profit", "gross_margin", "operating_income"],
+      "supporting_fields": ["net_income", "eps_basic", "eps_diluted"],
+      "optional_fields": ["capex", "free_cash_flow"],
+      "required_evidence_types": ["fundamentals_snapshot"],
+      "required_bear_case_responses": ["margin_sustainability_risk"]
+    },
+    "cash_flow_improvement": {
+      "core_fields": ["operating_cash_flow", "capex", "free_cash_flow"],
+      "supporting_fields": ["revenue", "net_income", "cash_and_equivalents", "total_debt"],
+      "optional_fields": ["gross_profit", "gross_margin"],
+      "required_evidence_types": ["fundamentals_snapshot", "cash_flow_statement"],
+      "required_bear_case_responses": ["cash_flow_quality_risk"]
+    },
+    "shareholder_return": {
+      "core_fields": ["net_income", "cash_and_equivalents", "total_debt", "shareholders_equity"],
+      "supporting_fields": ["free_cash_flow", "operating_cash_flow", "eps_basic"],
+      "optional_fields": ["capex", "gross_margin"],
+      "required_evidence_types": ["fundamentals_snapshot", "capital_return_evidence"],
+      "required_bear_case_responses": ["balance_sheet_risk"]
+    },
+    "cloud_growth": {
+      "core_fields": ["revenue"],
+      "supporting_fields": ["gross_profit", "gross_margin", "operating_income", "capex"],
+      "optional_fields": ["free_cash_flow", "shareholders_equity"],
+      "required_evidence_types": ["fundamentals_snapshot", "segment_evidence"],
+      "required_bear_case_responses": ["growth_durability_risk"]
+    },
+    "ai_infrastructure_demand": {
+      "core_fields": ["revenue", "gross_profit"],
+      "supporting_fields": ["gross_margin", "operating_income", "capex"],
+      "optional_fields": ["free_cash_flow"],
+      "required_evidence_types": ["fundamentals_snapshot", "demand_evidence"],
+      "required_bear_case_responses": ["demand_sustainability_risk"]
+    },
+    "cost_reduction": {
+      "core_fields": ["gross_profit", "gross_margin", "operating_income"],
+      "supporting_fields": ["revenue", "net_income"],
+      "optional_fields": ["capex", "free_cash_flow"],
+      "required_evidence_types": ["fundamentals_snapshot"],
+      "required_bear_case_responses": ["cost_sustainability_risk"]
+    },
+    "balance_sheet_repair": {
+      "core_fields": ["cash_and_equivalents", "total_debt", "shareholders_equity"],
+      "supporting_fields": ["net_income", "operating_cash_flow", "free_cash_flow"],
+      "optional_fields": ["gross_margin", "capex"],
+      "required_evidence_types": ["fundamentals_snapshot", "balance_sheet_statement"],
+      "required_bear_case_responses": ["balance_sheet_risk"]
+    },
+    "event_driven": {
+      "core_fields": ["price", "market_cap"],
+      "supporting_fields": ["revenue", "net_income"],
+      "optional_fields": ["capex", "free_cash_flow", "gross_margin"],
+      "required_evidence_types": ["event_evidence", "valuation_snapshot"],
+      "required_bear_case_responses": ["event_execution_risk"]
+    },
+    "technical_momentum": {
+      "core_fields": ["price"],
+      "supporting_fields": ["market_cap"],
+      "optional_fields": ["revenue", "net_income", "capex", "free_cash_flow"],
+      "required_evidence_types": ["price_snapshot"],
+      "required_bear_case_responses": ["technical_failure_risk"]
+    }
+  }
+}

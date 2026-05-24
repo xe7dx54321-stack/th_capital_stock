@@ -45,6 +45,31 @@ def _market_signal_positive(market_signal: dict[str, Any]) -> bool:
     return signal in {"positive", "bullish", "up", "pass", "allowed"}
 
 
+def _promotion_snapshot(promotion_result: dict[str, Any]) -> dict[str, Any]:
+    return promotion_result.get("snapshots") or {}
+
+
+def _reduced_size_policy(promotion_result: dict[str, Any]) -> dict[str, Any]:
+    snapshots = _promotion_snapshot(promotion_result)
+    return {
+        "default_multiplier": 0.5,
+        "max_reduced_size_pct": 1.0,
+        "requires_human_review": True,
+        **(snapshots.get("reduced_size_policy") or {}),
+    }
+
+
+def _is_reduced_size_pending(promotion_result: dict[str, Any]) -> bool:
+    snapshots = _promotion_snapshot(promotion_result)
+    return snapshots.get("promotion_mode") == "reduced_size_pending" or snapshots.get("position_policy") == "reduced_size"
+
+
+def _apply_reduced_size(base_position: float, policy: dict[str, Any]) -> float:
+    multiplier = float(policy.get("default_multiplier") or 0.5)
+    max_reduced = float(policy.get("max_reduced_size_pct") or 1.0)
+    return round(min(float(base_position or 0.0) * multiplier, max_reduced), 4)
+
+
 def decide_action(
     promotion_result: dict[str, Any],
     valuation_snapshot: dict[str, Any],
@@ -67,6 +92,8 @@ def decide_action(
             return "observation", reasons, confidence, suggested_position_pct, max_position_pct
         return "watch", reasons, confidence, suggested_position_pct, max_position_pct
 
+    reduced_size_pending = _is_reduced_size_pending(promotion_result)
+    reduced_policy = _reduced_size_policy(promotion_result)
     action = "small_candidate"
     confidence = 0.58
     suggested_position_pct = 1.0
@@ -88,7 +115,7 @@ def decide_action(
         confidence += 0.08
     if valuation_usage == "promotion_eligible":
         confidence += 0.08
-        action = "buy_candidate"
+        action = "small_candidate" if reduced_size_pending else "buy_candidate"
         suggested_position_pct = 2.0
         max_position_pct = 5.0
     elif valuation_usage == "supporting_evidence":
@@ -96,6 +123,12 @@ def decide_action(
         action = "small_candidate"
         suggested_position_pct = 1.5
         max_position_pct = 4.0
+    if reduced_size_pending:
+        reasons.append("reduced_size_pending_policy")
+        action = "small_candidate"
+        suggested_position_pct = _apply_reduced_size(suggested_position_pct, reduced_policy)
+        max_position_pct = min(max_position_pct, float(reduced_policy.get("max_reduced_size_pct") or 1.0))
+        confidence = min(confidence, 0.62)
     if _market_signal_positive(market_signal):
         confidence += 0.04
     if _risk_blocked(risk_snapshot):
@@ -120,7 +153,7 @@ def decide_action(
         max_position_pct = min(max_position_pct, float(portfolio_risk.get("recommended_max_position_pct") or max_position_pct))
     if bear_strength == "high":
         reasons.append("high_bear_case_reduces_action")
-        action = "small_candidate" if action == "buy_candidate" else "watch"
+        action = "small_candidate" if action == "buy_candidate" or reduced_size_pending else "watch"
         suggested_position_pct = min(suggested_position_pct, 1.0)
         max_position_pct = min(max_position_pct, 2.0)
         confidence -= 0.08
@@ -184,6 +217,8 @@ def build_recommendation_candidate(
         "reduce_conditions": report.get("reduce_conditions") or [],
         "kill_conditions": kill_conditions,
         "status": status,
+        "promotion_mode": (promotion.get("snapshots") or {}).get("promotion_mode"),
+        "position_policy": (promotion.get("snapshots") or {}).get("position_policy"),
         "reasons": action_reasons,
         "snapshots": {
             "claim_graph": claim_graph,

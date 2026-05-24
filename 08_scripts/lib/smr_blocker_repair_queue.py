@@ -356,3 +356,82 @@ def resolve_repair_task_after_validation(
     if reason and "not_applicable" in reason:
         return update_repair_task_status(conn, repair_id, "ignored", owner=owner, note=reason)
     return update_repair_task_status(conn, repair_id, "needs_manual_review", owner=owner, note=reason or "blocker remains after validation")
+
+
+def apply_phase13_core_gate_metadata(
+    conn: sqlite3.Connection,
+    *,
+    ticker: str,
+    field_gate: dict[str, Any],
+    data_quality_gate: dict[str, Any],
+    watchlist_id: str | None = "ai_core",
+    owner: str | None = "codex",
+) -> dict[str, Any]:
+    """Reflect Phase 13 core/non-core classification in repair queue metadata.
+
+    Optional missing fields remain repair tasks, but are marked non-blocking
+    rather than incorrectly resolved.
+    """
+
+    ensure_blocker_repair_queue_tables(conn)
+    tasks = list_repair_tasks(conn, ticker=ticker, watchlist_id=watchlist_id, limit=200)
+    optional_fields = {
+        item.get("field")
+        for item in (field_gate.get("optional_warnings") or [])
+        if isinstance(item, dict) and item.get("field")
+    }
+    supporting_fields = {
+        item.get("field")
+        for item in (field_gate.get("supporting_warnings") or [])
+        if isinstance(item, dict) and item.get("field")
+    }
+    core_fields = {
+        item.get("field")
+        for item in (field_gate.get("core_blockers") or [])
+        if isinstance(item, dict) and item.get("field")
+    }
+    updated: list[dict[str, Any]] = []
+    counters = {
+        "optional_missing_marked_warning": 0,
+        "supporting_missing_marked_in_progress": 0,
+        "core_missing_still_open": 0,
+    }
+    for task in tasks:
+        fields = set(str(item) for item in task.get("affected_fields") or [])
+        metadata_updates: dict[str, Any] = {
+            "phase13_core_gate": {
+                "gate_status": field_gate.get("gate_status"),
+                "data_quality_gate_status": data_quality_gate.get("status") or data_quality_gate.get("after_status"),
+            }
+        }
+        if fields & optional_fields:
+            counters["optional_missing_marked_warning"] += 1
+            metadata_updates["non_blocking_warning"] = True
+            metadata_updates["warning_classification"] = "optional_missing"
+            task = update_repair_task_metadata(conn, task["repair_id"], metadata_updates, note="Phase 13 classified this missing field as optional warning")
+            if task.get("status") == "open":
+                task = update_repair_task_status(conn, task["repair_id"], "in_progress", owner=owner, note="optional missing is non-blocking but still tracked")
+            updated.append(task)
+        elif fields & supporting_fields:
+            counters["supporting_missing_marked_in_progress"] += 1
+            metadata_updates["warning_classification"] = "supporting_missing"
+            task = update_repair_task_metadata(conn, task["repair_id"], metadata_updates, note="Phase 13 classified this missing field as supporting warning")
+            if task.get("status") == "open":
+                task = update_repair_task_status(conn, task["repair_id"], "in_progress", owner=owner, note="supporting missing remains repairable")
+            updated.append(task)
+        elif fields & core_fields:
+            counters["core_missing_still_open"] += 1
+            metadata_updates["warning_classification"] = "core_missing"
+            metadata_updates["non_blocking_warning"] = False
+            task = update_repair_task_metadata(conn, task["repair_id"], metadata_updates, note="Phase 13 confirmed this missing field is core-blocking")
+            if task.get("status") != "open":
+                task = update_repair_task_status(conn, task["repair_id"], "open", owner=owner, note="core missing remains blocking")
+            updated.append(task)
+    return {
+        "ticker": ticker.upper(),
+        "watchlist_id": watchlist_id,
+        "tasks_considered": len(tasks),
+        "tasks_updated": len(updated),
+        "counters": counters,
+        "updated_tasks": updated[:20],
+    }

@@ -9,6 +9,7 @@ from dataclasses import asdict, dataclass
 from typing import Any
 
 from smr_decision import upsert_decision_ledger
+from smr_data_quality_gate import PASSING_STATUSES
 
 
 @dataclass
@@ -189,7 +190,12 @@ def fundamentals_requirements(fundamentals: dict[str, Any], action: str) -> tupl
     return [], [], []
 
 
-def consensus_requirements(consensus_proxy: dict[str, Any], action: str) -> tuple[list[str], list[str], list[str]]:
+def consensus_requirements(
+    consensus_proxy: dict[str, Any],
+    action: str,
+    *,
+    allow_medium_proxy_for_reduced_size: bool = False,
+) -> tuple[list[str], list[str], list[str]]:
     if not is_buy_or_add(action):
         return [], [], []
     official_active = bool(consensus_proxy.get("official_consensus_active") or consensus_proxy.get("is_official_consensus"))
@@ -199,12 +205,65 @@ def consensus_requirements(consensus_proxy: dict[str, Any], action: str) -> tupl
     usable = bool(consensus_proxy.get("usable_for_promotion"))
     if quality == "strong" and usable:
         return [], [], []
+    if quality == "medium" and allow_medium_proxy_for_reduced_size:
+        return [], [], []
     if quality == "medium":
         return [], ["strong_proxy_or_official_consensus_for_pending_review"], ["add primary evidence or independent sources to upgrade proxy quality"]
     return [], ["consensus_proxy_quality"], ["build a strong internal proxy with linked evidence; do not present it as official consensus"]
 
 
-def bear_case_requirements(bear_case: dict[str, Any], action: str) -> tuple[list[str], list[str], list[str]]:
+def _gate_items(gate: dict[str, Any], key: str) -> list[dict[str, Any]]:
+    return [item for item in (gate.get(key) or []) if isinstance(item, dict)]
+
+
+def promotion_evidence_gate_requirements(gate: dict[str, Any]) -> tuple[list[str], list[str], list[str]]:
+    if not gate:
+        return [], [], []
+    missing: list[str] = []
+    fixes: list[str] = []
+    core = _gate_items(gate, "core_blockers")
+    unknown = _gate_items(gate, "unknown_warnings")
+    if core:
+        missing.append("core_evidence_blocker")
+        fields = ", ".join(item.get("field") or "" for item in core if item.get("field"))
+        fixes.append(f"repair core thesis fields before promotion: {fields}")
+    if unknown:
+        missing.append("unknown_evidence_dependency")
+        fields = ", ".join(item.get("field") or "" for item in unknown if item.get("field"))
+        fixes.append(f"classify unknown thesis field dependencies before promotion: {fields}")
+    return [], missing, fixes
+
+
+def data_quality_gate_requirements(gate: dict[str, Any]) -> tuple[list[str], list[str], list[str]]:
+    if not gate:
+        return [], [], []
+    status = str(gate.get("status") or gate.get("after_status") or "").lower()
+    if status in {"degraded_core", "blocked"}:
+        return (
+            [],
+            ["data_quality_core_gate_passed"],
+            ["repair core data-quality issues or downgrade the thesis/action before pending review"],
+        )
+    return [], [], []
+
+
+def bear_case_gate_allows_partial(gate: dict[str, Any]) -> bool:
+    if not gate:
+        return False
+    if gate.get("has_critical_unresolved_core_risk"):
+        return False
+    if gate.get("action_effect") in {"reduce_position_size", "reduced_size_candidate_allowed", "reduce_confidence"}:
+        return True
+    return gate.get("gate_status") in {"pass_with_warnings", "reduced_size_allowed"}
+
+
+def bear_case_requirements(
+    bear_case: dict[str, Any],
+    action: str,
+    *,
+    data_quality_gate: dict[str, Any] | None = None,
+    bear_case_gate: dict[str, Any] | None = None,
+) -> tuple[list[str], list[str], list[str]]:
     missing: list[str] = []
     fixes: list[str] = []
     if not is_buy_or_add(action):
@@ -217,7 +276,11 @@ def bear_case_requirements(bear_case: dict[str, Any], action: str) -> tuple[list
     if not deal_breakers:
         missing.append("deal_breakers")
         fixes.append("write at least one deal breaker / kill condition")
-    if bear_case.get("bear_case_strength") == "high" and not bear_case.get("thesis_response"):
+    if (
+        bear_case.get("bear_case_strength") == "high"
+        and not bear_case.get("thesis_response")
+        and not bear_case_gate_allows_partial(bear_case_gate or bear_case.get("bear_case_gate") or {})
+    ):
         missing.append("high_bear_case_answered")
         fixes.append("answer high-strength bear case or downgrade to observation")
     response = bear_case.get("bear_case_response") or {}
@@ -225,10 +288,16 @@ def bear_case_requirements(bear_case: dict[str, Any], action: str) -> tuple[list
     if bear_case.get("bear_case_strength") == "high" and response_status in {"unresolved", "needs_manual_review"}:
         missing.append("high_bear_case_unresolved")
         fixes.append("resolve or mitigate high bear case with live evidence before pending review")
-    elif bear_case.get("bear_case_strength") == "high" and response_status == "partially_mitigated":
+    elif (
+        bear_case.get("bear_case_strength") == "high"
+        and response_status == "partially_mitigated"
+        and not bear_case_gate_allows_partial(bear_case_gate or bear_case.get("bear_case_gate") or {})
+    ):
         missing.append("high_bear_case_partially_mitigated")
         fixes.append("fully mitigate high bear case before pending review; keep reduced candidate below pending review")
-    if bear_case.get("data_quality_risk") == "high":
+    dq_gate = data_quality_gate or bear_case.get("data_quality_gate") or {}
+    dq_status = str(dq_gate.get("status") or dq_gate.get("after_status") or "").lower()
+    if bear_case.get("data_quality_risk") == "high" and dq_status not in PASSING_STATUSES:
         missing.append("data_quality_risk_not_high")
         fixes.append("repair data quality risk before promotion")
     return [], missing, fixes
@@ -280,6 +349,11 @@ def evaluate_promotion(
     bear_case: dict[str, Any] | None = None,
     risk_snapshot: dict[str, Any] | None = None,
     lint_result: dict[str, Any] | None = None,
+    thesis_types: list[str] | None = None,
+    promotion_evidence_gate: dict[str, Any] | None = None,
+    data_quality_gate: dict[str, Any] | None = None,
+    bear_case_gate: dict[str, Any] | None = None,
+    reduced_size_policy: dict[str, Any] | None = None,
     write_ledger: bool = False,
 ) -> PromotionResult:
     summary = dashboard_summary or {}
@@ -302,7 +376,17 @@ def evaluate_promotion(
         "bear_case": bear_case or {},
         "risk_snapshot": risk_snapshot or {},
         "lint_result": lint_result or {},
+        "thesis_types": thesis_types or [],
+        "promotion_evidence_gate": promotion_evidence_gate or {},
+        "data_quality_gate": data_quality_gate or {},
+        "bear_case_gate": bear_case_gate or {},
+        "reduced_size_policy": reduced_size_policy or {},
     }
+    reduced_size_requested = bool(
+        reduced_size_policy
+        or (bear_case_gate or {}).get("action_effect") == "reduced_size_candidate_allowed"
+        or (promotion_evidence_gate or {}).get("gate_status") == "pass_with_warnings"
+    )
     for check in (
         data_health_requirements(data_health_snapshot or {}, ticker, action),
         evidence_requirements(evidence_check_snapshot or {}, claim_graph_snapshot or {}, action, bear_case or {}),
@@ -311,8 +395,19 @@ def evaluate_promotion(
             fundamentals_snapshot or ((valuation_snapshot or {}).get("fundamentals_snapshot") or {}),
             action,
         ),
-        consensus_requirements(consensus_proxy or {}, action),
-        bear_case_requirements(bear_case or {}, action),
+        consensus_requirements(
+            consensus_proxy or {},
+            action,
+            allow_medium_proxy_for_reduced_size=reduced_size_requested,
+        ),
+        promotion_evidence_gate_requirements(promotion_evidence_gate or {}),
+        data_quality_gate_requirements(data_quality_gate or {}),
+        bear_case_requirements(
+            bear_case or {},
+            action,
+            data_quality_gate=data_quality_gate,
+            bear_case_gate=bear_case_gate,
+        ),
         risk_requirements(risk_snapshot or {}, summary, action),
         lint_requirements(lint_result or {}),
     ):
@@ -325,7 +420,12 @@ def evaluate_promotion(
     allowed = not missing
     if allowed:
         to_status = "pending_human_review"
-        reasons.append("all promotion gates passed")
+        if reduced_size_requested:
+            snapshots["promotion_mode"] = "reduced_size_pending"
+            snapshots["position_policy"] = "reduced_size"
+            reasons.append("all promotion gates passed with reduced-size Phase 13 warnings")
+        else:
+            reasons.append("all promotion gates passed")
     elif not any(item.startswith("lint:") or item in {"daily_bar_fresh", "news_not_globally_stale", "relevant_filings_not_stale"} for item in missing):
         to_status = "candidate_shadow"
     else:
@@ -355,6 +455,11 @@ def evaluate_promotion(
                 "valuation_snapshot": valuation_snapshot,
                 "consensus_proxy": consensus_proxy,
                 "bear_case": bear_case,
+                "promotion_evidence_gate": promotion_evidence_gate,
+                "data_quality_gate": data_quality_gate,
+                "bear_case_gate": bear_case_gate,
+                "promotion_mode": snapshots.get("promotion_mode"),
+                "position_policy": snapshots.get("position_policy"),
             },
         )
     return result

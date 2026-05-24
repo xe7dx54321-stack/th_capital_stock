@@ -12,11 +12,14 @@ class BearCaseResponse:
     ticker: str
     bear_case_claim_id: str | None
     bear_case_text: str
+    risk_category: str
+    core_to_thesis: bool
     response_status: str
     response_evidence_ids: list[str]
     evidence_quality: str
     response_summary: str
     action_effect: str
+    residual_risk_level: str
     confidence: float
     metadata: dict[str, Any]
 
@@ -70,6 +73,45 @@ def _field_quality_support(fundamentals_snapshot: dict[str, Any]) -> tuple[int, 
     return supporting, promotion
 
 
+def _risk_category(text: str) -> str:
+    lower = text.lower()
+    if any(token in lower for token in ("valuation", "rerating", "multiple", "price")):
+        return "valuation_bear_case"
+    if any(token in lower for token in ("data quality", "fundamentals", "field quality", "evidence quality")):
+        return "data_quality_bear_case"
+    if any(token in lower for token in ("cash flow", "free cash flow", "fcf", "capex")):
+        return "core_bear_case"
+    if any(token in lower for token in ("portfolio", "position", "exposure")):
+        return "portfolio_bear_case"
+    return "supporting_bear_case"
+
+
+def _core_to_thesis(category: str, thesis_types: list[str], field_gate: dict[str, Any] | None = None) -> bool:
+    thesis = set(thesis_types or [])
+    field_gate = field_gate or {}
+    if category == "valuation_bear_case":
+        return "valuation_rerating" in thesis
+    if category == "data_quality_bear_case":
+        return bool(field_gate.get("core_blockers"))
+    if category == "core_bear_case":
+        return bool(thesis & {"cash_flow_improvement", "balance_sheet_repair"})
+    return category == "portfolio_bear_case"
+
+
+def _residual_risk(status: str, severity: str, core_to_thesis: bool) -> str:
+    if status == "unresolved" and core_to_thesis:
+        return "critical"
+    if status == "unresolved":
+        return "high"
+    if status == "partially_mitigated" and severity == "high" and core_to_thesis:
+        return "medium"
+    if status == "partially_mitigated":
+        return "medium"
+    if status == "mitigated":
+        return "low"
+    return "medium"
+
+
 def respond_to_bear_case(
     ticker: str,
     bear_case: dict[str, Any] | None,
@@ -77,11 +119,17 @@ def respond_to_bear_case(
     evidence_rows: list[dict[str, Any]] | None = None,
     fundamentals_snapshot: dict[str, Any] | None = None,
     valuation_snapshot: dict[str, Any] | None = None,
+    thesis_types: list[str] | None = None,
+    field_gate: dict[str, Any] | None = None,
+    data_quality_gate: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     bear_case = bear_case or {}
     evidence_rows = evidence_rows or []
     fundamentals_snapshot = fundamentals_snapshot or {}
     valuation_snapshot = valuation_snapshot or {}
+    thesis_types = thesis_types or []
+    field_gate = field_gate or {}
+    data_quality_gate = data_quality_gate or {}
     claims = bear_case.get("bear_case_claims") or []
     if not claims:
         return {
@@ -100,12 +148,25 @@ def respond_to_bear_case(
     for index, claim in enumerate(claims, start=1):
         text = str(claim.get("claim_text") or claim.get("text") or "")
         severity = str(claim.get("severity") or "medium").lower()
+        risk_category = _risk_category(text)
+        core_to_thesis = _core_to_thesis(risk_category, thesis_types, field_gate)
         evidence_ids = [row.get("evidence_id") for row in evidence_rows if row.get("evidence_id")][:3]
         valuation_blocked = valuation_usage in {"context_only", "blocked_due_to_stale_price"}
         core_valuation_risk = any(token in text.lower() for token in ("valuation", "rerating", "multiple", "price"))
         data_quality_risk = any(token in text.lower() for token in ("data quality", "fundamentals", "field quality", "evidence quality"))
         valuation_evidence_ids = _valuation_support_evidence(ticker, valuation_snapshot)
-        if severity == "high" and core_valuation_risk and valuation_blocked:
+        if severity == "high" and data_quality_risk and data_quality_gate.get("status") == "degraded_non_core":
+            status = "partially_mitigated"
+            action_effect = "reduce_position_size"
+            confidence = 0.62
+            summary = "data-quality bear case is thesis-aware: remaining field gaps are non-core warnings, not core evidence blockers"
+            evidence_ids = [
+                detail.get("source_evidence_id")
+                for detail in (fundamentals_snapshot.get("field_details") or {}).values()
+                if detail.get("allowed_usage") in {"supporting_evidence", "promotion_evidence"} and detail.get("source_evidence_id")
+            ][:3]
+            evidence_quality = "supporting" if evidence_ids else "context_only"
+        elif severity == "high" and core_valuation_risk and valuation_blocked:
             status = "unresolved"
             action_effect = "block_pending_review"
             confidence = 0.25
@@ -166,16 +227,20 @@ def respond_to_bear_case(
             summary = "insufficient live evidence to answer the bear case"
             evidence_ids = []
             evidence_quality = "missing"
+        residual_risk_level = _residual_risk(status, severity, core_to_thesis)
         responses.append(
             BearCaseResponse(
                 ticker=ticker,
                 bear_case_claim_id=claim.get("claim_id"),
                 bear_case_text=text,
+                risk_category=risk_category,
+                core_to_thesis=core_to_thesis,
                 response_status=status,
                 response_evidence_ids=[str(item) for item in evidence_ids if item],
                 evidence_quality=evidence_quality,
                 response_summary=summary,
                 action_effect=action_effect,
+                residual_risk_level=residual_risk_level,
                 confidence=confidence,
                 metadata={"claim_index": index, "claim_severity": severity},
             )
@@ -185,15 +250,38 @@ def respond_to_bear_case(
     unresolved_count = sum(1 for status in statuses if status == "unresolved")
     partially_mitigated_count = sum(1 for status in statuses if status == "partially_mitigated")
     mitigated_count = sum(1 for status in statuses if status == "mitigated")
-    if unresolved_count:
+    critical_unresolved_core = any(
+        item.response_status == "unresolved" and item.core_to_thesis and item.residual_risk_level in {"critical", "high"}
+        for item in responses
+    )
+    if critical_unresolved_core:
+        overall = "unresolved"
+        action_effect = "block_pending_review"
+    elif unresolved_count:
         overall = "unresolved"
         action_effect = "block_pending_review"
     elif partially_mitigated_count:
         overall = "partially_mitigated"
-        action_effect = "reduce_position_size"
+        phase13_gate_active = bool(thesis_types or field_gate or data_quality_gate)
+        action_effect = "reduced_size_candidate_allowed" if phase13_gate_active and not critical_unresolved_core else "reduce_position_size"
     else:
         overall = "mitigated"
         action_effect = "keep_status"
+    residual_rank = {"low": 0, "medium": 1, "high": 2, "critical": 3}
+    overall_residual = max(
+        (item.residual_risk_level for item in responses),
+        key=lambda value: residual_rank.get(value, 0),
+        default="low",
+    )
+    bear_case_gate = {
+        "overall_status": overall,
+        "residual_risk_level": overall_residual,
+        "action_effect": action_effect,
+        "has_critical_unresolved_core_risk": critical_unresolved_core,
+        "core_bear_case_count": sum(1 for item in responses if item.core_to_thesis),
+        "non_core_bear_case_count": sum(1 for item in responses if not item.core_to_thesis),
+        "gate_status": "blocked" if critical_unresolved_core else ("reduced_size_allowed" if partially_mitigated_count else "pass"),
+    }
     return {
         "ticker": ticker,
         "overall_response_status": overall,
@@ -203,8 +291,10 @@ def respond_to_bear_case(
             "partially_mitigated_count": partially_mitigated_count,
             "mitigated_count": mitigated_count,
             "action_effect": action_effect,
+            "residual_risk_level": overall_residual,
         },
         "action_effect": action_effect,
+        "bear_case_gate": bear_case_gate,
         "bear_case_responses": [asdict(item) for item in responses],
         "responses": [asdict(item) for item in responses],
         "summary": "; ".join(item.response_summary for item in responses[:2]),

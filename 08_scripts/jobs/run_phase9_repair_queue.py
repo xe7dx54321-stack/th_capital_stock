@@ -36,7 +36,16 @@ def action_for_task(task: dict[str, Any]) -> str:
     code = task.get("blocker_code")
     if blocker_type == "valuation" or str(code or "").startswith(("VALUATION", "PRICE", "FORWARD_EPS", "HISTORICAL", "PEER")):
         return "repair_valuation_snapshot"
-    if blocker_type == "fundamentals" or code in {"FUNDAMENTALS_MISSING_FIELDS", "FIELD_NOT_FOUND", "FIELD_MAPPING_MISSING", "TABLE_NOT_FOUND", "PARSE_FAILED", "AMBIGUOUS_UNIT"}:
+    if blocker_type == "fundamentals" or code in {
+        "FUNDAMENTALS_MISSING_FIELDS",
+        "FIELD_NOT_FOUND",
+        "FIELD_MAPPING_MISSING",
+        "TABLE_NOT_FOUND",
+        "PARSE_FAILED",
+        "AMBIGUOUS_UNIT",
+        "DATA_QUALITY_CORE_GATE",
+        "CORE_EVIDENCE_BLOCKER",
+    }:
         return "repair_fundamentals_snapshot"
     if blocker_type == "risk" or str(code or "").startswith("HIGH_BEAR_CASE"):
         return "build_bear_case_response"

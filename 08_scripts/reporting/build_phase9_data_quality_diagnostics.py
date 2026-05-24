@@ -16,6 +16,7 @@ if str(LIB_DIR) not in sys.path:
 
 from smr_agents import DB_PATH
 from smr_blocker_taxonomy import normalize_blocker
+from smr_data_quality_gate import build_data_quality_gate
 from smr_evidence_quality import ensure_evidence_quality_columns, update_evidence_quality_scores
 from smr_fundamentals import FUNDAMENTAL_FIELDS, build_fundamentals_snapshot, latest_fundamentals_snapshot
 from smr_phase6_watchlists import load_watchlist_config
@@ -254,7 +255,14 @@ def evidence_issues(conn: sqlite3.Connection, ticker: str, limit: int = 20) -> l
     return issues
 
 
-def build_diagnostics(conn: sqlite3.Connection, ticker: str, *, refresh_fundamentals: bool = False, limit: int = 20) -> dict[str, Any]:
+def build_diagnostics(
+    conn: sqlite3.Connection,
+    ticker: str,
+    *,
+    refresh_fundamentals: bool = False,
+    limit: int = 20,
+    thesis_types: list[str] | None = None,
+) -> dict[str, Any]:
     before_snapshot = latest_fundamentals_snapshot(conn, ticker)
     if refresh_fundamentals:
         snapshot = build_fundamentals_snapshot(conn, ticker, prefer_live=True)
@@ -275,6 +283,14 @@ def build_diagnostics(conn: sqlite3.Connection, ticker: str, *, refresh_fundamen
         "evidence_issues": issues,
         "field_quality": fields,
     }
+    if thesis_types:
+        payload["data_quality_gate"] = build_data_quality_gate(
+            ticker=ticker,
+            thesis_types=thesis_types,
+            root_causes=root_causes,
+            field_quality=fields,
+            before_status=status,
+        )
     if refresh_fundamentals and before_snapshot:
         before_fields = field_quality_from_snapshot(before_snapshot)
         before_causes = root_causes_from_field_quality(before_fields)
@@ -327,6 +343,7 @@ def main() -> int:
     parser.add_argument("--json", action="store_true")
     parser.add_argument("--markdown", action="store_true")
     parser.add_argument("--refresh-fundamentals", action="store_true")
+    parser.add_argument("--thesis", action="append", default=None)
     args = parser.parse_args()
 
     conn = sqlite3.connect(args.db_path)
@@ -338,12 +355,24 @@ def main() -> int:
                 "generated_at": now_ts(),
                 "watchlist_id": args.watchlist,
                 "results": [
-                    build_diagnostics(conn, item["ticker"], refresh_fundamentals=args.refresh_fundamentals, limit=args.limit)
+                    build_diagnostics(
+                        conn,
+                        item["ticker"],
+                        refresh_fundamentals=args.refresh_fundamentals,
+                        limit=args.limit,
+                        thesis_types=args.thesis,
+                    )
                     for item in (config.get("tickers") or [])[: args.limit]
                 ],
             }
         else:
-            payload = build_diagnostics(conn, args.ticker or "09988.HK", refresh_fundamentals=args.refresh_fundamentals, limit=args.limit)
+            payload = build_diagnostics(
+                conn,
+                args.ticker or "09988.HK",
+                refresh_fundamentals=args.refresh_fundamentals,
+                limit=args.limit,
+                thesis_types=args.thesis,
+            )
         register_snapshot(
             conn,
             entity_type="phase9_data_quality_diagnostics",
