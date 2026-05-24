@@ -1,0 +1,31 @@
+{
+  "peer_sets": {
+    "hk_internet_platforms": {
+      "description": "HK/China internet platform and cloud/ecommerce peers.",
+      "tickers": [
+        "09988.HK",
+        "00700.HK",
+        "9618.HK",
+        "BABA",
+        "PDD",
+        "JD"
+      ],
+      "primary_ticker": "09988.HK",
+      "metrics": [
+        "pe_ttm",
+        "ps_ttm",
+        "pb",
+        "ev_ebitda_ttm"
+      ],
+      "required_min_peers": 2,
+      "fallback_allowed": true
+    }
+  },
+  "ticker_to_peer_set": {
+    "09988.HK": "hk_internet_platforms",
+    "00700.HK": "hk_internet_platforms",
+    "BABA": "hk_internet_platforms",
+    "PDD": "hk_internet_platforms",
+    "JD": "hk_internet_platforms"
+  }
+}

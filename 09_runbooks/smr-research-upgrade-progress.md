@@ -269,3 +269,60 @@ missing peer set, unresolved high bear case, and field-level fundamentals
 quality issues. A/H extraction was also hardened to reject paragraph numbers,
 percent-change EPS noise, ambiguous currencies, and field values too far from
 their field anchor.
+
+## Stage 10 Goal
+
+Phase 10 focuses on repair resolution and valuation input hardening. It starts
+turning Phase 9's diagnostics into concrete valuation input repairs for
+`09988.HK`.
+
+Current Phase 9 checkpoint:
+
+- Commit: `77e00791a3ca17cea7d913c304ea17a4a9f0d501`
+- Stage: `Phase 9: Repair Execution & Candidate Recovery`
+- `09988.HK`: `candidate_shadow`, `proxy_quality=strong`,
+  `fundamentals_status=fresh`, `promotion_allowed=false`
+- Main blockers: `PRICE_STALE`, `VALUATION_STALE`,
+  `FORWARD_EPS_MISSING`, `HISTORICAL_PERCENTILE_MISSING`,
+  `PEER_SET_MISSING`, `DATA_QUALITY_RISK`, and high bear case blockers
+
+### Phase 10 Goals
+
+1. Repair or refine `PRICE_STALE` and `VALUATION_STALE`.
+2. Add a minimal auditable peer set for `09988.HK`.
+3. Add historical valuation percentile status and missing reasons.
+4. Support internal proxy EPS as labelled supporting evidence only.
+5. Improve bear-case response summaries and action effects.
+6. Require validation before repair queue tasks can be marked `resolved`.
+7. Revalidate `09988.HK` with before/after output.
+
+### Phase 10 Non-goals
+
+- Do not add Industry Chain Agent.
+- Do not add Investment Committee Agent.
+- Do not execute real trades.
+- Do not expand the watchlist.
+- Do not add large new data sources.
+- Do not relax promotion rules.
+- Do not label internal proxy EPS as official consensus.
+- Do not use stale price to support actionable valuation.
+- Do not remove high bear case to manufacture pending review.
+
+### Phase 10 New Artifacts
+
+- `00_control/valuation_peer_sets.json`
+- `08_scripts/jobs/run_phase10_repair_resolution.py`
+- `08_scripts/verification/validate_phase10_repaired_candidate.py`
+- `docs/plans/2026-05-23-phase10-valuation-input-hardening.md`
+
+### Phase 10 Acceptance Criteria
+
+- `repair_valuation_snapshot.py --ticker 09988.HK --execute --json` outputs
+  before/after valuation repair.
+- `09988.HK` valuation output includes `peer_set_status`,
+  `historical_percentile_status`, and `forward_eps.status`.
+- Proxy EPS is explicitly `internal_proxy` and never official consensus.
+- Bear-case response includes status counts and action effect.
+- Repair queue resolution marks `resolved` only after validation proves the
+  original blocker disappeared.
+- Promotion rules remain unchanged.

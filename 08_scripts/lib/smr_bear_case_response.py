@@ -73,12 +73,19 @@ def respond_to_bear_case(
         text = str(claim.get("claim_text") or claim.get("text") or "")
         severity = str(claim.get("severity") or "medium").lower()
         evidence_ids = [row.get("evidence_id") for row in evidence_rows if row.get("evidence_id")][:3]
-        if severity == "high" and (valuation_usage in {"context_only", "blocked_due_to_stale_price"} or len(fundamentals_missing) >= 3):
+        valuation_blocked = valuation_usage in {"context_only", "blocked_due_to_stale_price"}
+        core_valuation_risk = any(token in text.lower() for token in ("valuation", "rerating", "multiple", "price"))
+        if severity == "high" and core_valuation_risk and valuation_blocked:
             status = "unresolved"
             action_effect = "block_pending_review"
             confidence = 0.25
             summary = "high bear case remains unresolved because valuation/data quality gates are still blocking"
             evidence_ids = []
+        elif severity == "high" and (valuation_blocked or len(fundamentals_missing) >= 3) and (usable_count >= 1 or live_count >= 2):
+            status = "partially_mitigated"
+            action_effect = "reduce_position_size"
+            confidence = 0.56
+            summary = "live evidence addresses part of the risk, but valuation or fundamentals gaps still prevent pending review"
         elif usable_count >= 2 and live_count >= 2 and len(fundamentals_missing) <= 2:
             status = "mitigated"
             action_effect = "keep_status"
@@ -110,10 +117,13 @@ def respond_to_bear_case(
         )
 
     statuses = [item.response_status for item in responses]
-    if any(status == "unresolved" for status in statuses):
+    unresolved_count = sum(1 for status in statuses if status == "unresolved")
+    partially_mitigated_count = sum(1 for status in statuses if status == "partially_mitigated")
+    mitigated_count = sum(1 for status in statuses if status == "mitigated")
+    if unresolved_count:
         overall = "unresolved"
         action_effect = "block_pending_review"
-    elif any(status == "partially_mitigated" for status in statuses):
+    elif partially_mitigated_count:
         overall = "partially_mitigated"
         action_effect = "reduce_position_size"
     else:
@@ -122,8 +132,16 @@ def respond_to_bear_case(
     return {
         "ticker": ticker,
         "overall_response_status": overall,
+        "bear_case_response_summary": {
+            "overall_status": overall,
+            "unresolved_count": unresolved_count,
+            "partially_mitigated_count": partially_mitigated_count,
+            "mitigated_count": mitigated_count,
+            "action_effect": action_effect,
+        },
         "action_effect": action_effect,
         "bear_case_responses": [asdict(item) for item in responses],
+        "responses": [asdict(item) for item in responses],
         "summary": "; ".join(item.response_summary for item in responses[:2]),
     }
 

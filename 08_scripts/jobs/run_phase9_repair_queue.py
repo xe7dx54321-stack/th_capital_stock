@@ -86,8 +86,8 @@ def execute_task(conn: sqlite3.Connection, task: dict[str, Any], *, dry_run: boo
         if action == "repair_valuation_snapshot":
             result = repair_valuation_for_ticker(conn, task["ticker"], dry_run=False, source_repair_id=task["repair_id"])
             remaining = set((result.get("after") or {}).get("remaining_blockers") or [])
-            new_status = "needs_manual_review" if remaining else "resolved"
-            note = "valuation repaired but manual review remains" if remaining else "valuation blocker resolved"
+            new_status = "needs_manual_review" if remaining else "in_progress"
+            note = "valuation repaired but validation is required before resolution" if not remaining else "valuation repaired but manual review remains"
         elif action == "build_data_quality_diagnostics":
             result = build_diagnostics(conn, task["ticker"], refresh_fundamentals=False)
             new_status = "needs_manual_review" if result.get("root_causes") else "resolved"

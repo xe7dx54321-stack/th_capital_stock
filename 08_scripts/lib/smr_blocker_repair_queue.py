@@ -317,3 +317,42 @@ def update_repair_task_metadata(
         (now_ts(), dumps_json(metadata), repair_id),
     )
     return get_repair_task(conn, repair_id)
+
+
+def resolve_repair_task_after_validation(
+    conn: sqlite3.Connection,
+    repair_id: str,
+    *,
+    validation_blockers: list[str],
+    replacement_blockers: list[str] | None = None,
+    reason: str | None = None,
+    owner: str | None = "codex",
+) -> dict[str, Any]:
+    """Resolve only when validation proves the original blocker disappeared."""
+
+    current = get_repair_task(conn, repair_id)
+    if not current:
+        raise ValueError(f"Unknown repair task: {repair_id}")
+    blocker_code = str(current.get("blocker_code") or "")
+    blockers = {str(item) for item in validation_blockers or []}
+    replacements = [str(item) for item in replacement_blockers or [] if str(item).strip()]
+    resolution_check = {
+        "validation_blockers": sorted(blockers),
+        "replacement_blockers": replacements,
+        "umbrella_blocker_removed": blocker_code not in blockers,
+        "is_resolved": blocker_code not in blockers and not replacements,
+        "reason": reason,
+    }
+    update_repair_task_metadata(
+        conn,
+        repair_id,
+        {"phase10_resolution_check": resolution_check},
+        note=reason or "Phase 10 validation resolution check",
+    )
+    if resolution_check["is_resolved"]:
+        return update_repair_task_status(conn, repair_id, "resolved", owner=owner, note=reason or "validated blocker disappeared")
+    if blocker_code not in blockers and replacements:
+        return update_repair_task_status(conn, repair_id, "in_progress", owner=owner, note=reason or "umbrella blocker split into sub-blockers")
+    if reason and "not_applicable" in reason:
+        return update_repair_task_status(conn, repair_id, "ignored", owner=owner, note=reason)
+    return update_repair_task_status(conn, repair_id, "needs_manual_review", owner=owner, note=reason or "blocker remains after validation")
