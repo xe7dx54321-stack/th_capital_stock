@@ -58,6 +58,12 @@ secrets/
 11_smr_wiki/raw/
 11_smr_wiki/drafts/
 11_smr_wiki/wiki/
+11_smr_wiki/financial_statement_chunks/
+11_smr_wiki/financial_statement_raw/
+11_smr_wiki/financial_statement_reports/
+financial_statement_chunks/
+financial_statement_raw/
+financial_statement_reports/
 
 # Agent runtime queues and workspaces
 12_smr_agents/handoffs/

@@ -828,3 +828,88 @@ python 08_scripts/verification/validate_phase16_parser_thesis_recovery.py --json
 python 08_scripts/reporting/build_phase16_parser_recovery_summary.py --json
 python 08_scripts/jobs/apply_watchlist_metadata_patch.py --ticker 002230.SZ --dry-run
 ```
+
+## Stage 17 Goal
+
+Phase 17 focuses on financial statement source chunk recovery. Phase 16 made
+the parser failures more precise, but it also showed that the current evidence
+graph did not always contain true financial statement table chunks. Phase 17
+therefore recovers the primary report source, extracts the table chunk, links it
+back to evidence, and only then reruns the parser.
+
+Current Phase 16 checkpoint:
+
+- Commit: `8eea7d08ad4cd3a8d6b2bbc5a503e7c190f2b73f`
+- Stage: `Phase 16: HKEX / CNINFO Parser Recovery + Thesis Metadata Hardening`
+- `00700.HK` `shareholders_equity` was refined to `balance_sheet_not_found`.
+- `300308.SZ` and `688041.SH` `revenue` / `gross_profit` were refined to
+  `income_statement_table_not_found`.
+- `002230.SZ` unknown thesis diagnostics improved, but the ticker still does
+  not bypass the evidence gate or enter pending review.
+
+### Phase 17 Goals
+
+1. Discover primary HKEX / CNINFO financial statement sources.
+2. Extract income statement, balance sheet, and cash flow chunks from reports.
+3. Classify financial statement chunks and reject contents, disclaimers, and
+   management discussion sections as core statement tables.
+4. Link recovered chunks to `document_chunks` and `evidence_items`.
+5. Rerun the Phase 16 parsers on recovered chunks.
+6. Validate `00700.HK`, `300308.SZ`, and `688041.SH` before/after status.
+7. Summarize sources found, chunks found, evidence linked, extracted fields,
+   derived fields, and remaining table-not-found blockers.
+
+### Phase 17 Non-goals
+
+- Do not perform real trading.
+- Do not auto approve anything.
+- Do not generate paper orders or paper positions.
+- Do not expand the `ai_core` watchlist.
+- Do not loosen promotion rules.
+- Do not fabricate extracted fields when no source table chunk exists.
+- Do not use source-missing or low-confidence fields as core evidence.
+- Do not commit raw PDFs, HTML dumps, or large generated extraction outputs.
+
+### Phase 17 New Artifacts
+
+- `08_scripts/lib/smr_financial_statement_source_discovery.py`
+- `08_scripts/lib/smr_financial_statement_chunker.py`
+- `08_scripts/jobs/discover_financial_statement_sources.py`
+- `08_scripts/jobs/extract_financial_statement_chunks.py`
+- `08_scripts/jobs/link_financial_statement_chunks_to_evidence.py`
+- `08_scripts/verification/validate_phase17_source_chunk_recovery.py`
+- `08_scripts/reporting/build_phase17_source_chunk_recovery_summary.py`
+- `00_control/financial_statement_sources.json`
+- `docs/plans/2026-05-23-phase17-financial-statement-source-chunk-recovery.md`
+
+### Phase 17 Expected Behavior
+
+- `00700.HK` can discover a HKEX annual report, extract a balance sheet chunk,
+  link it to evidence, and rerun `shareholders_equity` extraction.
+- `300308.SZ` can discover a CNINFO annual report, extract an income statement
+  chunk, link it to evidence, and rerun `revenue` / `gross_profit` extraction.
+- `688041.SH` remains acceptable as a refined missing source case if CNINFO
+  org hints or manifest source metadata are unavailable.
+- The system reports what source and chunk were used, which evidence ID was
+  created, and why any remaining field cannot be extracted.
+
+### Phase 17 Validation Commands
+
+```bash
+python -m py_compile 08_scripts/lib/*.py 08_scripts/jobs/*.py 08_scripts/verification/*.py 08_scripts/reporting/*.py
+python -m unittest discover -s tests -v
+python 08_scripts/verification/validate_phase3_e2e.py
+python 08_scripts/verification/validate_phase4_live_e2e.py --tickers NVDA --days 180 --timeout 240
+python 08_scripts/verification/validate_phase5_paper_portfolio_smoke.py
+python 08_scripts/verification/validate_phase6_multi_ticker_live.py --watchlist ai_core --save-run-history --compare-last-run --timeout 240
+python 08_scripts/verification/validate_phase14_thesis_aware_multi_ticker_live.py --watchlist ai_core --timeout 240 --json
+python 08_scripts/reporting/build_phase15_review_ops_summary.py --watchlist ai_core --json
+python 08_scripts/verification/validate_phase16_parser_thesis_recovery.py --json
+python 08_scripts/jobs/discover_financial_statement_sources.py --tickers 00700.HK,300308.SZ,688041.SH --json
+python 08_scripts/jobs/extract_financial_statement_chunks.py --tickers 00700.HK,300308.SZ,688041.SH --json
+python 08_scripts/jobs/link_financial_statement_chunks_to_evidence.py --ticker 00700.HK --json
+python 08_scripts/jobs/link_financial_statement_chunks_to_evidence.py --ticker 300308.SZ --json
+python 08_scripts/jobs/link_financial_statement_chunks_to_evidence.py --ticker 688041.SH --json
+python 08_scripts/verification/validate_phase17_source_chunk_recovery.py --tickers 00700.HK,300308.SZ,688041.SH --json
+python 08_scripts/reporting/build_phase17_source_chunk_recovery_summary.py --json
+```

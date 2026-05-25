@@ -13,6 +13,7 @@ BALANCE_SHEET_TITLES = [
     "statement of financial position",
     "balance sheet",
     "condensed consolidated statement of financial position",
+    "condensed consolidated statements of financial position",
     "簡明綜合財務狀況表",
     "綜合財務狀況表",
     "綜合資產負債表",

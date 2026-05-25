@@ -162,11 +162,11 @@ def build_recovery_payload(conn: sqlite3.Connection, ticker: str, *, watchlist_i
             ):
                 status = {**status, **phase16_status}
         field_repair[field] = {"before": "missing" if field in core_before else "unknown", "after": status.get("status"), **status}
-    core_after = [field for field, status in field_repair.items() if status.get("status") != "extracted"]
+    core_after = [field for field, status in field_repair.items() if status.get("status") not in {"extracted", "derived"}]
     minimum_fix_path = [
         status.get("suggested_fix")
         for status in field_repair.values()
-        if status.get("status") != "extracted" and status.get("suggested_fix")
+        if status.get("status") not in {"extracted", "derived"} and status.get("suggested_fix")
     ]
     return {
         "generated_at": now_ts(),

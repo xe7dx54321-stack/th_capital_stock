@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "updated_at": "2026-05-25T00:00:00",
+  "sources": {
+    "00700.HK": [
+      {
+        "source_id": "hkex_00700_hk_12100024",
+        "source_type": "annual_report",
+        "source_url": "https://www1.hkexnews.hk/listedco/listconews/sehk/2026/0409/2026040901231.pdf",
+        "published_at": "2026-04-09",
+        "title": "Annual Report 2025",
+        "document_format": "pdf",
+        "expected_sections": [
+          "income_statement",
+          "balance_sheet",
+          "cash_flow_statement"
+        ],
+        "status": "active"
+      }
+    ],
+    "300308.SZ": [
+      {
+        "source_id": "cninfo_300308_sz_1225056459",
+        "source_type": "annual_report",
+        "source_url": "https://static.cninfo.com.cn/finalpage/2026-03-31/1225056459.PDF",
+        "published_at": "2026-03-31",
+        "title": "2025年年度报告",
+        "document_format": "pdf",
+        "expected_sections": [
+          "income_statement",
+          "balance_sheet",
+          "cash_flow_statement"
+        ],
+        "status": "active"
+      }
+    ]
+  }
+}
