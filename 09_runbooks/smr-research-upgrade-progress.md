@@ -745,3 +745,86 @@ python 08_scripts/verification/validate_phase15_core_blocker_recovery.py --ticke
 python 08_scripts/reporting/build_phase15_unknown_thesis_diagnostics.py --ticker 002230.SZ --json
 python 08_scripts/reporting/build_phase15_review_ops_summary.py --watchlist ai_core --json
 ```
+
+## Stage 16 Goal
+
+Phase 16 focuses on parser recovery and thesis metadata hardening. It does not
+try to create more pending recommendations. Instead, it turns broad core
+blockers into either repaired fields with evidence IDs or precise missing
+reasons that can be worked from.
+
+Current Phase 15 checkpoint:
+
+- Commit: `3637f821f160433dd9c2feb34a3459671f40f8f7`
+- Stage: `Phase 15: Human Review Workflow + Core Blocker Recovery`
+- `09988.HK` review workflow and paper order guard are complete.
+- `00700.HK` still has `shareholders_equity` as a core blocker.
+- `300308.SZ` and `688041.SH` still have `revenue` / `gross_profit` core
+  blockers.
+- `002230.SZ` remains `unknown` thesis and cannot enter pending review.
+
+### Phase 16 Goals
+
+1. Add HKEX balance sheet parser recovery for `shareholders_equity`.
+2. Add HK equity synonym coverage for owners/shareholders equity.
+3. Refine `00700.HK` from broad `table_not_found` to a balance-sheet-specific
+   reason when extraction is not possible.
+4. Add CNINFO income statement parser recovery for `revenue`,
+   `operating_cost`, and `gross_profit`.
+5. Support A-share `gross_profit = revenue - operating_cost` derivation with
+   linked input evidence IDs.
+6. Harden `002230.SZ` unknown-thesis diagnostics with a dry-run metadata patch
+   and after-patch simulation.
+7. Add a Phase 16 parser/thesis recovery validator and daily parser recovery
+   summary.
+
+### Phase 16 Non-goals
+
+- Do not perform real trading.
+- Do not auto approve anything.
+- Do not create paper orders from pending items.
+- Do not expand the `ai_core` watchlist.
+- Do not loosen promotion rules.
+- Do not let unknown thesis bypass thesis-aware evidence gates.
+- Do not use source-missing or low-confidence fields as promotion evidence.
+
+### Phase 16 New Artifacts
+
+- `08_scripts/lib/smr_hkex_table_parser.py`
+- `08_scripts/lib/smr_cninfo_table_parser.py`
+- `08_scripts/jobs/apply_watchlist_metadata_patch.py`
+- `08_scripts/verification/validate_phase16_parser_thesis_recovery.py`
+- `08_scripts/reporting/build_phase16_parser_recovery_summary.py`
+- `docs/plans/2026-05-23-phase16-parser-thesis-recovery.md`
+
+### Phase 16 Expected Behavior
+
+- `00700.HK` `shareholders_equity` no longer reports only a broad
+  `table_not_found`; it is either extracted with source evidence or refined to
+  a specific balance-sheet parser reason.
+- A-share revenue and gross-profit blockers are either extracted/derived with
+  input evidence IDs or refined to income-statement-specific missing reasons.
+- `002230.SZ` receives a concrete suggested metadata patch and simulation, but
+  remains blocked from pending unless normal thesis inference and evidence gates
+  pass later.
+- Phase 15 review and paper-order guard behavior remains unchanged.
+
+### Phase 16 Validation Commands
+
+```bash
+python -m py_compile 08_scripts/lib/*.py 08_scripts/jobs/*.py 08_scripts/verification/*.py 08_scripts/reporting/*.py
+python -m unittest discover -s tests -v
+python 08_scripts/verification/validate_phase3_e2e.py
+python 08_scripts/verification/validate_phase4_live_e2e.py --tickers NVDA --days 180 --timeout 240
+python 08_scripts/verification/validate_phase5_paper_portfolio_smoke.py
+python 08_scripts/verification/validate_phase6_multi_ticker_live.py --watchlist ai_core --save-run-history --compare-last-run --timeout 240
+python 08_scripts/verification/validate_phase14_thesis_aware_multi_ticker_live.py --watchlist ai_core --timeout 240 --json
+python 08_scripts/reporting/build_phase15_review_ops_summary.py --watchlist ai_core --json
+python 08_scripts/verification/validate_phase15_core_blocker_recovery.py --ticker 00700.HK --json
+python 08_scripts/verification/validate_phase15_core_blocker_recovery.py --ticker 300308.SZ --json
+python 08_scripts/verification/validate_phase15_core_blocker_recovery.py --ticker 688041.SH --json
+python 08_scripts/reporting/build_phase15_unknown_thesis_diagnostics.py --ticker 002230.SZ --json
+python 08_scripts/verification/validate_phase16_parser_thesis_recovery.py --json
+python 08_scripts/reporting/build_phase16_parser_recovery_summary.py --json
+python 08_scripts/jobs/apply_watchlist_metadata_patch.py --ticker 002230.SZ --dry-run
+```

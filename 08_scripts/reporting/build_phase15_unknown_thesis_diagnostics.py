@@ -18,6 +18,7 @@ from smr_agents import DB_PATH
 from smr_phase6_watchlists import watchlist_map
 from smr_registry import register_snapshot
 from smr_runlog import log_run
+from smr_thesis_inference import infer_thesis_type
 from smr_wiki import now_ts
 from build_phase14_thesis_aware_daily_summary import latest_phase14_validation
 
@@ -58,8 +59,14 @@ def suggested_patch(ticker: str, watchlist_item: dict[str, Any], row: dict[str, 
     if ticker.endswith((".SZ", ".SH")) and ("ai" in theme or "application" in theme):
         return {
             "theme": "ai_infrastructure",
+            "theme_tags": ["ai_infrastructure", "compute_hardware", "server_supply_chain"],
+            "sector": "technology_hardware",
+            "business_driver": "AI server / compute infrastructure supply chain",
+            "candidate_thesis_hints": ["ai_infrastructure_demand", "revenue_growth"],
             "candidate_thesis_types": ["ai_infrastructure_demand", "revenue_growth"],
-            "primary_business_driver": "AI infrastructure or application revenue driver needs explicit confirmation",
+            "claim_keywords": ["AI server", "compute", "infrastructure", "revenue growth", "order demand"],
+            "proxy_signal_hints": ["order", "guidance", "revenue growth", "industry demand"],
+            "primary_business_driver": "AI server / compute infrastructure supply chain",
         }
     scorecard = (row.get("thesis_inference") or {}).get("scorecard") or {}
     candidates = [name for name, _score in sorted(scorecard.items(), key=lambda item: -float(item[1]))[:2]]
@@ -67,6 +74,26 @@ def suggested_patch(ticker: str, watchlist_item: dict[str, Any], row: dict[str, 
         "theme": watchlist_item.get("theme") or "needs_manual_theme_tag",
         "candidate_thesis_types": candidates or ["revenue_growth"],
         "primary_business_driver": "add claim keywords or watchlist thesis metadata",
+    }
+
+
+def simulate_after_patch(ticker: str, watchlist_item: dict[str, Any], patch: dict[str, Any], row: dict[str, Any]) -> dict[str, Any]:
+    simulated_item = {**watchlist_item, **patch}
+    inference = infer_thesis_type(
+        ticker,
+        candidate={"reason": "metadata patch simulation"},
+        proxy={"proxy_quality": "medium"},
+        valuation={},
+        watchlist_item=simulated_item,
+    )
+    return {
+        "candidate_thesis_type": inference.get("primary_thesis_type"),
+        "simulated_confidence": inference.get("confidence"),
+        "signals_used": inference.get("signals_used") or [],
+        "allow_pending": False,
+        "reason": "metadata patch improves thesis inference but evidence gate still required"
+        if inference.get("primary_thesis_type") != "unknown"
+        else "metadata patch is still insufficient; manual thesis review remains required",
     }
 
 
@@ -78,6 +105,7 @@ def build_ticker_payload(conn: sqlite3.Connection, ticker: str, *, watchlist_id:
     watchlist_item = lookup.get(ticker) or {}
     inference = row.get("thesis_inference") or {}
     confidence = inference.get("confidence") if inference.get("confidence") is not None else row.get("thesis_inference_confidence")
+    patch = suggested_patch(ticker, watchlist_item, row)
     return {
         "generated_at": now_ts(),
         "ticker": ticker,
@@ -91,7 +119,8 @@ def build_ticker_payload(conn: sqlite3.Connection, ticker: str, *, watchlist_id:
         ],
         "signals_used": inference.get("signals_used") or [],
         "scorecard": inference.get("scorecard") or {},
-        "suggested_metadata_patch": suggested_patch(ticker, watchlist_item, row),
+        "suggested_metadata_patch": patch,
+        "after_patch_simulation": simulate_after_patch(ticker, watchlist_item, patch, row),
         "allow_pending": False,
     }
 

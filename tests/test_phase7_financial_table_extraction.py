@@ -103,7 +103,10 @@ class Phase7FinancialTableExtractionTests(unittest.TestCase):
         self.assertEqual(snapshot["market"], "A")
         self.assertTrue(snapshot["field_details"]["revenue"]["source_evidence_id"])
         self.assertIn("gross_profit", snapshot["missing_fields"])
-        self.assertIn(snapshot["field_details"]["gross_profit"]["missing_reason"], {"field_not_found", "parse_failed", "table_not_found"})
+        self.assertIn(
+            snapshot["field_details"]["gross_profit"]["missing_reason"],
+            {"field_not_found", "parse_failed", "table_not_found", "income_statement_table_not_found"},
+        )
         self.assertGreaterEqual(snapshot["field_details"]["operating_cash_flow"]["confidence"], 0.0)
 
     def test_portfolio_risk_exposes_projected_exposure_and_risk_adjusted_sizing(self):

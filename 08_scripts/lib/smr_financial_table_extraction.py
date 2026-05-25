@@ -8,7 +8,9 @@ import sqlite3
 from datetime import datetime, timedelta
 from typing import Any
 
+from smr_cninfo_table_parser import extract_income_statement_fields_from_chunks
 from smr_filing_chunk_selector import select_relevant_document_chunks
+from smr_hkex_table_parser import extract_shareholders_equity_from_chunks
 
 
 FIELD_ORDER = [
@@ -557,6 +559,54 @@ def extract_field_level_fundamentals(
             field_details[field] = _field_detail_defaults(field, market, latest_anchor.strftime("%Y-%m-%d") if latest_anchor else None, reason or ("stale_filing" if stale else "field_not_found"))
             missing_fields.append(field)
             missing_reasons[field] = field_details[field]["missing_reason"]
+
+    if str(market or "").upper() == "H" and field_values.get("shareholders_equity") is None:
+        hk_recovery = extract_shareholders_equity_from_chunks(chunks, ticker=ticker, market="H")
+        if hk_recovery.get("status") == "extracted" and not hk_recovery.get("missing_reason"):
+            field_details["shareholders_equity"] = hk_recovery
+            field_values["shareholders_equity"] = hk_recovery["extracted_value"]
+            if hk_recovery.get("source_evidence_id"):
+                evidence_ids.append(str(hk_recovery["source_evidence_id"]))
+        elif field_details.get("shareholders_equity", {}).get("missing_reason") == "table_not_found":
+            detail = dict(field_details["shareholders_equity"])
+            detail.update(
+                {
+                    "missing_reason": hk_recovery.get("missing_reason") or "balance_sheet_not_found",
+                    "table_detected": hk_recovery.get("table_detected", False),
+                    "source_section_type": hk_recovery.get("section_type"),
+                    "chunk_section_type": hk_recovery.get("section_type"),
+                    "method": "hkex_balance_sheet",
+                    "suggested_fix": hk_recovery.get("suggested_fix") or "improve HKEX balance sheet parser and equity synonym coverage",
+                }
+            )
+            field_details["shareholders_equity"] = detail
+            missing_reasons["shareholders_equity"] = detail["missing_reason"]
+
+    if str(market or "").upper() == "A" and (field_values.get("revenue") is None or field_values.get("gross_profit") is None):
+        cn_recovery = extract_income_statement_fields_from_chunks(chunks, ticker=ticker)
+        cn_fields = cn_recovery.get("field_status") or {}
+        for field in ("revenue", "gross_profit"):
+            recovered = cn_fields.get(field) or {}
+            if recovered.get("status") in {"extracted", "derived"} and recovered.get("extracted_value") is not None and not recovered.get("missing_reason"):
+                field_details[field] = recovered
+                field_values[field] = recovered["extracted_value"]
+                if recovered.get("source_evidence_id"):
+                    evidence_ids.extend(recovered.get("source_evidence_ids") or [recovered["source_evidence_id"]])
+            elif field_values.get(field) is None and field_details.get(field, {}).get("missing_reason") in {"table_not_found", "field_not_found"}:
+                detail = dict(field_details[field])
+                detail.update(
+                    {
+                        "missing_reason": recovered.get("missing_reason") or cn_recovery.get("missing_reason") or "income_statement_table_not_found",
+                        "missing_inputs": recovered.get("missing_inputs"),
+                        "table_detected": cn_recovery.get("table_detected", False),
+                        "source_section_type": cn_recovery.get("section_type"),
+                        "chunk_section_type": cn_recovery.get("section_type"),
+                        "scope": cn_recovery.get("scope"),
+                        "method": "cninfo_income_statement",
+                    }
+                )
+                field_details[field] = detail
+                missing_reasons[field] = detail["missing_reason"]
 
     if field_values.get("operating_cash_flow") is not None and field_values.get("capex") is not None:
         derived = _derive_metric("free_cash_flow", field_details["operating_cash_flow"], field_details["capex"], "operating_cash_flow - abs(capex)")

@@ -19,6 +19,8 @@ if str(REPORTING_DIR) not in sys.path:
 
 from smr_agents import DB_PATH
 from smr_fundamentals import latest_fundamentals_snapshot
+from smr_cninfo_table_parser import extract_income_statement_fields_from_chunks
+from smr_hkex_table_parser import extract_shareholders_equity_from_chunks
 from smr_registry import register_snapshot
 from smr_runlog import log_run
 from smr_wiki import now_ts
@@ -78,6 +80,67 @@ def _suggested_fix(field: str, market: str) -> str:
     return f"improve fundamentals extraction for {field}"
 
 
+def _latest_chunks(conn: sqlite3.Connection, ticker: str, limit: int = 80) -> list[dict[str, Any]]:
+    row = conn.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='document_chunks'").fetchone()
+    if not row:
+        return []
+    columns = {item[1] for item in conn.execute("PRAGMA table_info(document_chunks)").fetchall()}
+    select_columns = [
+        column
+        for column in ("chunk_id", "document_id", "evidence_id", "chunk_section_type", "text", "published_at", "ingested_at", "created_at")
+        if column in columns
+    ]
+    if not select_columns:
+        return []
+    order_columns = [column for column in ("created_at", "ingested_at", "published_at") if column in columns]
+    if len(order_columns) > 1:
+        order_expr = f"datetime(COALESCE({', '.join(order_columns)})) DESC"
+    elif len(order_columns) == 1:
+        order_expr = f"datetime({order_columns[0]}) DESC"
+    else:
+        order_expr = "rowid DESC"
+    rows = conn.execute(
+        f"SELECT {', '.join(select_columns)} FROM document_chunks WHERE ticker=? ORDER BY {order_expr} LIMIT ?",
+        (ticker, limit),
+    ).fetchall()
+    return [dict(zip(select_columns, row)) for row in rows]
+
+
+def _phase16_recovery_status(conn: sqlite3.Connection, ticker: str, field: str) -> dict[str, Any] | None:
+    market = _market_for_ticker(ticker)
+    chunks = _latest_chunks(conn, ticker)
+    if market == "HK" and field == "shareholders_equity":
+        result = extract_shareholders_equity_from_chunks(chunks, ticker=ticker, market="H")
+        if result.get("status") == "extracted":
+            return result
+        return {
+            "status": "missing",
+            "missing_reason": result.get("missing_reason") or "balance_sheet_not_found",
+            "table_detected": result.get("table_detected", False),
+            "section_type": result.get("section_type"),
+            "confidence": result.get("confidence") or 0.0,
+            "allowed_usage": "blocked",
+            "suggested_fix": result.get("suggested_fix") or _suggested_fix(field, market),
+        }
+    if market == "CN" and field in {"revenue", "gross_profit"}:
+        result = extract_income_statement_fields_from_chunks(chunks, ticker=ticker)
+        status = (result.get("field_status") or {}).get(field) or {}
+        if status.get("status") in {"extracted", "derived"}:
+            return status
+        return {
+            "status": "missing",
+            "missing_reason": status.get("missing_reason") or result.get("missing_reason") or "income_statement_table_not_found",
+            "missing_inputs": status.get("missing_inputs"),
+            "table_detected": result.get("table_detected", False),
+            "section_type": result.get("section_type"),
+            "scope": result.get("scope"),
+            "confidence": 0.0,
+            "allowed_usage": "blocked",
+            "suggested_fix": _suggested_fix(field, market),
+        }
+    return None
+
+
 def build_recovery_payload(conn: sqlite3.Connection, ticker: str, *, watchlist_id: str = "ai_core") -> dict[str, Any]:
     ticker = ticker.upper()
     validation = latest_phase14_validation(conn, watchlist_id)
@@ -88,7 +151,17 @@ def build_recovery_payload(conn: sqlite3.Connection, ticker: str, *, watchlist_i
         core_before = list((row.get("field_gate") or {}).get("core_blockers") or [])
     if not core_before and ticker == "00700.HK":
         core_before = ["shareholders_equity"]
-    field_repair = {field: {"before": "missing" if field in core_before else "unknown", "after": _field_status(snapshot, field).get("status"), **_field_status(snapshot, field)} for field in core_before}
+    field_repair = {}
+    for field in core_before:
+        status = _field_status(snapshot, field)
+        if status.get("status") != "extracted":
+            phase16_status = _phase16_recovery_status(conn, ticker, field)
+            if phase16_status and (
+                phase16_status.get("status") in {"extracted", "derived"}
+                or status.get("missing_reason") in {"table_not_found", "field_not_found"}
+            ):
+                status = {**status, **phase16_status}
+        field_repair[field] = {"before": "missing" if field in core_before else "unknown", "after": status.get("status"), **status}
     core_after = [field for field, status in field_repair.items() if status.get("status") != "extracted"]
     minimum_fix_path = [
         status.get("suggested_fix")

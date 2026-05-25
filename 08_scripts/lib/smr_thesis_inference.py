@@ -178,6 +178,29 @@ def infer_thesis_type(
     for item in candidate.get("thesis_types") or []:
         if str(item) in SUPPORTED_THESIS_TYPES:
             _add_score(scores, signals, str(item), 0.45, "explicit_structured_thesis_list")
+    for item in watchlist_item.get("candidate_thesis_hints") or []:
+        if str(item) in SUPPORTED_THESIS_TYPES:
+            _add_score(scores, signals, str(item), 0.34, "watchlist_candidate_thesis_hint")
+    if watchlist_item.get("theme_tags"):
+        tag_text = _lower_json(watchlist_item.get("theme_tags"))
+        if _contains(tag_text, "ai_infrastructure", "compute_hardware", "server_supply_chain"):
+            _add_score(scores, signals, "ai_infrastructure_demand", 0.26, "watchlist_theme_tags")
+    if watchlist_item.get("business_driver"):
+        driver = str(watchlist_item.get("business_driver") or "").lower()
+        if _contains(driver, "ai server", "compute infrastructure", "server supply chain"):
+            _add_score(scores, signals, "ai_infrastructure_demand", 0.22, "watchlist_business_driver")
+    if watchlist_item.get("claim_keywords"):
+        keywords = _lower_json(watchlist_item.get("claim_keywords"))
+        if _contains(keywords, "ai server", "compute", "infrastructure", "order demand"):
+            _add_score(scores, signals, "ai_infrastructure_demand", 0.18, "watchlist_claim_keywords")
+        if _contains(keywords, "revenue growth", "sales growth"):
+            _add_score(scores, signals, "revenue_growth", 0.16, "watchlist_claim_keywords")
+    if watchlist_item.get("proxy_signal_hints"):
+        proxy_hints = _lower_json(watchlist_item.get("proxy_signal_hints"))
+        if _contains(proxy_hints, "order", "guidance", "industry demand"):
+            _add_score(scores, signals, "ai_infrastructure_demand", 0.12, "watchlist_proxy_signal_hints")
+        if _contains(proxy_hints, "revenue growth"):
+            _add_score(scores, signals, "revenue_growth", 0.12, "watchlist_proxy_signal_hints")
 
     ranked = sorted(scores.items(), key=lambda item: (-item[1], item[0]))
     if not ranked:
