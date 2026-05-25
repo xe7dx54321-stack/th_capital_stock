@@ -207,6 +207,21 @@ def approved_recommendations(conn: sqlite3.Connection, limit: int = 100) -> list
     ]
 
 
+def latest_recommendation_status(conn: sqlite3.Connection, recommendation_id: str) -> str | None:
+    ensure_paper_portfolio_tables(conn)
+    row = conn.execute(
+        """
+        SELECT status
+        FROM decision_ledger
+        WHERE recommendation_id=?
+        ORDER BY datetime(updated_at) DESC, id DESC
+        LIMIT 1
+        """,
+        (recommendation_id,),
+    ).fetchone()
+    return row[0] if row else None
+
+
 def update_ledger_paper_trace(
     conn: sqlite3.Connection,
     recommendation_id: str,
@@ -244,9 +259,28 @@ def create_order_for_approved_recommendation(
     conn: sqlite3.Connection,
     recommendation: dict[str, Any],
     max_price_age_days: int = 7,
+    dry_run: bool = False,
 ) -> dict[str, Any]:
     ensure_paper_portfolio_tables(conn)
     rec_id = recommendation["recommendation_id"]
+    latest_status = latest_recommendation_status(conn, rec_id)
+    if latest_status != "approved_paper":
+        if not dry_run:
+            update_ledger_paper_trace(
+                conn,
+                rec_id,
+                lifecycle_status="paper_order_blocked",
+                reason=f"paper order requires approved_paper status, got {latest_status or 'unknown'}",
+            )
+        return {
+            "order_id": None,
+            "status": "blocked_not_approved",
+            "recommendation_id": rec_id,
+            "created": False,
+            "reason": "paper order requires approved_paper status",
+            "current_status": latest_status,
+            "dry_run": dry_run,
+        }
     existing = conn.execute(
         "SELECT order_id, status FROM paper_portfolio_orders WHERE recommendation_id=? ORDER BY id DESC LIMIT 1",
         (rec_id,),

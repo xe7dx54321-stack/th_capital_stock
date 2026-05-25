@@ -653,3 +653,95 @@ python 08_scripts/verification/validate_phase14_thesis_aware_multi_ticker_live.p
 python 08_scripts/reporting/build_phase14_thesis_aware_daily_summary.py --watchlist ai_core --json
 python 08_scripts/reporting/build_paper_portfolio_summary.py
 ```
+
+## Stage 15 Goal
+
+Phase 15 hardens the human review workflow that follows Phase 14 reduced-size
+pending recommendations. The focus is operational safety: a reviewer can see
+why an item is pending, choose a structured action, and only an explicit
+`approve_paper` transition can later create a paper portfolio order.
+
+Current Phase 14 checkpoint:
+
+- Commit: `d2670cc37a9d2d7bb7f4f814243eb2e97068f4e0`
+- Stage: `Phase 14: Thesis-aware Gate Generalization + Review Workflow Hardening`
+- `09988.HK` under inferred `valuation_rerating`: reduced-size
+  `pending_human_review`
+- `09988.HK` has `requires_human_review=true`,
+  `auto_approval_allowed=false`, and `paper_order_allowed=false` before
+  approval
+- Core blocker tickers remain `00700.HK`, `300308.SZ`, and `688041.SH`
+- `002230.SZ` remains `unknown` thesis and cannot enter pending review
+
+### Phase 15 Goals
+
+1. Add review queue and review detail snapshots with thesis, field warnings,
+   bear-case residual risk, portfolio impact, and hard audit flags.
+2. Add structured manual review actions: `approve_paper`, `reject`,
+   `downgrade`, `request_more_research`, `reduce_position_size`, and
+   `archive`.
+3. Write every review action to both `human_review_actions` and the decision
+   ledger.
+4. Enforce that only `pending_human_review` can become `approved_paper`.
+5. Enforce that only `approved_paper` can create paper orders.
+6. Add a dry-run review-to-paper smoke validator for `09988.HK`.
+7. Add recovery diagnostics for `00700.HK`, `300308.SZ`, and `688041.SH`
+   core blockers.
+8. Add unknown-thesis diagnostics for `002230.SZ`.
+9. Add a daily review operations summary for review and repair work.
+
+### Phase 15 Non-goals
+
+- Do not perform real trading.
+- Do not auto approve reduced-size pending.
+- Do not create paper orders from `pending_human_review`.
+- Do not let `candidate_shadow`, `observation_only`, `rejected`,
+  `needs_more_research`, or `archived` create paper orders.
+- Do not hide optional warnings.
+- Do not loosen promotion rules.
+- Do not treat proxy EPS as official consensus.
+
+### Phase 15 New Artifacts
+
+- `08_scripts/lib/smr_human_review_workflow.py`
+- `08_scripts/jobs/apply_human_review_action.py`
+- `08_scripts/reporting/build_review_queue_snapshot.py`
+- `08_scripts/reporting/build_phase15_unknown_thesis_diagnostics.py`
+- `08_scripts/reporting/build_phase15_review_ops_summary.py`
+- `08_scripts/verification/validate_phase15_review_to_paper_smoke.py`
+- `08_scripts/verification/validate_phase15_core_blocker_recovery.py`
+- `docs/plans/2026-05-23-phase15-human-review-core-blocker-recovery.md`
+
+### Phase 15 Expected Behavior
+
+- `09988.HK` reduced-size pending appears in review queue with thesis,
+  optional warnings, bear-case status, and portfolio projection.
+- `approve_paper` is allowed only from `pending_human_review`.
+- `reduce_position_size` can only lower or keep the existing suggested
+  position size.
+- `approved_paper` is the only status eligible for paper order generation.
+- Pending, rejected, archived, and needs-more-research items cannot generate
+  paper orders.
+- Core blocker recovery reports before/after field status, but does not
+  fabricate missing fundamentals.
+- Unknown-thesis diagnostics suggest metadata patches without changing the
+  watchlist automatically.
+
+### Phase 15 Validation Commands
+
+```bash
+python -m py_compile 08_scripts/lib/*.py 08_scripts/jobs/*.py 08_scripts/verification/*.py 08_scripts/reporting/*.py
+python -m unittest discover -s tests -v
+python 08_scripts/verification/validate_phase3_e2e.py
+python 08_scripts/verification/validate_phase4_live_e2e.py --tickers NVDA --days 180 --timeout 240
+python 08_scripts/verification/validate_phase5_paper_portfolio_smoke.py
+python 08_scripts/verification/validate_phase6_multi_ticker_live.py --watchlist ai_core --save-run-history --compare-last-run --timeout 240
+python 08_scripts/verification/validate_phase13_core_gate_repaired_candidate.py --ticker 09988.HK --days 365 --thesis valuation_rerating --json
+python 08_scripts/verification/validate_phase14_thesis_aware_multi_ticker_live.py --watchlist ai_core --timeout 240 --json
+python 08_scripts/reporting/build_review_queue_snapshot.py --json
+python 08_scripts/jobs/apply_human_review_action.py --recommendation-id phase14__09988.HK__valuation_rerating --action approve_paper --reviewer manual --note "phase15 dry-run approval" --dry-run
+python 08_scripts/verification/validate_phase15_review_to_paper_smoke.py --ticker 09988.HK --dry-run --json
+python 08_scripts/verification/validate_phase15_core_blocker_recovery.py --ticker 00700.HK --json
+python 08_scripts/reporting/build_phase15_unknown_thesis_diagnostics.py --ticker 002230.SZ --json
+python 08_scripts/reporting/build_phase15_review_ops_summary.py --watchlist ai_core --json
+```

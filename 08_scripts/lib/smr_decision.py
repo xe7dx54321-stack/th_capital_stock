@@ -24,6 +24,7 @@ RECOMMENDATION_STATUSES = {
     "pending_human_review",
     "approved_paper",
     "rejected",
+    "needs_more_research",
     "archived",
     "expired",
 }
@@ -32,9 +33,15 @@ REVIEW_ACTIONS = {
     "approve_paper",
     "reject",
     "request_more_research",
+    "downgrade",
     "downgrade_to_observation",
     "reduce_position_size",
     "archive",
+}
+
+REVIEW_ACTION_ALIASES = {
+    "downgrade": "downgrade",
+    "downgrade_to_observation": "downgrade",
 }
 
 
@@ -51,6 +58,21 @@ def ensure_decision_tables(conn: sqlite3.Connection) -> None:
             review_action TEXT,
             review_comment TEXT,
             created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            metadata_json TEXT NOT NULL DEFAULT '{}'
+        );
+
+        CREATE TABLE IF NOT EXISTS human_review_actions (
+            review_action_id TEXT PRIMARY KEY,
+            recommendation_id TEXT NOT NULL,
+            ticker TEXT NOT NULL,
+            action TEXT NOT NULL,
+            reviewer TEXT,
+            review_note TEXT,
+            previous_status TEXT,
+            new_status TEXT,
+            previous_position_pct REAL,
+            new_position_pct REAL,
+            created_at TEXT NOT NULL,
             metadata_json TEXT NOT NULL DEFAULT '{}'
         );
 
@@ -97,6 +119,9 @@ def ensure_decision_tables(conn: sqlite3.Connection) -> None:
 
         CREATE INDEX IF NOT EXISTS idx_recommendation_reviews_rec
         ON recommendation_reviews(recommendation_id, created_at DESC);
+
+        CREATE INDEX IF NOT EXISTS idx_human_review_actions_rec
+        ON human_review_actions(recommendation_id, created_at DESC);
 
         CREATE TABLE IF NOT EXISTS agent_runs (
             run_id TEXT PRIMARY KEY,
@@ -260,7 +285,7 @@ def build_review_audit_metadata(
         "residual_risk_level": residual_risk_level,
         "requires_human_review": bool(pending_review or reduced_size_pending or metadata.get("requires_human_review")),
         "auto_approval_allowed": False if pending_review or reduced_size_pending else bool(metadata.get("auto_approval_allowed", False)),
-        "paper_order_allowed": bool(status == "approved_paper" and metadata.get("paper_order_allowed")),
+        "paper_order_allowed": bool(status == "approved_paper"),
         "audit_flags": list(dict.fromkeys(str(item) for item in audit_flags if str(item).strip())),
     }
     if thesis_inference:
@@ -534,6 +559,108 @@ def current_decision_status(conn: sqlite3.Connection, recommendation_id: str) ->
     return row[0] if row else "candidate_shadow"
 
 
+def latest_decision_ledger_row(conn: sqlite3.Connection, recommendation_id: str) -> dict[str, Any] | None:
+    ensure_decision_tables(conn)
+    row = conn.execute(
+        """
+        SELECT recommendation_id, ticker, market, action, status, suggested_position_pct,
+               max_position_pct, metadata_json, updated_at
+        FROM decision_ledger
+        WHERE recommendation_id=?
+        ORDER BY datetime(updated_at) DESC, id DESC
+        LIMIT 1
+        """,
+        (recommendation_id,),
+    ).fetchone()
+    if not row:
+        return None
+    return {
+        "recommendation_id": row[0],
+        "ticker": row[1],
+        "market": row[2],
+        "action": row[3],
+        "status": row[4],
+        "suggested_position_pct": row[5],
+        "max_position_pct": row[6],
+        "metadata": loads(row[7], {}),
+        "updated_at": row[8],
+    }
+
+
+def _normalize_review_action(action: str) -> str:
+    text = str(action or "").strip()
+    return REVIEW_ACTION_ALIASES.get(text, text)
+
+
+def _position_pct_from_row(row: dict[str, Any] | None) -> float | None:
+    if not row:
+        return None
+    metadata = _as_dict(row.get("metadata"))
+    candidate = _as_dict(metadata.get("candidate"))
+    value = row.get("suggested_position_pct")
+    if value is None:
+        value = candidate.get("suggested_position_pct")
+    try:
+        return float(value) if value is not None else None
+    except (TypeError, ValueError):
+        return None
+
+
+def _ticker_from_decision_row(row: dict[str, Any] | None, recommendation_id: str) -> str:
+    if row:
+        metadata = _as_dict(row.get("metadata"))
+        candidate = _as_dict(metadata.get("candidate"))
+        ticker = row.get("ticker") or metadata.get("ticker") or candidate.get("ticker")
+        if ticker:
+            return str(ticker)
+        parsed, _market = parse_primary_ticker(row.get("action"))
+        if parsed:
+            return parsed
+    return str(recommendation_id).split("__")[1] if "__" in str(recommendation_id) else "unknown"
+
+
+def _insert_human_review_action(
+    conn: sqlite3.Connection,
+    *,
+    recommendation_id: str,
+    ticker: str,
+    action: str,
+    reviewer: str | None,
+    review_note: str | None,
+    previous_status: str | None,
+    new_status: str | None,
+    previous_position_pct: float | None,
+    new_position_pct: float | None,
+    metadata: dict[str, Any] | None = None,
+) -> str:
+    review_action_id = generate_execution_id("human_review_action")
+    conn.execute(
+        """
+        INSERT INTO human_review_actions (
+            review_action_id, recommendation_id, ticker, action, reviewer, review_note,
+            previous_status, new_status, previous_position_pct, new_position_pct,
+            created_at, metadata_json
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        (
+            review_action_id,
+            recommendation_id,
+            ticker,
+            action,
+            reviewer,
+            review_note,
+            previous_status,
+            new_status,
+            previous_position_pct,
+            new_position_pct,
+            datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            dumps(metadata or {}),
+        ),
+    )
+    return review_action_id
+
+
 def review_recommendation(
     conn: sqlite3.Connection,
     recommendation_id: str,
@@ -543,27 +670,46 @@ def review_recommendation(
     overrides: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     ensure_decision_tables(conn)
-    if action not in REVIEW_ACTIONS and action != "request_more_research":
+    action = _normalize_review_action(action)
+    if action not in REVIEW_ACTIONS:
         raise ValueError(f"Unsupported review action: {action}")
     overrides = overrides or {}
     if not str(comment or "").strip():
         raise ValueError("review comment is required")
-    previous_status = current_decision_status(conn, recommendation_id)
-    if action == "approve_paper" and previous_status.startswith("blocked"):
-        raise ValueError("blocked recommendations cannot be approved; archive or request more research")
+    current_row = latest_decision_ledger_row(conn, recommendation_id)
+    previous_status = current_row["status"] if current_row else current_decision_status(conn, recommendation_id)
+    previous_position_pct = _position_pct_from_row(current_row)
+    if action == "approve_paper" and previous_status != "pending_human_review":
+        raise ValueError("approve_paper requires pending_human_review status")
     if action == "reduce_position_size" and not (
         overrides.get("suggested_position_pct") is not None or overrides.get("new_position_pct") is not None
     ):
         raise ValueError("reduce_position_size requires suggested_position_pct or new_position_pct override")
+    if action != "approve_paper" and previous_status in {"approved_paper", "rejected", "archived"}:
+        raise ValueError(f"{previous_status} recommendations cannot be changed by {action}")
     mapping = {
         "approve_paper": "approved_paper",
         "reject": "rejected",
-        "request_more_research": "pending_human_review",
-        "downgrade_to_observation": "observation_only",
+        "request_more_research": "needs_more_research",
+        "downgrade": "candidate_shadow",
+        "downgrade_to_observation": "candidate_shadow",
         "reduce_position_size": "pending_human_review",
         "archive": "archived",
     }
     new_status = overrides.get("new_status") or mapping[action]
+    new_position_pct = previous_position_pct
+    if action == "reduce_position_size":
+        raw_position = overrides.get("new_position_pct")
+        if raw_position is None:
+            raw_position = overrides.get("suggested_position_pct")
+        try:
+            new_position_pct = float(raw_position)
+        except (TypeError, ValueError) as exc:
+            raise ValueError("new position pct must be numeric") from exc
+        if new_position_pct < 0:
+            raise ValueError("new position pct must be non-negative")
+        if previous_position_pct is not None and new_position_pct > previous_position_pct:
+            raise ValueError("reduce_position_size cannot increase suggested_position_pct")
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     conn.execute(
         """
@@ -599,28 +745,69 @@ def review_recommendation(
             metadata = json.loads(row[0] or "{}")
         except json.JSONDecodeError:
             metadata = {}
-    metadata["review_overrides"] = overrides
+    candidate = _as_dict(metadata.get("candidate"))
+    dashboard_position = new_position_pct if new_position_pct is not None else previous_position_pct
+    metadata["review_overrides"] = {**overrides, "action": action, "new_status": new_status}
+    metadata["last_human_review_action"] = {
+        "action": action,
+        "reviewer": reviewer,
+        "review_note": comment,
+        "previous_status": previous_status,
+        "new_status": new_status,
+        "previous_position_pct": previous_position_pct,
+        "new_position_pct": dashboard_position,
+        "created_at": now,
+    }
     if action == "reduce_position_size":
+        candidate["suggested_position_pct"] = dashboard_position
+        metadata["candidate"] = candidate
         metadata["human_review_position_override"] = {
             "reviewer": reviewer,
             "comment": comment,
+            "previous_position_pct": previous_position_pct,
+            "new_position_pct": dashboard_position,
             "overrides": overrides,
         }
+    if action == "approve_paper":
+        metadata["paper_order_allowed"] = True
+        metadata["approved_position_pct"] = dashboard_position
+    else:
+        metadata["paper_order_allowed"] = False
+    metadata = build_review_audit_metadata(metadata, status=new_status)
+    ticker = _ticker_from_decision_row(current_row, recommendation_id)
+    review_action_id = _insert_human_review_action(
+        conn,
+        recommendation_id=recommendation_id,
+        ticker=ticker,
+        action=action,
+        reviewer=reviewer,
+        review_note=comment,
+        previous_status=previous_status,
+        new_status=new_status,
+        previous_position_pct=previous_position_pct,
+        new_position_pct=dashboard_position,
+        metadata={"overrides": overrides, "source": "review_recommendation"},
+    )
     conn.execute(
         """
         UPDATE decision_ledger
-        SET status=?, human_review_status=?, reviewer=?, review_comment=?, metadata_json=?, updated_at=?
+        SET status=?, human_review_status=?, reviewer=?, review_comment=?,
+            suggested_position_pct=COALESCE(?, suggested_position_pct),
+            metadata_json=?, updated_at=?
         WHERE recommendation_id=?
         """,
-        (new_status, new_status, reviewer, comment, dumps(metadata), now, recommendation_id),
+        (new_status, new_status, reviewer, comment, dashboard_position, dumps(metadata), now, recommendation_id),
     )
     return {
+        "review_action_id": review_action_id,
         "recommendation_id": recommendation_id,
         "previous_status": previous_status,
         "new_status": new_status,
         "reviewer": reviewer,
         "review_action": action,
         "review_comment": comment,
+        "previous_position_pct": previous_position_pct,
+        "new_position_pct": dashboard_position,
     }
 
 
