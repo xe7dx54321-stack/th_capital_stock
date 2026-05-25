@@ -148,6 +148,208 @@ def merge_metadata(existing: dict[str, Any], updates: dict[str, Any]) -> dict[st
     return merged
 
 
+def _as_dict(value: Any) -> dict[str, Any]:
+    return value if isinstance(value, dict) else {}
+
+
+def _field_names(items: Any) -> list[str]:
+    fields: list[str] = []
+    for item in items or []:
+        if isinstance(item, dict):
+            field = item.get("field") or item.get("code")
+        else:
+            field = item
+        if field is not None and str(field).strip():
+            fields.append(str(field))
+    return list(dict.fromkeys(fields))
+
+
+def _gate_from_metadata(metadata: dict[str, Any], key: str) -> dict[str, Any]:
+    direct = metadata.get(key)
+    if isinstance(direct, dict):
+        return direct
+    promotion = _as_dict(metadata.get("promotion_result"))
+    snapshots = _as_dict(promotion.get("snapshots"))
+    gate = snapshots.get(key)
+    return gate if isinstance(gate, dict) else {}
+
+
+def _audit_status_from_gate(gate: Any) -> str | None:
+    if isinstance(gate, dict):
+        return gate.get("status") or gate.get("after_status") or gate.get("overall_status")
+    if gate:
+        return str(gate)
+    return None
+
+
+def build_review_audit_metadata(
+    metadata: dict[str, Any] | None,
+    *,
+    status: str | None = None,
+    dashboard_summary: dict[str, Any] | None = None,
+    risk_snapshot: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Normalize Phase 14 review/ledger audit fields.
+
+    This helper is intentionally additive. It does not grant approval, create
+    paper orders, or change promotion outcomes.
+    """
+
+    metadata = dict(metadata or {})
+    dashboard_summary = dashboard_summary or {}
+    risk_snapshot = risk_snapshot or {}
+    promotion = _as_dict(metadata.get("promotion_result"))
+    snapshots = _as_dict(promotion.get("snapshots"))
+    candidate = _as_dict(metadata.get("candidate"))
+    thesis_inference = _as_dict(metadata.get("thesis_inference") or snapshots.get("thesis_inference"))
+    field_gate = _gate_from_metadata(metadata, "promotion_evidence_gate")
+    data_quality_gate = _gate_from_metadata(metadata, "data_quality_gate")
+    bear_case_gate = _gate_from_metadata(metadata, "bear_case_gate")
+    consensus_proxy = _as_dict(metadata.get("consensus_proxy") or snapshots.get("consensus_proxy"))
+
+    thesis_types = (
+        metadata.get("thesis_types")
+        or snapshots.get("thesis_types")
+        or field_gate.get("thesis_types")
+        or []
+    )
+    primary_thesis = (
+        metadata.get("primary_thesis_type")
+        or thesis_inference.get("primary_thesis_type")
+        or (thesis_types[0] if isinstance(thesis_types, list) and thesis_types else None)
+        or "unknown"
+    )
+    promotion_mode = metadata.get("promotion_mode") or candidate.get("promotion_mode") or snapshots.get("promotion_mode")
+    position_policy = metadata.get("position_policy") or candidate.get("position_policy") or snapshots.get("position_policy")
+    if field_gate:
+        core_blockers = _field_names(field_gate.get("core_blockers"))
+        supporting_warnings = _field_names(field_gate.get("supporting_warnings"))
+        optional_warnings = _field_names(field_gate.get("optional_warnings"))
+    else:
+        core_blockers = _field_names(metadata.get("core_blockers"))
+        supporting_warnings = _field_names(metadata.get("supporting_warnings"))
+        optional_warnings = _field_names(metadata.get("optional_warnings"))
+    data_quality_status = metadata.get("data_quality_gate_status") or _audit_status_from_gate(data_quality_gate)
+    bear_case_status = metadata.get("bear_case_status") or _audit_status_from_gate(bear_case_gate)
+    residual_risk_level = metadata.get("residual_risk_level") or bear_case_gate.get("residual_risk_level")
+    reduced_size_pending = promotion_mode == "reduced_size_pending" or position_policy == "reduced_size"
+    pending_review = status == "pending_human_review" or str(metadata.get("status") or "") == "pending_human_review"
+    audit_flags = list(metadata.get("audit_flags") or [])
+
+    if pending_review:
+        audit_flags.append("requires_human_review")
+    if reduced_size_pending:
+        audit_flags.extend(["reduced_size_only", "requires_human_review"])
+    if optional_warnings:
+        audit_flags.append("optional_missing_fields_present")
+    if consensus_proxy and not bool(consensus_proxy.get("is_official_consensus") or consensus_proxy.get("official_consensus_active")):
+        audit_flags.append("proxy_eps_not_official_consensus")
+
+    audit_updates = {
+        "primary_thesis_type": primary_thesis,
+        "thesis_inference_confidence": metadata.get("thesis_inference_confidence")
+        if metadata.get("thesis_inference_confidence") is not None
+        else thesis_inference.get("confidence"),
+        "promotion_mode": promotion_mode,
+        "position_policy": position_policy,
+        "core_blockers": core_blockers,
+        "supporting_warnings": supporting_warnings,
+        "optional_warnings": optional_warnings,
+        "data_quality_gate_status": data_quality_status,
+        "bear_case_status": bear_case_status,
+        "residual_risk_level": residual_risk_level,
+        "requires_human_review": bool(pending_review or reduced_size_pending or metadata.get("requires_human_review")),
+        "auto_approval_allowed": False if pending_review or reduced_size_pending else bool(metadata.get("auto_approval_allowed", False)),
+        "paper_order_allowed": bool(status == "approved_paper" and metadata.get("paper_order_allowed")),
+        "audit_flags": list(dict.fromkeys(str(item) for item in audit_flags if str(item).strip())),
+    }
+    if thesis_inference:
+        audit_updates["thesis_inference"] = thesis_inference
+    if data_quality_status is not None:
+        if isinstance(metadata.get("data_quality_gate"), dict):
+            audit_updates["data_quality_gate_detail"] = metadata.get("data_quality_gate")
+        audit_updates["data_quality_gate"] = data_quality_status
+    if bear_case_gate:
+        audit_updates["bear_case_gate"] = bear_case_gate
+    if risk_snapshot and "portfolio_risk_status" not in metadata:
+        audit_updates["portfolio_risk_status"] = risk_snapshot.get("status") or risk_snapshot.get("risk_status")
+    return {**metadata, **audit_updates}
+
+
+def review_audit_detail_from_metadata(
+    recommendation_id: str,
+    metadata: dict[str, Any] | None,
+    *,
+    status: str | None = None,
+    ticker: str | None = None,
+) -> dict[str, Any]:
+    """Build a review-detail friendly view of thesis-aware audit metadata."""
+
+    metadata = build_review_audit_metadata(metadata, status=status)
+    candidate = _as_dict(metadata.get("candidate"))
+    bear_case_gate = _as_dict(metadata.get("bear_case_gate"))
+    return {
+        "recommendation_id": recommendation_id,
+        "ticker": ticker or metadata.get("ticker") or candidate.get("ticker"),
+        "status": status,
+        "promotion_mode": metadata.get("promotion_mode"),
+        "position_policy": metadata.get("position_policy"),
+        "suggested_position_pct": candidate.get("suggested_position_pct") or metadata.get("suggested_position_pct"),
+        "primary_thesis_type": metadata.get("primary_thesis_type"),
+        "field_gate": {
+            "core_blockers": metadata.get("core_blockers") or [],
+            "supporting_warnings": metadata.get("supporting_warnings") or [],
+            "optional_warnings": metadata.get("optional_warnings") or [],
+        },
+        "bear_case_gate": {
+            "overall_status": bear_case_gate.get("overall_status") or metadata.get("bear_case_status"),
+            "residual_risk_level": bear_case_gate.get("residual_risk_level") or metadata.get("residual_risk_level"),
+            "action_effect": bear_case_gate.get("action_effect"),
+        },
+        "portfolio_risk_status": metadata.get("portfolio_risk_status"),
+        "requires_human_review": bool(metadata.get("requires_human_review")),
+        "auto_approval_allowed": bool(metadata.get("auto_approval_allowed")),
+        "paper_order_allowed": bool(metadata.get("paper_order_allowed")),
+        "audit_flags": metadata.get("audit_flags") or [],
+    }
+
+
+def update_decision_ledger_metadata(
+    conn: sqlite3.Connection,
+    recommendation_id: str,
+    metadata_updates: dict[str, Any],
+    *,
+    status: str | None = None,
+) -> dict[str, Any]:
+    """Merge metadata into a decision ledger row and re-run audit normalization."""
+
+    ensure_decision_tables(conn)
+    row = conn.execute(
+        """
+        SELECT status, metadata_json
+        FROM decision_ledger
+        WHERE recommendation_id=?
+        ORDER BY datetime(updated_at) DESC, id DESC
+        LIMIT 1
+        """,
+        (recommendation_id,),
+    ).fetchone()
+    if not row:
+        return {}
+    current_status = status or row[0]
+    metadata = merge_metadata(loads(row[1], {}), metadata_updates or {})
+    metadata = build_review_audit_metadata(metadata, status=current_status)
+    conn.execute(
+        """
+        UPDATE decision_ledger
+        SET metadata_json=?, updated_at=?
+        WHERE recommendation_id=?
+        """,
+        (dumps(metadata), datetime.now().strftime("%Y-%m-%d %H:%M:%S"), recommendation_id),
+    )
+    return {"recommendation_id": recommendation_id, "status": current_status, "metadata": metadata}
+
+
 def parse_action(summary: dict[str, Any] | None, fallback: str = "") -> str:
     summary = summary or {}
     action = str(summary.get("action_detail") or summary.get("action") or fallback or "").strip()
@@ -229,6 +431,12 @@ def upsert_decision_ledger(
     previous_status = previous_row[0] if previous_row else None
     previous_metadata = loads(previous_row[1], {}) if previous_row else {}
     metadata = merge_metadata(previous_metadata, metadata)
+    metadata = build_review_audit_metadata(
+        metadata,
+        status=status,
+        dashboard_summary=summary,
+        risk_snapshot=risk,
+    )
     ticker = metadata.get("ticker")
     market = metadata.get("market")
     if not ticker:

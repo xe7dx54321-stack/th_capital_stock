@@ -80,6 +80,32 @@ def infer_thesis_type_from_claims(claims: list[dict[str, Any]], report: dict[str
     return _unique(inferred or ["valuation_rerating"])
 
 
+def infer_thesis_type(
+    ticker: str,
+    claims: list[dict[str, Any]] | None = None,
+    candidate: dict[str, Any] | None = None,
+    proxy: dict[str, Any] | None = None,
+    valuation: dict[str, Any] | None = None,
+    bear_case: dict[str, Any] | None = None,
+    market_signal: dict[str, Any] | None = None,
+    watchlist_item: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Phase 14 thesis inference wrapper kept here for dependency callers."""
+
+    from smr_thesis_inference import infer_thesis_type as _infer_thesis_type
+
+    return _infer_thesis_type(
+        ticker=ticker,
+        claims=claims,
+        candidate=candidate,
+        proxy=proxy,
+        valuation=valuation,
+        bear_case=bear_case,
+        market_signal=market_signal,
+        watchlist_item=watchlist_item,
+    )
+
+
 def get_required_fields_for_thesis(
     thesis_types: list[str],
     config: dict[str, Any] | None = None,

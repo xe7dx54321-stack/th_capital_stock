@@ -354,6 +354,8 @@ def evaluate_promotion(
     data_quality_gate: dict[str, Any] | None = None,
     bear_case_gate: dict[str, Any] | None = None,
     reduced_size_policy: dict[str, Any] | None = None,
+    thesis_inference: dict[str, Any] | None = None,
+    thesis_aware_mode: bool = False,
     write_ledger: bool = False,
 ) -> PromotionResult:
     summary = dashboard_summary or {}
@@ -381,7 +383,16 @@ def evaluate_promotion(
         "data_quality_gate": data_quality_gate or {},
         "bear_case_gate": bear_case_gate or {},
         "reduced_size_policy": reduced_size_policy or {},
+        "thesis_inference": thesis_inference or {},
     }
+    if thesis_inference:
+        primary_thesis = str(thesis_inference.get("primary_thesis_type") or "unknown")
+        confidence = float(thesis_inference.get("confidence") or 0.0)
+        snapshots["primary_thesis_type"] = primary_thesis
+        snapshots["thesis_inference_confidence"] = confidence
+        if thesis_aware_mode and (primary_thesis == "unknown" or confidence < 0.5):
+            missing.append("thesis_type_known_for_thesis_aware_promotion")
+            fixes.append("classify the current investment thesis before allowing thesis-aware pending review")
     reduced_size_requested = bool(
         reduced_size_policy
         or (bear_case_gate or {}).get("action_effect") == "reduced_size_candidate_allowed"
@@ -458,6 +469,9 @@ def evaluate_promotion(
                 "promotion_evidence_gate": promotion_evidence_gate,
                 "data_quality_gate": data_quality_gate,
                 "bear_case_gate": bear_case_gate,
+                "thesis_inference": thesis_inference,
+                "primary_thesis_type": snapshots.get("primary_thesis_type"),
+                "thesis_inference_confidence": snapshots.get("thesis_inference_confidence"),
                 "promotion_mode": snapshots.get("promotion_mode"),
                 "position_policy": snapshots.get("position_policy"),
             },

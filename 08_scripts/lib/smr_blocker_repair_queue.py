@@ -435,3 +435,84 @@ def apply_phase13_core_gate_metadata(
         "counters": counters,
         "updated_tasks": updated[:20],
     }
+
+
+def apply_phase14_thesis_metadata(
+    conn: sqlite3.Connection,
+    *,
+    ticker: str,
+    thesis_type: str,
+    field_gate: dict[str, Any],
+    data_quality_gate: dict[str, Any],
+    watchlist_id: str | None = "ai_core",
+    owner: str | None = "codex",
+) -> dict[str, Any]:
+    """Record thesis-aware severity without resolving optional warnings."""
+
+    base = apply_phase13_core_gate_metadata(
+        conn,
+        ticker=ticker,
+        field_gate=field_gate,
+        data_quality_gate=data_quality_gate,
+        watchlist_id=watchlist_id,
+        owner=owner,
+    )
+    tasks = list_repair_tasks(conn, ticker=ticker, watchlist_id=watchlist_id, limit=200)
+    optional_fields = {
+        item.get("field")
+        for item in (field_gate.get("optional_warnings") or [])
+        if isinstance(item, dict) and item.get("field")
+    }
+    supporting_fields = {
+        item.get("field")
+        for item in (field_gate.get("supporting_warnings") or [])
+        if isinstance(item, dict) and item.get("field")
+    }
+    core_fields = {
+        item.get("field")
+        for item in (field_gate.get("core_blockers") or [])
+        if isinstance(item, dict) and item.get("field")
+    }
+    phase14_updates = []
+    for task in tasks:
+        fields = set(str(item) for item in task.get("affected_fields") or [])
+        classification = None
+        non_blocking = None
+        if fields & optional_fields:
+            classification = "optional_missing"
+            non_blocking = True
+        elif fields & supporting_fields:
+            classification = "supporting_warning"
+            non_blocking = True
+        elif fields & core_fields:
+            classification = "core_missing"
+            non_blocking = False
+        if classification is None:
+            continue
+        updated = update_repair_task_metadata(
+            conn,
+            task["repair_id"],
+            {
+                "phase14_thesis_gate": {
+                    "thesis_type": thesis_type,
+                    "classification": classification,
+                    "data_quality_gate_status": data_quality_gate.get("status") or data_quality_gate.get("after_status"),
+                    "gate_status": field_gate.get("gate_status"),
+                },
+                "thesis_type": thesis_type,
+                "classification": classification,
+                "non_blocking_warning": bool(non_blocking),
+                "still_should_repair": True,
+            },
+            note="Phase 14 recorded thesis-aware repair queue classification",
+        )
+        if classification == "core_missing" and updated.get("status") != "open":
+            updated = update_repair_task_status(conn, updated["repair_id"], "open", owner=owner, note="core missing remains thesis-blocking")
+        elif classification != "core_missing" and updated.get("status") == "open":
+            updated = update_repair_task_status(conn, updated["repair_id"], "in_progress", owner=owner, note="non-core warning remains tracked")
+        phase14_updates.append(updated)
+    return {
+        **base,
+        "phase14_tasks_updated": len(phase14_updates),
+        "phase14_updated_tasks": phase14_updates[:20],
+    }

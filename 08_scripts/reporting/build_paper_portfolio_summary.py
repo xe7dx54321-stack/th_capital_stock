@@ -16,6 +16,7 @@ if str(LIB_DIR) not in sys.path:
     sys.path.insert(0, str(LIB_DIR))
 
 from smr_agents import DB_PATH
+from smr_decision import build_review_audit_metadata
 from smr_paper_portfolio import ensure_paper_portfolio_tables, is_price_fresh, latest_price_info, mark_open_positions_to_market
 from smr_phase6_watchlists import watchlist_map
 from smr_paths import project_path
@@ -172,6 +173,7 @@ def pending_candidate_rows(conn: sqlite3.Connection, watchlist_lookup: dict[str,
     results = []
     for row in rows:
         metadata = loads_json(row[7], {})
+        metadata = build_review_audit_metadata(metadata, status=row[4])
         candidate = metadata.get("candidate") or {}
         portfolio_risk = metadata.get("portfolio_risk") or (candidate.get("snapshots") or {}).get("portfolio_risk") or {}
         ticker = str(row[1] or candidate.get("ticker") or "").upper()
@@ -191,6 +193,16 @@ def pending_candidate_rows(conn: sqlite3.Connection, watchlist_lookup: dict[str,
             if portfolio_risk.get("risk_adjusted_sizing") is not None
             else base_pct
         )
+        full_size_pct = float(
+            portfolio_risk.get("base_position_pct")
+            if portfolio_risk.get("base_position_pct") is not None
+            else metadata.get("full_size_position_pct")
+            if metadata.get("full_size_position_pct") is not None
+            else candidate.get("max_position_pct")
+            or base_pct
+        )
+        promotion_mode = metadata.get("promotion_mode") or candidate.get("promotion_mode")
+        position_policy = metadata.get("position_policy") or candidate.get("position_policy")
         results.append(
             {
                 "recommendation_id": row[0],
@@ -200,10 +212,25 @@ def pending_candidate_rows(conn: sqlite3.Connection, watchlist_lookup: dict[str,
                 "status": row[4],
                 "position_pct": base_pct,
                 "risk_adjusted_position_pct": risk_adjusted_pct,
+                "full_size_position_pct": full_size_pct,
                 "max_position_pct": float(row[6] or candidate.get("max_position_pct") or 0.0),
                 "theme": metadata.get("theme") or candidate.get("theme") or portfolio_risk.get("theme") or watchlist_item.get("theme") or "unknown",
                 "sector": metadata.get("sector") or candidate.get("sector") or portfolio_risk.get("sector") or watchlist_item.get("sector") or "unknown",
                 "portfolio_risk": portfolio_risk,
+                "promotion_mode": promotion_mode,
+                "position_policy": position_policy,
+                "primary_thesis_type": metadata.get("primary_thesis_type") or candidate.get("primary_thesis_type"),
+                "core_blockers": metadata.get("core_blockers") or [],
+                "supporting_warnings": metadata.get("supporting_warnings") or [],
+                "optional_warnings": metadata.get("optional_warnings") or [],
+                "bear_case_status": metadata.get("bear_case_status"),
+                "residual_risk_level": metadata.get("residual_risk_level"),
+                "requires_human_review": bool(metadata.get("requires_human_review")),
+                "auto_approval_allowed": bool(metadata.get("auto_approval_allowed")),
+                "paper_order_allowed": bool(metadata.get("paper_order_allowed")),
+                "reduction_reason": metadata.get("reduction_reason")
+                or ("partially_mitigated_bear_case_and_non_core_data_quality_warnings" if promotion_mode == "reduced_size_pending" else None),
+                "audit_flags": metadata.get("audit_flags") or [],
                 "updated_at": row[8],
             }
         )
@@ -219,6 +246,37 @@ def _add_exposure_maps(base: dict[str, dict[str, float]], rows: list[dict[str, A
             projected.setdefault(dimension, {})
             projected[dimension][bucket] = round(projected[dimension].get(bucket, 0.0) + pct, 4)
     return projected
+
+
+def projected_reduced_size_exposure(
+    current_total: float,
+    current_exposures: dict[str, dict[str, float]],
+    reduced_rows: list[dict[str, Any]],
+) -> dict[str, Any]:
+    projected = _add_exposure_maps(current_exposures, reduced_rows, "risk_adjusted_position_pct")
+    return {
+        "total": round(current_total + sum(float(row.get("risk_adjusted_position_pct") or 0.0) for row in reduced_rows), 4),
+        "market": projected.get("market") or {},
+        "theme": projected.get("theme") or {},
+        "sector": projected.get("sector") or {},
+    }
+
+
+def dedupe_reduced_size_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Avoid double-counting repeated reduced-size validations for a ticker."""
+
+    by_ticker: dict[str, dict[str, Any]] = {}
+    for row in rows:
+        ticker = str(row.get("ticker") or row.get("recommendation_id") or "")
+        current = by_ticker.get(ticker)
+        if current is None:
+            by_ticker[ticker] = row
+            continue
+        rec_id = str(row.get("recommendation_id") or "")
+        current_id = str(current.get("recommendation_id") or "")
+        if rec_id.startswith("phase14_") and not current_id.startswith("phase14_"):
+            by_ticker[ticker] = row
+    return list(by_ticker.values())
 
 
 def _exposure_warnings(projected: dict[str, dict[str, float]], *, prefix: str = "PROJECTED") -> list[dict[str, str]]:
@@ -277,6 +335,15 @@ def render_markdown(payload: dict[str, Any]) -> str:
     lines.extend(["", "## Risk-adjusted Scenario", ""])
     lines.append(f"- gross_new_position_pct: `{risk_adjusted.get('gross_new_position_pct') or 0}`")
     lines.append(f"- risk_adjusted_exposure: `{risk_adjusted.get('risk_adjusted_exposure') or {}}`")
+    reduced = payload.get("pending_reduced_size_candidates") or []
+    lines.extend(["", "## Reduced-size Pending", ""])
+    lines.append(f"- candidate_count: `{len(reduced)}`")
+    lines.append(f"- projected_exposure_if_reduced_size_approved: `{payload.get('projected_exposure_if_reduced_size_approved') or {}}`")
+    for row in reduced:
+        lines.append(
+            f"- {row.get('ticker')}: {row.get('risk_adjusted_position_pct')}% reduced from {row.get('full_size_position_pct')}%; "
+            f"thesis={row.get('primary_thesis_type')}; warnings={row.get('optional_warnings') or []}"
+        )
     lines.extend(["", "## Warnings", ""])
     for warning in payload.get("warnings") or []:
         lines.append(f"- `{warning.get('code')}` {warning.get('message')} Suggested: {warning.get('suggested_action')}")
@@ -319,12 +386,20 @@ def main() -> int:
             "sector": summarize_exposure(positions, "sector"),
         }
         pending_rows = pending_candidate_rows(conn, watchlist_lookup)
+        reduced_size_rows = [
+            row
+            for row in pending_rows
+            if row.get("status") == "pending_human_review"
+            and row.get("promotion_mode") == "reduced_size_pending"
+        ]
+        reduced_size_rows = dedupe_reduced_size_rows(reduced_size_rows)
         current_exposure_total = summarize_total_exposure(positions)
         pending_exposure_if_all_approved = round(sum(float(row.get("position_pct") or 0.0) for row in pending_rows), 4)
         risk_adjusted_new_position_pct = round(sum(float(row.get("risk_adjusted_position_pct") or 0.0) for row in pending_rows), 4)
         exposure_after_risk_adjusted_sizing = round(current_exposure_total + risk_adjusted_new_position_pct, 4)
         projected_all = _add_exposure_maps(exposures, pending_rows, "position_pct")
         projected_risk_adjusted = _add_exposure_maps(exposures, pending_rows, "risk_adjusted_position_pct")
+        reduced_size_projected = projected_reduced_size_exposure(current_exposure_total, exposures, reduced_size_rows)
         warnings = _exposure_warnings(projected_all) + _exposure_warnings(projected_risk_adjusted, prefix="RISK_ADJUSTED")
         stale_price_count = sum(1 for row in positions if row.get("price_status") == "stale")
         payload = {
@@ -343,6 +418,8 @@ def main() -> int:
                 "projected_exposure_if_all_approved": projected_all,
                 "candidates": pending_rows,
             },
+            "pending_reduced_size_candidates": reduced_size_rows,
+            "projected_exposure_if_reduced_size_approved": reduced_size_projected,
             "risk_adjusted_scenario": {
                 "candidate_count": len(pending_rows),
                 "gross_new_position_pct": risk_adjusted_new_position_pct,

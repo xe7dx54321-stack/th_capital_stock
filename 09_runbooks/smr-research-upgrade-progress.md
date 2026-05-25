@@ -573,3 +573,83 @@ python 08_scripts/verification/validate_phase12_evidence_quality_repaired_candid
 python 08_scripts/verification/validate_phase13_core_gate_repaired_candidate.py --ticker 09988.HK --days 365 --thesis valuation_rerating --json
 python 08_scripts/verification/validate_phase13_core_gate_repaired_candidate.py --ticker 09988.HK --days 365 --thesis cash_flow_improvement --json
 ```
+
+## Stage 14 Goal
+
+Phase 14 generalizes the thesis-aware gate from the single `09988.HK`
+Phase 13 proof to the `ai_core` multi-ticker workflow. The goal is not to
+create more pending recommendations, but to make each ticker explain its
+primary thesis, core blockers, non-core warnings, and reduced-size review
+audit trail.
+
+Current Phase 13 checkpoint:
+
+- Commit: `6ed2452f4e74638a0742d091b497ae045ec77ad0`
+- Stage: `Phase 13: Thesis-aware promotion gate completed`
+- `09988.HK` under `valuation_rerating`: reduced-size
+  `pending_human_review`
+- `09988.HK` under `cash_flow_improvement`: still `candidate_shadow`
+- `capex` and `free_cash_flow`: optional warnings for valuation rerating,
+  core blockers for cash-flow improvement
+- Reduced-size pending remains human review only; no auto approval and no
+  paper order
+
+### Phase 14 Goals
+
+1. Add conservative thesis inference from claims, candidate context, proxy,
+   valuation, bear case, market signal, and watchlist metadata.
+2. Add an independent Phase 14 multi-ticker validator for `ai_core`.
+3. Keep the original Phase 6 live validator behavior unchanged by default.
+4. Add review and decision-ledger audit fields for reduced-size pending.
+5. Show reduced-size pending in paper portfolio projected exposure only, not
+   current exposure.
+6. Add a Phase 14 daily summary with thesis, core blockers, non-core warnings,
+   unknown thesis, and next action.
+7. Keep optional missing fields in the repair queue as non-blocking warnings,
+   not resolved tasks.
+
+### Phase 14 Non-goals
+
+- Do not expand the `ai_core` watchlist.
+- Do not add new complex agents.
+- Do not loosen promotion rules.
+- Do not delete bear cases.
+- Do not treat proxy EPS as official consensus.
+- Do not auto approve reduced-size pending.
+- Do not create paper orders before human approval.
+- Do not hide optional warnings.
+
+### Phase 14 New Artifacts
+
+- `08_scripts/lib/smr_thesis_inference.py`
+- `08_scripts/verification/validate_phase14_thesis_aware_multi_ticker_live.py`
+- `08_scripts/reporting/build_phase14_thesis_aware_daily_summary.py`
+- `docs/plans/2026-05-23-phase14-thesis-aware-generalization.md`
+
+### Phase 14 Expected Behavior
+
+- Every `ai_core` ticker gets a `primary_thesis_type` or `unknown`.
+- `unknown` thesis cannot create `pending_human_review`.
+- `core_blockers` continue to block pending review.
+- `optional_warnings` and `supporting_warnings` remain visible in ledger,
+  daily summary, and repair queue metadata.
+- `09988.HK` can remain reduced-size pending under inferred
+  `valuation_rerating` only if the strict Phase 13 gates still pass.
+- Reduced-size pending shows `requires_human_review=true`,
+  `auto_approval_allowed=false`, and `paper_order_allowed=false`.
+
+### Phase 14 Validation Commands
+
+```bash
+python -m py_compile 08_scripts/lib/*.py 08_scripts/jobs/*.py 08_scripts/verification/*.py 08_scripts/reporting/*.py
+python -m unittest discover -s tests -v
+python 08_scripts/verification/validate_phase3_e2e.py
+python 08_scripts/verification/validate_phase4_live_e2e.py --tickers NVDA --days 180 --timeout 240
+python 08_scripts/verification/validate_phase5_paper_portfolio_smoke.py
+python 08_scripts/verification/validate_phase6_multi_ticker_live.py --watchlist ai_core --save-run-history --compare-last-run --timeout 240
+python 08_scripts/verification/validate_phase13_core_gate_repaired_candidate.py --ticker 09988.HK --days 365 --thesis valuation_rerating --json
+python 08_scripts/verification/validate_phase13_core_gate_repaired_candidate.py --ticker 09988.HK --days 365 --thesis cash_flow_improvement --json
+python 08_scripts/verification/validate_phase14_thesis_aware_multi_ticker_live.py --watchlist ai_core --timeout 240 --json
+python 08_scripts/reporting/build_phase14_thesis_aware_daily_summary.py --watchlist ai_core --json
+python 08_scripts/reporting/build_paper_portfolio_summary.py
+```

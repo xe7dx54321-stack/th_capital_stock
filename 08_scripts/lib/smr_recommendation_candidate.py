@@ -14,7 +14,7 @@ from dataclasses import asdict
 from datetime import datetime
 from typing import Any
 
-from smr_decision import upsert_decision_ledger
+from smr_decision import build_review_audit_metadata, upsert_decision_ledger
 from smr_recommendation_promotion import PromotionResult, promotion_to_dict
 from smr_portfolio_risk import evaluate_portfolio_risk
 
@@ -186,6 +186,7 @@ def build_recommendation_candidate(
     portfolio_risk = portfolio_risk or {}
     market_signal = market_signal or {}
     promotion = promotion_to_dict(promotion_result)
+    promotion_snapshots = promotion.get("snapshots") or {}
     rec_id = recommendation_id or f"rec_candidate_{_now_id()}"
     ticker = ticker or report.get("ticker") or valuation_snapshot.get("ticker") or consensus_proxy.get("ticker")
     action, action_reasons, confidence, suggested_position_pct, max_position_pct = decide_action(
@@ -217,8 +218,11 @@ def build_recommendation_candidate(
         "reduce_conditions": report.get("reduce_conditions") or [],
         "kill_conditions": kill_conditions,
         "status": status,
-        "promotion_mode": (promotion.get("snapshots") or {}).get("promotion_mode"),
-        "position_policy": (promotion.get("snapshots") or {}).get("position_policy"),
+        "promotion_mode": promotion_snapshots.get("promotion_mode"),
+        "position_policy": promotion_snapshots.get("position_policy"),
+        "primary_thesis_type": promotion_snapshots.get("primary_thesis_type")
+        or ((promotion_snapshots.get("thesis_types") or [None])[0] if isinstance(promotion_snapshots.get("thesis_types"), list) else None),
+        "thesis_inference_confidence": promotion_snapshots.get("thesis_inference_confidence"),
         "reasons": action_reasons,
         "snapshots": {
             "claim_graph": claim_graph,
@@ -231,6 +235,38 @@ def build_recommendation_candidate(
             "market_signal": market_signal,
             "promotion_result": promotion,
         },
+    }
+    audit_metadata = build_review_audit_metadata(
+        {
+            "ticker": ticker,
+            "market": valuation_snapshot.get("market") or consensus_proxy.get("market"),
+            "candidate": candidate,
+            "promotion_result": promotion,
+            "claim_graph": claim_graph,
+            "consensus_proxy": consensus_proxy,
+            "bear_case": bear_case,
+            "portfolio_risk": portfolio_risk,
+            "promotion_evidence_gate": promotion_snapshots.get("promotion_evidence_gate") or {},
+            "data_quality_gate": promotion_snapshots.get("data_quality_gate") or {},
+            "bear_case_gate": promotion_snapshots.get("bear_case_gate") or {},
+            "thesis_inference": promotion_snapshots.get("thesis_inference") or {},
+            "promotion_mode": candidate.get("promotion_mode"),
+            "position_policy": candidate.get("position_policy"),
+            "primary_thesis_type": candidate.get("primary_thesis_type"),
+            "thesis_inference_confidence": candidate.get("thesis_inference_confidence"),
+        },
+        status=status,
+        dashboard_summary={"suggested_position_pct": suggested_position_pct, "max_position_pct": max_position_pct},
+        risk_snapshot=portfolio_risk,
+    )
+    candidate["audit"] = {
+        "requires_human_review": audit_metadata.get("requires_human_review"),
+        "auto_approval_allowed": audit_metadata.get("auto_approval_allowed"),
+        "paper_order_allowed": audit_metadata.get("paper_order_allowed"),
+        "audit_flags": audit_metadata.get("audit_flags") or [],
+        "core_blockers": audit_metadata.get("core_blockers") or [],
+        "supporting_warnings": audit_metadata.get("supporting_warnings") or [],
+        "optional_warnings": audit_metadata.get("optional_warnings") or [],
     }
     if write_ledger and conn is not None:
         market = valuation_snapshot.get("market") or consensus_proxy.get("market")
@@ -251,6 +287,7 @@ def build_recommendation_candidate(
             lint_snapshot={},
             risk_snapshot=risk_snapshot,
             metadata={
+                **audit_metadata,
                 "ticker": ticker,
                 "market": market,
                 "candidate": candidate,
@@ -258,6 +295,7 @@ def build_recommendation_candidate(
                 "claim_graph": claim_graph,
                 "consensus_proxy": consensus_proxy,
                 "bear_case": bear_case,
+                "portfolio_risk": portfolio_risk,
             },
         )
     return candidate
