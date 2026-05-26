@@ -257,6 +257,51 @@ def upsert_phase21_evidence_repair_task(
     )
 
 
+def upsert_phase22_valuation_demand_repair_task(
+    conn: sqlite3.Connection,
+    *,
+    ticker: str,
+    watchlist_id: str | None,
+    task_type: str,
+    priority: str,
+    gate_type: str,
+    missing_evidence: str,
+    suggested_sources: list[str] | None = None,
+    source_run_ids: list[str] | None = None,
+) -> dict[str, Any]:
+    """Upsert a Phase 22 valuation/demand/proxy repair task with stable de-dupe."""
+
+    import hashlib
+
+    suffix = hashlib.sha1(
+        "|".join([str(gate_type or ""), str(missing_evidence or ""), str(task_type or "")]).encode("utf-8")
+    ).hexdigest()[:10]
+    blocker_code = f"{task_type}_{suffix}"
+    return upsert_repair_task(
+        conn,
+        ticker=ticker,
+        market=None,
+        watchlist_id=watchlist_id,
+        blocker_code=blocker_code,
+        blocker_type="valuation_demand_gap",
+        priority=priority,
+        severity="high" if priority == "high" else "medium" if priority == "medium" else "low",
+        fixability="medium",
+        expected_impact="may_reduce_valuation_demand_or_proxy_gate_blocker",
+        suggested_fix=f"Collect {missing_evidence} from {', '.join(suggested_sources or [])}",
+        source_run_ids=source_run_ids or [],
+        affected_fields=[task_type, gate_type],
+        metadata={
+            "phase": 22,
+            "task_type": task_type,
+            "gate_type": gate_type,
+            "missing_evidence": missing_evidence,
+            "suggested_sources": suggested_sources or [],
+            "promotion_rules_relaxed": False,
+        },
+    )
+
+
 def get_repair_task(conn: sqlite3.Connection, repair_id: str) -> dict[str, Any]:
     ensure_blocker_repair_queue_tables(conn)
     row = conn.execute(

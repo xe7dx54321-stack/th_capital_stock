@@ -1259,3 +1259,92 @@ python 08_scripts/verification/validate_phase21_bear_case_demand_mitigation.py -
 python 08_scripts/verification/validate_phase21_promotion_revalidation.py --watchlist ai_core --json
 python 08_scripts/reporting/build_phase21_demand_proxy_gate_summary.py --watchlist ai_core --json
 ```
+
+## Stage 22 Goal
+
+Phase 22 upgrades the largest remaining post-Phase-21 gate: valuation. It also
+escalates demand evidence from broad indications into explicit confirmed-order,
+tender/procurement, customer-capex, management-guidance, and industry-context
+categories.
+
+Current Phase 21 checkpoint:
+
+- Commit: `1981508dc551098bc080e33ca130f0b0750bdddc`
+- Stage: `Phase 21: Direct Demand Evidence + Independent Proxy Source Expansion`
+- Direct demand evidence is available for `300308.SZ`, `688041.SH`, and
+  `002230.SZ`.
+- `300308.SZ` and `688041.SH` bear cases are partially mitigated.
+- Proxy sources expanded, but `002230.SZ` remains weak.
+- Remaining gates include `VALUATION_GATE`, `PROXY_SIGNAL_GATE`, and
+  `BEAR_CASE_GATE`.
+- No new pending review, no promotion-rule relaxation, and no real trading risk
+  were introduced.
+
+### Phase 22 Goals
+
+1. Add valuation gate v2 with concrete blocker codes.
+2. Link direct demand evidence to valuation assumptions.
+3. Escalate demand evidence into confirmed/tender/customer-capex categories.
+4. Strengthen internal proxy source diagnostics.
+5. Revalidate promotion impact across valuation, demand, proxy, and bear-case
+   gates.
+6. Build a valuation/demand gate summary.
+7. Convert remaining valuation, demand, and proxy gaps into repair queue tasks.
+
+### Phase 22 Non-goals
+
+- Do not add a full industry-chain agent.
+- Do not perform real trading.
+- Do not auto approve pending review.
+- Do not generate paper orders or paper positions.
+- Do not expand `ai_core`.
+- Do not loosen promotion rules.
+- Do not treat indication as confirmed order.
+- Do not treat management commentary as customer order.
+- Do not treat internal proxy or proxy EPS as official consensus.
+- Do not commit raw/PDF/HTML source files.
+
+### Phase 22 New Artifacts
+
+- `08_scripts/lib/smr_demand_valuation_linkage.py`
+- `08_scripts/lib/smr_valuation_gate_v2.py`
+- `08_scripts/reporting/build_phase22_valuation_gate_upgrade.py`
+- `08_scripts/reporting/build_phase22_demand_valuation_linkage.py`
+- `08_scripts/reporting/build_phase22_confirmed_demand_evidence.py`
+- `08_scripts/reporting/build_phase22_proxy_strengthening.py`
+- `08_scripts/verification/validate_phase22_valuation_demand_promotion_revalidation.py`
+- `08_scripts/reporting/build_phase22_valuation_demand_gate_summary.py`
+- `08_scripts/jobs/upsert_phase22_valuation_demand_repair_tasks.py`
+- `docs/plans/2026-05-23-phase22-valuation-demand-gate-upgrade.md`
+
+### Phase 22 Expected Behavior
+
+- Valuation diagnostics expose exact blocker codes and next fixes.
+- Demand evidence can support revenue-growth assumptions, but cannot replace
+  valuation models.
+- Signed contract, tender, and procurement evidence can provide strong support.
+- Management commentary remains medium support at most.
+- Customer capex is a strong indication, not a confirmed company order.
+- Proxy EPS remains internal/supporting and is not official consensus.
+- Reduced-size pending remains human-review only and is not automatically
+  created by diagnostics.
+
+### Phase 22 Validation Commands
+
+```bash
+python -m py_compile 08_scripts/lib/*.py 08_scripts/jobs/*.py 08_scripts/verification/*.py 08_scripts/reporting/*.py
+python -m unittest discover -s tests -v
+python 08_scripts/verification/validate_phase3_e2e.py
+python 08_scripts/verification/validate_phase4_live_e2e.py --tickers NVDA --days 180 --timeout 240
+python 08_scripts/verification/validate_phase5_paper_portfolio_smoke.py
+python 08_scripts/verification/validate_phase6_multi_ticker_live.py --watchlist ai_core --save-run-history --compare-last-run --timeout 240
+python 08_scripts/verification/validate_phase14_thesis_aware_multi_ticker_live.py --watchlist ai_core --timeout 240 --json
+python 08_scripts/reporting/build_phase21_demand_proxy_gate_summary.py --watchlist ai_core --json
+python 08_scripts/reporting/build_phase22_valuation_gate_upgrade.py --watchlist ai_core --json
+python 08_scripts/reporting/build_phase22_demand_valuation_linkage.py --watchlist ai_core --json
+python 08_scripts/reporting/build_phase22_confirmed_demand_evidence.py --watchlist ai_core --json
+python 08_scripts/reporting/build_phase22_proxy_strengthening.py --watchlist ai_core --json
+python 08_scripts/verification/validate_phase22_valuation_demand_promotion_revalidation.py --watchlist ai_core --json
+python 08_scripts/reporting/build_phase22_valuation_demand_gate_summary.py --watchlist ai_core --json
+python 08_scripts/jobs/upsert_phase22_valuation_demand_repair_tasks.py --tickers 300308.SZ,688041.SH,002230.SZ --dry-run --json
+```

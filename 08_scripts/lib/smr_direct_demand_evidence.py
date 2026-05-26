@@ -45,6 +45,21 @@ DEMAND_STRENGTHS = {
     "blocked",
 }
 
+CONFIRMED_DEMAND_ESCALATION_CATEGORIES = {
+    "confirmed_order",
+    "signed_contract",
+    "framework_agreement",
+    "tender_award",
+    "procurement_award",
+    "customer_capex",
+    "customer_project",
+    "downstream_procurement",
+    "backlog",
+    "shipment",
+    "management_guidance",
+    "industry_context",
+}
+
 ORDER_KEYWORDS = ("订单", "在手订单", "新签订单", "order", "orders", "backlog")
 CONTRACT_KEYWORDS = ("合同", "框架协议", "协议", "contract", "framework agreement")
 SIGNED_CONTRACT_KEYWORDS = ("签署", "签订", "signed", "entered into")
@@ -138,6 +153,33 @@ STRENGTH_RANK = {
 }
 
 QUALITY_RANK = {"blocked": 0, "low": 1, "medium": 2, "high": 3}
+
+
+def escalation_category_for_item(item: dict[str, Any]) -> str:
+    """Map Phase 21 demand categories into Phase 22 escalation buckets.
+
+    This intentionally does not upgrade indications into confirmed orders.
+    """
+
+    category = str(item.get("evidence_category") or "")
+    strength = str(item.get("demand_strength") or "")
+    if category == "signed_contract":
+        return "signed_contract"
+    if category == "tender_award":
+        return "tender_award"
+    if category == "procurement_award":
+        return "procurement_award"
+    if category == "framework_contract":
+        return "framework_agreement"
+    if category in {"customer_capex", "downstream_capex"}:
+        return "customer_capex"
+    if category in {"customer_order", "product_launch_demand"}:
+        return "customer_project"
+    if category in {"policy_demand", "industry_data", "news_mention"}:
+        return "industry_context"
+    if category in CONFIRMED_DEMAND_ESCALATION_CATEGORIES:
+        return category
+    return "industry_context" if strength in {"weak_indication", "context_only"} else "management_guidance"
 
 
 def normalize_ticker(ticker: str | None) -> str:
