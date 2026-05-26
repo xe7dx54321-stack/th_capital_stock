@@ -1,0 +1,143 @@
+{
+  "version": 1,
+  "updated_at": "2026-05-26",
+  "profiles": {
+    "300394.SZ": {
+      "company_name": "\u5929\u5b5a\u901a\u4fe1",
+      "theme": "ai_optical_interconnect",
+      "market": "CN",
+      "supply_chain_role": [
+        "optical component",
+        "optical packaging",
+        "high-speed optical device"
+      ],
+      "product_exposure": [
+        "high-speed optical components",
+        "optical engine components",
+        "advanced optical packaging"
+      ],
+      "customer_exposure_status": "not_directly_confirmed",
+      "supplier_share_assumption_range": {
+        "low": null,
+        "base": null,
+        "high": null,
+        "unit": "undisclosed"
+      },
+      "ASP_assumption_range": {
+        "low": null,
+        "base": null,
+        "high": null,
+        "unit": "undisclosed"
+      },
+      "capacity_constraint": "unknown",
+      "key_unknowns": [
+        "NVIDIA / hyperscaler exposure not officially disclosed",
+        "exact supplier share not disclosed",
+        "ASP not disclosed",
+        "customer allocation not disclosed"
+      ],
+      "assumption_required": true,
+      "allowed_usage": "scenario_analysis_only"
+    },
+    "300308.SZ": {
+      "company_name": "\u4e2d\u9645\u65ed\u521b",
+      "theme": "ai_optical_interconnect",
+      "market": "CN",
+      "supply_chain_role": [
+        "optical transceiver"
+      ],
+      "product_exposure": [
+        "800G optical modules",
+        "high-speed optical modules",
+        "AI data center optical modules"
+      ],
+      "customer_exposure_status": "proxy_only",
+      "supplier_share_assumption_range": {
+        "low": null,
+        "base": null,
+        "high": null,
+        "unit": "undisclosed"
+      },
+      "ASP_assumption_range": {
+        "low": null,
+        "base": null,
+        "high": null,
+        "unit": "undisclosed"
+      },
+      "capacity_constraint": "proxy_only",
+      "key_unknowns": [
+        "exact customer allocation not disclosed",
+        "supplier share not disclosed",
+        "ASP not disclosed"
+      ],
+      "assumption_required": true,
+      "allowed_usage": "scenario_analysis_only"
+    },
+    "688041.SH": {
+      "company_name": "\u6d77\u5149\u4fe1\u606f",
+      "theme": "ai_compute_infrastructure",
+      "market": "CN",
+      "supply_chain_role": [
+        "AI accelerator / CPU compute"
+      ],
+      "product_exposure": [
+        "AI compute chips",
+        "domestic compute infrastructure"
+      ],
+      "customer_exposure_status": "proxy_only",
+      "supplier_share_assumption_range": {
+        "low": null,
+        "base": null,
+        "high": null,
+        "unit": "not_applicable_to_optical_template"
+      },
+      "ASP_assumption_range": {
+        "low": null,
+        "base": null,
+        "high": null,
+        "unit": "undisclosed"
+      },
+      "capacity_constraint": "unknown",
+      "key_unknowns": [
+        "not an optical interconnect pure-play",
+        "customer allocation not disclosed",
+        "ASP not disclosed"
+      ],
+      "assumption_required": true,
+      "allowed_usage": "scenario_analysis_only"
+    },
+    "002230.SZ": {
+      "company_name": "\u79d1\u5927\u8baf\u98de",
+      "theme": "ai_application",
+      "market": "CN",
+      "supply_chain_role": [
+        "AI application / model ecosystem"
+      ],
+      "product_exposure": [
+        "AI application services",
+        "model and software platform"
+      ],
+      "customer_exposure_status": "not_directly_confirmed",
+      "supplier_share_assumption_range": {
+        "low": null,
+        "base": null,
+        "high": null,
+        "unit": "not_applicable_to_optical_template"
+      },
+      "ASP_assumption_range": {
+        "low": null,
+        "base": null,
+        "high": null,
+        "unit": "undisclosed"
+      },
+      "capacity_constraint": "unknown",
+      "key_unknowns": [
+        "not an optical interconnect supplier",
+        "direct optical supply-chain exposure not confirmed",
+        "customer allocation not disclosed"
+      ],
+      "assumption_required": true,
+      "allowed_usage": "scenario_analysis_only"
+    }
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "updated_at": "2026-05-26",
+  "templates": {
+    "ai_optical_interconnect": {
+      "description": "AI data center optical interconnect and optical component supply chain.",
+      "end_demand_drivers": [
+        "AI data center capex",
+        "GPU / accelerator shipment",
+        "AI cluster networking demand",
+        "800G optical module demand",
+        "1.6T optical module demand",
+        "CPO / LPO adoption"
+      ],
+      "product_layers": [
+        "optical transceiver",
+        "optical component",
+        "optical engine",
+        "optical packaging",
+        "connector",
+        "fiber array",
+        "lens / isolator / WDM components"
+      ],
+      "supplier_variables": [
+        "product_exposure",
+        "customer_exposure",
+        "supplier_share_assumption",
+        "capacity_constraint",
+        "ASP_assumption",
+        "gross_margin_sensitivity"
+      ],
+      "expectation_variables": [
+        "revenue_consensus_or_proxy",
+        "growth_expectation",
+        "valuation_expectation",
+        "price_in_level"
+      ],
+      "core_evidence_requirements": [
+        "end_demand_proxy",
+        "supplier_exposure",
+        "revenue_sensitivity",
+        "expectation_gap"
+      ],
+      "planned_sources": [
+        "industry research provider",
+        "LightCounting",
+        "TrendForce",
+        "Omdia / Dell'Oro",
+        "commercial data"
+      ]
+    }
+  }
+}

@@ -1517,3 +1517,102 @@ python 08_scripts/reporting/build_phase24_cn_tender_procurement_summary.py --tic
 python 08_scripts/verification/validate_phase24_tender_procurement_revalidation.py --tickers 300308.SZ,688041.SH,002230.SZ --json
 python 08_scripts/reporting/build_phase24_tender_procurement_summary.py --watchlist ai_core --json
 ```
+
+## Phase 25: Supply Chain Expectation Gap Engine v1
+
+Phase 25 moves the research stack from "find tender/order evidence" toward a
+scenario-based supply-chain expectation gap framework. The point is not to
+discover unavailable customer allocation or supplier-share data. The point is to
+make the assumptions explicit, score the gap conservatively, and route the next
+missing variables to the right future connectors.
+
+Current Phase 24 checkpoint:
+
+- Commit: `f6f516867b5714c530407b3ade595d458d01f2ce`
+- Stage: `Phase 24: CN Tender / Procurement Connector v1`
+- `cn_tender_procurement` moved from planned to partial.
+- Dry-run works for `300308.SZ`, `688041.SH`, and `002230.SZ`.
+- Target tickers generated `queries=72`.
+- `raw_results_found=1`, `normalized_items=1`, `evidence_candidates=1`.
+- `confirmed_awards=0`; no indication was promoted into a confirmed order.
+- No pending review was created, no paper order was created, and no promotion
+  rule was relaxed.
+
+### Phase 25 Goals
+
+1. Add supply-chain theme template support.
+2. Add supplier exposure profiles for the pilot tickers.
+3. Add `300394.SZ` through a separate `supply_chain_pilot` watchlist instead of
+   expanding `ai_core`.
+4. Build end-demand proxy output for `ai_optical_interconnect`.
+5. Build scenario-only revenue sensitivity output.
+6. Build expectation gap scoring with uncertainty penalties.
+7. Build expectation gap packets for research review.
+8. Validate thesis, valuation, and bear-case gate impact without allowing gap-only
+   promotion.
+9. Build a Phase 25 summary dashboard.
+
+### Phase 25 Guardrails
+
+- Do not build a full tender/procurement platform expansion.
+- Do not add an industry-chain agent or investment committee agent.
+- Do not use paid commercial data sources.
+- Do not fabricate NVIDIA, hyperscaler, customer order, supplier-share, ASP, or
+  customer allocation data.
+- Do not treat industry forecasts as company orders.
+- Do not treat internal proxy estimates as official consensus.
+- Do not loosen promotion rules.
+- Do not create pending review, paper orders, paper positions, or real trading
+  actions from expectation gap alone.
+- Do not commit raw HTML, PDF, or large log files.
+
+### Phase 25 New Artifacts
+
+- `00_control/supply_chain_theme_templates.json`
+- `00_control/supplier_exposure_profiles.json`
+- `00_control/watchlists/supply_chain_pilot.json`
+- `08_scripts/lib/smr_supply_chain_theme_template.py`
+- `08_scripts/lib/smr_supplier_exposure_model.py`
+- `08_scripts/lib/smr_end_demand_proxy.py`
+- `08_scripts/lib/smr_revenue_sensitivity_model.py`
+- `08_scripts/lib/smr_expectation_gap.py`
+- `08_scripts/reporting/build_phase25_end_demand_proxy.py`
+- `08_scripts/reporting/build_phase25_revenue_sensitivity.py`
+- `08_scripts/reporting/build_phase25_expectation_gap.py`
+- `08_scripts/reporting/build_phase25_supply_chain_expectation_gap_packet.py`
+- `08_scripts/reporting/build_phase25_supply_chain_gap_summary.py`
+- `08_scripts/verification/validate_phase25_expectation_gap_gate_integration.py`
+- `docs/plans/2026-05-23-phase25-supply-chain-expectation-gap.md`
+
+### Phase 25 Expected Behavior
+
+- `ai_optical_interconnect` end-demand proxy can output direction, confidence,
+  active evidence, planned sources, and limitations.
+- Supplier profiles remain `scenario_analysis_only`.
+- `300394.SZ` is available in the pilot watchlist, not added to `ai_core`.
+- Revenue sensitivity can emit scenario cases with missing variables instead of
+  forcing precise revenue estimates.
+- Expectation gap can identify low-confidence positive candidates while applying
+  uncertainty penalties.
+- Expectation gap packets default to `promotion_allowed=false`.
+- Gate integration reports thesis and valuation support impact but never creates
+  pending review from expectation gap alone.
+
+### Phase 25 Validation Commands
+
+```bash
+python -m py_compile 08_scripts/lib/*.py 08_scripts/jobs/*.py 08_scripts/verification/*.py 08_scripts/reporting/*.py
+python -m unittest discover -s tests -v
+python 08_scripts/verification/validate_phase3_e2e.py
+python 08_scripts/verification/validate_phase4_live_e2e.py --tickers NVDA --days 180 --timeout 240
+python 08_scripts/verification/validate_phase5_paper_portfolio_smoke.py
+python 08_scripts/verification/validate_phase6_multi_ticker_live.py --watchlist ai_core --save-run-history --compare-last-run --timeout 240
+python 08_scripts/verification/validate_phase14_thesis_aware_multi_ticker_live.py --watchlist ai_core --timeout 240 --json
+python 08_scripts/reporting/build_phase24_tender_procurement_summary.py --watchlist ai_core --json
+python 08_scripts/reporting/build_phase25_end_demand_proxy.py --theme ai_optical_interconnect --json
+python 08_scripts/reporting/build_phase25_revenue_sensitivity.py --tickers 300394.SZ,300308.SZ,688041.SH,002230.SZ --json
+python 08_scripts/reporting/build_phase25_expectation_gap.py --tickers 300394.SZ,300308.SZ,688041.SH,002230.SZ --json
+python 08_scripts/reporting/build_phase25_supply_chain_expectation_gap_packet.py --tickers 300394.SZ,300308.SZ,688041.SH,002230.SZ --json
+python 08_scripts/verification/validate_phase25_expectation_gap_gate_integration.py --tickers 300394.SZ,300308.SZ,688041.SH,002230.SZ --json
+python 08_scripts/reporting/build_phase25_supply_chain_gap_summary.py --json
+```
