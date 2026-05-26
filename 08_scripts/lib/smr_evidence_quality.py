@@ -404,6 +404,47 @@ def evidence_quality_level(score: float | None, *, evidence_id: str | None = Non
     return "blocked"
 
 
+def score_tender_evidence_candidate(candidate: dict[str, Any]) -> dict[str, Any]:
+    """Score a normalized tender/procurement candidate conservatively."""
+
+    if not candidate.get("source_url"):
+        return {
+            "quality_score": 0.0,
+            "quality_level": "blocked",
+            "usable_for_bear_case_mitigation": False,
+            "usable_for_proxy_signal": False,
+            "remaining_issue": "missing_source_url",
+        }
+    strength = str(candidate.get("evidence_strength") or "")
+    source_subtype = str(candidate.get("source_subtype") or candidate.get("evidence_type") or "")
+    score = 0.42
+    if strength == "confirmed_award":
+        score += 0.28
+    elif strength == "near_confirmed":
+        score += 0.2
+    elif strength == "strong_indication":
+        score += 0.12
+    elif strength == "medium_indication":
+        score += 0.06
+    if candidate.get("published_at"):
+        score += 0.04
+    if (candidate.get("metadata") or {}).get("is_company_named") or candidate.get("is_company_named"):
+        score += 0.08
+    if source_subtype in {"tender_notice", "procurement_notice", "purchase_intention", "news_mention"}:
+        score = min(score, 0.58)
+    if strength in {"blocked", "context_only"}:
+        score = min(score, 0.34)
+    quality_score = round(max(0.0, min(score, 1.0)), 3)
+    quality_level = evidence_quality_level(quality_score, evidence_id=candidate.get("evidence_id"))
+    return {
+        "quality_score": quality_score,
+        "quality_level": quality_level,
+        "usable_for_bear_case_mitigation": quality_level in {"high", "medium"} and source_subtype not in {"tender_notice", "procurement_notice", "news_mention"},
+        "usable_for_proxy_signal": quality_level in {"high", "medium", "low"} and strength != "blocked",
+        "remaining_issue": None if quality_level in {"high", "medium"} else "quality_below_gate",
+    }
+
+
 def phase19_quality_dimensions(row: sqlite3.Row | dict[str, Any], ticker: str | None = None, theme: str | None = None) -> dict[str, Any]:
     if isinstance(row, dict):
         data = dict(row)

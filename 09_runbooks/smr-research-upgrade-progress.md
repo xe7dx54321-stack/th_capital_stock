@@ -1435,3 +1435,85 @@ python 08_scripts/reporting/build_phase23_source_acquisition_plan.py --tickers 3
 python 08_scripts/reporting/build_phase23_connector_availability_dashboard.py --json
 python 08_scripts/verification/validate_phase23_source_routing_revalidation.py --watchlist ai_core --json
 ```
+
+## Stage 24 Goal
+
+Phase 24 turns the Phase 23 planned `cn_tender_procurement` route into a
+conservative executable connector. The focus is not broad web crawling; it is a
+small, auditable chain for CN tender, procurement, award, contract, and customer
+project evidence that can be normalized and linked into direct demand gates.
+
+Current Phase 23 checkpoint:
+
+- Commit: `9d420054d6f91677688f8e8420fc1e241f81fbe9`
+- Stage: `Phase 23: Source Connector Registry v2 + Valuation Source Routing`
+- Source routing can explain where to look for missing evidence.
+- `cn_tender_procurement` was still planned.
+- Confirmed order, tender, and procurement evidence remained key demand gaps.
+- Phase 23 created no pending review, no paper order, and no promotion-rule
+  relaxation.
+
+### Phase 24 Goals
+
+1. Add CN tender/procurement source schema.
+2. Add deterministic query planner for `300308.SZ`, `688041.SH`, and
+   `002230.SZ`.
+3. Add executable `cn_tender_procurement` connector v1.
+4. Normalize tender, procurement, award, contract, customer capex, and news
+   mentions into evidence candidates.
+5. Link normalized items into evidence graph candidates only when `source_url`
+   is present.
+6. Feed tender evidence into direct demand evidence summaries.
+7. Revalidate proxy, bear-case, and promotion impact without auto pending.
+8. Update registry status conservatively to `partial`.
+9. Build Phase 24 tender/procurement summary reports.
+
+### Phase 24 Non-goals
+
+- Do not add a full industry-chain agent.
+- Do not perform real trading.
+- Do not expand `ai_core`.
+- Do not crawl or commit raw HTML, PDF, or log files.
+- Do not treat tender notices as tender awards.
+- Do not treat procurement notices or purchase intentions as confirmed orders.
+- Do not treat news reposts as official award evidence.
+- Do not loosen promotion rules or auto approve pending review.
+
+### Phase 24 New Artifacts
+
+- `08_scripts/lib/smr_cn_tender_procurement.py`
+- `08_scripts/lib/smr_cn_tender_query_planner.py`
+- `08_scripts/lib/smr_tender_evidence_linkage.py`
+- `08_scripts/jobs/fetch_cn_tender_procurement.py`
+- `08_scripts/reporting/build_phase24_cn_tender_procurement_summary.py`
+- `08_scripts/reporting/build_phase24_tender_procurement_summary.py`
+- `08_scripts/verification/validate_phase24_tender_procurement_revalidation.py`
+- `docs/plans/2026-05-23-phase24-cn-tender-procurement-connector.md`
+
+### Phase 24 Expected Behavior
+
+- `cn_tender_procurement` is `partial`, not `implemented`.
+- Dry-run produces queries and normalized candidates but writes no evidence
+  graph rows.
+- Execute mode writes only normalized evidence candidates with `source_url`.
+- Tender/procurement evidence can support direct demand and proxy/bear-case
+  diagnostics.
+- Tender notices remain indications and cannot trigger pending.
+- Promotion status is reported, not automatically changed.
+
+### Phase 24 Validation Commands
+
+```bash
+python -m py_compile 08_scripts/lib/*.py 08_scripts/jobs/*.py 08_scripts/verification/*.py 08_scripts/reporting/*.py
+python -m unittest discover -s tests -v
+python 08_scripts/verification/validate_phase3_e2e.py
+python 08_scripts/verification/validate_phase4_live_e2e.py --tickers NVDA --days 180 --timeout 240
+python 08_scripts/verification/validate_phase5_paper_portfolio_smoke.py
+python 08_scripts/verification/validate_phase6_multi_ticker_live.py --watchlist ai_core --save-run-history --compare-last-run --timeout 240
+python 08_scripts/verification/validate_phase14_thesis_aware_multi_ticker_live.py --watchlist ai_core --timeout 240 --json
+python 08_scripts/reporting/build_phase23_connector_availability_dashboard.py --json
+python 08_scripts/jobs/fetch_cn_tender_procurement.py --tickers 300308.SZ,688041.SH,002230.SZ --dry-run --json
+python 08_scripts/reporting/build_phase24_cn_tender_procurement_summary.py --tickers 300308.SZ,688041.SH,002230.SZ --json
+python 08_scripts/verification/validate_phase24_tender_procurement_revalidation.py --tickers 300308.SZ,688041.SH,002230.SZ --json
+python 08_scripts/reporting/build_phase24_tender_procurement_summary.py --watchlist ai_core --json
+```

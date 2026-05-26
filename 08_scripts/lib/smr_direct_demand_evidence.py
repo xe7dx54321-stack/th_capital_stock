@@ -32,6 +32,7 @@ DEMAND_EVIDENCE_CATEGORIES = {
     "channel_check",
     "industry_data",
     "policy_demand",
+    "tender_notice",
     "news_mention",
     "rumor_or_unconfirmed",
 }
@@ -421,6 +422,93 @@ def demand_strength_for(
     return "context_only"
 
 
+def direct_demand_item_from_tender_candidate(candidate: dict[str, Any]) -> dict[str, Any] | None:
+    """Convert a Phase 24 tender candidate into direct demand evidence.
+
+    The conversion preserves the distinction between notices and awards:
+    tender_notice/procurement_notice never become confirmed_order.
+    """
+
+    source_url = str(candidate.get("source_url") or "").strip()
+    if not source_url:
+        return None
+    source_subtype = str(candidate.get("source_subtype") or candidate.get("evidence_type") or "")
+    strength = str(candidate.get("evidence_strength") or "blocked")
+    category_map = {
+        "tender_award": "tender_award",
+        "winning_bid": "tender_award",
+        "procurement_award": "procurement_award",
+        "signed_contract": "signed_contract",
+        "framework_agreement": "framework_contract",
+        "tender_notice": "tender_notice",
+        "procurement_notice": "tender_notice",
+        "customer_capex": "customer_capex",
+        "customer_project": "customer_order",
+        "purchase_intention": "news_mention",
+        "news_mention": "news_mention",
+        "rumor_or_unconfirmed": "rumor_or_unconfirmed",
+    }
+    demand_strength_map = {
+        "confirmed_award": "confirmed_order",
+        "near_confirmed": "strong_indication",
+        "strong_indication": "strong_indication",
+        "medium_indication": "medium_indication",
+        "weak_indication": "weak_indication",
+        "context_only": "context_only",
+        "blocked": "blocked",
+    }
+    category = category_map.get(source_subtype, "news_mention")
+    demand_strength = demand_strength_map.get(strength, "context_only")
+    if category == "tender_notice" and demand_strength == "confirmed_order":
+        demand_strength = "medium_indication"
+    if category == "news_mention" and demand_strength not in {"blocked", "context_only"}:
+        demand_strength = "context_only"
+    limitations = list(candidate.get("limitations") or [])
+    if category == "tender_notice":
+        limitations.append("tender/procurement notice only, not confirmed award")
+    if category == "customer_capex":
+        limitations.append("customer-side capex, not company-specific order")
+    usable_for_bear = demand_strength in {"confirmed_order", "strong_indication", "medium_indication"} and category != "tender_notice"
+    usable_for_proxy = demand_strength in {"confirmed_order", "strong_indication", "medium_indication", "weak_indication"}
+    metadata = candidate.get("metadata") or {}
+    return {
+        "ticker": normalize_ticker(candidate.get("ticker")),
+        "demand_evidence_id": stable_demand_evidence_id(
+            str(candidate.get("ticker") or ""),
+            str(candidate.get("evidence_id") or ""),
+            category,
+            str(candidate.get("independent_source_key") or source_url),
+        ),
+        "evidence_id": candidate.get("evidence_id"),
+        "evidence_category": category,
+        "demand_direction": "positive" if demand_strength != "blocked" else "unknown",
+        "demand_strength": demand_strength,
+        "customer_or_downstream": metadata.get("customer_name") or metadata.get("project_name") or "tender/procurement source",
+        "amount": metadata.get("amount"),
+        "period": None,
+        "source_type": "tender_procurement",
+        "source_quality": "medium" if demand_strength not in {"blocked", "context_only"} else "low",
+        "is_confirmed": demand_strength == "confirmed_order",
+        "is_forward_looking": category == "tender_notice",
+        "is_management_commentary": False,
+        "independent_source_key": candidate.get("independent_source_key") or source_url,
+        "claim_relevance": "core",
+        "usable_for_bear_case_mitigation": usable_for_bear,
+        "usable_for_proxy_signal": usable_for_proxy,
+        "usable_for_promotion": False,
+        "limitations": list(dict.fromkeys(limitations)),
+        "evidence_excerpt": candidate.get("text_excerpt") or candidate.get("title"),
+        "metadata": {
+            **metadata,
+            "phase": 24,
+            "source_url": source_url,
+            "source_subtype": source_subtype,
+            "connector_id": "cn_tender_procurement",
+            "promotion_rules_relaxed": False,
+        },
+    }
+
+
 def period_from_text(text: str, metadata: dict[str, Any]) -> str | None:
     if metadata.get("period"):
         return str(metadata["period"])
@@ -698,6 +786,22 @@ def extract_direct_demand_evidence(
         ):
             best_by_id[key] = item
     items = list(best_by_id.values())
+    try:
+        from smr_tender_evidence_linkage import load_tender_evidence_candidates
+
+        for candidate in load_tender_evidence_candidates(conn, ticker, limit=limit):
+            item = direct_demand_item_from_tender_candidate(candidate)
+            if not item:
+                continue
+            current = best_by_id.get(item["demand_evidence_id"])
+            if current is None or (STRENGTH_RANK[item["demand_strength"]], QUALITY_RANK[item["source_quality"]]) > (
+                STRENGTH_RANK[current["demand_strength"]],
+                QUALITY_RANK[current["source_quality"]],
+            ):
+                best_by_id[item["demand_evidence_id"]] = item
+        items = list(best_by_id.values())
+    except sqlite3.Error:
+        items = list(best_by_id.values())
     items.sort(
         key=lambda item: (
             STRENGTH_RANK.get(item.get("demand_strength"), 0),

@@ -89,6 +89,14 @@
             {
               "source_name": "tender/procurement platforms",
               "connector_id": "cn_tender_procurement",
+              "status": "partial",
+              "source_quality": "medium",
+              "allowed_usage": "supporting_evidence",
+              "evidence_category": "third_party_procurement"
+            },
+            {
+              "source_name": "full CN tender/procurement platform expansion",
+              "connector_id": "cn_tender_procurement_full_platforms",
               "status": "planned",
               "source_quality": "medium",
               "allowed_usage": "planned_only",
@@ -235,9 +243,9 @@
             {
               "source_name": "CN tender/procurement platforms",
               "connector_id": "cn_tender_procurement",
-              "status": "planned",
+              "status": "partial",
               "source_quality": "medium",
-              "allowed_usage": "planned_only",
+              "allowed_usage": "supporting_evidence",
               "evidence_category": "third_party_procurement"
             }
           ],
@@ -309,6 +317,44 @@
     "procurement_award": {
       "description": "Procurement award evidence from customer or public procurement sources.",
       "markets": {
+        "CN": {
+          "preferred_sources": [
+            {
+              "source_name": "CN tender/procurement connector v1",
+              "connector_id": "cn_tender_procurement",
+              "status": "partial",
+              "source_quality": "medium",
+              "allowed_usage": "supporting_evidence",
+              "evidence_category": "third_party_procurement"
+            },
+            {
+              "source_name": "full CN tender/procurement platform expansion",
+              "connector_id": "cn_tender_procurement_full_platforms",
+              "status": "planned",
+              "source_quality": "medium",
+              "allowed_usage": "planned_only",
+              "evidence_category": "third_party_procurement"
+            }
+          ],
+          "fallback_sources": [
+            {
+              "source_name": "company announcement / filing",
+              "connector_id": "company_filings",
+              "status": "partial",
+              "source_quality": "high",
+              "allowed_usage": "supporting_evidence",
+              "evidence_category": "company_primary_filing"
+            },
+            {
+              "source_name": "news ingestion",
+              "connector_id": "news_ingestion",
+              "status": "partial",
+              "source_quality": "medium",
+              "allowed_usage": "context_only",
+              "evidence_category": "news"
+            }
+          ]
+        },
         "GLOBAL": {
           "preferred_sources": [
             {
