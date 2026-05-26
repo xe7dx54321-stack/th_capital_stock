@@ -1,6 +1,28 @@
 {
   "version": 1,
   "updated_at": "2026-05-25T00:00:00",
+  "source_identities": {
+    "300308.SZ": {
+      "org_id": "9900022016",
+      "exchange": "SZSE",
+      "security_code": "300308",
+      "security_name": "中际旭创",
+      "plate": "sz",
+      "column": "szse",
+      "identity_source": "manifest",
+      "confidence": 0.9
+    },
+    "688041.SH": {
+      "org_id": "9900048365",
+      "exchange": "SSE",
+      "security_code": "688041",
+      "security_name": "海光信息",
+      "plate": "sh",
+      "column": "sse",
+      "identity_source": "manifest",
+      "confidence": 0.9
+    }
+  },
   "sources": {
     "00700.HK": [
       {
@@ -24,6 +46,22 @@
         "source_type": "annual_report",
         "source_url": "https://static.cninfo.com.cn/finalpage/2026-03-31/1225056459.PDF",
         "published_at": "2026-03-31",
+        "title": "2025年年度报告",
+        "document_format": "pdf",
+        "expected_sections": [
+          "income_statement",
+          "balance_sheet",
+          "cash_flow_statement"
+        ],
+        "status": "active"
+      }
+    ],
+    "688041.SH": [
+      {
+        "source_id": "cninfo_688041_sh_1225083088",
+        "source_type": "annual_report",
+        "source_url": "https://static.cninfo.com.cn/finalpage/2026-04-08/1225083088.PDF",
+        "published_at": "2026-04-08",
         "title": "2025年年度报告",
         "document_format": "pdf",
         "expected_sections": [

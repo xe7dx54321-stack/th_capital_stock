@@ -136,9 +136,9 @@ def parse_dt(value: Any) -> datetime | None:
     if not text:
         return None
     text = text.replace("T", " ")[:19]
-    for fmt in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M", "%Y-%m-%d"):
+    for fmt, width in (("%Y-%m-%d %H:%M:%S", 19), ("%Y-%m-%d %H:%M", 16), ("%Y-%m-%d", 10)):
         try:
-            return datetime.strptime(text[: len(fmt)], fmt)
+            return datetime.strptime(text[:width], fmt)
         except ValueError:
             continue
     try:

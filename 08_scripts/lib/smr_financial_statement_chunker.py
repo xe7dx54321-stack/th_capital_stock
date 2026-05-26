@@ -304,7 +304,17 @@ def extract_financial_statement_chunks_from_source(ticker: str, source: dict[str
         detected_headings.append(section_title)
         if section_type in {"notes", "management_discussion"}:
             continue
-        classified = classify_financial_section(window["raw_text"], section_title)
+        if section_type in {"income_statement", "balance_sheet", "cash_flow_statement"}:
+            table_score = table_like_score(window["raw_text"], section_type)
+            if table_score < 0.35:
+                continue
+            classified = {
+                "section_type": section_type,
+                "section_title": section_title,
+                "confidence": round(min(0.95, 0.55 + table_score * 0.4), 3),
+            }
+        else:
+            classified = classify_financial_section(window["raw_text"], section_title)
         if classified["section_type"] not in {"income_statement", "balance_sheet", "cash_flow_statement", "financial_highlights"}:
             continue
         table_text = normalize_table_text(window["raw_text"], classified["section_type"], ticker=ticker)

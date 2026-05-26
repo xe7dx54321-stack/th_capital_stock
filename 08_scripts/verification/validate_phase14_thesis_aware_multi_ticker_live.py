@@ -28,6 +28,7 @@ from smr_blocker_repair_queue import apply_phase14_thesis_metadata
 from smr_data_quality_gate import build_data_quality_gate
 from smr_decision import ensure_decision_tables, upsert_decision_ledger, update_decision_ledger_metadata
 from smr_fundamentals import latest_fundamentals_snapshot
+from smr_recovered_fundamentals import field_recovered_in_snapshot
 from smr_phase6_watchlists import load_watchlist_config, watchlist_map
 from smr_portfolio_risk import evaluate_portfolio_risk
 from smr_registry import register_snapshot
@@ -102,7 +103,8 @@ def field_names(items: list[dict[str, Any]] | None) -> list[str]:
 def missing_fields_from_phase6(row: dict[str, Any], fundamentals: dict[str, Any]) -> list[str]:
     fields = list(row.get("fundamentals_missing_fields") or [])
     fields.extend(fundamentals.get("missing_fields") or [])
-    return sorted({str(item).split(":", 1)[-1] for item in fields if str(item).strip()})
+    normalized = {str(item).split(":", 1)[-1] for item in fields if str(item).strip()}
+    return sorted(field for field in normalized if not field_recovered_in_snapshot(field, fundamentals))
 
 
 def compact_gate(field_gate: dict[str, Any]) -> dict[str, Any]:

@@ -913,3 +913,91 @@ python 08_scripts/jobs/link_financial_statement_chunks_to_evidence.py --ticker 6
 python 08_scripts/verification/validate_phase17_source_chunk_recovery.py --tickers 00700.HK,300308.SZ,688041.SH --json
 python 08_scripts/reporting/build_phase17_source_chunk_recovery_summary.py --json
 ```
+
+## Stage 18 Goal
+
+Phase 18 closes the remaining source gap and moves recovered financial
+statement fields into the system path that matters: fundamentals snapshots and
+the thesis-aware core blocker gate. It does not create more aggressive
+promotion behavior.
+
+Current Phase 17 checkpoint:
+
+- Commit: `050a0e9b69708ee83197e84d55f557f858fc2b2f`
+- Stage: `Phase 17: Financial Statement Source Chunk Recovery`
+- `00700.HK` `shareholders_equity` is extracted from HKEX financial statement
+  evidence.
+- `300308.SZ` `revenue` is extracted and `gross_profit` is derived from CNINFO
+  income statement evidence.
+- `688041.SH` was still `financial_statement_source_not_found`.
+- No new pending review, no promotion relaxation, and no trading action were
+  introduced.
+
+### Phase 18 Goals
+
+1. Resolve `688041.SH` CNINFO source identity.
+2. Discover and cache a usable `688041.SH` annual report source.
+3. Extract and link `688041.SH` income statement chunks.
+4. Recover `688041.SH` `revenue` and `gross_profit` when evidence is present.
+5. Insert recovered `00700.HK`, `300308.SZ`, and `688041.SH` fields into new
+   fundamentals snapshots with lineage.
+6. Let thesis-aware core blocker logic remove recovered fields only when the
+   snapshot has evidence IDs and sufficient confidence.
+7. Add Phase 18 revalidation and a daily fundamentals recovery summary.
+
+### Phase 18 Non-goals
+
+- Do not perform real trading.
+- Do not auto approve anything.
+- Do not generate paper orders or paper positions.
+- Do not expand `ai_core`.
+- Do not loosen promotion rules.
+- Do not fabricate fields without source chunks and evidence IDs.
+- Do not allow low-confidence recovered fields to clear core blockers.
+- Do not commit raw PDF, HTML, or generated report outputs.
+
+### Phase 18 New Artifacts
+
+- `08_scripts/lib/smr_cninfo_source_identity.py`
+- `08_scripts/lib/smr_recovered_fundamentals.py`
+- `08_scripts/jobs/resolve_cninfo_source_identity.py`
+- `08_scripts/jobs/update_fundamentals_from_recovered_chunks.py`
+- `08_scripts/verification/validate_phase18_remaining_source_gap_closure.py`
+- `08_scripts/verification/validate_phase18_fundamentals_recovery_revalidation.py`
+- `08_scripts/reporting/build_phase18_fundamentals_recovery_summary.py`
+- `docs/plans/2026-05-23-phase18-fundamentals-recovery-expansion.md`
+
+### Phase 18 Expected Behavior
+
+- `688041.SH` resolves to a CNINFO identity and source manifest entry.
+- `688041.SH` discovers the 2025 annual report and extracts financial statement
+  chunks.
+- `688041.SH` `revenue` and `gross_profit` can be recovered from linked income
+  statement evidence.
+- `00700.HK`, `300308.SZ`, and `688041.SH` recovered fields are represented in
+  fundamentals snapshots with previous-value metadata.
+- Phase 14 missing-field logic treats recovered, traceable fields as no longer
+  missing, while low-confidence/context-only fields remain blocking.
+
+### Phase 18 Validation Commands
+
+```bash
+python -m py_compile 08_scripts/lib/*.py 08_scripts/jobs/*.py 08_scripts/verification/*.py 08_scripts/reporting/*.py
+python -m unittest discover -s tests -v
+python 08_scripts/verification/validate_phase3_e2e.py
+python 08_scripts/verification/validate_phase4_live_e2e.py --tickers NVDA --days 180 --timeout 240
+python 08_scripts/verification/validate_phase5_paper_portfolio_smoke.py
+python 08_scripts/verification/validate_phase6_multi_ticker_live.py --watchlist ai_core --save-run-history --compare-last-run --timeout 240
+python 08_scripts/verification/validate_phase14_thesis_aware_multi_ticker_live.py --watchlist ai_core --timeout 240 --json
+python 08_scripts/reporting/build_phase15_review_ops_summary.py --watchlist ai_core --json
+python 08_scripts/verification/validate_phase16_parser_thesis_recovery.py --json
+python 08_scripts/verification/validate_phase17_source_chunk_recovery.py --tickers 00700.HK,300308.SZ,688041.SH --json
+python 08_scripts/jobs/resolve_cninfo_source_identity.py --ticker 688041.SH --json
+python 08_scripts/jobs/discover_financial_statement_sources.py --ticker 688041.SH --json
+python 08_scripts/jobs/extract_financial_statement_chunks.py --ticker 688041.SH --json
+python 08_scripts/jobs/link_financial_statement_chunks_to_evidence.py --ticker 688041.SH --json
+python 08_scripts/verification/validate_phase18_remaining_source_gap_closure.py --ticker 688041.SH --json
+python 08_scripts/jobs/update_fundamentals_from_recovered_chunks.py --tickers 00700.HK,300308.SZ,688041.SH --json
+python 08_scripts/verification/validate_phase18_fundamentals_recovery_revalidation.py --tickers 00700.HK,300308.SZ,688041.SH --json
+python 08_scripts/reporting/build_phase18_fundamentals_recovery_summary.py --json
+```

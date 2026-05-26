@@ -14,6 +14,7 @@ from typing import Any
 
 from smr_paths import normalize_project_path, project_path, relative_to_project
 from smr_wiki import loads_json, now_ts
+from smr_cninfo_source_identity import cninfo_query_hint, resolve_cninfo_source_identity
 
 
 MANIFEST_PATH = project_path("00_control", "financial_statement_sources.json")
@@ -26,11 +27,6 @@ TARGET_NAMES = {
     "688041.SH": "海光信息",
     "00700.HK": "TENCENT",
 }
-
-CNINFO_ORG_HINTS = {
-    "300308.SZ": {"org_id": "9900022016", "plate": "sz", "column": "szse"},
-}
-
 
 def market_for_ticker(ticker: str) -> str:
     value = ticker.upper()
@@ -187,7 +183,7 @@ def _fetch_json(url: str, *, data: bytes | None = None, referer: str = "https://
 
 def discover_cninfo_sources_live(ticker: str, *, days_back: int = 900) -> list[dict[str, Any]]:
     ticker = ticker.upper()
-    hint = CNINFO_ORG_HINTS.get(ticker)
+    hint = cninfo_query_hint(ticker)
     if not hint:
         return []
     code = ticker.split(".")[0]
@@ -226,17 +222,18 @@ def discover_cninfo_sources_live(ticker: str, *, days_back: int = 900) -> list[d
             published_at = datetime.fromtimestamp((item.get("announcementTime") or 0) / 1000).strftime("%Y-%m-%d")
             title = re.sub(r"<[^>]+>", "", str(item.get("announcementTitle") or "")).strip()
             source_url = urllib.parse.urljoin(CNINFO_STATIC_PREFIX, item["adjunctUrl"])
+            is_summary = "摘要" in title or "summary" in title.lower()
             results.append(
                 _normalize_source(
                     ticker,
                     {
                         "source_id": f"cninfo_{ticker.lower().replace('.', '_')}_{item.get('announcementId')}",
-                        "source_type": default_type,
+                        "source_type": f"{default_type}_summary" if is_summary else default_type,
                         "source_url": source_url,
                         "published_at": published_at,
                         "title": title,
                         "document_format": "pdf",
-                        "confidence": 0.88 if default_type in {"annual_report", "quarterly_report"} else 0.8,
+                        "confidence": 0.65 if is_summary else (0.88 if default_type in {"annual_report", "quarterly_report"} else 0.8),
                     },
                     provider_hint="cninfo",
                 )
@@ -410,12 +407,15 @@ def discover_financial_statement_sources(
     ranked = rank_sources([source for source in sources if source.get("source_type") != "discovery_error"])
     best = choose_best_source(ranked)
     if not ranked:
+        source_identity = resolve_cninfo_source_identity(ticker) if market_for_ticker(ticker) == "CN" else None
+        identity_reason = (source_identity or {}).get("missing_reason")
         return {
             "ticker": ticker,
             "market": market_for_ticker(ticker),
             "sources_found": [],
             "best_source": None,
-            "missing_reason": "financial_statement_source_not_found",
+            "source_identity": source_identity,
+            "missing_reason": identity_reason or "financial_statement_source_not_found",
             "suggested_fix": f"refresh {'HKEX' if ticker.endswith('.HK') else 'CNINFO'} filings ingestion for annual/interim/quarterly reports",
         }
     return {
@@ -423,6 +423,7 @@ def discover_financial_statement_sources(
         "market": market_for_ticker(ticker),
         "sources_found": ranked,
         "best_source": best,
+        "source_identity": resolve_cninfo_source_identity(ticker) if market_for_ticker(ticker) == "CN" else None,
         "missing_reason": None if best else "financial_statement_source_not_found",
     }
 
