@@ -1,0 +1,814 @@
+{
+  "version": 2,
+  "updated_at": "2026-05-26",
+  "information_types": {
+    "financial_statement": {
+      "description": "Audited or filed financial statement data used for fundamentals and valuation inputs.",
+      "markets": {
+        "CN": {
+          "preferred_sources": [
+            {
+              "source_name": "CNINFO financial statements",
+              "connector_id": "cninfo_filings",
+              "status": "implemented",
+              "source_quality": "high",
+              "allowed_usage": "core_evidence",
+              "evidence_category": "company_primary_filing"
+            }
+          ],
+          "fallback_sources": [
+            {
+              "source_name": "existing filing evidence graph",
+              "connector_id": "evidence_graph",
+              "status": "implemented",
+              "source_quality": "medium",
+              "allowed_usage": "supporting_evidence",
+              "evidence_category": "derived_evidence"
+            }
+          ]
+        },
+        "HK": {
+          "preferred_sources": [
+            {
+              "source_name": "HKEX financial statements",
+              "connector_id": "hkex_filings",
+              "status": "implemented",
+              "source_quality": "high",
+              "allowed_usage": "core_evidence",
+              "evidence_category": "company_primary_filing"
+            }
+          ],
+          "fallback_sources": [
+            {
+              "source_name": "existing filing evidence graph",
+              "connector_id": "evidence_graph",
+              "status": "implemented",
+              "source_quality": "medium",
+              "allowed_usage": "supporting_evidence",
+              "evidence_category": "derived_evidence"
+            }
+          ]
+        },
+        "US": {
+          "preferred_sources": [
+            {
+              "source_name": "SEC company filings",
+              "connector_id": "sec_filings",
+              "status": "partial",
+              "source_quality": "high",
+              "allowed_usage": "supporting_evidence",
+              "evidence_category": "company_primary_filing"
+            }
+          ],
+          "fallback_sources": [
+            {
+              "source_name": "existing filing evidence graph",
+              "connector_id": "evidence_graph",
+              "status": "implemented",
+              "source_quality": "medium",
+              "allowed_usage": "supporting_evidence",
+              "evidence_category": "derived_evidence"
+            }
+          ]
+        }
+      }
+    },
+    "confirmed_order": {
+      "description": "Confirmed company order, signed customer order, contract win, tender win, or procurement award.",
+      "markets": {
+        "CN": {
+          "preferred_sources": [
+            {
+              "source_name": "CNINFO company announcement",
+              "connector_id": "cninfo_filings",
+              "status": "implemented",
+              "source_quality": "high",
+              "allowed_usage": "supporting_evidence",
+              "evidence_category": "company_primary_filing"
+            },
+            {
+              "source_name": "tender/procurement platforms",
+              "connector_id": "cn_tender_procurement",
+              "status": "planned",
+              "source_quality": "medium",
+              "allowed_usage": "planned_only",
+              "evidence_category": "third_party_procurement"
+            }
+          ],
+          "fallback_sources": [
+            {
+              "source_name": "company IR / official website",
+              "connector_id": "company_ir",
+              "status": "partial",
+              "source_quality": "medium",
+              "allowed_usage": "supporting_evidence",
+              "evidence_category": "company_official_material"
+            },
+            {
+              "source_name": "news ingestion",
+              "connector_id": "news_ingestion",
+              "status": "partial",
+              "source_quality": "medium",
+              "allowed_usage": "context_only",
+              "evidence_category": "news"
+            }
+          ]
+        },
+        "HK": {
+          "preferred_sources": [
+            {
+              "source_name": "HKEX company announcement",
+              "connector_id": "hkex_filings",
+              "status": "implemented",
+              "source_quality": "high",
+              "allowed_usage": "supporting_evidence",
+              "evidence_category": "company_primary_filing"
+            },
+            {
+              "source_name": "tender/procurement platforms",
+              "connector_id": "hk_tender_procurement",
+              "status": "planned",
+              "source_quality": "medium",
+              "allowed_usage": "planned_only",
+              "evidence_category": "third_party_procurement"
+            }
+          ],
+          "fallback_sources": [
+            {
+              "source_name": "company IR / official website",
+              "connector_id": "company_ir",
+              "status": "partial",
+              "source_quality": "medium",
+              "allowed_usage": "supporting_evidence",
+              "evidence_category": "company_official_material"
+            },
+            {
+              "source_name": "news ingestion",
+              "connector_id": "news_ingestion",
+              "status": "partial",
+              "source_quality": "medium",
+              "allowed_usage": "context_only",
+              "evidence_category": "news"
+            }
+          ]
+        },
+        "US": {
+          "preferred_sources": [
+            {
+              "source_name": "SEC material contract filings",
+              "connector_id": "sec_filings",
+              "status": "partial",
+              "source_quality": "high",
+              "allowed_usage": "supporting_evidence",
+              "evidence_category": "company_primary_filing"
+            },
+            {
+              "source_name": "public procurement platforms",
+              "connector_id": "us_public_procurement",
+              "status": "planned",
+              "source_quality": "medium",
+              "allowed_usage": "planned_only",
+              "evidence_category": "third_party_procurement"
+            }
+          ],
+          "fallback_sources": [
+            {
+              "source_name": "company IR / official website",
+              "connector_id": "company_ir",
+              "status": "partial",
+              "source_quality": "medium",
+              "allowed_usage": "supporting_evidence",
+              "evidence_category": "company_official_material"
+            },
+            {
+              "source_name": "news ingestion",
+              "connector_id": "news_ingestion",
+              "status": "partial",
+              "source_quality": "medium",
+              "allowed_usage": "context_only",
+              "evidence_category": "news"
+            }
+          ]
+        }
+      }
+    },
+    "signed_contract": {
+      "description": "Signed contract evidence disclosed by company filing or official announcement.",
+      "markets": {
+        "GLOBAL": {
+          "preferred_sources": [
+            {
+              "source_name": "company filing / exchange announcement",
+              "connector_id": "company_filings",
+              "status": "partial",
+              "source_quality": "high",
+              "allowed_usage": "supporting_evidence",
+              "evidence_category": "company_primary_filing"
+            }
+          ],
+          "fallback_sources": [
+            {
+              "source_name": "company IR / official website",
+              "connector_id": "company_ir",
+              "status": "partial",
+              "source_quality": "medium",
+              "allowed_usage": "supporting_evidence",
+              "evidence_category": "company_official_material"
+            }
+          ]
+        }
+      }
+    },
+    "tender_award": {
+      "description": "Tender award or tender win evidence.",
+      "markets": {
+        "CN": {
+          "preferred_sources": [
+            {
+              "source_name": "CNINFO announcement mentioning tender award",
+              "connector_id": "cninfo_filings",
+              "status": "implemented",
+              "source_quality": "high",
+              "allowed_usage": "supporting_evidence",
+              "evidence_category": "company_primary_filing"
+            },
+            {
+              "source_name": "CN tender/procurement platforms",
+              "connector_id": "cn_tender_procurement",
+              "status": "planned",
+              "source_quality": "medium",
+              "allowed_usage": "planned_only",
+              "evidence_category": "third_party_procurement"
+            }
+          ],
+          "fallback_sources": [
+            {
+              "source_name": "news ingestion",
+              "connector_id": "news_ingestion",
+              "status": "partial",
+              "source_quality": "medium",
+              "allowed_usage": "context_only",
+              "evidence_category": "news"
+            }
+          ]
+        },
+        "HK": {
+          "preferred_sources": [
+            {
+              "source_name": "HKEX announcement mentioning tender award",
+              "connector_id": "hkex_filings",
+              "status": "implemented",
+              "source_quality": "high",
+              "allowed_usage": "supporting_evidence",
+              "evidence_category": "company_primary_filing"
+            },
+            {
+              "source_name": "HK tender/procurement platforms",
+              "connector_id": "hk_tender_procurement",
+              "status": "planned",
+              "source_quality": "medium",
+              "allowed_usage": "planned_only",
+              "evidence_category": "third_party_procurement"
+            }
+          ],
+          "fallback_sources": [
+            {
+              "source_name": "news ingestion",
+              "connector_id": "news_ingestion",
+              "status": "partial",
+              "source_quality": "medium",
+              "allowed_usage": "context_only",
+              "evidence_category": "news"
+            }
+          ]
+        },
+        "US": {
+          "preferred_sources": [
+            {
+              "source_name": "public procurement platforms",
+              "connector_id": "us_public_procurement",
+              "status": "planned",
+              "source_quality": "medium",
+              "allowed_usage": "planned_only",
+              "evidence_category": "third_party_procurement"
+            }
+          ],
+          "fallback_sources": [
+            {
+              "source_name": "news ingestion",
+              "connector_id": "news_ingestion",
+              "status": "partial",
+              "source_quality": "medium",
+              "allowed_usage": "context_only",
+              "evidence_category": "news"
+            }
+          ]
+        }
+      }
+    },
+    "procurement_award": {
+      "description": "Procurement award evidence from customer or public procurement sources.",
+      "markets": {
+        "GLOBAL": {
+          "preferred_sources": [
+            {
+              "source_name": "tender/procurement platforms",
+              "connector_id": "procurement_platforms",
+              "status": "planned",
+              "source_quality": "medium",
+              "allowed_usage": "planned_only",
+              "evidence_category": "third_party_procurement"
+            }
+          ],
+          "fallback_sources": [
+            {
+              "source_name": "company announcement / filing",
+              "connector_id": "company_filings",
+              "status": "partial",
+              "source_quality": "high",
+              "allowed_usage": "supporting_evidence",
+              "evidence_category": "company_primary_filing"
+            },
+            {
+              "source_name": "news ingestion",
+              "connector_id": "news_ingestion",
+              "status": "partial",
+              "source_quality": "medium",
+              "allowed_usage": "context_only",
+              "evidence_category": "news"
+            }
+          ]
+        }
+      }
+    },
+    "customer_capex": {
+      "description": "Customer or downstream capex evidence supporting demand indication, not company-specific order confirmation.",
+      "markets": {
+        "GLOBAL": {
+          "preferred_sources": [
+            {
+              "source_name": "customer capex filings/news",
+              "connector_id": "customer_capex_news",
+              "status": "partial",
+              "source_quality": "medium",
+              "allowed_usage": "supporting_evidence",
+              "evidence_category": "customer_downstream_evidence"
+            },
+            {
+              "source_name": "industry capex reports",
+              "connector_id": "industry_capex_reports",
+              "status": "planned",
+              "source_quality": "medium",
+              "allowed_usage": "planned_only",
+              "evidence_category": "industry_data"
+            }
+          ],
+          "fallback_sources": [
+            {
+              "source_name": "news ingestion",
+              "connector_id": "news_ingestion",
+              "status": "partial",
+              "source_quality": "medium",
+              "allowed_usage": "context_only",
+              "evidence_category": "news"
+            }
+          ]
+        }
+      }
+    },
+    "downstream_capex": {
+      "description": "Downstream capex or procurement signal used as demand support only.",
+      "markets": {
+        "GLOBAL": {
+          "preferred_sources": [
+            {
+              "source_name": "customer capex filings/news",
+              "connector_id": "customer_capex_news",
+              "status": "partial",
+              "source_quality": "medium",
+              "allowed_usage": "supporting_evidence",
+              "evidence_category": "customer_downstream_evidence"
+            }
+          ],
+          "fallback_sources": [
+            {
+              "source_name": "news ingestion",
+              "connector_id": "news_ingestion",
+              "status": "partial",
+              "source_quality": "medium",
+              "allowed_usage": "context_only",
+              "evidence_category": "news"
+            }
+          ]
+        }
+      }
+    },
+    "direct_demand": {
+      "description": "Direct demand, order, guidance, customer, shipment, or backlog evidence extracted from existing evidence.",
+      "markets": {
+        "GLOBAL": {
+          "preferred_sources": [
+            {
+              "source_name": "direct demand evidence extractor",
+              "connector_id": "direct_demand_evidence",
+              "status": "implemented",
+              "source_quality": "medium",
+              "allowed_usage": "supporting_evidence",
+              "evidence_category": "derived_evidence"
+            },
+            {
+              "source_name": "existing filing evidence graph",
+              "connector_id": "evidence_graph",
+              "status": "implemented",
+              "source_quality": "medium",
+              "allowed_usage": "supporting_evidence",
+              "evidence_category": "derived_evidence"
+            }
+          ],
+          "fallback_sources": [
+            {
+              "source_name": "news ingestion",
+              "connector_id": "news_ingestion",
+              "status": "partial",
+              "source_quality": "medium",
+              "allowed_usage": "context_only",
+              "evidence_category": "news"
+            }
+          ]
+        }
+      }
+    },
+    "forward_eps": {
+      "description": "Forward EPS estimate used as valuation input. Internal proxy is supporting only.",
+      "markets": {
+        "GLOBAL": {
+          "preferred_sources": [
+            {
+              "source_name": "internal forward EPS proxy",
+              "connector_id": "internal_consensus_proxy",
+              "status": "implemented",
+              "source_quality": "medium",
+              "allowed_usage": "supporting_evidence",
+              "evidence_category": "internal_proxy"
+            }
+          ],
+          "fallback_sources": [
+            {
+              "source_name": "filings/news proxy extraction",
+              "connector_id": "proxy_extraction",
+              "status": "implemented",
+              "source_quality": "medium",
+              "allowed_usage": "supporting_evidence",
+              "evidence_category": "derived_evidence"
+            },
+            {
+              "source_name": "commercial consensus provider",
+              "connector_id": "commercial_consensus",
+              "status": "planned",
+              "source_quality": "high",
+              "allowed_usage": "planned_only",
+              "evidence_category": "consensus_estimate"
+            }
+          ]
+        }
+      }
+    },
+    "official_consensus": {
+      "description": "Official or commercial consensus estimates. Not currently implemented.",
+      "markets": {
+        "GLOBAL": {
+          "preferred_sources": [
+            {
+              "source_name": "commercial consensus provider",
+              "connector_id": "commercial_consensus",
+              "status": "planned",
+              "source_quality": "high",
+              "allowed_usage": "planned_only",
+              "evidence_category": "consensus_estimate"
+            }
+          ],
+          "fallback_sources": [
+            {
+              "source_name": "internal consensus proxy",
+              "connector_id": "internal_consensus_proxy",
+              "status": "implemented",
+              "source_quality": "medium",
+              "allowed_usage": "supporting_evidence",
+              "evidence_category": "internal_proxy"
+            },
+            {
+              "source_name": "filings/news proxy extraction",
+              "connector_id": "proxy_extraction",
+              "status": "implemented",
+              "source_quality": "medium",
+              "allowed_usage": "supporting_evidence",
+              "evidence_category": "derived_evidence"
+            }
+          ]
+        }
+      }
+    },
+    "internal_consensus_proxy": {
+      "description": "Internal proxy estimate, explicitly not official consensus.",
+      "markets": {
+        "GLOBAL": {
+          "preferred_sources": [
+            {
+              "source_name": "internal consensus proxy",
+              "connector_id": "internal_consensus_proxy",
+              "status": "implemented",
+              "source_quality": "medium",
+              "allowed_usage": "supporting_evidence",
+              "evidence_category": "internal_proxy"
+            }
+          ],
+          "fallback_sources": [
+            {
+              "source_name": "filings/news proxy extraction",
+              "connector_id": "proxy_extraction",
+              "status": "implemented",
+              "source_quality": "medium",
+              "allowed_usage": "supporting_evidence",
+              "evidence_category": "derived_evidence"
+            }
+          ]
+        }
+      }
+    },
+    "peer_valuation": {
+      "description": "Peer comparison data from peer set config, market prices, and fundamentals.",
+      "markets": {
+        "GLOBAL": {
+          "preferred_sources": [
+            {
+              "source_name": "valuation peer set config",
+              "connector_id": "peer_set_config",
+              "status": "implemented",
+              "source_quality": "medium",
+              "allowed_usage": "supporting_evidence",
+              "evidence_category": "configuration"
+            },
+            {
+              "source_name": "daily bar market prices",
+              "connector_id": "daily_bar",
+              "status": "implemented",
+              "source_quality": "high",
+              "allowed_usage": "supporting_evidence",
+              "evidence_category": "market_data"
+            },
+            {
+              "source_name": "fundamentals snapshot",
+              "connector_id": "fundamentals_snapshot",
+              "status": "implemented",
+              "source_quality": "medium",
+              "allowed_usage": "supporting_evidence",
+              "evidence_category": "derived_fundamentals"
+            }
+          ],
+          "fallback_sources": [
+            {
+              "source_name": "manual peer set review",
+              "connector_id": "manual_peer_review",
+              "status": "planned",
+              "source_quality": "medium",
+              "allowed_usage": "planned_only",
+              "evidence_category": "manual_review"
+            }
+          ]
+        }
+      }
+    },
+    "historical_valuation": {
+      "description": "Historical valuation sample from price history and fundamentals snapshots.",
+      "markets": {
+        "GLOBAL": {
+          "preferred_sources": [
+            {
+              "source_name": "price history",
+              "connector_id": "daily_bar",
+              "status": "implemented",
+              "source_quality": "high",
+              "allowed_usage": "supporting_evidence",
+              "evidence_category": "market_data"
+            },
+            {
+              "source_name": "fundamentals snapshot history",
+              "connector_id": "fundamentals_snapshot",
+              "status": "implemented",
+              "source_quality": "medium",
+              "allowed_usage": "supporting_evidence",
+              "evidence_category": "derived_fundamentals"
+            }
+          ],
+          "fallback_sources": [
+            {
+              "source_name": "historical valuation repair job",
+              "connector_id": "historical_valuation_repair",
+              "status": "partial",
+              "source_quality": "medium",
+              "allowed_usage": "supporting_evidence",
+              "evidence_category": "derived_valuation"
+            }
+          ]
+        }
+      }
+    },
+    "price_freshness": {
+      "description": "Latest market price freshness check.",
+      "markets": {
+        "GLOBAL": {
+          "preferred_sources": [
+            {
+              "source_name": "daily bar market data",
+              "connector_id": "daily_bar",
+              "status": "implemented",
+              "source_quality": "high",
+              "allowed_usage": "supporting_evidence",
+              "evidence_category": "market_data"
+            }
+          ],
+          "fallback_sources": [
+            {
+              "source_name": "manual price refresh",
+              "connector_id": "manual_price_refresh",
+              "status": "planned",
+              "source_quality": "medium",
+              "allowed_usage": "planned_only",
+              "evidence_category": "manual_review"
+            }
+          ]
+        }
+      }
+    },
+    "proxy_independent_source": {
+      "description": "Independent source used to strengthen internal proxy signal. Metadata does not count.",
+      "markets": {
+        "GLOBAL": {
+          "preferred_sources": [
+            {
+              "source_name": "company filings",
+              "connector_id": "company_filings",
+              "status": "partial",
+              "source_quality": "high",
+              "allowed_usage": "supporting_evidence",
+              "evidence_category": "company_primary_filing"
+            },
+            {
+              "source_name": "direct demand evidence",
+              "connector_id": "direct_demand_evidence",
+              "status": "implemented",
+              "source_quality": "medium",
+              "allowed_usage": "supporting_evidence",
+              "evidence_category": "derived_evidence"
+            }
+          ],
+          "fallback_sources": [
+            {
+              "source_name": "news ingestion",
+              "connector_id": "news_ingestion",
+              "status": "partial",
+              "source_quality": "medium",
+              "allowed_usage": "context_only",
+              "evidence_category": "news"
+            }
+          ]
+        }
+      }
+    },
+    "industry_price": {
+      "description": "Industry price data for products or commodities.",
+      "markets": {
+        "GLOBAL": {
+          "preferred_sources": [
+            {
+              "source_name": "industry price data provider",
+              "connector_id": "industry_price_data",
+              "status": "planned",
+              "source_quality": "medium",
+              "allowed_usage": "planned_only",
+              "evidence_category": "industry_data"
+            }
+          ],
+          "fallback_sources": [
+            {
+              "source_name": "news ingestion",
+              "connector_id": "news_ingestion",
+              "status": "partial",
+              "source_quality": "medium",
+              "allowed_usage": "context_only",
+              "evidence_category": "news"
+            }
+          ]
+        }
+      }
+    },
+    "inventory": {
+      "description": "Inventory and channel stock data.",
+      "markets": {
+        "GLOBAL": {
+          "preferred_sources": [
+            {
+              "source_name": "industry inventory data provider",
+              "connector_id": "industry_inventory_data",
+              "status": "planned",
+              "source_quality": "medium",
+              "allowed_usage": "planned_only",
+              "evidence_category": "industry_data"
+            }
+          ],
+          "fallback_sources": [
+            {
+              "source_name": "company filings",
+              "connector_id": "company_filings",
+              "status": "partial",
+              "source_quality": "medium",
+              "allowed_usage": "context_only",
+              "evidence_category": "company_primary_filing"
+            }
+          ]
+        }
+      }
+    },
+    "capacity_utilization": {
+      "description": "Capacity utilization or production ramp evidence.",
+      "markets": {
+        "GLOBAL": {
+          "preferred_sources": [
+            {
+              "source_name": "company filings / management guidance",
+              "connector_id": "company_filings",
+              "status": "partial",
+              "source_quality": "medium",
+              "allowed_usage": "supporting_evidence",
+              "evidence_category": "company_primary_filing"
+            }
+          ],
+          "fallback_sources": [
+            {
+              "source_name": "industry capacity data provider",
+              "connector_id": "industry_capacity_data",
+              "status": "planned",
+              "source_quality": "medium",
+              "allowed_usage": "planned_only",
+              "evidence_category": "industry_data"
+            }
+          ]
+        }
+      }
+    },
+    "market_flow": {
+      "description": "ETF flow or market flow signal.",
+      "markets": {
+        "GLOBAL": {
+          "preferred_sources": [
+            {
+              "source_name": "ETF flow data provider",
+              "connector_id": "etf_flow_data",
+              "status": "planned",
+              "source_quality": "medium",
+              "allowed_usage": "planned_only",
+              "evidence_category": "market_flow"
+            }
+          ],
+          "fallback_sources": []
+        }
+      }
+    },
+    "options_signal": {
+      "description": "Options market signal.",
+      "markets": {
+        "GLOBAL": {
+          "preferred_sources": [
+            {
+              "source_name": "options data provider",
+              "connector_id": "options_data",
+              "status": "planned",
+              "source_quality": "medium",
+              "allowed_usage": "planned_only",
+              "evidence_category": "market_signal"
+            }
+          ],
+          "fallback_sources": []
+        }
+      }
+    },
+    "short_interest": {
+      "description": "Short interest or borrow signal.",
+      "markets": {
+        "GLOBAL": {
+          "preferred_sources": [
+            {
+              "source_name": "short interest data provider",
+              "connector_id": "short_interest_data",
+              "status": "planned",
+              "source_quality": "medium",
+              "allowed_usage": "planned_only",
+              "evidence_category": "market_signal"
+            }
+          ],
+          "fallback_sources": []
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,253 @@
+{
+  "PRICE_STALE": {
+    "information_types": [
+      "price_freshness"
+    ],
+    "priority": "high",
+    "reason": "Latest price is stale and must be refreshed before valuation can support promotion."
+  },
+  "VALUATION_STALE": {
+    "information_types": [
+      "price_freshness",
+      "historical_valuation"
+    ],
+    "priority": "high",
+    "reason": "Valuation snapshot is stale and needs refreshed market and valuation inputs."
+  },
+  "PEER_COMPARISON_MISSING": {
+    "information_types": [
+      "peer_valuation"
+    ],
+    "priority": "high",
+    "reason": "Peer comparison evidence is missing."
+  },
+  "PEER_COMPARISON_WEAK": {
+    "information_types": [
+      "peer_valuation"
+    ],
+    "priority": "medium",
+    "reason": "Peer comparison evidence exists but is weak."
+  },
+  "HISTORICAL_VALUATION_MISSING": {
+    "information_types": [
+      "historical_valuation"
+    ],
+    "priority": "high",
+    "reason": "Historical valuation sample is missing."
+  },
+  "HISTORICAL_VALUATION_WEAK": {
+    "information_types": [
+      "historical_valuation"
+    ],
+    "priority": "medium",
+    "reason": "Historical valuation sample exists but is weak."
+  },
+  "FORWARD_EPS_MISSING": {
+    "information_types": [
+      "forward_eps",
+      "official_consensus",
+      "internal_consensus_proxy"
+    ],
+    "priority": "high",
+    "reason": "Forward EPS is missing."
+  },
+  "FORWARD_EPS_PROXY_ONLY": {
+    "information_types": [
+      "official_consensus",
+      "forward_eps",
+      "internal_consensus_proxy"
+    ],
+    "priority": "high",
+    "reason": "Forward EPS is currently proxy-only and cannot be treated as official consensus."
+  },
+  "DEMAND_ASSUMPTION_UNSUPPORTED": {
+    "information_types": [
+      "direct_demand",
+      "customer_capex",
+      "confirmed_order"
+    ],
+    "priority": "high",
+    "reason": "Demand evidence does not support valuation assumptions."
+  },
+  "REVENUE_GROWTH_ASSUMPTION_UNSUPPORTED": {
+    "information_types": [
+      "direct_demand",
+      "customer_capex",
+      "confirmed_order"
+    ],
+    "priority": "high",
+    "reason": "Revenue growth assumption lacks direct demand support."
+  },
+  "MARGIN_ASSUMPTION_UNSUPPORTED": {
+    "information_types": [
+      "financial_statement",
+      "capacity_utilization"
+    ],
+    "priority": "medium",
+    "reason": "Margin assumption lacks financial or utilization support."
+  },
+  "VALUATION_CONFLICTS_WITH_THESIS": {
+    "information_types": [
+      "direct_demand",
+      "financial_statement",
+      "peer_valuation"
+    ],
+    "priority": "high",
+    "reason": "Valuation evidence conflicts with thesis evidence."
+  },
+  "VALUATION_EVIDENCE_QUALITY_LOW": {
+    "information_types": [
+      "peer_valuation",
+      "historical_valuation",
+      "financial_statement"
+    ],
+    "priority": "medium",
+    "reason": "Valuation evidence quality is low."
+  },
+  "VALUATION_CONFIDENCE_LOW": {
+    "information_types": [
+      "peer_valuation",
+      "historical_valuation",
+      "forward_eps"
+    ],
+    "priority": "medium",
+    "reason": "Valuation confidence is low."
+  },
+  "VALUATION_SUPPORTING_ONLY": {
+    "information_types": [
+      "official_consensus",
+      "peer_valuation",
+      "historical_valuation",
+      "confirmed_order"
+    ],
+    "priority": "medium",
+    "reason": "Valuation is supporting evidence only and cannot support full-size promotion."
+  },
+  "VALUATION_SUPPORT_WEAK": {
+    "information_types": [
+      "peer_valuation",
+      "historical_valuation",
+      "price_freshness",
+      "forward_eps"
+    ],
+    "priority": "high",
+    "reason": "Repair task indicates weak valuation support."
+  },
+  "CONFIRMED_ORDER_EVIDENCE_MISSING": {
+    "information_types": [
+      "confirmed_order",
+      "signed_contract",
+      "tender_award",
+      "procurement_award"
+    ],
+    "priority": "high",
+    "reason": "Confirmed order or near-confirmed demand evidence is missing."
+  },
+  "ORDER_EVIDENCE_MISSING": {
+    "information_types": [
+      "confirmed_order",
+      "signed_contract"
+    ],
+    "priority": "high",
+    "reason": "Order evidence is missing."
+  },
+  "CUSTOMER_EVIDENCE_MISSING": {
+    "information_types": [
+      "customer_capex",
+      "confirmed_order",
+      "direct_demand"
+    ],
+    "priority": "high",
+    "reason": "Customer evidence is missing."
+  },
+  "DIRECT_DEMAND_EVIDENCE_MISSING": {
+    "information_types": [
+      "direct_demand",
+      "confirmed_order",
+      "customer_capex"
+    ],
+    "priority": "high",
+    "reason": "Direct demand evidence is missing."
+  },
+  "TENDER_EVIDENCE_MISSING": {
+    "information_types": [
+      "tender_award",
+      "procurement_award",
+      "confirmed_order"
+    ],
+    "priority": "high",
+    "reason": "Tender evidence is missing."
+  },
+  "PROCUREMENT_EVIDENCE_MISSING": {
+    "information_types": [
+      "procurement_award",
+      "tender_award",
+      "confirmed_order"
+    ],
+    "priority": "high",
+    "reason": "Procurement award evidence is missing."
+  },
+  "CUSTOMER_CAPEX_EVIDENCE_MISSING": {
+    "information_types": [
+      "customer_capex",
+      "downstream_capex",
+      "direct_demand"
+    ],
+    "priority": "medium",
+    "reason": "Customer or downstream capex evidence is missing."
+  },
+  "DOWNSTREAM_CAPEX_EVIDENCE_MISSING": {
+    "information_types": [
+      "downstream_capex",
+      "customer_capex",
+      "direct_demand"
+    ],
+    "priority": "medium",
+    "reason": "Downstream capex evidence is missing."
+  },
+  "PROXY_INDEPENDENT_SOURCE_MISSING": {
+    "information_types": [
+      "proxy_independent_source",
+      "direct_demand",
+      "customer_capex"
+    ],
+    "priority": "medium",
+    "reason": "Proxy independent source count is insufficient."
+  },
+  "DOMINANT_PROXY_SIGNAL_MISSING": {
+    "information_types": [
+      "proxy_independent_source",
+      "direct_demand",
+      "confirmed_order"
+    ],
+    "priority": "medium",
+    "reason": "Dominant proxy signal is missing."
+  },
+  "DEMAND_VALUATION_LINKAGE_WEAK": {
+    "information_types": [
+      "direct_demand",
+      "customer_capex",
+      "confirmed_order"
+    ],
+    "priority": "high",
+    "reason": "Demand-to-valuation linkage is weak."
+  },
+  "CLAIM_GRAPH_SUPPORT_MISSING": {
+    "information_types": [
+      "direct_demand",
+      "financial_statement",
+      "proxy_independent_source"
+    ],
+    "priority": "medium",
+    "reason": "Claim graph support is missing."
+  },
+  "FILING_OR_NEWS_SUPPORT_MISSING": {
+    "information_types": [
+      "financial_statement",
+      "direct_demand",
+      "proxy_independent_source"
+    ],
+    "priority": "medium",
+    "reason": "Filing or news support is missing."
+  }
+}

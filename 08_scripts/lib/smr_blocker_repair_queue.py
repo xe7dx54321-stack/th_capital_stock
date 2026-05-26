@@ -268,6 +268,7 @@ def upsert_phase22_valuation_demand_repair_task(
     missing_evidence: str,
     suggested_sources: list[str] | None = None,
     source_run_ids: list[str] | None = None,
+    source_acquisition_plan: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Upsert a Phase 22 valuation/demand/proxy repair task with stable de-dupe."""
 
@@ -297,6 +298,8 @@ def upsert_phase22_valuation_demand_repair_task(
             "gate_type": gate_type,
             "missing_evidence": missing_evidence,
             "suggested_sources": suggested_sources or [],
+            "source_acquisition_plan": source_acquisition_plan,
+            "planned_connectors_executed": False,
             "promotion_rules_relaxed": False,
         },
     )

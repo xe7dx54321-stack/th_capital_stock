@@ -1348,3 +1348,90 @@ python 08_scripts/verification/validate_phase22_valuation_demand_promotion_reval
 python 08_scripts/reporting/build_phase22_valuation_demand_gate_summary.py --watchlist ai_core --json
 python 08_scripts/jobs/upsert_phase22_valuation_demand_repair_tasks.py --tickers 300308.SZ,688041.SH,002230.SZ --dry-run --json
 ```
+
+## Stage 23 Goal
+
+Phase 23 adds a source routing layer. The system already knows which valuation,
+demand, proxy, and bear-case gates are missing evidence; this stage makes the
+next step explicit by mapping each blocker to information types, source routes,
+connector status, fallback sources, and acquisition plans.
+
+Current Phase 22 checkpoint:
+
+- Commit: `28eea04746eeafd7fab01b12ca8448e6eeae07e2`
+- Stage: `Phase 22: Valuation Gate Upgrade + Confirmed Demand Evidence Escalation`
+- `VALUATION_GATE` is the largest remaining gate.
+- `confirmed_order_count=0`.
+- `tender_or_procurement_count=0`.
+- `customer_capex_count=3`.
+- Phase 22 repair task dry-run identified `35` tasks.
+- No new pending review, no full-size pending, no promotion-rule relaxation, and
+  no real trading risk were introduced.
+
+### Phase 23 Goals
+
+1. Add Source Connector Registry v2.
+2. Add blocker-to-information-type routing.
+3. Route valuation blockers to source connectors.
+4. Route demand, order, tender, procurement, customer-capex, and proxy blockers.
+5. Generate repair task source acquisition plans.
+6. Build connector availability dashboard.
+7. Validate source route coverage without changing promotion outcomes.
+
+### Phase 23 Non-goals
+
+- Do not add a full industry-chain agent.
+- Do not add an investment committee agent.
+- Do not perform real trading.
+- Do not expand `ai_core`.
+- Do not add large raw source files.
+- Do not loosen promotion rules.
+- Do not treat planned connectors as implemented connectors.
+- Do not treat unavailable sources as usable evidence.
+- Do not treat commercial consensus as implemented.
+- Do not treat internal proxy as official consensus.
+- Do not auto approve pending review.
+- Do not create paper orders or paper positions.
+
+### Phase 23 New Artifacts
+
+- `00_control/source_connector_registry_v2.json`
+- `00_control/blocker_source_route_map.json`
+- `08_scripts/lib/smr_source_connector_registry.py`
+- `08_scripts/lib/smr_blocker_source_router.py`
+- `08_scripts/lib/smr_source_acquisition_plan.py`
+- `08_scripts/reporting/build_phase23_source_connector_registry_report.py`
+- `08_scripts/reporting/build_phase23_valuation_source_routing.py`
+- `08_scripts/reporting/build_phase23_demand_source_routing.py`
+- `08_scripts/reporting/build_phase23_source_acquisition_plan.py`
+- `08_scripts/reporting/build_phase23_connector_availability_dashboard.py`
+- `08_scripts/verification/validate_phase23_source_routing_revalidation.py`
+- `docs/plans/2026-05-23-phase23-source-connector-registry-v2.md`
+
+### Phase 23 Expected Behavior
+
+- Planned connectors appear as future actions only.
+- `official_consensus` remains `planned_only`.
+- Internal proxy remains supporting evidence and is not official consensus.
+- Tender/procurement connectors remain planned unless explicitly implemented.
+- Source acquisition plans do not fetch data or write evidence graph entries.
+- Promotion status should not change because Phase 23 is routing-only.
+
+### Phase 23 Validation Commands
+
+```bash
+python -m py_compile 08_scripts/lib/*.py 08_scripts/jobs/*.py 08_scripts/verification/*.py 08_scripts/reporting/*.py
+python -m unittest discover -s tests -v
+python 08_scripts/verification/validate_phase3_e2e.py
+python 08_scripts/verification/validate_phase4_live_e2e.py --tickers NVDA --days 180 --timeout 240
+python 08_scripts/verification/validate_phase5_paper_portfolio_smoke.py
+python 08_scripts/verification/validate_phase6_multi_ticker_live.py --watchlist ai_core --save-run-history --compare-last-run --timeout 240
+python 08_scripts/verification/validate_phase14_thesis_aware_multi_ticker_live.py --watchlist ai_core --timeout 240 --json
+python 08_scripts/reporting/build_phase22_valuation_demand_gate_summary.py --watchlist ai_core --json
+python 08_scripts/reporting/build_phase23_source_connector_registry_report.py --json
+python 08_scripts/reporting/build_phase23_valuation_source_routing.py --watchlist ai_core --json
+python 08_scripts/reporting/build_phase23_demand_source_routing.py --watchlist ai_core --json
+python 08_scripts/reporting/build_phase23_source_acquisition_plan.py --tickers 300308.SZ,688041.SH,002230.SZ --json
+python 08_scripts/reporting/build_phase23_connector_availability_dashboard.py --json
+python 08_scripts/verification/validate_phase23_source_routing_revalidation.py --watchlist ai_core --json
+```

@@ -117,6 +117,7 @@ def dry_run_task(ticker: str, watchlist: str, *, gate_type: str, missing_evidenc
         "gate_type": gate_type,
         "missing_evidence": missing_evidence,
         "suggested_sources": TASK_SOURCES.get(task_type) or TASK_SOURCES["CONFIRMED_ORDER_EVIDENCE_MISSING"],
+        "source_acquisition_plan_status": "available_via_phase23_source_acquisition_plan",
         "status": "open",
     }
 
