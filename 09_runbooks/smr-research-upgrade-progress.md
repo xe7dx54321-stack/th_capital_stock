@@ -1087,3 +1087,91 @@ python 08_scripts/reporting/build_phase19_thesis_evidence_gate.py --ticker 00223
 python 08_scripts/verification/validate_phase19_recovered_fundamentals_promotion_impact.py --watchlist ai_core --json
 python 08_scripts/reporting/build_phase19_daily_gate_summary.py --watchlist ai_core --json
 ```
+
+## Stage 20 Goal
+
+Phase 20 starts addressing the higher-level research gates identified by
+Phase 19. It is still a conservative diagnostic and evidence-mapping phase:
+it does not loosen promotion rules, auto approve reviews, or create real
+trading actions.
+
+Current Phase 19 checkpoint:
+
+- Commit: `72cb4f08818127226b87d52408b14e8c53ad7228`
+- Stage: `Phase 19: Non-core Gate Resolution + Evidence Freshness & Bear Case Mitigation`
+- Core blockers are cleared.
+- Filing freshness is fresh for `ai_core`.
+- Evidence quality has no blocked evidence.
+- Remaining gates include `BEAR_CASE_GATE`, `VALUATION_GATE`,
+  `REVIEW_STATE_GATE`, and `THESIS_CONFIDENCE_GATE`.
+- `002230.SZ` has high metadata-simulated thesis confidence but lacks enough
+  claim graph, proxy, and filing/news support for pending review.
+
+### Phase 20 Goals
+
+1. Map bear cases to mitigating evidence.
+2. Split valuation blockers into actionable codes.
+3. Strengthen internal proxy signal diagnostics without calling them official
+   consensus.
+4. Build an evidence pack for the `002230.SZ` thesis candidate.
+5. Revalidate promotion impact after gate diagnostics.
+6. Build a daily research gate summary.
+
+### Phase 20 Non-goals
+
+- Do not perform real trading.
+- Do not auto approve pending review.
+- Do not generate paper orders or paper positions.
+- Do not expand `ai_core`.
+- Do not loosen promotion rules.
+- Do not delete or hide bear cases.
+- Do not use weak evidence to mitigate core bear cases.
+- Do not let metadata-only thesis inference create pending review.
+- Do not treat proxy EPS or internal proxy signals as official consensus.
+
+### Phase 20 New Artifacts
+
+- `08_scripts/lib/smr_bear_case_mitigation.py`
+- `08_scripts/lib/smr_valuation_gate.py`
+- `08_scripts/lib/smr_proxy_signal_gate.py`
+- `08_scripts/reporting/build_phase20_bear_case_mitigation.py`
+- `08_scripts/reporting/build_phase20_valuation_gate_diagnostics.py`
+- `08_scripts/reporting/build_phase20_proxy_signal_gate.py`
+- `08_scripts/reporting/build_phase20_002230_thesis_evidence_pack.py`
+- `08_scripts/verification/validate_phase20_promotion_revalidation.py`
+- `08_scripts/reporting/build_phase20_research_gate_summary.py`
+- `docs/plans/2026-05-23-phase20-bear-valuation-proxy-gate.md`
+
+### Phase 20 Expected Behavior
+
+- Bear case mitigation outputs evidence ids or explicit missing evidence.
+- Financial statement evidence may mitigate revenue, margin, valuation, or
+  data-quality risk.
+- Financial statement evidence does not directly mitigate order, direct demand,
+  competitive, policy, or thesis-confidence risk.
+- Valuation diagnostics show concrete blocker codes.
+- Proxy diagnostics show direction, strength, independent source count,
+  evidence quality, thesis alignment, and conflicts.
+- `002230.SZ` can be upgraded from metadata-only to evidence-backed thesis
+  candidate only when non-metadata evidence exists.
+- Pending review is not required; if it ever appears, it must be reduced-size,
+  require human review, and disallow paper orders.
+
+### Phase 20 Validation Commands
+
+```bash
+python -m py_compile 08_scripts/lib/*.py 08_scripts/jobs/*.py 08_scripts/verification/*.py 08_scripts/reporting/*.py
+python -m unittest discover -s tests -v
+python 08_scripts/verification/validate_phase3_e2e.py
+python 08_scripts/verification/validate_phase4_live_e2e.py --tickers NVDA --days 180 --timeout 240
+python 08_scripts/verification/validate_phase5_paper_portfolio_smoke.py
+python 08_scripts/verification/validate_phase6_multi_ticker_live.py --watchlist ai_core --save-run-history --compare-last-run --timeout 240
+python 08_scripts/verification/validate_phase14_thesis_aware_multi_ticker_live.py --watchlist ai_core --timeout 240 --json
+python 08_scripts/reporting/build_phase19_daily_gate_summary.py --watchlist ai_core --json
+python 08_scripts/reporting/build_phase20_bear_case_mitigation.py --watchlist ai_core --json
+python 08_scripts/reporting/build_phase20_valuation_gate_diagnostics.py --watchlist ai_core --json
+python 08_scripts/reporting/build_phase20_proxy_signal_gate.py --watchlist ai_core --json
+python 08_scripts/reporting/build_phase20_002230_thesis_evidence_pack.py --json
+python 08_scripts/verification/validate_phase20_promotion_revalidation.py --watchlist ai_core --json
+python 08_scripts/reporting/build_phase20_research_gate_summary.py --watchlist ai_core --json
+```
