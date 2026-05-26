@@ -313,3 +313,99 @@ def attach_bear_case_response(bear_case: dict[str, Any], response: dict[str, Any
         updated["thesis_response"] = None
         updated["recommendation_adjustment"] = "block_pending_review"
     return updated
+
+
+def phase19_risk_category(category: str | None, text: str | None = None) -> str:
+    raw = f"{category or ''} {text or ''}".lower()
+    if "valuation" in raw or "multiple" in raw:
+        return "valuation_risk"
+    if "growth" in raw or "revenue" in raw or "order" in raw or "demand" in raw:
+        return "growth_risk"
+    if "margin" in raw or "cost" in raw:
+        return "margin_risk"
+    if "cash flow" in raw or "free cash flow" in raw or "fcf" in raw or "capex" in raw:
+        return "cash_flow_risk"
+    if "data" in raw or "evidence" in raw or "fundamental" in raw:
+        return "data_quality_risk"
+    if "competitive" in raw or "competition" in raw:
+        return "competitive_risk"
+    if "policy" in raw or "regulat" in raw:
+        return "policy_risk"
+    if "portfolio" in raw or "position" in raw or "exposure" in raw:
+        return "portfolio_concentration_risk"
+    return "unknown_risk"
+
+
+def decompose_bear_case_residual_risk(ticker: str, bear_case: dict[str, Any] | None) -> dict[str, Any]:
+    """Convert existing bear-case output into Phase 19 residual-risk diagnostics."""
+
+    bear_case = bear_case or {}
+    if "bear_case_gate" in bear_case or "responses" in bear_case:
+        gate = bear_case.get("bear_case_gate") or {}
+        responses = bear_case.get("responses") or bear_case.get("bear_case_responses") or []
+    else:
+        gate = bear_case
+        responses = bear_case.get("responses") or bear_case.get("bear_case_responses") or []
+    overall = str(gate.get("overall_status") or bear_case.get("overall_response_status") or "not_applicable")
+    residual = str(gate.get("residual_risk_level") or gate.get("overall_residual_risk_level") or "low")
+    blocks = (
+        residual in {"high", "critical"}
+        or overall == "unresolved"
+        or str(gate.get("action_effect") or bear_case.get("action_effect") or "") == "block_pending_review"
+    )
+    if not responses and overall != "not_applicable":
+        responses = [
+            {
+                "bear_case_claim_id": f"bear_{ticker.replace('.', '_')}_latest",
+                "bear_case_text": "latest bear case gate summary",
+                "risk_category": phase19_risk_category(gate.get("risk_category"), overall),
+                "core_to_thesis": bool(gate.get("has_critical_unresolved_core_risk") or residual in {"high", "critical"}),
+                "response_status": overall,
+                "residual_risk_level": residual,
+                "response_evidence_ids": [],
+                "missing_evidence": ["bear case response evidence"],
+                "action_effect": gate.get("action_effect") or ("block_pending_review" if blocks else "reduce_position_size"),
+            }
+        ]
+    normalized = []
+    for item in responses:
+        text = str(item.get("bear_case_text") or item.get("claim_text") or item.get("text") or "")
+        status = str(item.get("response_status") or overall)
+        level = str(item.get("residual_risk_level") or residual)
+        category = phase19_risk_category(item.get("risk_category"), text)
+        evidence = [str(value) for value in (item.get("response_evidence_ids") or item.get("evidence_used") or []) if value]
+        missing = list(item.get("missing_evidence") or [])
+        if not evidence and status in {"unresolved", "partially_mitigated"} and not missing:
+            missing = [
+                {
+                    "valuation_risk": "fresh valuation support",
+                    "growth_risk": "latest revenue growth or guidance evidence",
+                    "margin_risk": "margin or cost evidence",
+                    "cash_flow_risk": "cash-flow and capex evidence",
+                    "data_quality_risk": "primary field-linked evidence",
+                }.get(category, "direct bear-case mitigation evidence")
+            ]
+        action = item.get("action_effect") or ("block_pending_review" if level in {"high", "critical"} and status == "unresolved" else "reduce_position_size")
+        normalized.append(
+            {
+                "bear_case_claim_id": item.get("bear_case_claim_id") or item.get("claim_id"),
+                "risk_category": category,
+                "core_to_thesis": bool(item.get("core_to_thesis")),
+                "response_status": status,
+                "residual_risk_level": level,
+                "evidence_used": evidence,
+                "missing_evidence": missing,
+                "action_effect": action,
+            }
+        )
+    allows_reduced = overall == "partially_mitigated" and residual in {"low", "medium"} and not blocks
+    return {
+        "ticker": ticker,
+        "bear_case_residual_risk": {
+            "overall_status": overall,
+            "overall_residual_risk_level": residual,
+            "blocks_pending": bool(blocks),
+            "allows_reduced_size_pending": bool(allows_reduced),
+            "responses": normalized,
+        },
+    }

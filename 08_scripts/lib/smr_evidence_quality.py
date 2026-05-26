@@ -368,3 +368,159 @@ def evidence_quality_summary(conn: sqlite3.Connection, evidence_ids: list[str] |
         "primary_count": sum(1 for row in rows if row[4] == "primary"),
         "source_types": sorted({row[5] for row in rows if row[5]}),
     }
+
+
+def evidence_quality_level(score: float | None, *, evidence_id: str | None = None, usable_for_promotion: bool = False) -> str:
+    if not evidence_id:
+        return "blocked"
+    value = float(score or 0.0)
+    if usable_for_promotion and value >= 0.68:
+        return "high"
+    if value >= 0.68:
+        return "high"
+    if value >= 0.55:
+        return "medium"
+    if value >= 0.35:
+        return "low"
+    return "blocked"
+
+
+def phase19_quality_dimensions(row: sqlite3.Row | dict[str, Any], ticker: str | None = None, theme: str | None = None) -> dict[str, Any]:
+    if isinstance(row, dict):
+        data = dict(row)
+    elif hasattr(row, "keys"):
+        data = dict(row)
+    else:
+        keys = [
+            "evidence_id",
+            "source_key",
+            "source_type",
+            "source_quality",
+            "source_status",
+            "published_at",
+            "ingested_at",
+            "text_excerpt",
+            "metadata_json",
+            "quality_score",
+            "usable_for_core_claim",
+            "usable_for_promotion",
+        ]
+        data = dict(zip(keys, row or []))
+    scored = score_evidence_row(data, ticker=ticker, theme=theme)
+    metadata = scored.get("metadata") or {}
+    source_quality = str(data.get("source_quality") or metadata.get("source_quality") or "weak").lower()
+    source_primary_score = {"primary": 1.0, "secondary": 0.75, "tertiary": 0.45, "weak": 0.2}.get(source_quality, 0.2)
+    field_linkage_score = 1.0 if data.get("evidence_id") else 0.0
+    if metadata.get("chunk_section_type") in {"financial_statement", "income_statement", "balance_sheet", "cash_flow_statement"}:
+        field_linkage_score = max(field_linkage_score, 0.85)
+    claim_relevance = round((scored.get("theme_relevance", 0.0) * 0.4) + (scored.get("investment_relevance_score", 0.0) * 0.6), 3)
+    quality_level = evidence_quality_level(
+        scored.get("quality_score"),
+        evidence_id=scored.get("evidence_id"),
+        usable_for_promotion=bool(scored.get("usable_for_promotion")),
+    )
+    usable_for_core = bool(scored.get("usable_for_core_claim")) and quality_level in {"high", "medium"}
+    usable_for_promotion = bool(scored.get("usable_for_promotion")) and quality_level == "high"
+    return {
+        "evidence_id": scored.get("evidence_id"),
+        "source_primary_score": round(source_primary_score, 3),
+        "section_relevance_score": scored.get("section_type_score"),
+        "freshness_score": scored.get("recency_score"),
+        "ticker_relevance_score": scored.get("ticker_relevance"),
+        "field_linkage_score": round(field_linkage_score, 3),
+        "claim_relevance_score": claim_relevance,
+        "overall_quality_score": scored.get("quality_score"),
+        "quality_level": quality_level,
+        "usable_for_core_claim": usable_for_core,
+        "usable_for_promotion": usable_for_promotion,
+        "remaining_issue": None if quality_level in {"high", "medium"} else ("missing_source_evidence_id" if not scored.get("evidence_id") else "quality_below_gate"),
+    }
+
+
+def _ticker_evidence_rows(conn: sqlite3.Connection, ticker: str, *, limit: int = 80) -> list[sqlite3.Row]:
+    if not table_columns(conn, "evidence_items"):
+        return []
+    aliases = [str(ticker or "").upper()]
+    if "." in aliases[0]:
+        aliases.append(aliases[0].split(".", 1)[0])
+    clauses = []
+    params: list[Any] = []
+    for alias in aliases:
+        clauses.append("(metadata_json LIKE ? OR text_excerpt LIKE ? OR source_key LIKE ?)")
+        params.extend([f"%{alias}%", f"%{alias}%", f"%{alias}%"])
+    where = " OR ".join(clauses or ["1=0"])
+    return conn.execute(
+        f"""
+        SELECT evidence_id, source_key, source_type, source_quality, source_status,
+               published_at, ingested_at, text_excerpt, metadata_json, quality_score,
+               usable_for_core_claim, usable_for_promotion
+        FROM evidence_items
+        WHERE {where}
+        ORDER BY datetime(COALESCE(published_at, ingested_at, created_at)) DESC, id DESC
+        LIMIT ?
+        """,
+        (*params, limit),
+    ).fetchall()
+
+
+def build_evidence_quality_gate(
+    conn: sqlite3.Connection,
+    ticker: str,
+    *,
+    evidence_ids: list[str] | None = None,
+    theme: str | None = None,
+    limit: int = 80,
+) -> dict[str, Any]:
+    ensure_evidence_quality_columns(conn)
+    rows: list[Any]
+    if evidence_ids:
+        placeholders = ",".join("?" for _ in evidence_ids)
+        rows = conn.execute(
+            f"""
+            SELECT evidence_id, source_key, source_type, source_quality, source_status,
+                   published_at, ingested_at, text_excerpt, metadata_json, quality_score,
+                   usable_for_core_claim, usable_for_promotion
+            FROM evidence_items
+            WHERE evidence_id IN ({placeholders})
+            """,
+            tuple(evidence_ids),
+        ).fetchall()
+    else:
+        rows = _ticker_evidence_rows(conn, ticker, limit=limit)
+    dimensions = [phase19_quality_dimensions(row, ticker=ticker, theme=theme) for row in rows]
+    counts = {
+        "high": sum(1 for item in dimensions if item["quality_level"] == "high"),
+        "medium": sum(1 for item in dimensions if item["quality_level"] == "medium"),
+        "low": sum(1 for item in dimensions if item["quality_level"] == "low"),
+        "blocked": sum(1 for item in dimensions if item["quality_level"] == "blocked"),
+    }
+    if not dimensions:
+        status = "blocked"
+    elif counts["high"] >= 1:
+        status = "pass_with_warnings" if counts["low"] or counts["blocked"] else "pass"
+    elif counts["medium"] >= 1:
+        status = "pass_with_warnings"
+    else:
+        status = "blocked"
+    remaining = [
+        {
+            "evidence_id": item.get("evidence_id"),
+            "issue": item.get("remaining_issue"),
+            "action": "supporting_only" if item.get("quality_level") == "low" else "block_promotion",
+        }
+        for item in dimensions
+        if item.get("remaining_issue")
+    ]
+    return {
+        "ticker": str(ticker or "").upper(),
+        "evidence_quality_gate": {
+            "status": status,
+            "high_quality_evidence_count": counts["high"],
+            "medium_quality_evidence_count": counts["medium"],
+            "low_quality_evidence_count": counts["low"],
+            "blocked_evidence_count": counts["blocked"],
+            "usable_for_promotion": status in {"pass", "pass_with_warnings"} and counts["high"] >= 1,
+            "remaining_issues": remaining[:10],
+        },
+        "evidence": dimensions,
+    }

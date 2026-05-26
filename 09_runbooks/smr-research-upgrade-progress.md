@@ -1001,3 +1001,89 @@ python 08_scripts/jobs/update_fundamentals_from_recovered_chunks.py --tickers 00
 python 08_scripts/verification/validate_phase18_fundamentals_recovery_revalidation.py --tickers 00700.HK,300308.SZ,688041.SH --json
 python 08_scripts/reporting/build_phase18_fundamentals_recovery_summary.py --json
 ```
+
+## Stage 19 Goal
+
+Phase 19 explains the higher-level gates that remain after Phase 18 cleared
+the recovered fundamentals blockers. It does not create a more aggressive
+promotion path; it makes the remaining conservatism visible and actionable.
+
+Current Phase 18 checkpoint:
+
+- Commit: `5aeebb9df7f66f470432b2143a10b0b7493af150`
+- Stage: `Phase 18: Remaining Source Gap Closure + Fundamentals Recovery Expansion`
+- `00700.HK` `shareholders_equity` is in the fundamentals snapshot.
+- `300308.SZ` `revenue` and `gross_profit` are in the fundamentals snapshot.
+- `688041.SH` CNINFO identity, source, chunks, evidence, `revenue`, and
+  `gross_profit` are recovered and in the fundamentals snapshot.
+- Core blockers were reduced to zero for `00700.HK`, `300308.SZ`, and
+  `688041.SH`.
+- No new pending review, no promotion relaxation, and no trading action were
+  introduced.
+
+### Phase 19 Goals
+
+1. Add a promotion block reason hierarchy.
+2. Diagnose filing freshness and evidence freshness.
+3. Add evidence quality gate v2 diagnostics.
+4. Decompose bear case residual risk.
+5. Explain the `002230.SZ` thesis evidence gate.
+6. Validate the promotion impact of recovered fundamentals.
+7. Build a daily gate summary with remaining gate distribution.
+
+### Phase 19 Non-goals
+
+- Do not perform real trading.
+- Do not auto approve anything.
+- Do not generate paper orders or paper positions.
+- Do not expand `ai_core`.
+- Do not loosen promotion rules.
+- Do not delete bear cases.
+- Do not upgrade `partially_mitigated` to `mitigated` without evidence.
+- Do not allow metadata-only unknown thesis recovery to create pending review.
+
+### Phase 19 New Artifacts
+
+- `08_scripts/lib/smr_promotion_block_reason.py`
+- `08_scripts/lib/smr_filing_freshness.py`
+- `08_scripts/reporting/build_phase19_promotion_block_diagnostics.py`
+- `08_scripts/reporting/build_phase19_filing_freshness_diagnostics.py`
+- `08_scripts/reporting/build_phase19_evidence_quality_gate_summary.py`
+- `08_scripts/reporting/build_phase19_bear_case_residual_risk.py`
+- `08_scripts/reporting/build_phase19_thesis_evidence_gate.py`
+- `08_scripts/verification/validate_phase19_recovered_fundamentals_promotion_impact.py`
+- `08_scripts/reporting/build_phase19_daily_gate_summary.py`
+- `docs/plans/2026-05-23-phase19-noncore-gate-resolution.md`
+
+### Phase 19 Expected Behavior
+
+- Every `ai_core` ticker has one `primary_blocking_gate`.
+- Tickers with empty core blockers are not misreported as core fundamentals
+  blockers.
+- Filing freshness can block pending review when stale or missing.
+- Evidence quality is ranked as high, medium, low, or blocked.
+- Bear case residual risk explains whether reduced-size pending is allowed.
+- `002230.SZ` can show high metadata simulation confidence while still
+  remaining blocked by missing thesis evidence.
+- Daily summary shows gate distribution, recovered fields, and next fixes.
+
+### Phase 19 Validation Commands
+
+```bash
+python -m py_compile 08_scripts/lib/*.py 08_scripts/jobs/*.py 08_scripts/verification/*.py 08_scripts/reporting/*.py
+python -m unittest discover -s tests -v
+python 08_scripts/verification/validate_phase3_e2e.py
+python 08_scripts/verification/validate_phase4_live_e2e.py --tickers NVDA --days 180 --timeout 240
+python 08_scripts/verification/validate_phase5_paper_portfolio_smoke.py
+python 08_scripts/verification/validate_phase6_multi_ticker_live.py --watchlist ai_core --save-run-history --compare-last-run --timeout 240
+python 08_scripts/verification/validate_phase14_thesis_aware_multi_ticker_live.py --watchlist ai_core --timeout 240 --json
+python 08_scripts/reporting/build_phase15_review_ops_summary.py --watchlist ai_core --json
+python 08_scripts/verification/validate_phase18_fundamentals_recovery_revalidation.py --tickers 00700.HK,300308.SZ,688041.SH --json
+python 08_scripts/reporting/build_phase19_promotion_block_diagnostics.py --watchlist ai_core --json
+python 08_scripts/reporting/build_phase19_filing_freshness_diagnostics.py --watchlist ai_core --json
+python 08_scripts/reporting/build_phase19_evidence_quality_gate_summary.py --watchlist ai_core --json
+python 08_scripts/reporting/build_phase19_bear_case_residual_risk.py --watchlist ai_core --json
+python 08_scripts/reporting/build_phase19_thesis_evidence_gate.py --ticker 002230.SZ --json
+python 08_scripts/verification/validate_phase19_recovered_fundamentals_promotion_impact.py --watchlist ai_core --json
+python 08_scripts/reporting/build_phase19_daily_gate_summary.py --watchlist ai_core --json
+```
