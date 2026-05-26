@@ -552,11 +552,92 @@ def build_industry_forecast_routing(theme: str = "ai_optical_interconnect") -> d
     }
 
 
-def build_variable_evidence_packs(conn: sqlite3.Connection, ticker: str) -> dict[str, Any]:
-    return {
+SEMANTIC_VARIABLE_MAP = {
+    "supplier_share_signal": "supplier_share",
+    "ASP_price_signal": "ASP_price_proxy",
+    "capacity_signal": "capacity",
+    "shipment_signal": "capacity",
+    "customer_allocation_signal": "customer_allocation_proxy",
+    "consensus_signal": "consensus",
+    "expectation_signal": "consensus",
+    "product_exposure": "supplier_share",
+    "margin_signal": "ASP_price_proxy",
+    "order_visibility_signal": "capacity",
+}
+
+
+def _semantic_evidence_id(gate: dict[str, Any]) -> str:
+    return f"semantic:{gate.get('source_id')}:{gate.get('chunk_id')}:{gate.get('variable_type')}"
+
+
+def apply_semantic_evidence_to_packs(packs: dict[str, Any], semantic_gate_results: list[dict[str, Any]] | None) -> dict[str, Any]:
+    if not semantic_gate_results:
+        return packs
+    updated = {key: dict(value) for key, value in packs.items()}
+    for gate in semantic_gate_results:
+        if gate.get("evidence_status") == "blocked":
+            continue
+        pack_key = SEMANTIC_VARIABLE_MAP.get(str(gate.get("variable_type")))
+        if not pack_key or pack_key not in updated:
+            continue
+        pack = updated[pack_key]
+        semantic_items = list(pack.get("semantic_evidence") or [])
+        semantic_items.append(
+            {
+                "semantic_evidence_id": _semantic_evidence_id(gate),
+                "source_id": gate.get("source_id"),
+                "chunk_id": gate.get("chunk_id"),
+                "variable_type": gate.get("variable_type"),
+                "quoted_span": (gate.get("extraction") or {}).get("quoted_span"),
+                "evidence_status": gate.get("evidence_status"),
+                "allowed_usage": gate.get("allowed_usage"),
+                "confidence": gate.get("confidence_after_gate"),
+            }
+        )
+        pack["semantic_evidence"] = semantic_items
+        pack["evidence_ids"] = unique_list(list(pack.get("evidence_ids") or []) + [_semantic_evidence_id(gate)])
+        current = pack.get("evidence_status")
+        gated_status = gate.get("evidence_status")
+        if pack_key in {"supplier_share", "customer_allocation_proxy", "consensus"}:
+            if current == "missing" and gated_status in {"partial", "proxy_supported", "context_only"}:
+                pack["evidence_status"] = "partial" if pack_key == "supplier_share" else "context_only"
+            if pack_key == "customer_allocation_proxy":
+                pack["confirmed_customer_allocation"] = False
+            if pack_key == "consensus":
+                pack["official_consensus_available"] = False
+        elif pack_key == "ASP_price_proxy":
+            if current == "missing":
+                pack["evidence_status"] = "context_only"
+            pack["direct_ASP_disclosed"] = False
+        elif pack_key == "capacity" and current == "missing":
+            pack["evidence_status"] = "partial"
+            pack["confidence"] = "low_to_medium"
+        pack["allowed_usage"] = "scenario_analysis_only" if pack.get("allowed_usage") != "valuation_support" else pack.get("allowed_usage")
+        pack["active_for_scoring"] = pack.get("evidence_status") not in {"planned_only", "missing", "blocked"}
+        safety = dict(pack.get("safety") or {})
+        safety.update(
+            {
+                "supplier_share_fabricated": False,
+                "ASP_fabricated": False,
+                "customer_allocation_fabricated": False,
+                "semantic_evidence_direct_promotion": False,
+            }
+        )
+        pack["safety"] = safety
+    return updated
+
+
+def build_variable_evidence_packs(
+    conn: sqlite3.Connection,
+    ticker: str,
+    *,
+    semantic_gate_results: list[dict[str, Any]] | None = None,
+) -> dict[str, Any]:
+    packs = {
         "supplier_share": build_supplier_share_pack(conn, ticker),
         "ASP_price_proxy": build_asp_price_proxy_pack(conn, ticker),
         "capacity": build_capacity_shipment_pack(conn, ticker),
         "customer_allocation_proxy": build_customer_allocation_proxy_pack(conn, ticker),
         "consensus": build_consensus_expectation_proxy_pack(conn, ticker),
     }
+    return apply_semantic_evidence_to_packs(packs, semantic_gate_results)

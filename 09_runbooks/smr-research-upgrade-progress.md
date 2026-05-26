@@ -1711,3 +1711,106 @@ python 08_scripts/reporting/build_phase26_industry_forecast_source_routing.py --
 python 08_scripts/verification/validate_phase26_variable_evidence_expectation_gap.py --tickers 300394.SZ,300308.SZ,688041.SH,002230.SZ --json
 python 08_scripts/reporting/build_phase26_variable_evidence_summary.py --json
 ```
+
+## Phase 27: Semantic IR & Industry Forecast Evidence Extractor v1
+
+Phase 27 adds a semantic extraction layer for company IR and public industry
+materials. The goal is to move beyond keyword matching while staying fully
+auditable: keywords and metadata can recall candidate chunks, but structured
+evidence must come from a quoted span and pass a deterministic rule gate before
+it can support variable evidence packs.
+
+Current Phase 26 checkpoint:
+
+- Commit: `9295c546dc283a6a1579680be4043685cf9f637d`
+- Stage: `Phase 26: Supply Chain Variable Evidence Connector v1`
+- Variable evidence packs exist for supplier share, ASP / price proxy, capacity
+  / shipment, customer allocation, consensus / expectation, and industry source
+  routing.
+- Main bottlenecks remain supplier share, ASP, customer allocation, official
+  consensus, and higher-quality company IR / industry evidence.
+- Phase 26 generated variable evidence packs without creating pending review,
+  relaxing promotion rules, or creating trading risk.
+
+### Phase 27 Goals
+
+1. Add semantic evidence extraction schema.
+2. Add company IR source inventory.
+3. Add IR / industry document chunker.
+4. Add candidate retriever for recall only.
+5. Add mock-first semantic extractor with reserved `--llm` interface.
+6. Add deterministic semantic evidence rule gate.
+7. Integrate passed semantic evidence into Phase 26 variable evidence packs.
+8. Add public industry forecast semantic extraction.
+9. Validate expectation gap, valuation, and bear case gate impact.
+10. Add Phase 27 semantic evidence summary dashboard.
+
+### Phase 27 Guardrails
+
+- Do not use keywords as final evidence judgement.
+- Do not allow LLM output that is not grounded in the input chunk.
+- Do not fabricate customer names, supplier share, ASP, shipment, or customer
+  allocation.
+- Do not rewrite North American customer as NVIDIA.
+- Do not rewrite strong demand as confirmed order.
+- Do not rewrite product mix optimization as ASP increase unless the source text
+  explicitly says so.
+- Do not treat industry forecast as a company-specific order.
+- Do not treat internal proxy as official consensus.
+- Do not create pending review from semantic evidence alone.
+- Do not loosen promotion rules.
+- Do not create paper orders, paper positions, or real trading actions.
+- Do not commit raw HTML, PDF, or large log files.
+
+### Phase 27 New Artifacts
+
+- `08_scripts/lib/smr_semantic_evidence_schema.py`
+- `08_scripts/lib/smr_ir_source_inventory.py`
+- `08_scripts/lib/smr_semantic_document_chunker.py`
+- `08_scripts/lib/smr_semantic_candidate_retriever.py`
+- `08_scripts/lib/smr_ir_semantic_extractor.py`
+- `08_scripts/lib/smr_semantic_evidence_gate.py`
+- `08_scripts/lib/smr_industry_forecast_semantic_extractor.py`
+- `08_scripts/lib/smr_phase27_semantic_pipeline.py`
+- `08_scripts/jobs/build_semantic_ir_evidence.py`
+- `08_scripts/reporting/build_phase27_ir_source_inventory.py`
+- `08_scripts/reporting/build_phase27_industry_forecast_evidence.py`
+- `08_scripts/reporting/build_phase27_semantic_evidence_summary.py`
+- `08_scripts/verification/validate_phase27_semantic_variable_pack_integration.py`
+- `08_scripts/verification/validate_phase27_semantic_evidence_gate_impact.py`
+- `docs/plans/2026-05-23-phase27-semantic-ir-industry-forecast-extractor.md`
+
+### Phase 27 Expected Behavior
+
+- IR source inventory can list available or mock-accessible source candidates by
+  ticker and source type.
+- Document chunker preserves source metadata and keeps Q&A context together.
+- Candidate retriever returns candidate chunks and hints only; it does not output
+  final variable evidence status.
+- Mock semantic extractor is deterministic and default. Reserved `--llm` mode is
+  disabled unless explicitly requested and does not run in validation.
+- Every extraction must include source id, chunk id, and quoted span.
+- Rule gate downgrades management commentary, blocks invalid extractions, and
+  keeps promotion disabled.
+- Semantic evidence can improve partial/proxy variable evidence, but cannot add
+  confirmed supplier share, confirmed customer allocation, official consensus, or
+  confirmed orders by itself.
+
+### Phase 27 Validation Commands
+
+```bash
+python -m py_compile 08_scripts/lib/*.py 08_scripts/jobs/*.py 08_scripts/verification/*.py 08_scripts/reporting/*.py
+python -m unittest discover -s tests -v
+python 08_scripts/verification/validate_phase3_e2e.py
+python 08_scripts/verification/validate_phase4_live_e2e.py --tickers NVDA --days 180 --timeout 240
+python 08_scripts/verification/validate_phase5_paper_portfolio_smoke.py
+python 08_scripts/verification/validate_phase6_multi_ticker_live.py --watchlist ai_core --save-run-history --compare-last-run --timeout 240
+python 08_scripts/verification/validate_phase14_thesis_aware_multi_ticker_live.py --watchlist ai_core --timeout 240 --json
+python 08_scripts/reporting/build_phase26_variable_evidence_summary.py --json
+python 08_scripts/reporting/build_phase27_ir_source_inventory.py --tickers 300394.SZ,300308.SZ,688041.SH,002230.SZ --json
+python 08_scripts/jobs/build_semantic_ir_evidence.py --tickers 300394.SZ,300308.SZ,688041.SH,002230.SZ --mock --json
+python 08_scripts/reporting/build_phase27_industry_forecast_evidence.py --theme ai_optical_interconnect --mock --json
+python 08_scripts/verification/validate_phase27_semantic_variable_pack_integration.py --tickers 300394.SZ,300308.SZ,688041.SH,002230.SZ --mock --json
+python 08_scripts/verification/validate_phase27_semantic_evidence_gate_impact.py --tickers 300394.SZ,300308.SZ,688041.SH,002230.SZ --mock --json
+python 08_scripts/reporting/build_phase27_semantic_evidence_summary.py --mock --json
+```
