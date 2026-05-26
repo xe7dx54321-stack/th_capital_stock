@@ -58,6 +58,7 @@ def build_revenue_sensitivity(
     *,
     theme: str | None = None,
     end_demand_proxy: dict[str, Any] | None = None,
+    variable_evidence_packs: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     ticker = normalize_ticker(ticker)
     profile = get_supplier_exposure_profile(ticker)
@@ -96,6 +97,10 @@ def build_revenue_sensitivity(
                 "customer_exposure_status": profile.get("customer_exposure_status"),
                 "end_demand_direction": (end_demand_proxy.get("end_demand_proxy") or {}).get("overall_direction"),
                 "end_demand_confidence": (end_demand_proxy.get("end_demand_proxy") or {}).get("overall_confidence"),
+            },
+            "variable_evidence_status": {
+                key: (pack.get("evidence_status") if isinstance(pack, dict) else "missing")
+                for key, pack in (variable_evidence_packs or {}).items()
             },
             "next_connector_needs": next_connector_needs(missing),
             "valuation_support": "supporting" if allowed_for_valuation else "context_only",

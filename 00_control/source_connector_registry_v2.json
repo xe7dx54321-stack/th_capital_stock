@@ -802,6 +802,238 @@
         }
       }
     },
+    "supplier_share": {
+      "description": "Supplier share or allocation evidence. Exact share requires direct disclosure; otherwise scenario-only.",
+      "markets": {
+        "GLOBAL": {
+          "preferred_sources": [
+            {
+              "source_name": "company IR / official disclosure",
+              "connector_id": "company_ir",
+              "status": "partial",
+              "source_quality": "medium",
+              "allowed_usage": "context_only",
+              "evidence_category": "company_official_material"
+            },
+            {
+              "source_name": "authorized industry/sell-side source",
+              "connector_id": "authorized_industry_share_source",
+              "status": "planned",
+              "source_quality": "high",
+              "allowed_usage": "planned_only",
+              "evidence_category": "industry_data"
+            }
+          ],
+          "fallback_sources": [
+            {
+              "source_name": "supplier exposure profile",
+              "connector_id": "supplier_exposure_profile",
+              "status": "implemented",
+              "source_quality": "low",
+              "allowed_usage": "context_only",
+              "evidence_category": "configuration"
+            }
+          ]
+        }
+      }
+    },
+    "customer_allocation_proxy": {
+      "description": "Customer allocation proxy evidence. Does not confirm NVIDIA/hyperscaler exposure without direct evidence.",
+      "markets": {
+        "GLOBAL": {
+          "preferred_sources": [
+            {
+              "source_name": "company IR / official customer disclosure",
+              "connector_id": "company_ir",
+              "status": "partial",
+              "source_quality": "medium",
+              "allowed_usage": "context_only",
+              "evidence_category": "company_official_material"
+            },
+            {
+              "source_name": "authorized industry/sell-side source",
+              "connector_id": "authorized_customer_allocation_source",
+              "status": "planned",
+              "source_quality": "high",
+              "allowed_usage": "planned_only",
+              "evidence_category": "industry_data"
+            }
+          ],
+          "fallback_sources": [
+            {
+              "source_name": "news / public industry commentary",
+              "connector_id": "news_ingestion",
+              "status": "partial",
+              "source_quality": "medium",
+              "allowed_usage": "context_only",
+              "evidence_category": "news"
+            }
+          ]
+        }
+      }
+    },
+    "company_ir": {
+      "description": "Company investor relations, official presentation, or investor interaction evidence.",
+      "markets": {
+        "GLOBAL": {
+          "preferred_sources": [
+            {
+              "source_name": "company IR / official website",
+              "connector_id": "company_ir",
+              "status": "partial",
+              "source_quality": "medium",
+              "allowed_usage": "context_only",
+              "evidence_category": "company_official_material"
+            }
+          ],
+          "fallback_sources": [
+            {
+              "source_name": "company filings",
+              "connector_id": "company_filings",
+              "status": "partial",
+              "source_quality": "medium",
+              "allowed_usage": "supporting_evidence",
+              "evidence_category": "company_primary_filing"
+            }
+          ]
+        }
+      }
+    },
+    "industry_forecast": {
+      "description": "Industry forecast source for demand, shipment, price, or capacity assumptions.",
+      "markets": {
+        "GLOBAL": {
+          "preferred_sources": [
+            {
+              "source_name": "industry research provider",
+              "connector_id": "industry_forecast_provider",
+              "status": "planned",
+              "source_quality": "high",
+              "allowed_usage": "planned_only",
+              "evidence_category": "industry_data"
+            }
+          ],
+          "fallback_sources": [
+            {
+              "source_name": "news / public industry commentary",
+              "connector_id": "news_ingestion",
+              "status": "partial",
+              "source_quality": "medium",
+              "allowed_usage": "context_only",
+              "evidence_category": "news"
+            }
+          ]
+        }
+      }
+    },
+    "optical_module_forecast": {
+      "description": "Optical module demand forecast, including 800G and 1.6T demand.",
+      "markets": {
+        "GLOBAL": {
+          "preferred_sources": [
+            {
+              "source_name": "optical communications industry forecast provider",
+              "connector_id": "optical_module_forecast_provider",
+              "status": "planned",
+              "source_quality": "high",
+              "allowed_usage": "planned_only",
+              "evidence_category": "industry_data"
+            }
+          ],
+          "fallback_sources": [
+            {
+              "source_name": "news / public industry commentary",
+              "connector_id": "news_ingestion",
+              "status": "partial",
+              "source_quality": "medium",
+              "allowed_usage": "context_only",
+              "evidence_category": "news"
+            }
+          ]
+        }
+      }
+    },
+    "AI_capex_forecast": {
+      "description": "AI infrastructure or hyperscaler capex forecast source.",
+      "markets": {
+        "GLOBAL": {
+          "preferred_sources": [
+            {
+              "source_name": "AI capex industry forecast provider",
+              "connector_id": "ai_capex_forecast_provider",
+              "status": "planned",
+              "source_quality": "high",
+              "allowed_usage": "planned_only",
+              "evidence_category": "industry_data"
+            }
+          ],
+          "fallback_sources": [
+            {
+              "source_name": "customer capex news and filings",
+              "connector_id": "customer_capex_news",
+              "status": "partial",
+              "source_quality": "medium",
+              "allowed_usage": "supporting_evidence",
+              "evidence_category": "customer_downstream_evidence"
+            }
+          ]
+        }
+      }
+    },
+    "component_price_forecast": {
+      "description": "Component price or ASP forecast source.",
+      "markets": {
+        "GLOBAL": {
+          "preferred_sources": [
+            {
+              "source_name": "component price forecast provider",
+              "connector_id": "component_price_forecast_provider",
+              "status": "planned",
+              "source_quality": "high",
+              "allowed_usage": "planned_only",
+              "evidence_category": "industry_data"
+            }
+          ],
+          "fallback_sources": [
+            {
+              "source_name": "news / public industry commentary",
+              "connector_id": "news_ingestion",
+              "status": "partial",
+              "source_quality": "medium",
+              "allowed_usage": "context_only",
+              "evidence_category": "news"
+            }
+          ]
+        }
+      }
+    },
+    "shipment_forecast": {
+      "description": "Shipment forecast or product-level shipment source.",
+      "markets": {
+        "GLOBAL": {
+          "preferred_sources": [
+            {
+              "source_name": "industry shipment forecast provider",
+              "connector_id": "shipment_forecast_provider",
+              "status": "planned",
+              "source_quality": "high",
+              "allowed_usage": "planned_only",
+              "evidence_category": "industry_data"
+            }
+          ],
+          "fallback_sources": [
+            {
+              "source_name": "company filings / management guidance",
+              "connector_id": "company_filings",
+              "status": "partial",
+              "source_quality": "medium",
+              "allowed_usage": "context_only",
+              "evidence_category": "company_primary_filing"
+            }
+          ]
+        }
+      }
+    },
     "market_flow": {
       "description": "ETF flow or market flow signal.",
       "markets": {

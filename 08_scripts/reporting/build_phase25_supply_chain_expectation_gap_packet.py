@@ -23,6 +23,7 @@ from smr_revenue_sensitivity_model import build_revenue_sensitivity
 from smr_runlog import log_run
 from smr_supplier_exposure_model import get_supplier_exposure_profile
 from smr_supply_chain_theme_template import get_supply_chain_template
+from smr_supply_chain_variable_evidence import build_variable_evidence_packs
 from smr_wiki import now_ts
 
 if hasattr(sys.stdout, "reconfigure"):
@@ -36,8 +37,9 @@ def build_packet(conn: sqlite3.Connection, ticker: str) -> dict[str, Any]:
     theme = profile.get("theme") or "ai_optical_interconnect"
     template = get_supply_chain_template("ai_optical_interconnect")
     end_proxy = build_end_demand_proxy(conn, "ai_optical_interconnect")
-    sensitivity = build_revenue_sensitivity(conn, ticker, theme=theme, end_demand_proxy=end_proxy)
-    gap = build_expectation_gap(conn, ticker, theme=theme, end_demand_proxy=end_proxy, revenue_sensitivity=sensitivity)
+    variable_evidence = build_variable_evidence_packs(conn, ticker)
+    sensitivity = build_revenue_sensitivity(conn, ticker, theme=theme, end_demand_proxy=end_proxy, variable_evidence_packs=variable_evidence)
+    gap = build_expectation_gap(conn, ticker, theme=theme, end_demand_proxy=end_proxy, revenue_sensitivity=sensitivity, variable_evidence=variable_evidence)
     missing_variables = unique_list(
         list((sensitivity.get("revenue_sensitivity") or {}).get("missing_variables") or [])
         + ["official consensus"]
@@ -56,6 +58,7 @@ def build_packet(conn: sqlite3.Connection, ticker: str) -> dict[str, Any]:
             "supplier_exposure": profile,
             "end_demand_proxy": end_proxy.get("end_demand_proxy"),
             "revenue_sensitivity": sensitivity.get("revenue_sensitivity"),
+            "variable_evidence": variable_evidence,
             "expectation_gap": gap.get("expectation_gap"),
             "missing_variables": missing_variables,
             "next_connector_needs": next_connector_needs,

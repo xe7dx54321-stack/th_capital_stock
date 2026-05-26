@@ -9,6 +9,7 @@ from typing import Any
 from smr_end_demand_proxy import build_end_demand_proxy
 from smr_revenue_sensitivity_model import build_revenue_sensitivity
 from smr_supplier_exposure_model import get_supplier_exposure_profile, normalize_ticker
+from smr_supply_chain_variable_evidence import build_variable_evidence_packs
 
 
 def _end_demand_points(proxy: dict[str, Any]) -> int:
@@ -58,13 +59,33 @@ def _evidence_quality_points(proxy: dict[str, Any]) -> int:
     return 4
 
 
-def _uncertainty_penalty(profile: dict[str, Any], sensitivity: dict[str, Any], official_consensus_available: bool) -> int:
+def _variable_status(variable_evidence: dict[str, Any], key: str) -> str:
+    return str((variable_evidence.get(key) or {}).get("evidence_status") or "missing")
+
+
+def _variable_evidence_uncertainty_offset(variable_evidence: dict[str, Any]) -> int:
+    if not variable_evidence:
+        return 0
+    offset = 0
+    for key in ("supplier_share", "capacity"):
+        if _variable_status(variable_evidence, key) in {"partial", "proxy_supported", "confirmed"}:
+            offset += 1
+    return max(-4, min(3, offset))
+
+
+def _uncertainty_penalty(
+    profile: dict[str, Any],
+    sensitivity: dict[str, Any],
+    official_consensus_available: bool,
+    variable_evidence: dict[str, Any] | None = None,
+) -> int:
     missing = len((sensitivity.get("revenue_sensitivity") or {}).get("missing_variables") or [])
     penalty = -min(14, missing * 2)
     if profile.get("customer_exposure_status") != "confirmed":
         penalty -= 2
     if not official_consensus_available:
         penalty -= 2
+    penalty += _variable_evidence_uncertainty_offset(variable_evidence or {})
     return penalty
 
 
@@ -97,13 +118,15 @@ def build_expectation_gap(
     theme: str | None = None,
     end_demand_proxy: dict[str, Any] | None = None,
     revenue_sensitivity: dict[str, Any] | None = None,
+    variable_evidence: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     ticker = normalize_ticker(ticker)
     profile = get_supplier_exposure_profile(ticker)
     theme = theme or profile.get("theme") or "ai_optical_interconnect"
     end_proxy = end_demand_proxy or build_end_demand_proxy(conn, "ai_optical_interconnect")
     sensitivity = revenue_sensitivity or build_revenue_sensitivity(conn, ticker, theme=theme, end_demand_proxy=end_proxy)
-    official_consensus_available = False
+    variable_evidence = variable_evidence if variable_evidence is not None else build_variable_evidence_packs(conn, ticker)
+    official_consensus_available = bool((variable_evidence.get("consensus") or {}).get("official_consensus_available"))
     drivers = {
         "end_demand_strength": _end_demand_points(end_proxy),
         "supplier_exposure_strength": _supplier_points(profile),
@@ -111,7 +134,7 @@ def build_expectation_gap(
         "valuation_expectation_support": _valuation_points(sensitivity),
         "proxy_consensus_gap": 4 if not official_consensus_available else 10,
         "evidence_quality": _evidence_quality_points(end_proxy),
-        "uncertainty_penalty": _uncertainty_penalty(profile, sensitivity, official_consensus_available),
+        "uncertainty_penalty": _uncertainty_penalty(profile, sensitivity, official_consensus_available, variable_evidence),
     }
     score = max(0, min(100, sum(drivers.values())))
     confidence = _confidence(score, sensitivity, official_consensus_available)
@@ -124,6 +147,10 @@ def build_expectation_gap(
     uncertainties = list((profile.get("key_unknowns") or []) + (sensitivity.get("revenue_sensitivity") or {}).get("missing_variables", []))
     if not official_consensus_available:
         uncertainties.append("official consensus unavailable")
+    variable_summary = {
+        key: (pack.get("evidence_status") if isinstance(pack, dict) else "missing")
+        for key, pack in (variable_evidence or {}).items()
+    }
     return {
         "ticker": ticker,
         "company_name": profile.get("company_name"),
@@ -136,6 +163,7 @@ def build_expectation_gap(
             "drivers": drivers,
             "key_positive_factors": list(dict.fromkeys(key_positive)),
             "key_uncertainties": list(dict.fromkeys(str(item) for item in uncertainties if item))[:10],
+            "variable_evidence_summary": variable_summary,
             "allowed_usage": "research_candidate_only",
             "promotion_allowed": False,
             "safety": {

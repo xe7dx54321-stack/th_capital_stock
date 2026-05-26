@@ -1616,3 +1616,98 @@ python 08_scripts/reporting/build_phase25_supply_chain_expectation_gap_packet.py
 python 08_scripts/verification/validate_phase25_expectation_gap_gate_integration.py --tickers 300394.SZ,300308.SZ,688041.SH,002230.SZ --json
 python 08_scripts/reporting/build_phase25_supply_chain_gap_summary.py --json
 ```
+
+## Phase 26: Supply Chain Variable Evidence Connector v1
+
+Phase 26 adds auditable evidence packs for the most important variables inside
+the supply-chain expectation gap engine. The goal is not to add another
+reasoning layer. The goal is to show, variable by variable, whether evidence
+exists, what source route is available, what confidence is justified, and what
+connector should be added next.
+
+Current Phase 25 checkpoint:
+
+- Commit: `10313d33b34e134d8db68f742f820ca6b4201039`
+- Stage: `Phase 25: Supply Chain Expectation Gap Engine v1`
+- `positive_gap_candidates=2`.
+- `packets=4`.
+- `needs_more_data=4`.
+- `promotion_allowed=0`.
+- Main bottlenecks are supplier share, ASP, capacity/shipment, customer
+  allocation, official consensus, and industry forecast source coverage.
+
+### Phase 26 Goals
+
+1. Add supply-chain variable evidence schema.
+2. Add supplier share evidence pack.
+3. Add ASP / price proxy evidence pack.
+4. Add capacity / shipment evidence pack.
+5. Add customer allocation proxy pack.
+6. Add consensus / expectation proxy pack.
+7. Add industry forecast source routing.
+8. Feed variable evidence status back into expectation gap confidence checks.
+9. Build a variable evidence summary dashboard.
+
+### Phase 26 Guardrails
+
+- Do not fabricate supplier share.
+- Do not fabricate ASP or product price.
+- Do not fabricate NVIDIA, hyperscaler, or customer allocation exposure.
+- Do not treat customer capex as company revenue.
+- Do not treat internal consensus proxy as official consensus.
+- Do not treat planned industry forecast sources as active evidence.
+- Do not create pending review from expectation gap or variable evidence alone.
+- Do not loosen promotion rules.
+- Do not create paper orders, paper positions, or real trading actions.
+- Do not commit raw HTML, PDF, or large log files.
+
+### Phase 26 New Artifacts
+
+- `08_scripts/lib/smr_supply_chain_variable_evidence.py`
+- `08_scripts/reporting/build_phase26_supplier_share_evidence.py`
+- `08_scripts/reporting/build_phase26_asp_price_proxy.py`
+- `08_scripts/reporting/build_phase26_capacity_shipment_evidence.py`
+- `08_scripts/reporting/build_phase26_customer_allocation_proxy.py`
+- `08_scripts/reporting/build_phase26_consensus_expectation_proxy.py`
+- `08_scripts/reporting/build_phase26_industry_forecast_source_routing.py`
+- `08_scripts/verification/validate_phase26_variable_evidence_expectation_gap.py`
+- `08_scripts/reporting/build_phase26_variable_evidence_summary.py`
+- `docs/plans/2026-05-23-phase26-supply-chain-variable-evidence.md`
+
+### Phase 26 Expected Behavior
+
+- Supplier share packs can show product exposure and missing share disclosure, but
+  do not output a fixed share.
+- ASP packs can show product mix or price context, but do not output a fabricated
+  ASP.
+- Capacity packs distinguish capacity expansion from shipment.
+- Customer allocation packs keep confirmed allocation false unless direct
+  disclosure exists.
+- Consensus packs keep official consensus unavailable unless a real authorized
+  source is implemented.
+- Industry forecast routing keeps commercial or authorized providers as planned
+  until implemented.
+- Expectation gap confidence can use variable evidence status, but cannot become
+  high while supplier share, ASP, customer allocation, or official consensus are
+  still missing.
+
+### Phase 26 Validation Commands
+
+```bash
+python -m py_compile 08_scripts/lib/*.py 08_scripts/jobs/*.py 08_scripts/verification/*.py 08_scripts/reporting/*.py
+python -m unittest discover -s tests -v
+python 08_scripts/verification/validate_phase3_e2e.py
+python 08_scripts/verification/validate_phase4_live_e2e.py --tickers NVDA --days 180 --timeout 240
+python 08_scripts/verification/validate_phase5_paper_portfolio_smoke.py
+python 08_scripts/verification/validate_phase6_multi_ticker_live.py --watchlist ai_core --save-run-history --compare-last-run --timeout 240
+python 08_scripts/verification/validate_phase14_thesis_aware_multi_ticker_live.py --watchlist ai_core --timeout 240 --json
+python 08_scripts/reporting/build_phase25_supply_chain_gap_summary.py --json
+python 08_scripts/reporting/build_phase26_supplier_share_evidence.py --tickers 300394.SZ,300308.SZ,688041.SH,002230.SZ --json
+python 08_scripts/reporting/build_phase26_asp_price_proxy.py --tickers 300394.SZ,300308.SZ,688041.SH,002230.SZ --json
+python 08_scripts/reporting/build_phase26_capacity_shipment_evidence.py --tickers 300394.SZ,300308.SZ,688041.SH,002230.SZ --json
+python 08_scripts/reporting/build_phase26_customer_allocation_proxy.py --tickers 300394.SZ,300308.SZ,688041.SH,002230.SZ --json
+python 08_scripts/reporting/build_phase26_consensus_expectation_proxy.py --tickers 300394.SZ,300308.SZ,688041.SH,002230.SZ --json
+python 08_scripts/reporting/build_phase26_industry_forecast_source_routing.py --theme ai_optical_interconnect --json
+python 08_scripts/verification/validate_phase26_variable_evidence_expectation_gap.py --tickers 300394.SZ,300308.SZ,688041.SH,002230.SZ --json
+python 08_scripts/reporting/build_phase26_variable_evidence_summary.py --json
+```
