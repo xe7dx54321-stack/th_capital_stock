@@ -128,6 +128,8 @@ def method_weight(method: str) -> float:
     value = str(method or "").strip().lower()
     if value in {"guidance_change", "earnings_surprise"}:
         return 0.28
+    if value in {"direct_demand_evidence", "order_customer_evidence"}:
+        return 0.24
     if value in {"broker_report_extraction", "target_price_revision"}:
         return 0.18
     if value in {"price_reaction_proxy", "news_language_proxy"}:

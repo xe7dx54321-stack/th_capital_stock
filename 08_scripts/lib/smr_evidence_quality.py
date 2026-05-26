@@ -133,8 +133,27 @@ def quote_specificity_score(text: str) -> float:
         score += 0.2
     if re.search(r"\d", clean):
         score += 0.2
-    if any(token in clean.lower() for token in ("revenue", "eps", "cash", "margin", "guidance", "risk", "profit")):
+    if any(
+        token in clean.lower()
+        for token in (
+            "revenue",
+            "eps",
+            "cash",
+            "margin",
+            "guidance",
+            "risk",
+            "profit",
+            "demand",
+            "order",
+            "contract",
+            "customer",
+            "ai server",
+            "data center",
+        )
+    ):
         score += 0.2
+    if any(token in clean for token in ("需求", "订单", "合同", "客户", "中标", "采购", "算力", "数据中心", "智算中心", "AI服务器")):
+        score += 0.15
     if any(token in clean for token in ("收入", "利润", "现金流", "毛利率", "风险", "指引")):
         score += 0.15
     return min(score, 1.0)

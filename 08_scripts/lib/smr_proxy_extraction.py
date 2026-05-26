@@ -53,6 +53,21 @@ PROXY_TEXT_MARKERS = (
     "price target",
     "record quarter",
     "record revenue",
+    "AI server demand",
+    "data center demand",
+    "cloud capex",
+    "customer order",
+    "signed contract",
+    "tender award",
+    "procurement award",
+    "shipment ramp",
+    "backlog",
+    "算力需求",
+    "AI服务器",
+    "数据中心",
+    "智算中心",
+    "订单",
+    "中标",
 )
 
 TICKER_ALIASES = {

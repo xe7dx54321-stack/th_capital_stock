@@ -1175,3 +1175,87 @@ python 08_scripts/reporting/build_phase20_002230_thesis_evidence_pack.py --json
 python 08_scripts/verification/validate_phase20_promotion_revalidation.py --watchlist ai_core --json
 python 08_scripts/reporting/build_phase20_research_gate_summary.py --watchlist ai_core --json
 ```
+
+## Stage 21 Goal
+
+Phase 21 converts the Phase 20 missing direct-demand and independent-proxy
+evidence blockers into structured, auditable, re-runnable diagnostics. It is
+still not a new industry-chain agent and still does not loosen promotion rules.
+
+Current Phase 20 checkpoint:
+
+- Commit: `5d5b1a8fdd8bd127df9186a6959d1ae4812303f5`
+- Stage: `Phase 20: Bear Case Evidence Mitigation + Valuation/Proxy Gate Strengthening`
+- Bear case, valuation, proxy, and thesis evidence gates are explainable.
+- `300308.SZ`, `688041.SH`, and `002230.SZ` still need direct demand, order,
+  customer, capex, or independent source evidence.
+- `002230.SZ` is an evidence-backed thesis candidate but still lacks dominant
+  proxy signal and enough independent source support.
+- No promotion rules were relaxed and no real trading risk was introduced.
+
+### Phase 21 Goals
+
+1. Build a direct demand evidence schema.
+2. Extract demand/order/customer/capex evidence from existing local evidence.
+3. Expand internal proxy source counts using eligible direct demand evidence.
+4. Convert missing bear-case evidence into repair queue tasks.
+5. Re-run bear-case mitigation with demand evidence.
+6. Revalidate promotion impact.
+7. Build a demand/proxy gate summary.
+
+### Phase 21 Non-goals
+
+- Do not add a full industry-chain agent.
+- Do not perform real trading.
+- Do not auto approve pending review.
+- Do not generate paper orders or paper positions.
+- Do not expand `ai_core`.
+- Do not loosen promotion rules.
+- Do not treat weak evidence as strong evidence.
+- Do not treat news rumors as customer order confirmation.
+- Do not treat management commentary as confirmed order.
+- Do not treat internal proxy as official consensus.
+- Do not commit raw/PDF/HTML source files.
+
+### Phase 21 New Artifacts
+
+- `08_scripts/lib/smr_direct_demand_evidence.py`
+- `08_scripts/jobs/build_direct_demand_evidence.py`
+- `08_scripts/reporting/build_phase21_direct_demand_evidence_summary.py`
+- `08_scripts/reporting/build_phase21_proxy_source_expansion.py`
+- `08_scripts/jobs/upsert_bear_case_evidence_repair_tasks.py`
+- `08_scripts/verification/validate_phase21_bear_case_demand_mitigation.py`
+- `08_scripts/verification/validate_phase21_promotion_revalidation.py`
+- `08_scripts/reporting/build_phase21_demand_proxy_gate_summary.py`
+- `docs/plans/2026-05-23-phase21-demand-proxy-expansion.md`
+
+### Phase 21 Expected Behavior
+
+- Demand evidence requires `evidence_id` and `independent_source_key`.
+- Management commentary can support a gate but is not a confirmed order.
+- Rumor or unconfirmed evidence is blocked or context-only.
+- Metadata does not count as an independent proxy source.
+- Demand evidence can improve bear-case or proxy diagnostics, but cannot
+  directly create pending review.
+- If pending review ever appears, it must be reduced-size, require human
+  review, and keep `paper_order_allowed=false`.
+
+### Phase 21 Validation Commands
+
+```bash
+python -m py_compile 08_scripts/lib/*.py 08_scripts/jobs/*.py 08_scripts/verification/*.py 08_scripts/reporting/*.py
+python -m unittest discover -s tests -v
+python 08_scripts/verification/validate_phase3_e2e.py
+python 08_scripts/verification/validate_phase4_live_e2e.py --tickers NVDA --days 180 --timeout 240
+python 08_scripts/verification/validate_phase5_paper_portfolio_smoke.py
+python 08_scripts/verification/validate_phase6_multi_ticker_live.py --watchlist ai_core --save-run-history --compare-last-run --timeout 240
+python 08_scripts/verification/validate_phase14_thesis_aware_multi_ticker_live.py --watchlist ai_core --timeout 240 --json
+python 08_scripts/reporting/build_phase20_research_gate_summary.py --watchlist ai_core --json
+python 08_scripts/jobs/build_direct_demand_evidence.py --tickers 300308.SZ,688041.SH,002230.SZ --json
+python 08_scripts/reporting/build_phase21_direct_demand_evidence_summary.py --watchlist ai_core --json
+python 08_scripts/reporting/build_phase21_proxy_source_expansion.py --tickers 300308.SZ,688041.SH,002230.SZ --json
+python 08_scripts/jobs/upsert_bear_case_evidence_repair_tasks.py --tickers 300308.SZ,688041.SH,002230.SZ --dry-run --json
+python 08_scripts/verification/validate_phase21_bear_case_demand_mitigation.py --tickers 300308.SZ,688041.SH,002230.SZ --json
+python 08_scripts/verification/validate_phase21_promotion_revalidation.py --watchlist ai_core --json
+python 08_scripts/reporting/build_phase21_demand_proxy_gate_summary.py --watchlist ai_core --json
+```

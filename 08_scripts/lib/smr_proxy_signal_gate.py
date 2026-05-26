@@ -163,7 +163,7 @@ def evaluate_proxy_signal_gate(
     if main_direction == "unknown" and directions:
         main_direction = sorted(directions)[0]
     conflict_count = 1 if len(directions) > 1 else 0
-    evidence_quality = _quality_for_ids(conn, evidence_ids)
+    evidence_quality = str(snapshot.get("evidence_quality_override") or _quality_for_ids(conn, evidence_ids))
     independent_count = int(snapshot.get("independent_source_count") or 0)
     evidence_count = int(snapshot.get("evidence_count") or len(evidence_ids))
     confidence = float(snapshot.get("confidence") or 0.0)
@@ -229,6 +229,7 @@ def evaluate_proxy_signal_gate(
             "usable_for_reduced_size_pending": status == "strong" or (status == "medium" and independent_count >= 2),
             "missing_requirements": list(dict.fromkeys(missing)),
             "evidence_ids": evidence_ids[:8],
+            "direct_demand_evidence_ids": list(dict.fromkeys(snapshot.get("direct_demand_evidence_ids") or []))[:8],
             "is_official_consensus": False,
             "note": "internal proxy only; not official sell-side consensus",
         },

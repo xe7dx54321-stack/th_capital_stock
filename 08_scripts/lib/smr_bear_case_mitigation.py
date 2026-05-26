@@ -16,6 +16,11 @@ from smr_evidence_quality import evidence_quality_summary
 from smr_fundamentals import latest_fundamentals_snapshot
 from smr_promotion_block_reason import build_ticker_block_diagnostics
 
+try:
+    from smr_direct_demand_evidence import extract_direct_demand_evidence
+except ImportError:  # pragma: no cover - keeps older phase modules importable
+    extract_direct_demand_evidence = None
+
 
 RISK_CATEGORIES = {
     "valuation_risk",
@@ -63,6 +68,23 @@ DIRECT_THESIS_EVIDENCE_REQUIRED = {
     "supply_chain_risk": ["supplier or capacity evidence"],
     "customer_concentration_risk": ["customer concentration evidence"],
     "thesis_confidence_risk": ["claim graph support", "filing or news support"],
+}
+
+DIRECT_DEMAND_RISK_CATEGORIES = {
+    "growth_risk",
+    "competitive_risk",
+    "customer_concentration_risk",
+    "supply_chain_risk",
+    "thesis_confidence_risk",
+}
+
+DEMAND_STRENGTH_RANK = {
+    "blocked": 0,
+    "context_only": 1,
+    "weak_indication": 2,
+    "medium_indication": 3,
+    "strong_indication": 4,
+    "confirmed_order": 5,
 }
 
 
@@ -223,6 +245,55 @@ def _missing_for_category(category: str) -> list[str]:
     return list(DIRECT_THESIS_EVIDENCE_REQUIRED.get(category) or ["direct bear-case mitigation evidence"])
 
 
+def _direct_demand_candidates(category: str, items: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    if category not in DIRECT_DEMAND_RISK_CATEGORIES:
+        return []
+    candidates = [
+        item
+        for item in items or []
+        if item.get("usable_for_bear_case_mitigation")
+        and item.get("evidence_id")
+        and item.get("claim_relevance") in {"core", "supporting"}
+        and item.get("demand_strength") in {"medium_indication", "strong_indication", "confirmed_order"}
+    ]
+    candidates.sort(
+        key=lambda item: (
+            DEMAND_STRENGTH_RANK.get(str(item.get("demand_strength")), 0),
+            _quality_rank(str(item.get("source_quality") or "missing")),
+            bool(item.get("claim_relevance") == "core"),
+        ),
+        reverse=True,
+    )
+    return candidates
+
+
+def _demand_quality(items: list[dict[str, Any]]) -> str:
+    if not items:
+        return "missing"
+    ranks = [_quality_rank(str(item.get("source_quality") or "missing")) for item in items]
+    best = max(ranks) if ranks else 0
+    if best >= 3:
+        return "high"
+    if best >= 2:
+        return "medium"
+    if best >= 1:
+        return "low"
+    return "blocked"
+
+
+def _remaining_demand_evidence(category: str, items: list[dict[str, Any]]) -> list[str]:
+    missing = []
+    if not any(item.get("demand_strength") == "confirmed_order" for item in items):
+        missing.append("confirmed signed order or tender/procurement award")
+    if len({item.get("independent_source_key") for item in items if item.get("independent_source_key")}) < 2:
+        missing.append("second independent demand evidence source")
+    for item in _missing_for_category(category):
+        if "AI order" in item or "customer demand" in item:
+            continue
+        missing.append(item)
+    return list(dict.fromkeys(missing))
+
+
 def map_bear_case_to_evidence(
     conn: sqlite3.Connection,
     *,
@@ -230,6 +301,7 @@ def map_bear_case_to_evidence(
     primary_thesis_type: str,
     claims: list[dict[str, Any]],
     fundamentals_snapshot: dict[str, Any],
+    direct_demand_evidence: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     """Map bear-case claims to existing evidence without weakening blockers."""
 
@@ -240,6 +312,7 @@ def map_bear_case_to_evidence(
         evidence_rows = _field_evidence(fundamentals_snapshot, fields)
         evidence_ids = list(dict.fromkeys(eid for item in evidence_rows for eid in item.get("evidence_ids") or []))
         quality = _evidence_quality_for_ids(conn, evidence_ids)
+        demand_candidates = _direct_demand_candidates(category, direct_demand_evidence or [])
         core_to_thesis = bool(claim.get("core_to_thesis"))
         before_status = str(claim.get("response_status") or claim.get("before_status") or ("unresolved_core" if core_to_thesis else "unresolved_but_non_core"))
         if before_status == "mitigated":
@@ -251,6 +324,17 @@ def map_bear_case_to_evidence(
             evidence_ids = []
             quality = "missing"
             evidence_rows = []
+        elif demand_candidates:
+            evidence_ids = list(dict.fromkeys(str(item.get("evidence_id")) for item in demand_candidates if item.get("evidence_id")))
+            quality = _demand_quality(demand_candidates)
+            evidence_rows = []
+            best_strength = str(demand_candidates[0].get("demand_strength") or "")
+            confirmed = best_strength == "confirmed_order"
+            after_status = "mitigated" if confirmed and not any(item.get("is_management_commentary") for item in demand_candidates[:1]) else "partially_mitigated"
+            residual = "low" if after_status == "mitigated" and not core_to_thesis else "medium"
+            summary = "direct demand evidence mitigates the order/customer demand bear case, but promotion remains subject to proxy, valuation, and review gates"
+            missing = [] if after_status == "mitigated" else _remaining_demand_evidence(category, demand_candidates)
+            action = "reduce_position_size" if core_to_thesis else "supporting_warning"
         elif category in {"competitive_risk", "policy_risk", "supply_chain_risk", "customer_concentration_risk", "thesis_confidence_risk"}:
             after_status = "requires_more_evidence" if core_to_thesis else "unresolved_but_non_core"
             residual = "high" if core_to_thesis else "medium"
@@ -306,6 +390,8 @@ def map_bear_case_to_evidence(
                 "mitigating_evidence_ids": evidence_ids[:8],
                 "mitigating_evidence_quality": quality,
                 "mitigated_fields": [item["field"] for item in evidence_rows],
+                "direct_demand_evidence_ids": [item.get("evidence_id") for item in demand_candidates[:8]],
+                "direct_demand_strength": demand_candidates[0].get("demand_strength") if demand_candidates else None,
                 "evidence_summary": summary,
                 "missing_evidence": missing,
                 "residual_risk_level": residual,
@@ -347,16 +433,32 @@ def map_bear_case_to_evidence(
     }
 
 
-def build_ticker_bear_case_mitigation(conn: sqlite3.Connection, ticker: str, *, watchlist_id: str = "ai_core") -> dict[str, Any]:
+def build_ticker_bear_case_mitigation(
+    conn: sqlite3.Connection,
+    ticker: str,
+    *,
+    watchlist_id: str = "ai_core",
+    include_direct_demand: bool = True,
+) -> dict[str, Any]:
     ticker = normalize_ticker(ticker)
     diag = build_ticker_block_diagnostics(conn, ticker, watchlist_id=watchlist_id)
     fundamentals = latest_fundamentals_snapshot(conn, ticker) or {}
+    direct_demand = []
+    if include_direct_demand and extract_direct_demand_evidence is not None:
+        direct_demand = extract_direct_demand_evidence(
+            conn,
+            ticker,
+            thesis_type=str(diag.get("primary_thesis_type") or "unknown"),
+            limit=24,
+            persist=True,
+        )
     return map_bear_case_to_evidence(
         conn,
         ticker=ticker,
         primary_thesis_type=str(diag.get("primary_thesis_type") or "unknown"),
         claims=_input_claims(diag),
         fundamentals_snapshot=fundamentals,
+        direct_demand_evidence=direct_demand,
     )
 
 

@@ -14,6 +14,12 @@ from smr_source_registry import UNUSABLE_STATUSES, load_source_registry, source_
 
 
 CLAIM_TYPES = {
+    "demand": "demand_driver",
+    "order": "revenue_growth",
+    "contract": "revenue_growth",
+    "customer": "demand_driver",
+    "AI server": "demand_driver",
+    "data center": "demand_driver",
     "需求": "demand_driver",
     "capex": "demand_driver",
     "订单": "revenue_growth",
