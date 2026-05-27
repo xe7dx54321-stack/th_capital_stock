@@ -33,6 +33,72 @@
 | Agent run audit trail | Capture every pipeline run and block reason | Done | `agent_runs` | Real DB entries present | Useful for postmortem |
 | Daily system health report | Daily reliability summary | Done | `08_scripts/reporting/build_daily_system_health_report.py` | Validated on real data | Status reflects data health |
 
+## Phase 31: Evidence Candidate Review Queue + Manual Evidence Governance v1
+
+Phase 31 productizes semantic evidence governance after Phase 30 persistence.
+The phase adds a review queue, lifecycle states, manual governance actions,
+append-only audit logs, download repair tasks, sensitive-variable guardrails,
+variable-pack link audit, and governance revalidation.
+
+Phase 30 checkpoint:
+
+- Persisted semantic evidence candidates: `60`
+- Review-required candidates: `1`
+- Rejected/noisy candidate cleanup: completed in Phase 30
+- Download-unavailable sources: `2`
+- `usable_for_promotion_true=0`
+- `confirmed_variables_added=0`
+- `new_pending_created=0`
+
+### Phase 31 Goals
+
+1. Add evidence lifecycle schema.
+2. Add evidence review queue for pending, weak, sensitive, rejected, removed,
+   and repair items.
+3. Add manual evidence review actions with safety guards.
+4. Add evidence review audit log.
+5. Add evidence governance dashboard.
+6. Add download-unavailable repair queue.
+7. Add sensitive variable guard.
+8. Add variable pack link audit.
+9. Add governance revalidation.
+
+### Phase 31 Guardrails
+
+- Persisted candidate is not automatically approved evidence.
+- Approved evidence is not promotion evidence.
+- Manual review actions cannot enable `usable_for_promotion`.
+- Manual review actions cannot create confirmed supplier share, confirmed ASP,
+  confirmed customer allocation, official consensus, pending review, paper
+  orders, paper positions, or real trades.
+- Rejected, marked-noise, removed, and archived evidence remains auditable.
+- Download repair tasks do not bypass download controls and do not enable OCR by
+  default.
+- Raw PDF, raw HTML, text cache, DB, and log files are not committed.
+
+### Phase 31 Validation Commands
+
+```bash
+python -m py_compile 08_scripts/lib/*.py 08_scripts/jobs/*.py 08_scripts/verification/*.py 08_scripts/reporting/*.py
+python -m unittest discover -s tests -v
+python 08_scripts/verification/validate_phase3_e2e.py
+python 08_scripts/verification/validate_phase4_live_e2e.py --tickers NVDA --days 180 --timeout 240
+python 08_scripts/verification/validate_phase5_paper_portfolio_smoke.py
+python 08_scripts/verification/validate_phase6_multi_ticker_live.py --watchlist ai_core --save-run-history --compare-last-run --timeout 240
+python 08_scripts/verification/validate_phase14_thesis_aware_multi_ticker_live.py --watchlist ai_core --timeout 240 --json
+python 08_scripts/reporting/build_phase30_semantic_evidence_hardening_summary.py --json
+python 08_scripts/reporting/build_phase31_evidence_review_queue.py --json
+python 08_scripts/jobs/apply_evidence_review_action.py --evidence-id <EXISTING_EVIDENCE_ID> --action approve_evidence --dry-run --json
+python 08_scripts/jobs/apply_evidence_review_action.py --evidence-id <EXISTING_EVIDENCE_ID> --action downgrade_usage --target-usage context_only --dry-run --json
+python 08_scripts/reporting/build_phase31_evidence_review_audit_report.py --json
+python 08_scripts/reporting/build_phase31_evidence_governance_dashboard.py --json
+python 08_scripts/jobs/upsert_download_unavailable_repair_tasks.py --dry-run --json
+python 08_scripts/reporting/build_phase31_download_repair_queue_summary.py --json
+python 08_scripts/verification/validate_phase31_sensitive_variable_guard.py --json
+python 08_scripts/reporting/build_phase31_variable_pack_link_audit.py --json
+python 08_scripts/verification/validate_phase31_evidence_governance_revalidation.py --json
+```
+
 ## Stage 5 Recap
 
 Phase 5 completed a live candidate generation partial pass.
