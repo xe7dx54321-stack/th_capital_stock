@@ -35,6 +35,9 @@ def build_payload() -> dict:
             "ocr_default_enabled": False,
             "semantic_quality_guard_marked_implemented": False,
             "semantic_noise_filter_direct_promotion": False,
+            "phase32_workbench_marked_implemented": False,
+            "phase32_workbench_executes_actions": False,
+            "phase32_workbench_allows_promotion": False,
         },
     }
     return payload

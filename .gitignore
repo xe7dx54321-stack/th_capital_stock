@@ -64,6 +64,7 @@ secrets/
 financial_statement_chunks/
 financial_statement_raw/
 financial_statement_reports/
+09_runbooks/generated/
 08_data/generated/text_cache/**
 **/text_cache/**
 *.text_cache.json

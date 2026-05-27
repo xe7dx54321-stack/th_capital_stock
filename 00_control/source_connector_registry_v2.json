@@ -1473,6 +1473,141 @@
           ]
         }
       }
+    },
+    "evidence_review_workbench": {
+      "description": "Read-only evidence review workbench that merges review queue, lifecycle status, sensitive guard, link audit, and repair context without executing actions.",
+      "markets": {
+        "GLOBAL": {
+          "preferred_sources": [
+            {
+              "source_name": "evidence review workbench",
+              "connector_id": "evidence_review_workbench",
+              "status": "partial",
+              "source_quality": "medium",
+              "allowed_usage": "context_only",
+              "evidence_category": "evidence_governance_workbench"
+            }
+          ],
+          "fallback_sources": [
+            {
+              "source_name": "manual evidence review",
+              "connector_id": "manual_review",
+              "status": "partial",
+              "source_quality": "medium",
+              "allowed_usage": "context_only",
+              "evidence_category": "human_review"
+            }
+          ]
+        }
+      }
+    },
+    "priority_review_packet": {
+      "description": "Priority evidence review packet for high-priority, sensitive, and review-required evidence items with dry-run commands only.",
+      "markets": {
+        "GLOBAL": {
+          "preferred_sources": [
+            {
+              "source_name": "priority review packet",
+              "connector_id": "priority_review_packet",
+              "status": "partial",
+              "source_quality": "medium",
+              "allowed_usage": "context_only",
+              "evidence_category": "evidence_governance_packet"
+            }
+          ],
+          "fallback_sources": [
+            {
+              "source_name": "manual evidence review",
+              "connector_id": "manual_review",
+              "status": "partial",
+              "source_quality": "medium",
+              "allowed_usage": "context_only",
+              "evidence_category": "human_review"
+            }
+          ]
+        }
+      }
+    },
+    "evidence_review_html_dashboard": {
+      "description": "Static local HTML dashboard for browsing evidence review workbench items. It is read-only and does not execute actions.",
+      "markets": {
+        "GLOBAL": {
+          "preferred_sources": [
+            {
+              "source_name": "evidence review HTML dashboard",
+              "connector_id": "evidence_review_html_dashboard",
+              "status": "partial",
+              "source_quality": "medium",
+              "allowed_usage": "context_only",
+              "evidence_category": "evidence_governance_dashboard"
+            }
+          ],
+          "fallback_sources": [
+            {
+              "source_name": "priority review packet",
+              "connector_id": "priority_review_packet",
+              "status": "partial",
+              "source_quality": "medium",
+              "allowed_usage": "context_only",
+              "evidence_category": "evidence_governance_packet"
+            }
+          ]
+        }
+      }
+    },
+    "batch_review_dry_run": {
+      "description": "Batch dry-run helper for review queue recommended actions. It rolls back state and never exposes execute commands by default.",
+      "markets": {
+        "GLOBAL": {
+          "preferred_sources": [
+            {
+              "source_name": "batch review dry-run helper",
+              "connector_id": "batch_review_dry_run",
+              "status": "partial",
+              "source_quality": "medium",
+              "allowed_usage": "context_only",
+              "evidence_category": "evidence_governance_dry_run"
+            }
+          ],
+          "fallback_sources": [
+            {
+              "source_name": "manual evidence review",
+              "connector_id": "manual_review",
+              "status": "partial",
+              "source_quality": "medium",
+              "allowed_usage": "context_only",
+              "evidence_category": "human_review"
+            }
+          ]
+        }
+      }
+    },
+    "download_repair_workbench": {
+      "description": "Readable workbench packet for download-unavailable source repair tasks. It plans manual repair without bypassing source restrictions or creating evidence.",
+      "markets": {
+        "GLOBAL": {
+          "preferred_sources": [
+            {
+              "source_name": "download repair workbench",
+              "connector_id": "download_repair_workbench",
+              "status": "partial",
+              "source_quality": "medium",
+              "allowed_usage": "context_only",
+              "evidence_category": "source_repair_workbench"
+            }
+          ],
+          "fallback_sources": [
+            {
+              "source_name": "manual source repair",
+              "connector_id": "manual_review",
+              "status": "partial",
+              "source_quality": "medium",
+              "allowed_usage": "context_only",
+              "evidence_category": "human_review"
+            }
+          ]
+        }
+      }
     }
   }
 }

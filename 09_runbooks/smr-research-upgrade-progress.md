@@ -33,6 +33,95 @@
 | Agent run audit trail | Capture every pipeline run and block reason | Done | `agent_runs` | Real DB entries present | Useful for postmortem |
 | Daily system health report | Daily reliability summary | Done | `08_scripts/reporting/build_daily_system_health_report.py` | Validated on real data | Status reflects data health |
 
+## Phase 32: Evidence Review Workbench v1
+
+Phase 32 makes Phase 31 evidence governance usable as a lightweight review
+workbench. It does not expand sources, add models, relax promotion, create
+pending review, or introduce trading risk. The first version is intentionally
+small: JSON/Markdown packets, a static local HTML dashboard, and dry-run command
+helpers.
+
+Current Phase 31 checkpoint:
+
+- Commit: `7fdbb16e0bd7ac57470cf2703ae07c64fa709e65`
+- Stage: `Phase 31: Evidence Candidate Review Queue + Manual Evidence Governance v1`
+- `review_queue_items=62`
+- `high_priority=8`
+- `sensitive_variable_items=14`
+- `download repair tasks=3`
+- `promotion_allowed_true=0`
+- `new_pending_created=0`
+- `sensitive_guard_violations=0`
+- `invalid_links=0`
+- Evidence governance exists, but it needs a human-usable review surface.
+
+### Phase 32 Goals
+
+1. Add workbench data model.
+2. Add priority review packet.
+3. Add static local HTML dashboard.
+4. Add action command generator.
+5. Add batch dry-run review helper.
+6. Add review action audit summary.
+7. Add download repair workbench.
+8. Add workbench summary.
+9. Update connector registry conservatively.
+
+### Phase 32 Guardrails
+
+- Workbench items only aggregate data and do not change state.
+- Generated commands default to `--dry-run --json`.
+- Execute commands are not displayed by default.
+- Sensitive variable items display blocked actions.
+- `approve_evidence` does not allow promotion.
+- Evidence review cannot confirm supplier share, ASP, customer allocation, or
+  official consensus.
+- Evidence review cannot create pending review.
+- Evidence review cannot create approved paper, paper order, paper position, or
+  real trades.
+- Generated HTML is static and read-only.
+- `09_runbooks/generated/` is ignored by git.
+- Raw PDF, raw HTML, text cache, DB, logs, and generated HTML are not committed.
+
+### Phase 32 New Artifacts
+
+- `08_scripts/lib/smr_evidence_review_workbench.py`
+- `08_scripts/lib/smr_evidence_action_command_generator.py`
+- `08_scripts/reporting/build_phase32_priority_review_packet.py`
+- `08_scripts/reporting/build_phase32_evidence_review_html.py`
+- `08_scripts/reporting/build_phase32_review_action_audit_summary.py`
+- `08_scripts/reporting/build_phase32_download_repair_workbench.py`
+- `08_scripts/reporting/build_phase32_workbench_summary.py`
+- `08_scripts/jobs/run_phase32_batch_review_dry_run.py`
+- `docs/plans/2026-05-23-phase32-evidence-review-workbench.md`
+
+### Phase 32 Optional Local Route Decision
+
+The optional local route is not implemented in v1. The static HTML dashboard is
+preferred because it is simpler, has no server-side execution surface, requires
+no new frontend framework, and cannot trigger review actions from the page.
+
+### Phase 32 Validation Commands
+
+```bash
+python -m py_compile 08_scripts/lib/*.py 08_scripts/jobs/*.py 08_scripts/verification/*.py 08_scripts/reporting/*.py
+python -m unittest discover -s tests -v
+python 08_scripts/verification/validate_phase3_e2e.py
+python 08_scripts/verification/validate_phase4_live_e2e.py --tickers NVDA --days 180 --timeout 240
+python 08_scripts/verification/validate_phase5_paper_portfolio_smoke.py
+python 08_scripts/verification/validate_phase6_multi_ticker_live.py --watchlist ai_core --save-run-history --compare-last-run --timeout 240
+python 08_scripts/verification/validate_phase14_thesis_aware_multi_ticker_live.py --watchlist ai_core --timeout 240 --json
+python 08_scripts/reporting/build_phase31_evidence_governance_dashboard.py --json
+python 08_scripts/reporting/build_phase32_priority_review_packet.py --json
+python 08_scripts/reporting/build_phase32_priority_review_packet.py --priority high --markdown
+python 08_scripts/reporting/build_phase32_evidence_review_html.py --output 09_runbooks/generated/phase32_evidence_review.html
+python 08_scripts/jobs/run_phase32_batch_review_dry_run.py --priority high --json
+python 08_scripts/reporting/build_phase32_review_action_audit_summary.py --json
+python 08_scripts/reporting/build_phase32_download_repair_workbench.py --json
+python 08_scripts/reporting/build_phase32_workbench_summary.py --json
+python 08_scripts/reporting/build_phase23_connector_availability_dashboard.py --json
+```
+
 ## Phase 31: Evidence Candidate Review Queue + Manual Evidence Governance v1
 
 Phase 31 productizes semantic evidence governance after Phase 30 persistence.
