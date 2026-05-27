@@ -1814,3 +1814,101 @@ python 08_scripts/verification/validate_phase27_semantic_variable_pack_integrati
 python 08_scripts/verification/validate_phase27_semantic_evidence_gate_impact.py --tickers 300394.SZ,300308.SZ,688041.SH,002230.SZ --mock --json
 python 08_scripts/reporting/build_phase27_semantic_evidence_summary.py --mock --json
 ```
+
+## Phase 28: Real IR Source Connector + Semantic Evidence Persistence v1
+
+Phase 28 connects the Phase 27 semantic extraction pipeline to real local source
+metadata and persists gated semantic extractions as evidence graph candidates.
+The first version remains conservative: it consumes already available parsed
+filing/source/news metadata, does not fetch or write raw HTML/PDF, keeps mock
+fallback explicit, and only writes normalized metadata or candidate rows in
+execute mode.
+
+Current Phase 27 checkpoint:
+
+- Commit: `070874104f02af29b4fdad066eed85973b7a7981`
+- Stage: `Phase 27: Semantic IR & Industry Forecast Evidence Extractor v1`
+- Semantic extraction schema, chunker, retriever, mock extractor, rule gate, and
+  variable pack integration are working.
+- Mock semantic summary produced sources, candidate chunks, semantic
+  extractions, gate results, and variable pack updates without creating pending
+  review.
+- The next step is to use real source URLs and persist quoted-span evidence
+  candidates.
+
+### Phase 28 Goals
+
+1. Add real IR source connector for normalized source metadata.
+2. Integrate real sources into IR source inventory.
+3. Add real source document loader for parsed text or normalized snippets.
+4. Run semantic extraction on real-source chunks with mock extractor by default.
+5. Convert passed gate results into semantic evidence candidates.
+6. Support dry-run and execute persistence modes.
+7. Validate persisted candidate impact on variable packs.
+8. Validate expectation gap, valuation, and bear case impact.
+9. Add real IR semantic summary dashboard.
+10. Update connector registry conservatively.
+
+### Phase 28 Guardrails
+
+- Dry-run does not write DB rows.
+- Execute writes only normalized source metadata or evidence candidates.
+- Raw HTML, raw PDFs, and large logs are not written by Phase 28 scripts.
+- Mock evidence is explicitly marked and is not written as real evidence.
+- Source URL is required for persistence.
+- Quoted span is required for persistence.
+- Source id, chunk id, and quoted span are used for dedupe.
+- Semantic evidence is never usable for promotion by itself.
+- Supplier share, ASP, shipment, customer allocation, and official consensus are
+  not fabricated.
+- Promotion rules remain unchanged.
+- No paper orders, paper positions, or real trades are created.
+
+### Phase 28 New Artifacts
+
+- `08_scripts/lib/smr_real_ir_source_connector.py`
+- `08_scripts/lib/smr_real_ir_document_loader.py`
+- `08_scripts/lib/smr_semantic_evidence_persistence.py`
+- `08_scripts/jobs/fetch_real_ir_sources.py`
+- `08_scripts/jobs/persist_semantic_evidence_candidates.py`
+- `08_scripts/reporting/build_phase28_real_ir_source_summary.py`
+- `08_scripts/reporting/build_phase28_ir_source_inventory.py`
+- `08_scripts/reporting/build_phase28_real_ir_semantic_summary.py`
+- `08_scripts/verification/validate_phase28_persisted_semantic_variable_pack.py`
+- `08_scripts/verification/validate_phase28_persisted_semantic_gate_impact.py`
+- `docs/plans/2026-05-23-phase28-real-ir-semantic-evidence-persistence.md`
+
+### Phase 28 Expected Behavior
+
+- Real IR source connector can dry-run against local source metadata.
+- Real source inventory prefers real sources and reports mock fallback clearly.
+- Document loader returns chunks or explicit `text_unavailable`.
+- Semantic extraction keeps `source_url`, `source_id`, `chunk_id`, and
+  `quoted_span`.
+- Persistence dry-run creates candidates in memory only.
+- Persistence execute writes deduped candidate rows and no raw source text.
+- Persisted candidates can update partial/context variable evidence but cannot
+  add confirmed supplier share, confirmed ASP, confirmed customer allocation, or
+  official consensus.
+- Gate impact validators report before/after without creating pending review.
+
+### Phase 28 Validation Commands
+
+```bash
+python -m py_compile 08_scripts/lib/*.py 08_scripts/jobs/*.py 08_scripts/verification/*.py 08_scripts/reporting/*.py
+python -m unittest discover -s tests -v
+python 08_scripts/verification/validate_phase3_e2e.py
+python 08_scripts/verification/validate_phase4_live_e2e.py --tickers NVDA --days 180 --timeout 240
+python 08_scripts/verification/validate_phase5_paper_portfolio_smoke.py
+python 08_scripts/verification/validate_phase6_multi_ticker_live.py --watchlist ai_core --save-run-history --compare-last-run --timeout 240
+python 08_scripts/verification/validate_phase14_thesis_aware_multi_ticker_live.py --watchlist ai_core --timeout 240 --json
+python 08_scripts/reporting/build_phase27_semantic_evidence_summary.py --mock --json
+python 08_scripts/jobs/fetch_real_ir_sources.py --tickers 300394.SZ,300308.SZ,688041.SH,002230.SZ --dry-run --json
+python 08_scripts/reporting/build_phase28_ir_source_inventory.py --tickers 300394.SZ,300308.SZ,688041.SH,002230.SZ --json
+python 08_scripts/jobs/build_semantic_ir_evidence.py --tickers 300394.SZ,300308.SZ,688041.SH,002230.SZ --real-sources --mock --json
+python 08_scripts/jobs/persist_semantic_evidence_candidates.py --tickers 300394.SZ,300308.SZ,688041.SH,002230.SZ --dry-run --json
+python 08_scripts/verification/validate_phase28_persisted_semantic_variable_pack.py --tickers 300394.SZ,300308.SZ,688041.SH,002230.SZ --json
+python 08_scripts/verification/validate_phase28_persisted_semantic_gate_impact.py --tickers 300394.SZ,300308.SZ,688041.SH,002230.SZ --json
+python 08_scripts/reporting/build_phase28_real_ir_semantic_summary.py --json
+python 08_scripts/reporting/build_phase23_connector_availability_dashboard.py --json
+```

@@ -3,8 +3,10 @@
 
 from __future__ import annotations
 
+import sqlite3
 from typing import Any
 
+from smr_real_ir_source_connector import discover_real_ir_sources
 from smr_supplier_exposure_model import get_supplier_exposure_profile, normalize_ticker
 
 
@@ -99,9 +101,56 @@ def build_source_id(ticker: str, index: int, source_type: str) -> str:
     return f"ir_{stem}_{source_type}_{index:03d}"
 
 
-def build_ir_source_inventory(ticker: str) -> dict[str, Any]:
+def _mark_mock_source(row: dict[str, Any]) -> dict[str, Any]:
+    updated = dict(row)
+    updated["mock_source"] = True
+    updated["real_source"] = False
+    return updated
+
+
+def build_ir_source_inventory(
+    ticker: str,
+    *,
+    conn: sqlite3.Connection | None = None,
+    use_real_sources: bool = False,
+    allow_mock_fallback: bool = True,
+) -> dict[str, Any]:
     ticker = normalize_ticker(ticker)
     profile = get_supplier_exposure_profile(ticker)
+    real_sources: list[dict[str, Any]] = []
+    if use_real_sources and conn is not None:
+        real_sources = discover_real_ir_sources(conn, ticker)
+    if real_sources:
+        by_type: dict[str, int] = {}
+        for row in real_sources:
+            by_type[row["source_type"]] = by_type.get(row["source_type"], 0) + 1
+        return {
+            "ticker": ticker,
+            "company_name": profile.get("company_name"),
+            "source_inventory": {
+                "sources_found": len(real_sources),
+                "sources_by_type": by_type,
+                "sources": real_sources,
+                "source_missing": False,
+                "real_sources_found": len(real_sources),
+                "mock_sources_used": 0,
+                "mock_fallback_used": False,
+            },
+        }
+    if use_real_sources and not allow_mock_fallback:
+        return {
+            "ticker": ticker,
+            "company_name": profile.get("company_name"),
+            "source_inventory": {
+                "sources_found": 0,
+                "sources_by_type": {},
+                "sources": [],
+                "source_missing": True,
+                "real_sources_found": 0,
+                "mock_sources_used": 0,
+                "mock_fallback_used": False,
+            },
+        }
     rows = []
     for index, item in enumerate(MOCK_IR_TEXTS.get(ticker, []), start=1):
         source_type = item.get("source_type") if item.get("source_type") in SOURCE_TYPES else "unknown"
@@ -118,6 +167,8 @@ def build_ir_source_inventory(ticker: str) -> dict[str, Any]:
                 "status": "available" if item.get("text") else "source_missing",
                 "allowed_usage": "semantic_extraction_candidate" if source_url else "context_only",
                 "text": item.get("text") or "",
+                "mock_source": True,
+                "real_source": False,
             }
         )
     by_type: dict[str, int] = {}
@@ -131,5 +182,8 @@ def build_ir_source_inventory(ticker: str) -> dict[str, Any]:
             "sources_by_type": by_type,
             "sources": rows,
             "source_missing": len(rows) == 0,
+            "real_sources_found": 0,
+            "mock_sources_used": len(rows),
+            "mock_fallback_used": bool(use_real_sources and rows),
         },
     }

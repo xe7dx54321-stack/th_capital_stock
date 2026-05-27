@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updated_at": "2026-05-26",
+  "updated_at": "2026-05-27",
   "information_types": {
     "financial_statement": {
       "description": "Audited or filed financial statement data used for fundamentals and valuation inputs.",
@@ -894,6 +894,149 @@
               "source_quality": "medium",
               "allowed_usage": "supporting_evidence",
               "evidence_category": "company_primary_filing"
+            }
+          ]
+        }
+      }
+    },
+    "company_ir_records": {
+      "description": "Normalized company IR records and official IR materials for semantic extraction candidates.",
+      "markets": {
+        "GLOBAL": {
+          "preferred_sources": [
+            {
+              "source_name": "real company IR source connector",
+              "connector_id": "company_ir_records",
+              "status": "partial",
+              "source_quality": "medium",
+              "allowed_usage": "context_only",
+              "evidence_category": "company_official_material"
+            },
+            {
+              "source_name": "semantic IR extractor",
+              "connector_id": "semantic_ir_extractor",
+              "status": "partial",
+              "source_quality": "medium",
+              "allowed_usage": "supporting_evidence",
+              "evidence_category": "semantic_extraction_candidate"
+            }
+          ],
+          "fallback_sources": [
+            {
+              "source_name": "existing filing evidence graph",
+              "connector_id": "evidence_graph",
+              "status": "partial",
+              "source_quality": "medium",
+              "allowed_usage": "context_only",
+              "evidence_category": "derived_evidence"
+            }
+          ]
+        }
+      }
+    },
+    "cninfo_ir_records": {
+      "description": "CNINFO investor relations activity records and announcement materials normalized without raw-file writes.",
+      "markets": {
+        "CN": {
+          "preferred_sources": [
+            {
+              "source_name": "CNINFO IR records metadata",
+              "connector_id": "cninfo_ir_records",
+              "status": "partial",
+              "source_quality": "high",
+              "allowed_usage": "context_only",
+              "evidence_category": "company_primary_filing"
+            }
+          ],
+          "fallback_sources": [
+            {
+              "source_name": "company IR records",
+              "connector_id": "company_ir_records",
+              "status": "partial",
+              "source_quality": "medium",
+              "allowed_usage": "context_only",
+              "evidence_category": "company_official_material"
+            }
+          ]
+        }
+      }
+    },
+    "exchange_investor_interaction": {
+      "description": "Exchange investor interaction or Q&A materials. Limited public coverage remains partial.",
+      "markets": {
+        "CN": {
+          "preferred_sources": [
+            {
+              "source_name": "exchange investor interaction",
+              "connector_id": "exchange_investor_interaction",
+              "status": "partial",
+              "source_quality": "medium",
+              "allowed_usage": "context_only",
+              "evidence_category": "company_official_material"
+            }
+          ],
+          "fallback_sources": [
+            {
+              "source_name": "CNINFO IR records",
+              "connector_id": "cninfo_ir_records",
+              "status": "partial",
+              "source_quality": "medium",
+              "allowed_usage": "context_only",
+              "evidence_category": "company_primary_filing"
+            }
+          ]
+        }
+      }
+    },
+    "semantic_ir_extractor": {
+      "description": "Semantic extraction over IR chunks with quoted_span validation and rule gates.",
+      "markets": {
+        "GLOBAL": {
+          "preferred_sources": [
+            {
+              "source_name": "semantic IR extractor",
+              "connector_id": "semantic_ir_extractor",
+              "status": "partial",
+              "source_quality": "medium",
+              "allowed_usage": "supporting_evidence",
+              "evidence_category": "semantic_extraction_candidate"
+            }
+          ],
+          "fallback_sources": [
+            {
+              "source_name": "mock semantic extractor fixture",
+              "connector_id": "semantic_ir_extractor_mock",
+              "status": "planned",
+              "source_quality": "low",
+              "allowed_usage": "planned_only",
+              "evidence_category": "mock_fixture"
+            }
+          ]
+        }
+      }
+    },
+    "semantic_evidence_persistence": {
+      "description": "Persistence of gated semantic extraction as evidence graph candidates, not direct promotion evidence.",
+      "markets": {
+        "GLOBAL": {
+          "preferred_sources": [
+            {
+              "source_name": "semantic evidence candidate persistence",
+              "connector_id": "semantic_evidence_persistence",
+              "status": "partial",
+              "source_quality": "medium",
+              "allowed_usage": "supporting_evidence",
+              "evidence_category": "semantic_evidence_candidate"
+            }
+          ],
+          "fallback_sources": [
+            {
+              "source_name": "manual semantic evidence review",
+              "connector_id": "manual_review",
+              "status": "partial",
+              "source_quality": "medium",
+              "allowed_usage": "context_only",
+              "evidence_category": "human_review"
             }
           ]
         }

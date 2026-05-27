@@ -44,6 +44,9 @@ def _make_chunk(source: dict[str, Any], text: str, index: int) -> dict[str, Any]
             "published_at": source.get("published_at"),
             "source_url": source.get("source_url"),
             "title": source.get("title"),
+            "real_source": bool(source.get("real_source")),
+            "mock_source": bool(source.get("mock_source")),
+            "source_quality": source.get("source_quality"),
         },
     }
 

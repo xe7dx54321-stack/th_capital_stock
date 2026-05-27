@@ -29,6 +29,8 @@ def build_payload() -> dict:
             "official_consensus_implemented": False,
             "tender_procurement_implemented_if_planned": False,
             "planned_connector_usable_as_evidence": False,
+            "semantic_ir_mock_marked_implemented": False,
+            "semantic_evidence_persistence_direct_promotion": False,
         },
     }
     return payload

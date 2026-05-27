@@ -85,7 +85,7 @@ def gate_semantic_extractions(extractions: list[dict[str, Any]], *, chunks_by_id
     results = []
     chunks_by_id = chunks_by_id or {}
     for item in extractions:
-        chunk = chunks_by_id.get(str(item.get("chunk_id"))) or {}
+        chunk = chunks_by_id.get(f"{item.get('source_id')}:{item.get('chunk_id')}") or chunks_by_id.get(str(item.get("chunk_id"))) or {}
         source_url = (chunk.get("metadata") or {}).get("source_url")
         results.append(gate_semantic_extraction(item, source_url=source_url, chunk_text=chunk.get("text")))
     return results
