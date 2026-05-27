@@ -60,6 +60,8 @@ def render_markdown(payload: dict[str, Any]) -> str:
         "",
         "## Overall",
         f"- Total workbench items: {summary.get('total_workbench_items')}",
+        f"- Reviewed items: {summary.get('reviewed_items', 0)}",
+        f"- Remaining items: {summary.get('remaining_items', summary.get('total_workbench_items'))}",
         f"- High priority: {summary.get('high_priority')}",
         f"- Sensitive variable items: {summary.get('sensitive_variable_items')}",
         f"- Review required: {summary.get('review_required')}",

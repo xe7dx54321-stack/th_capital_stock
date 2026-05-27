@@ -28,15 +28,30 @@ if hasattr(sys.stdout, "reconfigure"):
 SCRIPT_NAME = "upsert_download_unavailable_repair_tasks.py"
 
 
-def build_payload(conn: sqlite3.Connection, *, tickers: str | None = None, execute: bool = False) -> dict:
+def build_payload(conn: sqlite3.Connection, *, tickers: str | None = None, execute: bool = False, limit: int | None = None) -> dict:
     plan = build_repair_plan(conn, tickers=tickers)
     sources = plan.get("sources") or []
+    if limit is not None:
+        sources = sources[: max(0, int(limit))]
     tasks = []
+    before_keys = set()
+    try:
+        from smr_download_repair_queue import list_download_repair_tasks
+
+        before_keys = {(task.get("source_id"), task.get("task_type")) for task in list_download_repair_tasks(conn)}
+    except Exception:
+        before_keys = set()
     for source in sources:
         task = normalize_repair_task(source)
         if execute:
             task = upsert_download_repair_task(conn, task)
         tasks.append(task)
+    task_keys = {(task.get("source_id"), task.get("task_type")) for task in tasks}
+    type_counts = {}
+    for task in tasks:
+        type_counts[task.get("task_type")] = type_counts.get(task.get("task_type"), 0) + 1
+    duplicates_prevented = max(0, len(tasks) - len(task_keys))
+    duplicates_skipped = sum(1 for key in task_keys if key in before_keys) if execute else 0
     return {
         "generated_at": now_ts(),
         "mode": "execute" if execute else "dry_run",
@@ -44,7 +59,11 @@ def build_payload(conn: sqlite3.Connection, *, tickers: str | None = None, execu
             "repair_tasks_identified": len(tasks),
             "repair_tasks_written": len(tasks) if execute else 0,
             "dry_run_wrote_db": False if not execute else None,
-            "duplicates_prevented": max(0, len(tasks) - len({(task.get("source_id"), task.get("task_type")) for task in tasks})),
+            "duplicates_prevented": duplicates_prevented,
+            "duplicates_skipped": duplicates_skipped,
+            "manual_text_needed": type_counts.get("MANUAL_TEXT_NEEDED", 0),
+            "alternate_source_needed": type_counts.get("ALTERNATE_SOURCE_NEEDED", 0),
+            "optional_ocr_needed": type_counts.get("OPTIONAL_OCR_NEEDED", 0),
         },
         "tasks": tasks,
         "safety": {
@@ -62,12 +81,13 @@ def main() -> int:
     parser.add_argument("--tickers")
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--execute", action="store_true")
+    parser.add_argument("--limit", type=int)
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args()
     execute = bool(args.execute and not args.dry_run)
     conn = sqlite3.connect(args.db_path)
     try:
-        payload = build_payload(conn, tickers=args.tickers, execute=execute)
+        payload = build_payload(conn, tickers=args.tickers, execute=execute, limit=args.limit)
         register_snapshot(
             conn,
             entity_type="phase31_download_repair_tasks",

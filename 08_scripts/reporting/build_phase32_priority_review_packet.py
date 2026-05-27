@@ -41,6 +41,7 @@ def _packet_item(item: dict[str, Any]) -> dict[str, Any]:
         "quality_bucket": item.get("quality_bucket"),
         "lifecycle_status": item.get("lifecycle_status"),
         "review_status": item.get("review_status"),
+        "reviewed": item.get("reviewed"),
         "quoted_span_preview": item.get("quoted_span_preview"),
         "source_url": item.get("source_url"),
         "source_type": item.get("source_type"),

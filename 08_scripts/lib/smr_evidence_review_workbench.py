@@ -35,6 +35,16 @@ SENSITIVE_BLOCKED_ACTIONS = sorted(
     }
 )
 
+REVIEWED_LIFECYCLE_STATUSES = {
+    "approved_evidence",
+    "rejected_evidence",
+    "downgraded_evidence",
+    "marked_noise",
+    "needs_better_source",
+    "archived",
+    "removed",
+}
+
 
 def _preview(text: Any, limit: int = 220) -> str:
     compact = " ".join(str(text or "").split())
@@ -140,6 +150,7 @@ def normalize_workbench_item(
         "persisted_in_evidence_store": bool(candidate or state),
         "usable_for_promotion": False,
     }
+    normalized["reviewed"] = lifecycle_status in REVIEWED_LIFECYCLE_STATUSES or review_status in {"reviewed", "needs_follow_up", "blocked"}
     normalized["recommended_action"] = recommended_action_for_item(normalized)
     return attach_action_command(normalized)
 
@@ -180,9 +191,12 @@ def build_workbench(
     sensitive_count = sum(1 for item in items if item.get("sensitive_variable"))
     download_repair = sum(1 for item in items if item.get("item_type") == "download_repair")
     action_count = sum(1 for item in items if item.get("action_command_dry_run"))
+    reviewed_count = sum(1 for item in items if item.get("reviewed"))
     return {
         "summary": {
             "total_workbench_items": len(items),
+            "reviewed_items": reviewed_count,
+            "remaining_items": max(0, len(items) - reviewed_count),
             "high_priority": priority_counts.get("high", 0),
             "medium_priority": priority_counts.get("medium", 0),
             "low_priority": priority_counts.get("low", 0),

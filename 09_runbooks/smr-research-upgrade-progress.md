@@ -33,6 +33,100 @@
 | Agent run audit trail | Capture every pipeline run and block reason | Done | `agent_runs` | Real DB entries present | Useful for postmortem |
 | Daily system health report | Daily reliability summary | Done | `08_scripts/reporting/build_daily_system_health_report.py` | Validated on real data | Status reflects data health |
 
+## Phase 33: Controlled Evidence Review Execution v1
+
+Phase 33 turns the Phase 32 read-only workbench into a guarded execution loop
+for a small evidence sample. It does not review all 62 queue items. It executes
+only a controlled plan, writes audit records, updates lifecycle status, and
+then revalidates sensitive-variable, promotion, pending, paper-order, and
+research-impact safety gates.
+
+Current Phase 32 checkpoint:
+
+- Commit: `61e4f6adc7561af3454a3ec65dbb01959b995377`
+- Stage: `Phase 32: Evidence Review Workbench v1`
+- `workbench_items=62`
+- `high_priority=8`
+- `sensitive_variable_items=14`
+- `download_repair_tasks=3`
+- `batch_dry_run_passed=true`
+- `promotion_allowed_after_actions=0`
+- `new_pending_created=0`
+- `paper_order_created=0`
+- The next step is to execute a few guarded review actions and verify the real
+  audit/lifecycle loop.
+
+### Phase 33 Goals
+
+1. Add controlled review plan builder.
+2. Execute guarded review actions on a small sample.
+3. Add lifecycle delta report.
+4. Add audit log execution verification.
+5. Add governance dashboard delta.
+6. Add workbench incremental view.
+7. Add sensitive guard post-execution revalidation.
+8. Add variable pack / expectation gap post-review audit.
+9. Add download repair controlled upsert.
+10. Add controlled review execution summary.
+
+### Phase 33 Guardrails
+
+- Execute mode uses only the controlled plan.
+- Review-only or generated non-persisted items are skipped with a reason.
+- Sensitive items are downgraded or sent for better-source review, not approved
+  by default.
+- `approve_evidence` still does not allow promotion.
+- `downgrade_usage` can only reduce usage.
+- `reject_evidence` does not physically delete evidence.
+- `mark_as_noise` blocks variable-pack usage.
+- `request_better_source` creates repair tasks but not evidence.
+- No pending review, approved paper, paper order, paper position, or real trade
+  is created.
+- No semantic evidence is upgraded into confirmed supplier share, confirmed ASP,
+  confirmed customer allocation, or official consensus.
+- Raw PDF, raw HTML, text cache, DB, logs, and generated files are not
+  committed.
+
+### Phase 33 New Artifacts
+
+- `08_scripts/lib/smr_controlled_review_plan.py`
+- `08_scripts/reporting/build_phase33_controlled_review_plan.py`
+- `08_scripts/jobs/execute_phase33_controlled_review_actions.py`
+- `08_scripts/reporting/build_phase33_lifecycle_delta_report.py`
+- `08_scripts/verification/validate_phase33_audit_log_execution.py`
+- `08_scripts/reporting/build_phase33_governance_delta_dashboard.py`
+- `08_scripts/reporting/build_phase33_workbench_incremental_view.py`
+- `08_scripts/verification/validate_phase33_sensitive_guard_post_execution.py`
+- `08_scripts/verification/validate_phase33_post_review_research_impact.py`
+- `08_scripts/verification/validate_phase33_download_repair_upsert.py`
+- `08_scripts/reporting/build_phase33_controlled_review_execution_summary.py`
+- `docs/plans/2026-05-23-phase33-controlled-evidence-review-execution.md`
+
+### Phase 33 Validation Commands
+
+```bash
+python -m py_compile 08_scripts/lib/*.py 08_scripts/jobs/*.py 08_scripts/verification/*.py 08_scripts/reporting/*.py
+python -m unittest discover -s tests -v
+python 08_scripts/verification/validate_phase3_e2e.py
+python 08_scripts/verification/validate_phase4_live_e2e.py --tickers NVDA --days 180 --timeout 240
+python 08_scripts/verification/validate_phase5_paper_portfolio_smoke.py
+python 08_scripts/verification/validate_phase6_multi_ticker_live.py --watchlist ai_core --save-run-history --compare-last-run --timeout 240
+python 08_scripts/verification/validate_phase14_thesis_aware_multi_ticker_live.py --watchlist ai_core --timeout 240 --json
+python 08_scripts/reporting/build_phase32_workbench_summary.py --json
+python 08_scripts/reporting/build_phase33_controlled_review_plan.py --json
+python 08_scripts/jobs/execute_phase33_controlled_review_actions.py --dry-run --json
+python 08_scripts/jobs/execute_phase33_controlled_review_actions.py --execute --json
+python 08_scripts/reporting/build_phase33_lifecycle_delta_report.py --json
+python 08_scripts/verification/validate_phase33_audit_log_execution.py --json
+python 08_scripts/reporting/build_phase33_governance_delta_dashboard.py --json
+python 08_scripts/reporting/build_phase33_workbench_incremental_view.py --json
+python 08_scripts/verification/validate_phase33_sensitive_guard_post_execution.py --json
+python 08_scripts/verification/validate_phase33_post_review_research_impact.py --json
+python 08_scripts/jobs/upsert_download_unavailable_repair_tasks.py --execute --limit 3 --json
+python 08_scripts/verification/validate_phase33_download_repair_upsert.py --json
+python 08_scripts/reporting/build_phase33_controlled_review_execution_summary.py --json
+```
+
 ## Phase 32: Evidence Review Workbench v1
 
 Phase 32 makes Phase 31 evidence governance usable as a lightweight review
