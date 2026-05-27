@@ -28,6 +28,9 @@ def retrieve_candidate_chunks(chunks: list[dict[str, Any]], *, min_score: float 
     candidates = []
     for chunk in chunks:
         text = str(chunk.get("text") or "").lower()
+        metadata = chunk.get("metadata") or {}
+        if metadata.get("chunk_noise_action") == "reject":
+            continue
         variables = []
         reasons = []
         hits = 0

@@ -1913,6 +1913,97 @@ python 08_scripts/reporting/build_phase28_real_ir_semantic_summary.py --json
 python 08_scripts/reporting/build_phase23_connector_availability_dashboard.py --json
 ```
 
+## Phase 30: Semantic Evidence Quality & Persistence Hardening v1
+
+Phase 30 hardens Phase 29 semantic evidence candidates before they enter the
+evidence graph. The phase does not expand the watchlist or broaden extraction
+scope. It scores candidate quality, filters noisy table/PPT/metadata fragments,
+adds execute-time persistence guards, and audits the impact of persisted
+semantic candidates.
+
+Current Phase 29 checkpoint:
+
+- Commit: `1fd7ac1b629abf2e964b920bf173034a87a11013`
+- Stage: `Phase 29: Real IR Document Text Extraction v1`
+- `text_extracted=12`
+- `semantic_extractions=88`
+- `evidence_candidates_created=66`
+- `evidence_candidates_written=0`
+- Next step is candidate quality scoring, noise filtering, and safe
+  persistence.
+
+### Phase 30 Goals
+
+1. Add semantic evidence quality scoring.
+2. Add semantic evidence noise filter.
+3. Add persistence execute guard.
+4. Add candidate review summary.
+5. Add post-persistence audit.
+6. Add download unavailable repair plan.
+7. Harden table/PPT quality gates.
+8. Add semantic evidence hardening summary.
+9. Update connector registry conservatively.
+
+### Phase 30 Guardrails
+
+- Dry-run does not write DB rows.
+- Execute writes only quality-scored, non-noisy, deduped candidates.
+- Review-required candidates are not written by default.
+- Table fragments, PPT title-only spans, headers, footers, disclaimers, and
+  metadata-only snippets are rejected.
+- Clean text cache and raw PDF/HTML files are not committed.
+- OCR is not enabled by default.
+- `usable_for_promotion` remains false.
+- Semantic evidence cannot create pending review by itself.
+- Supplier share, ASP, customer allocation, official consensus, customer names,
+  and shipment values are not fabricated.
+- Promotion rules remain unchanged.
+- No paper orders, paper positions, or real trades are created.
+
+### Phase 30 New Artifacts
+
+- `08_scripts/lib/smr_semantic_evidence_quality.py`
+- `08_scripts/lib/smr_semantic_evidence_noise_filter.py`
+- `08_scripts/reporting/build_phase30_semantic_evidence_quality_report.py`
+- `08_scripts/reporting/build_phase30_candidate_review_summary.py`
+- `08_scripts/reporting/build_phase30_download_unavailable_repair_plan.py`
+- `08_scripts/reporting/build_phase30_semantic_evidence_hardening_summary.py`
+- `08_scripts/verification/validate_phase30_post_persistence_audit.py`
+- `docs/plans/2026-05-23-phase30-semantic-evidence-quality-persistence-hardening.md`
+
+### Phase 30 Expected Behavior
+
+- Every semantic evidence candidate receives a 0-100 quality score and bucket.
+- Missing `quoted_span`, missing `source_url`, and `unknown` variable type are
+  rejected.
+- Management commentary can be usable, but is capped below high quality.
+- Direct quantified disclosures score higher than context-only fragments.
+- Noisy table/PPT/metadata fragments are rejected before persistence.
+- Execute mode uses quality, noise, dedupe, and promotion-safety guards.
+- Post-persistence audit reports impact without creating confirmed variables or
+  pending review.
+
+### Phase 30 Validation Commands
+
+```bash
+python -m py_compile 08_scripts/lib/*.py 08_scripts/jobs/*.py 08_scripts/verification/*.py 08_scripts/reporting/*.py
+python -m unittest discover -s tests -v
+python 08_scripts/verification/validate_phase3_e2e.py
+python 08_scripts/verification/validate_phase4_live_e2e.py --tickers NVDA --days 180 --timeout 240
+python 08_scripts/verification/validate_phase5_paper_portfolio_smoke.py
+python 08_scripts/verification/validate_phase6_multi_ticker_live.py --watchlist ai_core --save-run-history --compare-last-run --timeout 240
+python 08_scripts/verification/validate_phase14_thesis_aware_multi_ticker_live.py --watchlist ai_core --timeout 240 --json
+python 08_scripts/reporting/build_phase29_text_extraction_summary.py --json
+python 08_scripts/reporting/build_phase30_semantic_evidence_quality_report.py --tickers 300394.SZ,300308.SZ,688041.SH,002230.SZ --json
+python 08_scripts/reporting/build_phase30_candidate_review_summary.py --tickers 300394.SZ,300308.SZ,688041.SH,002230.SZ --json
+python 08_scripts/jobs/persist_semantic_evidence_candidates.py --tickers 300394.SZ,300308.SZ,688041.SH,002230.SZ --use-text-cache --dry-run --quality-report --json
+python 08_scripts/jobs/persist_semantic_evidence_candidates.py --tickers 300394.SZ,300308.SZ,688041.SH,002230.SZ --use-text-cache --execute --min-quality-score 50 --reject-noisy --json
+python 08_scripts/verification/validate_phase30_post_persistence_audit.py --tickers 300394.SZ,300308.SZ,688041.SH,002230.SZ --json
+python 08_scripts/reporting/build_phase30_download_unavailable_repair_plan.py --json
+python 08_scripts/reporting/build_phase30_semantic_evidence_hardening_summary.py --json
+python 08_scripts/reporting/build_phase23_connector_availability_dashboard.py --json
+```
+
 ## Phase 29: Real IR Document Text Extraction v1
 
 Phase 29 upgrades real IR source metadata into clean, auditable text that can be

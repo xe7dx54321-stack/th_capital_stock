@@ -117,5 +117,33 @@ def build_semantic_pipeline(
             "metadata_only_skipped": sum(row.get("metadata_only_skipped") or 0 for row in rows),
             "quoted_span_validated": sum(row.get("quoted_span_validated") or 0 for row in rows),
             "source_url_preserved": sum(row.get("source_url_preserved") or 0 for row in rows),
+            "table_fragments_filtered": sum(
+                1
+                for row in rows
+                for chunk in row.get("chunks") or []
+                if "table_fragment" in ((chunk.get("metadata") or {}).get("chunk_noise_types") or [])
+                and (chunk.get("metadata") or {}).get("chunk_noise_action") == "reject"
+            ),
+            "ppt_title_only_filtered": sum(
+                1
+                for row in rows
+                for chunk in row.get("chunks") or []
+                if "ppt_title_only" in ((chunk.get("metadata") or {}).get("chunk_noise_types") or [])
+                and (chunk.get("metadata") or {}).get("chunk_noise_action") == "reject"
+            ),
+            "metadata_fragments_filtered": sum(
+                1
+                for row in rows
+                for chunk in row.get("chunks") or []
+                if "source_metadata_only" in ((chunk.get("metadata") or {}).get("chunk_noise_types") or [])
+                and (chunk.get("metadata") or {}).get("chunk_noise_action") == "reject"
+            ),
+            "qa_chunks_preserved": sum(
+                1
+                for row in rows
+                for chunk in row.get("chunks") or []
+                if (chunk.get("metadata") or {}).get("section_type") == "qa_section"
+                and (chunk.get("metadata") or {}).get("chunk_noise_action") != "reject"
+            ),
         },
     }

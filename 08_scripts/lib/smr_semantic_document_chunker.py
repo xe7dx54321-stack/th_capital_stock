@@ -7,6 +7,7 @@ import re
 from typing import Any
 
 from smr_ir_section_splitter import split_ir_sections
+from smr_semantic_evidence_noise_filter import annotate_chunk_noise
 
 
 def _split_qa(text: str) -> list[str]:
@@ -61,7 +62,7 @@ def _chunk_section(source: dict[str, Any], section: dict[str, Any], start_index:
 
 def _make_chunk(source: dict[str, Any], text: str, index: int, *, section: dict[str, Any] | None = None) -> dict[str, Any]:
     section = section or {}
-    return {
+    chunk = {
         "source_id": source.get("source_id"),
         "chunk_id": f"chunk_{index + 1:04d}",
         "ticker": source.get("ticker"),
@@ -83,6 +84,7 @@ def _make_chunk(source: dict[str, Any], text: str, index: int, *, section: dict[
             "extraction_status": source.get("extraction_status"),
         },
     }
+    return annotate_chunk_noise(chunk)
 
 
 def chunk_sources(sources: list[dict[str, Any]], *, max_chars: int = 900) -> list[dict[str, Any]]:

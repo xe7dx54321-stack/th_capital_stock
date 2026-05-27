@@ -10,6 +10,7 @@ from typing import Any
 
 from smr_phase25_utils import resolve_phase25_tickers
 from smr_phase27_semantic_pipeline import build_semantic_pipeline, build_semantic_pipeline_for_ticker
+from smr_semantic_evidence_quality import filter_candidates_for_persistence
 from smr_wiki import now_ts
 
 
@@ -144,12 +145,57 @@ def build_semantic_evidence_candidates(
     }
 
 
-def write_semantic_evidence_candidates(conn: sqlite3.Connection, candidates: list[dict[str, Any]]) -> int:
+def guard_semantic_evidence_candidates(
+    candidates: list[dict[str, Any]],
+    *,
+    min_quality_score: int = 50,
+    allow_review_required: bool = False,
+    reject_noisy: bool = True,
+) -> dict[str, Any]:
+    guarded = filter_candidates_for_persistence(
+        candidates,
+        min_quality_score=min_quality_score,
+        allow_review_required=allow_review_required,
+        reject_noisy=reject_noisy,
+    )
+    return {
+        **guarded,
+        "summary": {
+            "quality_scored": len(guarded["scored_candidates"]),
+            "eligible_for_persistence": len(guarded["eligible_candidates"]),
+            "rejected_by_quality": sum(1 for candidate in guarded["rejected_candidates"] if (candidate.get("quality") or {}).get("quality_bucket") == "reject"),
+            "rejected_by_noise": sum(
+                1
+                for candidate in guarded["rejected_candidates"]
+                if ((candidate.get("quality") or {}).get("noise") or {}).get("recommended_action") == "reject"
+            ),
+            "review_required": len(guarded["review_required_candidates"]),
+            "usable_for_promotion_true": sum(1 for candidate in guarded["scored_candidates"] if candidate.get("usable_for_promotion")),
+        },
+    }
+
+
+def write_semantic_evidence_candidates(
+    conn: sqlite3.Connection,
+    candidates: list[dict[str, Any]],
+    *,
+    enforce_quality_guard: bool = False,
+    min_quality_score: int = 50,
+    allow_review_required: bool = False,
+    reject_noisy: bool = True,
+) -> int:
     ensure_semantic_evidence_candidate_table(conn)
+    if enforce_quality_guard:
+        candidates = guard_semantic_evidence_candidates(
+            candidates,
+            min_quality_score=min_quality_score,
+            allow_review_required=allow_review_required,
+            reject_noisy=reject_noisy,
+        )["eligible_candidates"]
     now = now_ts()
     written = 0
     for candidate in candidates:
-        if not candidate.get("source_url") or not candidate.get("quoted_span"):
+        if not candidate.get("source_url") or not candidate.get("quoted_span") or candidate.get("usable_for_promotion"):
             continue
         conn.execute(
             """
@@ -194,6 +240,22 @@ def write_semantic_evidence_candidates(conn: sqlite3.Connection, candidates: lis
         )
         written += 1
     return written
+
+
+def delete_semantic_evidence_candidates(conn: sqlite3.Connection, candidates: list[dict[str, Any]]) -> int:
+    """Remove previously persisted candidates that the current guard now rejects."""
+
+    ensure_semantic_evidence_candidate_table(conn)
+    deleted = 0
+    seen: set[str] = set()
+    for candidate in candidates:
+        evidence_id = str(candidate.get("evidence_id") or "")
+        if not evidence_id or evidence_id in seen:
+            continue
+        seen.add(evidence_id)
+        cursor = conn.execute("DELETE FROM semantic_evidence_candidates WHERE evidence_id = ?", (evidence_id,))
+        deleted += int(cursor.rowcount or 0)
+    return deleted
 
 
 def semantic_candidates_to_gate_results(candidates: list[dict[str, Any]]) -> list[dict[str, Any]]:

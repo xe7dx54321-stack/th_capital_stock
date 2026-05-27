@@ -1365,6 +1365,114 @@
           "fallback_sources": []
         }
       }
+    },
+    "semantic_evidence_quality_scorer": {
+      "description": "Quality scoring for semantic evidence candidates before persistence. Scores quoted_span traceability, source quality, section relevance, specificity, noise risk, and promotion safety.",
+      "markets": {
+        "GLOBAL": {
+          "preferred_sources": [
+            {
+              "source_name": "semantic evidence quality scorer",
+              "connector_id": "semantic_evidence_quality_scorer",
+              "status": "partial",
+              "source_quality": "medium",
+              "allowed_usage": "supporting_evidence",
+              "evidence_category": "semantic_evidence_quality"
+            }
+          ],
+          "fallback_sources": [
+            {
+              "source_name": "manual semantic evidence review",
+              "connector_id": "manual_review",
+              "status": "partial",
+              "source_quality": "medium",
+              "allowed_usage": "context_only",
+              "evidence_category": "human_review"
+            }
+          ]
+        }
+      }
+    },
+    "semantic_evidence_noise_filter": {
+      "description": "Noise filter for table fragments, PPT title-only spans, headers, footers, disclaimers, metadata-only spans, and numeric fragments.",
+      "markets": {
+        "GLOBAL": {
+          "preferred_sources": [
+            {
+              "source_name": "semantic evidence noise filter",
+              "connector_id": "semantic_evidence_noise_filter",
+              "status": "partial",
+              "source_quality": "medium",
+              "allowed_usage": "supporting_evidence",
+              "evidence_category": "semantic_evidence_quality"
+            }
+          ],
+          "fallback_sources": [
+            {
+              "source_name": "manual semantic evidence review",
+              "connector_id": "manual_review",
+              "status": "partial",
+              "source_quality": "medium",
+              "allowed_usage": "context_only",
+              "evidence_category": "human_review"
+            }
+          ]
+        }
+      }
+    },
+    "semantic_evidence_persistence_guard": {
+      "description": "Execute guard that allows only quality-scored, non-noisy, deduped semantic evidence candidates to be persisted.",
+      "markets": {
+        "GLOBAL": {
+          "preferred_sources": [
+            {
+              "source_name": "semantic evidence persistence guard",
+              "connector_id": "semantic_evidence_persistence_guard",
+              "status": "partial",
+              "source_quality": "medium",
+              "allowed_usage": "supporting_evidence",
+              "evidence_category": "semantic_evidence_candidate"
+            }
+          ],
+          "fallback_sources": [
+            {
+              "source_name": "manual semantic evidence review",
+              "connector_id": "manual_review",
+              "status": "partial",
+              "source_quality": "medium",
+              "allowed_usage": "context_only",
+              "evidence_category": "human_review"
+            }
+          ]
+        }
+      }
+    },
+    "semantic_evidence_post_persistence_audit": {
+      "description": "Post-persistence audit for semantic evidence candidate impact on variable packs, expectation gap, valuation, and bear case without promotion changes.",
+      "markets": {
+        "GLOBAL": {
+          "preferred_sources": [
+            {
+              "source_name": "semantic evidence post-persistence audit",
+              "connector_id": "semantic_evidence_post_persistence_audit",
+              "status": "partial",
+              "source_quality": "medium",
+              "allowed_usage": "supporting_evidence",
+              "evidence_category": "semantic_evidence_audit"
+            }
+          ],
+          "fallback_sources": [
+            {
+              "source_name": "manual semantic evidence review",
+              "connector_id": "manual_review",
+              "status": "partial",
+              "source_quality": "medium",
+              "allowed_usage": "context_only",
+              "evidence_category": "human_review"
+            }
+          ]
+        }
+      }
     }
   }
 }

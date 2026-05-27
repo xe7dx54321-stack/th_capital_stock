@@ -33,6 +33,8 @@ def build_payload() -> dict:
             "semantic_evidence_persistence_direct_promotion": False,
             "real_ir_text_extractor_marked_implemented": False,
             "ocr_default_enabled": False,
+            "semantic_quality_guard_marked_implemented": False,
+            "semantic_noise_filter_direct_promotion": False,
         },
     }
     return payload
