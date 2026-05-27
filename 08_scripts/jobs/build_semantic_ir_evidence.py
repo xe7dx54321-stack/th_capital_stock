@@ -28,6 +28,9 @@ def build_payload(
     conn: sqlite3.Connection | None = None,
     use_real_sources: bool = False,
     allow_mock_fallback: bool = True,
+    use_text_cache: bool = False,
+    extract_text_if_missing: bool = False,
+    skip_metadata_only: bool = True,
 ) -> dict:
     pipeline = build_semantic_pipeline(
         tickers,
@@ -35,6 +38,9 @@ def build_payload(
         conn=conn,
         use_real_sources=use_real_sources,
         allow_mock_fallback=allow_mock_fallback,
+        use_text_cache=use_text_cache,
+        extract_text_if_missing=extract_text_if_missing,
+        skip_metadata_only=skip_metadata_only,
     )
     summary = dict(pipeline.get("summary") or {})
     summary["invalid_extractions"] = 0
@@ -49,6 +55,11 @@ def build_payload(
             "prompt_guardrails": row.get("prompt_guardrails"),
             "llm_enabled": row.get("llm_enabled"),
             "main_variables": list(dict.fromkeys(item.get("variable_type") for item in row.get("semantic_extractions") or [] if item.get("variable_type")))[:6],
+            "text_cache_hits": row.get("text_cache_hits"),
+            "document_text_extractions": row.get("document_text_extractions"),
+            "metadata_only_skipped": row.get("metadata_only_skipped"),
+            "quoted_span_validated": row.get("quoted_span_validated"),
+            "source_url_preserved": row.get("source_url_preserved"),
         }
         for row in pipeline.get("rows") or []
     ]
@@ -78,6 +89,9 @@ def main() -> int:
     parser.add_argument("--real-sources", action="store_true")
     parser.add_argument("--allow-mock-fallback", action="store_true", default=True)
     parser.add_argument("--no-mock-fallback", action="store_true")
+    parser.add_argument("--use-text-cache", action="store_true")
+    parser.add_argument("--extract-text-if-missing", action="store_true")
+    parser.add_argument("--skip-metadata-only", action="store_true", default=True)
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args()
     mode = "llm" if args.llm and not args.mock else "mock"
@@ -89,6 +103,9 @@ def main() -> int:
             conn=conn,
             use_real_sources=args.real_sources,
             allow_mock_fallback=not args.no_mock_fallback,
+            use_text_cache=args.use_text_cache,
+            extract_text_if_missing=args.extract_text_if_missing,
+            skip_metadata_only=args.skip_metadata_only,
         )
     finally:
         if conn is not None:

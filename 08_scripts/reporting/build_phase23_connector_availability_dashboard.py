@@ -31,6 +31,8 @@ def build_payload() -> dict:
             "planned_connector_usable_as_evidence": False,
             "semantic_ir_mock_marked_implemented": False,
             "semantic_evidence_persistence_direct_promotion": False,
+            "real_ir_text_extractor_marked_implemented": False,
+            "ocr_default_enabled": False,
         },
     }
     return payload

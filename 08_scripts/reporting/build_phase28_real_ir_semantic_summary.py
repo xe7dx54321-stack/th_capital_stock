@@ -23,12 +23,12 @@ if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
 
-def build_payload(conn: sqlite3.Connection, *, tickers: str | None = None) -> dict:
+def build_payload(conn: sqlite3.Connection, *, tickers: str | None = None, use_text_cache: bool = False) -> dict:
     resolved = resolve_phase25_tickers(tickers)
     rows = []
     by_variable: dict[str, int] = {}
     for ticker in resolved:
-        pipeline = build_semantic_pipeline_for_ticker(ticker, conn=conn, use_real_sources=True, allow_mock_fallback=True)
+        pipeline = build_semantic_pipeline_for_ticker(ticker, conn=conn, use_real_sources=True, allow_mock_fallback=True, use_text_cache=use_text_cache)
         candidates = candidates_from_pipeline(pipeline)
         passed = [gate for gate in pipeline.get("gate_results") or [] if gate.get("evidence_status") != "blocked"]
         variables = list(dict.fromkeys(str(gate.get("variable_type")) for gate in passed if gate.get("variable_type")))
@@ -104,12 +104,13 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Build Phase 28 real IR semantic summary")
     parser.add_argument("--db-path", default=str(DB_PATH))
     parser.add_argument("--tickers")
+    parser.add_argument("--use-text-cache", action="store_true")
     parser.add_argument("--json", action="store_true")
     parser.add_argument("--markdown", action="store_true")
     args = parser.parse_args()
     conn = sqlite3.connect(args.db_path)
     try:
-        payload = build_payload(conn, tickers=args.tickers)
+        payload = build_payload(conn, tickers=args.tickers, use_text_cache=args.use_text_cache)
     finally:
         conn.close()
     if args.markdown and not args.json:

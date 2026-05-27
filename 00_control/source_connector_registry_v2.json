@@ -1042,6 +1042,141 @@
         }
       }
     },
+    "real_ir_document_text_extractor": {
+      "description": "Clean text extraction from real IR, announcement, PDF, HTML, and local text sources without raw-file persistence.",
+      "markets": {
+        "GLOBAL": {
+          "preferred_sources": [
+            {
+              "source_name": "real IR document text extractor",
+              "connector_id": "real_ir_document_text_extractor",
+              "status": "partial",
+              "source_quality": "medium",
+              "allowed_usage": "supporting_evidence",
+              "evidence_category": "clean_text_extraction"
+            }
+          ],
+          "fallback_sources": [
+            {
+              "source_name": "manual text extraction review",
+              "connector_id": "manual_review",
+              "status": "partial",
+              "source_quality": "medium",
+              "allowed_usage": "context_only",
+              "evidence_category": "human_review"
+            }
+          ]
+        }
+      }
+    },
+    "cninfo_pdf_text_extractor": {
+      "description": "CNINFO PDF text-layer extraction for IR records and announcements. OCR is not enabled by default.",
+      "markets": {
+        "CN": {
+          "preferred_sources": [
+            {
+              "source_name": "CNINFO PDF text-layer extractor",
+              "connector_id": "cninfo_pdf_text_extractor",
+              "status": "partial",
+              "source_quality": "medium",
+              "allowed_usage": "supporting_evidence",
+              "evidence_category": "clean_text_extraction"
+            }
+          ],
+          "fallback_sources": [
+            {
+              "source_name": "CNINFO IR records metadata",
+              "connector_id": "cninfo_ir_records",
+              "status": "partial",
+              "source_quality": "medium",
+              "allowed_usage": "context_only",
+              "evidence_category": "company_primary_filing"
+            }
+          ]
+        }
+      }
+    },
+    "ir_pdf_text_extractor": {
+      "description": "Company IR PDF text-layer extraction with metadata-only and scanned-PDF quality gates.",
+      "markets": {
+        "GLOBAL": {
+          "preferred_sources": [
+            {
+              "source_name": "IR PDF text-layer extractor",
+              "connector_id": "ir_pdf_text_extractor",
+              "status": "partial",
+              "source_quality": "medium",
+              "allowed_usage": "supporting_evidence",
+              "evidence_category": "clean_text_extraction"
+            }
+          ],
+          "fallback_sources": [
+            {
+              "source_name": "real IR source metadata",
+              "connector_id": "company_ir_records",
+              "status": "partial",
+              "source_quality": "medium",
+              "allowed_usage": "context_only",
+              "evidence_category": "company_official_material"
+            }
+          ]
+        }
+      }
+    },
+    "semantic_text_cache": {
+      "description": "Ignored local clean-text cache for extracted IR document text. Raw PDF/HTML is not cached.",
+      "markets": {
+        "GLOBAL": {
+          "preferred_sources": [
+            {
+              "source_name": "semantic clean text cache",
+              "connector_id": "semantic_text_cache",
+              "status": "partial",
+              "source_quality": "medium",
+              "allowed_usage": "supporting_evidence",
+              "evidence_category": "clean_text_cache"
+            }
+          ],
+          "fallback_sources": [
+            {
+              "source_name": "document text extractor",
+              "connector_id": "real_ir_document_text_extractor",
+              "status": "partial",
+              "source_quality": "medium",
+              "allowed_usage": "supporting_evidence",
+              "evidence_category": "clean_text_extraction"
+            }
+          ]
+        }
+      }
+    },
+    "ir_section_splitter": {
+      "description": "Rule-based section splitter for extracted IR text; section priority only affects chunking order.",
+      "markets": {
+        "GLOBAL": {
+          "preferred_sources": [
+            {
+              "source_name": "IR section splitter",
+              "connector_id": "ir_section_splitter",
+              "status": "partial",
+              "source_quality": "medium",
+              "allowed_usage": "supporting_evidence",
+              "evidence_category": "text_structure"
+            }
+          ],
+          "fallback_sources": [
+            {
+              "source_name": "plain semantic chunker",
+              "connector_id": "semantic_ir_extractor",
+              "status": "partial",
+              "source_quality": "medium",
+              "allowed_usage": "supporting_evidence",
+              "evidence_category": "semantic_extraction_candidate"
+            }
+          ]
+        }
+      }
+    },
     "industry_forecast": {
       "description": "Industry forecast source for demand, shipment, price, or capacity assumptions.",
       "markets": {

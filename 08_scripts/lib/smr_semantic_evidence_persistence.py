@@ -47,8 +47,8 @@ def ensure_semantic_evidence_candidate_table(conn: sqlite3.Connection) -> None:
     )
 
 
-def semantic_candidate_id(source_id: str, chunk_id: str, quoted_span: str) -> str:
-    digest = hashlib.sha1(f"{source_id}|{chunk_id}|{quoted_span}".encode("utf-8")).hexdigest()[:16]
+def semantic_candidate_id(source_id: str, chunk_id: str, quoted_span: str, variable_type: str | None = None) -> str:
+    digest = hashlib.sha1(f"{source_id}|{chunk_id}|{variable_type or ''}|{quoted_span}".encode("utf-8")).hexdigest()[:16]
     return f"ev_semantic_ir_{digest}"
 
 
@@ -58,10 +58,11 @@ def gate_result_to_candidate(gate: dict[str, Any], *, chunk: dict[str, Any] | No
     metadata = chunk.get("metadata") or {}
     source_url = metadata.get("source_url")
     quoted_span = extraction.get("quoted_span")
-    if gate.get("evidence_status") == "blocked" or not source_url or not quoted_span or metadata.get("mock_source"):
+    chunk_text = str(chunk.get("text") or "")
+    if gate.get("evidence_status") == "blocked" or not source_url or not quoted_span or quoted_span not in chunk_text or metadata.get("mock_source"):
         return None
     return {
-        "evidence_id": semantic_candidate_id(str(gate.get("source_id")), str(gate.get("chunk_id")), str(quoted_span)),
+        "evidence_id": semantic_candidate_id(str(gate.get("source_id")), str(gate.get("chunk_id")), str(quoted_span), str(gate.get("variable_type"))),
         "ticker": extraction.get("ticker"),
         "theme": extraction.get("theme"),
         "source_id": gate.get("source_id"),
@@ -108,6 +109,9 @@ def build_semantic_evidence_candidates(
     use_real_sources: bool = True,
     allow_mock_fallback: bool = True,
     mode: str = "mock",
+    use_text_cache: bool = False,
+    extract_text_if_missing: bool = False,
+    skip_metadata_only: bool = True,
 ) -> dict[str, Any]:
     resolved = resolve_phase25_tickers(tickers)
     rows = []
@@ -118,6 +122,9 @@ def build_semantic_evidence_candidates(
             conn=conn,
             use_real_sources=use_real_sources,
             allow_mock_fallback=allow_mock_fallback,
+            use_text_cache=use_text_cache,
+            extract_text_if_missing=extract_text_if_missing,
+            skip_metadata_only=skip_metadata_only,
         )
         candidates = candidates_from_pipeline(pipeline)
         rows.append({"ticker": ticker, "pipeline": pipeline, "evidence_candidates": candidates})
@@ -126,6 +133,11 @@ def build_semantic_evidence_candidates(
         "summary": {
             "tickers_checked": len(rows),
             "semantic_evidence_candidates": sum(len(row["evidence_candidates"]) for row in rows),
+            "semantic_extractions": sum(len((row.get("pipeline") or {}).get("semantic_extractions") or []) for row in rows),
+            "passed_gate": sum(1 for row in rows for gate in (row.get("pipeline") or {}).get("gate_results") or [] if gate.get("evidence_status") != "blocked"),
+            "deduped_candidates": sum(
+                max(0, len((row.get("pipeline") or {}).get("gate_results") or []) - len(row["evidence_candidates"])) for row in rows
+            ),
             "raw_source_text_written": False,
         },
         "rows": rows,

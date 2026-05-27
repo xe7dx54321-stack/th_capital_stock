@@ -28,8 +28,17 @@ if hasattr(sys.stdout, "reconfigure"):
 SCRIPT_NAME = "persist_semantic_evidence_candidates.py"
 
 
-def build_payload(conn: sqlite3.Connection, *, tickers: str | None = None, mode: str = "dry_run") -> dict:
-    candidate_payload = build_semantic_evidence_candidates(conn, tickers, use_real_sources=True, allow_mock_fallback=True, mode="mock")
+def build_payload(conn: sqlite3.Connection, *, tickers: str | None = None, mode: str = "dry_run", use_text_cache: bool = False) -> dict:
+    candidate_payload = build_semantic_evidence_candidates(
+        conn,
+        tickers,
+        use_real_sources=True,
+        allow_mock_fallback=True,
+        mode="mock",
+        use_text_cache=use_text_cache,
+        extract_text_if_missing=False,
+        skip_metadata_only=True,
+    )
     candidates = flatten_candidates(candidate_payload)
     written = write_semantic_evidence_candidates(conn, candidates) if mode == "execute" else 0
     return {
@@ -65,12 +74,13 @@ def main() -> int:
     parser.add_argument("--tickers")
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--execute", action="store_true")
+    parser.add_argument("--use-text-cache", action="store_true")
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args()
     mode = "execute" if args.execute and not args.dry_run else "dry_run"
     conn = sqlite3.connect(args.db_path)
     try:
-        payload = build_payload(conn, tickers=args.tickers, mode=mode)
+        payload = build_payload(conn, tickers=args.tickers, mode=mode, use_text_cache=args.use_text_cache)
         if mode == "execute":
             conn.commit()
             register_snapshot(conn, "phase28_semantic_evidence_candidates", args.tickers or "supply_chain_pilot", mode, SCRIPT_NAME, payload=payload)

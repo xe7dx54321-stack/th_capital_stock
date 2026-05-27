@@ -64,6 +64,10 @@ secrets/
 financial_statement_chunks/
 financial_statement_raw/
 financial_statement_reports/
+08_data/generated/text_cache/**
+**/text_cache/**
+*.text_cache.json
+*.text_cache.txt
 
 # Agent runtime queues and workspaces
 12_smr_agents/handoffs/

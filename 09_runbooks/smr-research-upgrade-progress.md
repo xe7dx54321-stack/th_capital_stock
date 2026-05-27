@@ -1912,3 +1912,97 @@ python 08_scripts/verification/validate_phase28_persisted_semantic_gate_impact.p
 python 08_scripts/reporting/build_phase28_real_ir_semantic_summary.py --json
 python 08_scripts/reporting/build_phase23_connector_availability_dashboard.py --json
 ```
+
+## Phase 29: Real IR Document Text Extraction v1
+
+Phase 29 upgrades real IR source metadata into clean, auditable text that can be
+chunked, semantically extracted, gated, and persisted as quoted-span evidence
+candidates. The phase focuses on text extraction quality rather than promotion:
+metadata-only source records are not treated as body text, OCR is not enabled by
+default, and raw PDF/HTML files are not committed.
+
+Current Phase 28 checkpoint:
+
+- Commit: `e7460440f6d54295cfd12148d4619bc57a8ccb69`
+- Stage: `Phase 28: Real IR Source Connector + Semantic Evidence Persistence v1`
+- Real IR source metadata is connected.
+- Real source semantic pipeline can run, but many sources remain
+  `text_unavailable`.
+- Phase 28 summary had `text_unavailable_sources=11` and
+  `evidence_candidates_created=0`.
+- Bottleneck is CNINFO / IR PDF and announcement body extraction.
+
+### Phase 29 Goals
+
+1. Add document text extraction schema and quality statuses.
+2. Add PDF / HTML / plain text / local text extractor.
+3. Add ignored clean text cache.
+4. Add IR section splitter.
+5. Connect extracted text to the real source loader and chunker.
+6. Re-run semantic extraction on extracted text.
+7. Create semantic evidence candidates from extracted text.
+8. Revalidate variable packs, expectation gap, valuation, and bear case impact.
+9. Add text extraction summary dashboard.
+10. Update connector registry conservatively.
+
+### Phase 29 Guardrails
+
+- Dry-run does not write cache or DB rows.
+- Execute writes only clean text cache and evidence candidates.
+- Raw PDF and raw HTML are not written by Phase 29 scripts.
+- Generated text cache is ignored by git.
+- Metadata-only text cannot enter semantic chunking.
+- Text that is too short, table-only, or scanned-PDF-without-text is skipped.
+- OCR is not enabled by default.
+- Quoted span must come from extracted chunk text.
+- Source URL is required before evidence candidate persistence.
+- Semantic evidence remains promotion-disabled by default.
+- Supplier share, ASP, shipment, customer allocation, and customer names are not
+  fabricated.
+- Semantic evidence alone cannot create pending review.
+- Promotion rules remain unchanged.
+- No paper orders, paper positions, or real trades are created.
+
+### Phase 29 New Artifacts
+
+- `08_scripts/lib/smr_document_text_extraction.py`
+- `08_scripts/lib/smr_document_text_extractor.py`
+- `08_scripts/lib/smr_text_cache.py`
+- `08_scripts/lib/smr_ir_section_splitter.py`
+- `08_scripts/jobs/extract_real_ir_document_text.py`
+- `08_scripts/reporting/build_phase29_text_extraction_summary.py`
+- `08_scripts/verification/validate_phase29_text_extraction_semantic_evidence.py`
+- `docs/plans/2026-05-23-phase29-real-ir-document-text-extraction.md`
+
+### Phase 29 Expected Behavior
+
+- Document extraction reports `text_extracted`, `text_too_short`,
+  `metadata_only`, `scanned_pdf_needs_ocr`, `table_only`, or
+  `extraction_failed`.
+- Text cache can be written in execute mode and read by the semantic pipeline.
+- Section splitter preserves Q&A and classifies useful IR sections.
+- Chunker preserves source URL, published date, section type, text source, and
+  extraction status.
+- Semantic extraction can run from text cache while defaulting to mock mode.
+- Persistence dry-run can create candidates only when extracted text has valid
+  quoted spans and source URLs.
+- Revalidation reports impact without creating pending review.
+
+### Phase 29 Validation Commands
+
+```bash
+python -m py_compile 08_scripts/lib/*.py 08_scripts/jobs/*.py 08_scripts/verification/*.py 08_scripts/reporting/*.py
+python -m unittest discover -s tests -v
+python 08_scripts/verification/validate_phase3_e2e.py
+python 08_scripts/verification/validate_phase4_live_e2e.py --tickers NVDA --days 180 --timeout 240
+python 08_scripts/verification/validate_phase5_paper_portfolio_smoke.py
+python 08_scripts/verification/validate_phase6_multi_ticker_live.py --watchlist ai_core --save-run-history --compare-last-run --timeout 240
+python 08_scripts/verification/validate_phase14_thesis_aware_multi_ticker_live.py --watchlist ai_core --timeout 240 --json
+python 08_scripts/reporting/build_phase28_real_ir_semantic_summary.py --json
+python 08_scripts/jobs/extract_real_ir_document_text.py --tickers 300394.SZ,300308.SZ,688041.SH,002230.SZ --dry-run --json
+python 08_scripts/jobs/build_semantic_ir_evidence.py --tickers 300394.SZ,300308.SZ,688041.SH,002230.SZ --real-sources --use-text-cache --mock --json
+python 08_scripts/jobs/persist_semantic_evidence_candidates.py --tickers 300394.SZ,300308.SZ,688041.SH,002230.SZ --use-text-cache --dry-run --json
+python 08_scripts/verification/validate_phase29_text_extraction_semantic_evidence.py --tickers 300394.SZ,300308.SZ,688041.SH,002230.SZ --json
+python 08_scripts/reporting/build_phase29_text_extraction_summary.py --json
+python 08_scripts/reporting/build_phase23_connector_availability_dashboard.py --json
+```

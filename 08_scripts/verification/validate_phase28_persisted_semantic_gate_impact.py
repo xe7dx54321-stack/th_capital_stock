@@ -41,10 +41,10 @@ def _why_not_upgraded(packs: dict) -> list[str]:
     return reasons
 
 
-def _row(conn: sqlite3.Connection, ticker: str) -> dict:
+def _row(conn: sqlite3.Connection, ticker: str, *, use_text_cache: bool = False) -> dict:
     before_packs = build_variable_evidence_packs(conn, ticker)
     before_gap = build_expectation_gap(conn, ticker, variable_evidence=before_packs).get("expectation_gap") or {}
-    payload = build_semantic_evidence_candidates(conn, ticker, use_real_sources=True, allow_mock_fallback=True)
+    payload = build_semantic_evidence_candidates(conn, ticker, use_real_sources=True, allow_mock_fallback=True, use_text_cache=use_text_cache)
     candidates = flatten_candidates(payload)
     after_packs = build_variable_evidence_packs(conn, ticker, semantic_gate_results=semantic_candidates_to_gate_results(candidates))
     after_gap = build_expectation_gap(conn, ticker, variable_evidence=after_packs).get("expectation_gap") or {}
@@ -63,9 +63,9 @@ def _row(conn: sqlite3.Connection, ticker: str) -> dict:
     }
 
 
-def build_payload(conn: sqlite3.Connection, *, tickers: str | None = None) -> dict:
+def build_payload(conn: sqlite3.Connection, *, tickers: str | None = None, use_text_cache: bool = False) -> dict:
     resolved = resolve_phase25_tickers(tickers)
-    rows = [_row(conn, ticker) for ticker in resolved]
+    rows = [_row(conn, ticker, use_text_cache=use_text_cache) for ticker in resolved]
     return {
         "generated_at": now_ts(),
         "overall_status": "partial_pass",
@@ -91,11 +91,12 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Validate persisted semantic gate impact")
     parser.add_argument("--db-path", default=str(DB_PATH))
     parser.add_argument("--tickers")
+    parser.add_argument("--use-text-cache", action="store_true")
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args()
     conn = sqlite3.connect(args.db_path)
     try:
-        payload = build_payload(conn, tickers=args.tickers)
+        payload = build_payload(conn, tickers=args.tickers, use_text_cache=args.use_text_cache)
         register_snapshot(conn, "phase28_persisted_semantic_gate_impact", args.tickers or "supply_chain_pilot", payload["overall_status"], SCRIPT_NAME, payload=payload)
         conn.commit()
     finally:
