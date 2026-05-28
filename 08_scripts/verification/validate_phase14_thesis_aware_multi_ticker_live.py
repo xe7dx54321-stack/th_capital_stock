@@ -12,7 +12,6 @@ import argparse
 import json
 import sqlite3
 import sys
-from smr_safe_output import safe_print_json
 from collections import Counter
 from pathlib import Path
 from typing import Any
@@ -23,6 +22,7 @@ VERIFICATION_DIR = Path(__file__).resolve().parent
 for path in (LIB_DIR, REPORTING_DIR, VERIFICATION_DIR):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
+from smr_safe_output import safe_print_json
 
 from smr_agents import DB_PATH
 from smr_blocker_repair_queue import apply_phase14_thesis_metadata

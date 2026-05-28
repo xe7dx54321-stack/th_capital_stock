@@ -8,7 +8,6 @@ import json
 import sqlite3
 import subprocess
 import sys
-from smr_safe_output import safe_print_json
 from collections import Counter
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -17,6 +16,7 @@ from typing import Any
 LIB_DIR = Path(__file__).resolve().parents[1] / "lib"
 if str(LIB_DIR) not in sys.path:
     sys.path.insert(0, str(LIB_DIR))
+from smr_safe_output import safe_print_json
 
 from smr_agents import DB_PATH
 from smr_bear_case import build_bear_case
