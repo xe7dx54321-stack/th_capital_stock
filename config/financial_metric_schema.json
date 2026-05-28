@@ -1,0 +1,53 @@
+{
+  "metric_groups": {
+    "income_statement": [
+      "revenue",
+      "gross_profit",
+      "gross_margin",
+      "operating_profit",
+      "net_profit",
+      "net_margin"
+    ],
+    "balance_sheet": [
+      "inventory",
+      "contract_liabilities",
+      "accounts_receivable",
+      "total_assets",
+      "total_liabilities"
+    ],
+    "cash_flow": [
+      "operating_cash_flow",
+      "capex",
+      "free_cash_flow_proxy"
+    ],
+    "expense": [
+      "r_and_d_expense",
+      "selling_expense",
+      "administrative_expense",
+      "financial_expense"
+    ]
+  },
+  "period_types": [
+    "single_quarter",
+    "cumulative",
+    "annual",
+    "semiannual",
+    "ttm"
+  ],
+  "calculated_metrics": [
+    "yoy_growth",
+    "qoq_growth",
+    "gross_margin",
+    "net_margin",
+    "inventory_to_revenue",
+    "accounts_receivable_to_revenue",
+    "operating_cash_flow_to_net_profit"
+  ],
+  "industry_template_extension_points": [
+    "high_end_product_revenue",
+    "gross_margin_stability",
+    "inventory_build",
+    "delivery_signal",
+    "customer_demand_proxy"
+  ]
+}

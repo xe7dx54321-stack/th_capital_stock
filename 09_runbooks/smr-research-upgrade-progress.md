@@ -3752,3 +3752,34 @@ Daily brief with executive summary + analyst detail, forbidden phrase check, sty
 
 ### Phase 54: Research Brief Quality Contract & Investment Logic Upgrade v1
 Upgrade from tracking brief to investment logic brief. Business value first, no system status terms.
+
+
+## Phase 55: Financial Statement Signal Extraction Framework v1
+
+Status: completed
+
+Goals:
+- financial metric schema (generic base)
+- financial source availability
+- financial statement loader (dry-run / execute / fixture-only)
+- metric normalization
+- quarterly financial signal calculator
+- financial signal classifier
+- financial-to-thesis impact mapper
+- observed-first financial signal brief
+- framework generalization report
+- dashboard
+
+Design principles:
+- Generic base + industry template + single ticker adapter
+- Fixture data clearly marked as fixture_only
+- Missing data never fabricated
+- No AI guessing financial values
+- No trading recommendations
+
+Pilot: 300308.SZ
+Framework generic capabilities: 6 (schema, availability, loader, normalization, signals, classification)
+Industry-specific: 1 (variable mapping)
+Not assumed to generalize: 300308-specific thesis claims
+
+Boundary: pending_created=0, paper_order_created=0, real_trade_created=0
