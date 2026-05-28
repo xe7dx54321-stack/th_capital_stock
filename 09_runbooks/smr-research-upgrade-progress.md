@@ -33,6 +33,105 @@
 | Agent run audit trail | Capture every pipeline run and block reason | Done | `agent_runs` | Real DB entries present | Useful for postmortem |
 | Daily system health report | Daily reliability summary | Done | `08_scripts/reporting/build_daily_system_health_report.py` | Validated on real data | Status reflects data health |
 
+## Phase 34: Post-Governance Research Revalidation v1
+
+Phase 34 feeds the Phase 33 governed evidence state back into the research
+system. It does not expand sources, review more evidence at scale, create
+pending review rows, produce approved papers, or create any paper or real
+orders. Its job is to decide whether each supply-chain pilot ticker's research
+state is strengthened, weakened, unchanged and data-starved, ready for a deeper
+research packet, or deprioritized.
+
+Current Phase 33 checkpoint:
+
+- Commit: `ee3d9c68160ef2898b1d0c8fd4498f781605ef5a`
+- Stage: `Phase 33: Controlled Evidence Review Execution v1`
+- `actions_executed=8`
+- `audit_records_written=8`
+- `lifecycle_status_updated=8`
+- `variable_packs_changed=7`
+- `expectation_gap_changed=0`
+- `valuation_support_changed=0`
+- `confirmed_variables_added=0`
+- `promotion_allowed_true=0`
+- `new_pending_created=0`
+- `paper_order_created=0`
+- The next step is to revalidate research state from the governed evidence
+  rather than push directly toward pending.
+
+### Phase 34 Goals
+
+1. Add post-governance evidence state aggregation.
+2. Revalidate variable packs after governed review actions.
+3. Revalidate expectation gap confidence conservatively.
+4. Revalidate valuation support without replacing official valuation inputs.
+5. Revalidate bear case status.
+6. Classify ticker-level research state.
+7. Produce the next evidence plan.
+8. Produce ticker research revalidation packets.
+9. Produce the Phase 34 summary dashboard.
+
+### Phase 34 Guardrails
+
+- Reviewed evidence can strengthen or weaken research context, but it cannot
+  become promotion evidence by itself.
+- Downgraded evidence lowers variable impact.
+- Rejected or noisy evidence is excluded from active variable-pack use.
+- Supplier share, ASP, customer allocation, and official consensus are not
+  fabricated or upgraded to confirmed.
+- `ready_for_research_packet` is not `pending_human_review`.
+- No buy/sell/add/reduce recommendation is generated.
+- `new_pending_created=0`, `paper_order_created=0`, and
+  `promotion_allowed_true=0` remain hard safety boundaries.
+
+### Phase 34 New Artifacts
+
+- `08_scripts/lib/smr_post_governance_evidence_state.py`
+- `08_scripts/lib/smr_research_state_classifier.py`
+- `08_scripts/reporting/build_phase34_post_governance_evidence_state.py`
+- `08_scripts/reporting/build_phase34_research_state_classification.py`
+- `08_scripts/reporting/build_phase34_next_evidence_plan.py`
+- `08_scripts/reporting/build_phase34_research_revalidation_packet.py`
+- `08_scripts/reporting/build_phase34_post_governance_research_summary.py`
+- `08_scripts/verification/validate_phase34_variable_pack_post_governance.py`
+- `08_scripts/verification/validate_phase34_expectation_gap_post_governance.py`
+- `08_scripts/verification/validate_phase34_valuation_support_post_governance.py`
+- `08_scripts/verification/validate_phase34_bear_case_post_governance.py`
+- `docs/plans/2026-05-23-phase34-post-governance-research-revalidation.md`
+
+### Phase 34 Expected Behavior
+
+- Four supply-chain pilot tickers are evaluated:
+  `300394.SZ`, `300308.SZ`, `688041.SH`, and `002230.SZ`.
+- The summary distinguishes strengthened, weakened, unchanged, and packet-ready
+  research states.
+- Each ticker gets top missing variables and a targeted next evidence plan.
+- Evidence plans remain plan-only and do not write new evidence rows.
+- The research revalidation packet clearly separates evidence, assumption,
+  missing variables, and promotion boundary.
+
+### Phase 34 Validation Commands
+
+```bash
+python -m py_compile 08_scripts/lib/*.py 08_scripts/jobs/*.py 08_scripts/verification/*.py 08_scripts/reporting/*.py
+python -m unittest discover -s tests -v
+python 08_scripts/verification/validate_phase3_e2e.py
+python 08_scripts/verification/validate_phase4_live_e2e.py --tickers NVDA --days 180 --timeout 240
+python 08_scripts/verification/validate_phase5_paper_portfolio_smoke.py
+python 08_scripts/verification/validate_phase6_multi_ticker_live.py --watchlist ai_core --save-run-history --compare-last-run --timeout 240
+python 08_scripts/verification/validate_phase14_thesis_aware_multi_ticker_live.py --watchlist ai_core --timeout 240 --json
+python 08_scripts/reporting/build_phase33_controlled_review_execution_summary.py --json
+python 08_scripts/reporting/build_phase34_post_governance_evidence_state.py --json
+python 08_scripts/verification/validate_phase34_variable_pack_post_governance.py --json
+python 08_scripts/verification/validate_phase34_expectation_gap_post_governance.py --json
+python 08_scripts/verification/validate_phase34_valuation_support_post_governance.py --json
+python 08_scripts/verification/validate_phase34_bear_case_post_governance.py --json
+python 08_scripts/reporting/build_phase34_research_state_classification.py --json
+python 08_scripts/reporting/build_phase34_next_evidence_plan.py --json
+python 08_scripts/reporting/build_phase34_research_revalidation_packet.py --tickers 300394.SZ,300308.SZ,688041.SH,002230.SZ --json
+python 08_scripts/reporting/build_phase34_post_governance_research_summary.py --json
+```
+
 ## Phase 33: Controlled Evidence Review Execution v1
 
 Phase 33 turns the Phase 32 read-only workbench into a guarded execution loop
