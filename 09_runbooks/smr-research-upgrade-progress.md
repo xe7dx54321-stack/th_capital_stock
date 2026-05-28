@@ -33,6 +33,111 @@
 | Agent run audit trail | Capture every pipeline run and block reason | Done | `agent_runs` | Real DB entries present | Useful for postmortem |
 | Daily system health report | Daily reliability summary | Done | `08_scripts/reporting/build_daily_system_health_report.py` | Validated on real data | Status reflects data health |
 
+## Phase 42: Follow-up Evidence Fulfillment & Manual Source Intake v1
+
+Phase 42 starts consuming the three Phase 41 follow-up requests for
+`300308.SZ`. It adds a safe fulfillment frame for authorized/manual source
+metadata, supplier-share scenario assumptions, and customer-allocation
+proxy-vs-confirmed audit. The stage does not ingest raw files or write evidence;
+it defines which inputs could become candidates later, which remain scenario or
+proxy only, and why pending remains blocked.
+
+Current Phase 41 checkpoint:
+
+- Commit: `9e776702b7dee8771d8efa0082c81a5ae0c7aafd`
+- Stage: `Phase 41: Research Review Follow-up Task Execution v1`
+- `300308.SZ`: `followup_queue_items=3`, `audit_records=3`
+- `official_consensus`: `commercial_source_required`
+- `supplier_share`: `not_publicly_confirmable`, scenario-only
+- `confirmed_customer_allocation`: `proxy_only`
+- `pending_created=0`, `paper_order_created=0`, `promotion_allowed_true=0`
+- `300394.SZ`: remains `repair_required_before_review`
+
+### Phase 42 Goals
+
+1. Build follow-up request fulfillment state for the three core requests.
+2. Generate manual source intake templates without writing source rows.
+3. Validate manual source intake samples and reject internal proxies for
+   official consensus.
+4. Build official consensus fulfillment requirements for authorized/manual
+   metadata.
+5. Build supplier-share scenario registry with confirmed status disabled.
+6. Audit customer-allocation proxy evidence against confirmed-allocation misuse.
+7. Build the follow-up fulfillment packet and dashboard.
+8. Revalidate research packet impact as unchanged but better bounded.
+9. Generate optional read-only static HTML under ignored output paths.
+
+### Phase 42 Guardrails
+
+- Open requests are not evidence.
+- Manual source input is not automatically confirmed evidence.
+- Official consensus requires authorized or user-provided source metadata.
+- Internal proxy cannot fulfill official consensus.
+- Supplier share scenario assumptions remain `scenario_analysis_only`.
+- Customer-allocation proxy remains proxy-only until direct disclosure appears.
+- Scenario assumptions do not enter the promotion gate.
+- `pending_created=0`.
+- `paper_order_created=0`.
+- `promotion_allowed_true=0`.
+- No approved paper, paper position, broker adapter, or real trading path is
+  created.
+- Raw PDF, raw HTML, text cache, DB, log, and generated HTML artifacts are not
+  committed.
+
+### Phase 42 New Artifacts
+
+- `08_scripts/lib/smr_followup_fulfillment_state.py`
+- `08_scripts/lib/smr_manual_source_intake.py`
+- `08_scripts/lib/smr_manual_source_intake_validator.py`
+- `08_scripts/lib/smr_official_consensus_fulfillment.py`
+- `08_scripts/lib/smr_supplier_share_scenario_registry.py`
+- `08_scripts/lib/smr_customer_allocation_proxy_audit.py`
+- `08_scripts/jobs/validate_phase42_manual_source_intake.py`
+- `08_scripts/reporting/build_phase42_followup_fulfillment_state.py`
+- `08_scripts/reporting/build_phase42_manual_source_intake_template.py`
+- `08_scripts/reporting/build_phase42_official_consensus_fulfillment.py`
+- `08_scripts/reporting/build_phase42_supplier_share_scenario_registry.py`
+- `08_scripts/reporting/build_phase42_customer_allocation_proxy_audit.py`
+- `08_scripts/reporting/build_phase42_followup_fulfillment_packet.py`
+- `08_scripts/verification/validate_phase42_research_packet_impact.py`
+- `08_scripts/reporting/build_phase42_fulfillment_dashboard.py`
+- `08_scripts/reporting/build_phase42_fulfillment_html.py`
+- `docs/plans/2026-05-24-phase42-followup-evidence-fulfillment-manual-source-intake.md`
+
+### Phase 42 Expected Behavior
+
+For `300308.SZ`, the system should show that official consensus needs
+authorized source metadata, supplier share can only be used as explicit scenario
+assumption unless directly disclosed, and customer allocation remains proxy-only.
+The research packet impact should be `unchanged_but_better_bounded`, with
+stronger why-not-pending boundaries but no confirmed variable upgrade. For
+`300394.SZ`, the system remains repair-only.
+
+### Phase 42 Validation Commands
+
+```bash
+python -m py_compile 08_scripts/lib/*.py 08_scripts/jobs/*.py 08_scripts/verification/*.py 08_scripts/reporting/*.py
+python -m unittest discover -s tests -v
+python 08_scripts/verification/validate_phase3_e2e.py
+python 08_scripts/verification/validate_phase4_live_e2e.py --tickers NVDA --days 180 --timeout 240
+python 08_scripts/verification/validate_phase5_paper_portfolio_smoke.py
+python 08_scripts/verification/validate_phase6_multi_ticker_live.py --watchlist ai_core --save-run-history --compare-last-run --timeout 240
+python 08_scripts/verification/validate_phase14_thesis_aware_multi_ticker_live.py --watchlist ai_core --timeout 240 --json
+python 08_scripts/reporting/build_phase41_followup_dashboard.py --json
+python 08_scripts/reporting/build_phase42_followup_fulfillment_state.py --ticker 300308.SZ --json
+python 08_scripts/reporting/build_phase42_manual_source_intake_template.py --ticker 300308.SZ --evidence-type official_consensus --json
+python 08_scripts/jobs/validate_phase42_manual_source_intake.py --sample official_consensus --json
+python 08_scripts/jobs/validate_phase42_manual_source_intake.py --sample supplier_share_scenario --json
+python 08_scripts/jobs/validate_phase42_manual_source_intake.py --sample customer_allocation_proxy --json
+python 08_scripts/reporting/build_phase42_official_consensus_fulfillment.py --ticker 300308.SZ --json
+python 08_scripts/reporting/build_phase42_supplier_share_scenario_registry.py --ticker 300308.SZ --json
+python 08_scripts/reporting/build_phase42_customer_allocation_proxy_audit.py --ticker 300308.SZ --json
+python 08_scripts/reporting/build_phase42_followup_fulfillment_packet.py --ticker 300308.SZ --json
+python 08_scripts/verification/validate_phase42_research_packet_impact.py --ticker 300308.SZ --json
+python 08_scripts/reporting/build_phase42_fulfillment_dashboard.py --json
+python 08_scripts/reporting/build_phase42_fulfillment_html.py --output 09_runbooks/generated/phase42_fulfillment.html
+```
+
 ## Phase 41: Research Review Follow-up Task Execution v1
 
 Phase 41 converts the Phase 40 research action `request_deeper_research` into
