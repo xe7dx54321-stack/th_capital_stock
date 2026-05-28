@@ -3745,3 +3745,6 @@ Guard: passed_tracking_support!=confirmed, candidate!=pending, no promotion allo
 
 ### Phase 52: Watchlist Tracking Intelligence Summary v1
 Human-readable intelligence summary aggregating Phase 45-51 tracking data. Decision=continue_tracking. Not investment advice.
+
+### Phase 53: Watchlist Daily Brief & Brief Style Contract v1
+Daily brief with executive summary + analyst detail, forbidden phrase check, style lint. Not investment advice.

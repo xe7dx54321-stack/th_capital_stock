@@ -1,0 +1,66 @@
+{
+  "brief_type": "internal_watchlist_tracking_brief",
+  "style_name": "clear_internal_research_tracking_brief",
+  "target_reader": [
+    "boss",
+    "researcher"
+  ],
+  "forbidden_styles": [
+    "sell_side_research_report",
+    "public_marketing_article",
+    "investment_recommendation",
+    "long_form_industry_report"
+  ],
+  "required_sections": [
+    "executive_brief",
+    "analyst_detail",
+    "why_not_pending",
+    "next_actions"
+  ],
+  "writing_rules": {
+    "start_with_conclusion": true,
+    "max_bullets_per_section": 5,
+    "max_executive_chars_chinese": 500,
+    "avoid_empty_adjectives": true,
+    "avoid_ai_tone": true,
+    "avoid_sell_side_phrases": true,
+    "must_include_tracking_decision": true,
+    "must_include_forbidden_actions": true,
+    "must_include_boundary": true
+  },
+  "forbidden_phrases": {
+    "blocked": [
+      "建议买入",
+      "强烈推荐",
+      "目标价",
+      "上调评级",
+      "维持推荐",
+      "加仓",
+      "建仓",
+      "买入评级",
+      "卖出评级",
+      "增持",
+      "减持"
+    ],
+    "warning": [
+      "综合来看",
+      "有望受益",
+      "未来可期",
+      "值得关注",
+      "建议关注",
+      "重点推荐",
+      "打开成长空间",
+      "持续赋能",
+      "景气度提升",
+      "业绩弹性较大",
+      "逻辑逐步兑现",
+      "边际改善明显",
+      "具备较强竞争优势",
+      "高景气赛道",
+      "充分受益",
+      "成长确定性强",
+      "长期空间广阔",
+      "投资价值凸显"
+    ]
+  }
+}
