@@ -3595,3 +3595,87 @@ python 08_scripts/verification/validate_phase29_text_extraction_semantic_evidenc
 python 08_scripts/reporting/build_phase29_text_extraction_summary.py --json
 python 08_scripts/reporting/build_phase23_connector_availability_dashboard.py --json
 ```
+### Phase 47: Paper Watchlist Periodic Review v1
+
+Phase 47 adds periodic review capability to the paper watchlist tracking system
+introduced in Phase 46. The system now supports scheduled review state management,
+tracking variable snapshots, new evidence delta detection, research-only revalidation,
+thesis strength score updates, review execution with audit logging, review packets,
+and a periodic review dashboard.
+
+Current Phase 47 checkpoint:
+
+- Commit: (pending)
+- Stage: Phase 47: Paper Watchlist Periodic Review & New Evidence Revalidation v1
+- 300308.SZ: watchlist tracking continues
+- Periodic review executed for 300308.SZ
+- Thesis strength score updated
+- Dashboard reports reviews_completed >= 1
+- pending_created=0
+- paper_order_created=0
+- real_trade_created=0
+
+#### Phase 47 Goals
+
+1. Periodic review state management.
+2. Tracking variable snapshot generation.
+3. New evidence delta detection.
+4. Research-only new evidence revalidation.
+5. Thesis strength score update based on review.
+6. Periodic review executor with dry-run/execute modes.
+7. Periodic review audit logging.
+8. Periodic review packet composition.
+9. Periodic review dashboard.
+
+#### Phase 47 Guardrails
+
+- review_due does not mean pending_human_review.
+- review_strengthened does not mean buy signal.
+- review_weakened does not mean sell signal.
+- new_evidence does not auto-trigger pending.
+- thesis strength score update is research-only.
+- periodic review executor never creates pending/order/trade.
+- Audit records always show pending/order/trade = false.
+- All scenarios/proxies/unconfirmed remain as-is.
+- Promotion rules never relaxed.
+
+#### Phase 47 New Artifacts
+
+Library:
+- 08_scripts/lib/smr_paper_watchlist_periodic_review.py
+- 08_scripts/lib/smr_tracking_variable_snapshot.py
+- 08_scripts/lib/smr_new_evidence_delta_detector.py
+- 08_scripts/lib/smr_thesis_strength_score_update.py
+- 08_scripts/lib/smr_periodic_review_audit.py
+
+Reporting:
+- 08_scripts/reporting/build_phase47_periodic_review_state.py
+- 08_scripts/reporting/build_phase47_tracking_variable_snapshot.py
+- 08_scripts/reporting/build_phase47_new_evidence_delta.py
+- 08_scripts/reporting/build_phase47_thesis_strength_update.py
+- 08_scripts/reporting/build_phase47_periodic_review_audit_report.py
+- 08_scripts/reporting/build_phase47_periodic_review_packet.py
+- 08_scripts/reporting/build_phase47_periodic_review_dashboard.py
+
+Jobs:
+- 08_scripts/jobs/run_phase47_periodic_watchlist_review.py
+
+Verification:
+- 08_scripts/verification/validate_phase47_new_evidence_revalidation.py
+
+Tests:
+- tests/test_phase47_periodic_review_state.py
+- tests/test_phase47_tracking_variable_snapshot.py
+- tests/test_phase47_new_evidence_delta.py
+- tests/test_phase47_new_evidence_revalidation.py
+- tests/test_phase47_thesis_strength_update.py
+- tests/test_phase47_periodic_review_executor.py
+- tests/test_phase47_periodic_review_audit.py
+- tests/test_phase47_periodic_review_packet.py
+- tests/test_phase47_periodic_review_dashboard.py
+
+#### Next Phase
+
+Phase 48 can extend periodic review with event-driven tracking,
+evidence refresh scheduling, or multi-ticker watchlist expansion,
+while continuing to enforce: watchlist != pending/order/trade.
