@@ -36,5 +36,22 @@
     "must_include_variant_view": true,
     "must_include_financial_transmission": true,
     "must_include_disconfirming_evidence": true
+  },
+  "observed_first_brief": {
+    "enabled": true,
+    "description": "User-facing brief must prioritize observed facts and derived implications, not instructions about what to watch next.",
+    "required_patterns": [
+      "current_observation",
+      "implication",
+      "judgment_status",
+      "missing_evidence",
+      "cannot_conclude"
+    ],
+    "discouraged_patterns": [
+      "next_watch_list_only",
+      "teaching_style_followup",
+      "generic_need_to_watch",
+      "empty_next_step"
+    ]
   }
 }
