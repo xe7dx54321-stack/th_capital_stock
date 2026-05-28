@@ -33,6 +33,88 @@
 | Agent run audit trail | Capture every pipeline run and block reason | Done | `agent_runs` | Real DB entries present | Useful for postmortem |
 | Daily system health report | Daily reliability summary | Done | `08_scripts/reporting/build_daily_system_health_report.py` | Validated on real data | Status reflects data health |
 
+## Phase 35: Single-Stock Research Packet v1
+
+Phase 35 starts generating single-stock research work packets for the first
+focused ticker set. It does not expand sources, create new governance
+frameworks, chase pending review, issue trading instructions, create paper
+orders, or relax promotion rules.
+
+Current Phase 34 checkpoint:
+
+- Commit: `45241035d7c3397f7c16fadd46332971e3518058`
+- Stage: `Phase 34: Post-Governance Research Revalidation v1`
+- `002230.SZ`: `research_weakened`
+- `300394.SZ`: `unchanged_needs_more_data`
+- `300308.SZ`: `unchanged_needs_more_data`
+- `688041.SH`: `unchanged_needs_more_data`
+- `confirmed_variables_added=0`
+- `new_pending_created=0`
+- `paper_order_created=0`
+
+### Phase 35 Goals
+
+1. Build a conservative single-stock thesis for `300394.SZ` and `300308.SZ`.
+2. Organize current semantic evidence into an evidence-chain packet.
+3. Produce a variable coverage matrix with visible missing variables.
+4. Score research quality and readiness without producing an investment rating.
+5. Produce bull/base/bear research scenarios without price, return, or position
+   guidance.
+6. Explain why each ticker is not ready for pending review.
+7. Assemble a full single-stock research packet in JSON and Markdown.
+8. Produce a two-ticker research packet dashboard.
+
+### Phase 35 Guardrails
+
+- The packet is a research work packet, not an investment memo.
+- No buy, sell, add, reduce, target-price, return, or position guidance is
+  generated.
+- Semantic evidence does not confirm supplier share, ASP, customer allocation,
+  or official consensus.
+- Internal proxy data is not treated as official consensus.
+- `promotion_allowed=false`.
+- `new_pending_created=0`.
+- `paper_order_created=0`.
+- No real trading path is touched.
+- Raw PDF, HTML, cache, DB, log, and generated HTML artifacts are not committed.
+
+### Phase 35 New Artifacts
+
+- `08_scripts/lib/smr_single_stock_thesis_builder.py`
+- `08_scripts/lib/smr_research_evidence_chain.py`
+- `08_scripts/lib/smr_research_quality_scoring.py`
+- `08_scripts/reporting/build_phase35_single_stock_thesis.py`
+- `08_scripts/reporting/build_phase35_evidence_chain_packet.py`
+- `08_scripts/reporting/build_phase35_variable_coverage_matrix.py`
+- `08_scripts/reporting/build_phase35_research_quality_score.py`
+- `08_scripts/reporting/build_phase35_research_scenarios.py`
+- `08_scripts/reporting/build_phase35_why_not_pending.py`
+- `08_scripts/reporting/build_phase35_single_stock_research_packet.py`
+- `08_scripts/reporting/build_phase35_research_packet_dashboard.py`
+- `docs/plans/2026-05-24-phase35-single-stock-research-packet.md`
+
+### Phase 35 Validation Commands
+
+```bash
+python -m py_compile 08_scripts/lib/*.py 08_scripts/jobs/*.py 08_scripts/verification/*.py 08_scripts/reporting/*.py
+python -m unittest discover -s tests -v
+python 08_scripts/verification/validate_phase3_e2e.py
+python 08_scripts/verification/validate_phase4_live_e2e.py --tickers NVDA --days 180 --timeout 240
+python 08_scripts/verification/validate_phase5_paper_portfolio_smoke.py
+python 08_scripts/verification/validate_phase6_multi_ticker_live.py --watchlist ai_core --save-run-history --compare-last-run --timeout 240
+python 08_scripts/verification/validate_phase14_thesis_aware_multi_ticker_live.py --watchlist ai_core --timeout 240 --json
+python 08_scripts/reporting/build_phase34_post_governance_research_summary.py --json
+python 08_scripts/reporting/build_phase35_single_stock_thesis.py --ticker 300394.SZ --json
+python 08_scripts/reporting/build_phase35_evidence_chain_packet.py --ticker 300394.SZ --json
+python 08_scripts/reporting/build_phase35_variable_coverage_matrix.py --ticker 300394.SZ --json
+python 08_scripts/reporting/build_phase35_research_quality_score.py --ticker 300394.SZ --json
+python 08_scripts/reporting/build_phase35_research_scenarios.py --ticker 300394.SZ --json
+python 08_scripts/reporting/build_phase35_why_not_pending.py --ticker 300394.SZ --json
+python 08_scripts/reporting/build_phase35_single_stock_research_packet.py --ticker 300394.SZ --json
+python 08_scripts/reporting/build_phase35_single_stock_research_packet.py --ticker 300308.SZ --json
+python 08_scripts/reporting/build_phase35_research_packet_dashboard.py --json
+```
+
 ## Phase 34: Post-Governance Research Revalidation v1
 
 Phase 34 feeds the Phase 33 governed evidence state back into the research
