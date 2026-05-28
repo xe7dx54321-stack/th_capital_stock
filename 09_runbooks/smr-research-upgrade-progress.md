@@ -33,6 +33,113 @@
 | Agent run audit trail | Capture every pipeline run and block reason | Done | `agent_runs` | Real DB entries present | Useful for postmortem |
 | Daily system health report | Daily reliability summary | Done | `08_scripts/reporting/build_daily_system_health_report.py` | Validated on real data | Status reflects data health |
 
+## Phase 46: Paper Watchlist Tracking v1
+
+Phase 46 moves `300308.SZ` from a bounded final research conclusion into
+research-only paper watchlist tracking. The watchlist records a lifecycle entry,
+tracking variables, trigger conditions, audit records, thesis strength score,
+status updates, review packet, and dashboard. It does not create pending human
+review, approved paper, paper order, paper position, target price, position
+guidance, or real trade.
+
+Current Phase 45 checkpoint:
+
+- Commit: `8b6ec93bd3cad0e0a05225a791b459c760dcf01a`
+- Stage: `Phase 45: Final Research Packet Review v1`
+- `300308.SZ`: final thesis = `research_supported_but_not_investment_ready`
+- Research evidence = `sufficient_for_watchlist_research`
+- Investment pending evidence = `insufficient`
+- Final conclusion = `formal_research_conclusion_positive_watchlist`
+- Paper watchlist readiness = `paper_watchlist_candidate`
+- `pending_human_review_allowed=false`
+- `paper_order_allowed=false`
+- `promotion_allowed_true=0`
+- `real_trade_created=0`
+- `300394.SZ`: remains `repair_required_before_review`
+
+### Phase 46 Goals
+
+1. Create paper watchlist entry.
+2. Add paper watchlist lifecycle validation.
+3. Define tracking variables.
+4. Define tracking trigger conditions.
+5. Add watchlist entry upsert.
+6. Add watchlist audit report.
+7. Add thesis strength tracking score.
+8. Add watchlist status update and validator.
+9. Add paper watchlist review packet.
+10. Add paper watchlist dashboard.
+
+### Phase 46 Guardrails
+
+- Watchlist entry does not mean `pending_human_review`.
+- Watchlist entry does not mean approved paper, paper order, or paper position.
+- Tracking trigger does not mean trading signal.
+- Thesis strengthening does not mean investment action.
+- Supplier share remains scenario-only.
+- Official consensus remains unconfirmed.
+- Customer allocation remains proxy-only.
+- `pending_created=0`.
+- `paper_order_created=0`.
+- `real_trade_created=0`.
+- Promotion rules remain unchanged.
+- No raw PDF, raw HTML, cache, DB, log, or generated artifacts are committed.
+
+### Phase 46 New Artifacts
+
+- `08_scripts/lib/smr_paper_watchlist_entry.py`
+- `08_scripts/lib/smr_paper_watchlist_lifecycle.py`
+- `08_scripts/lib/smr_paper_watchlist_tracking_variables.py`
+- `08_scripts/lib/smr_paper_watchlist_triggers.py`
+- `08_scripts/lib/smr_paper_watchlist_audit.py`
+- `08_scripts/lib/smr_thesis_strength_tracking.py`
+- `08_scripts/jobs/upsert_phase46_paper_watchlist_entry.py`
+- `08_scripts/jobs/update_phase46_watchlist_status.py`
+- `08_scripts/verification/validate_phase46_watchlist_status_update.py`
+- `08_scripts/reporting/build_phase46_paper_watchlist_entry.py`
+- `08_scripts/reporting/build_phase46_tracking_variables.py`
+- `08_scripts/reporting/build_phase46_tracking_triggers.py`
+- `08_scripts/reporting/build_phase46_watchlist_audit_report.py`
+- `08_scripts/reporting/build_phase46_thesis_strength_score.py`
+- `08_scripts/reporting/build_phase46_paper_watchlist_review_packet.py`
+- `08_scripts/reporting/build_phase46_paper_watchlist_dashboard.py`
+- `docs/plans/2026-05-24-phase46-paper-watchlist-tracking.md`
+
+### Phase 46 Expected Behavior
+
+For `300308.SZ`, Phase 46 creates an idempotent research-only watchlist entry.
+The first execute moves the entry to `active_tracking`; later status updates can
+mark it `tracking_strengthened`, `tracking_weakened`, or
+`tracking_needs_more_evidence` without creating pending, paper orders,
+positions, or real trades. Dashboard active tracking counts include the active
+tracking family so a strengthened watchlist item still remains in the tracking
+pool.
+
+### Phase 46 Validation Commands
+
+```bash
+python -m py_compile 08_scripts/lib/*.py 08_scripts/jobs/*.py 08_scripts/verification/*.py 08_scripts/reporting/*.py
+python -m unittest discover -s tests -v
+python 08_scripts/verification/validate_phase3_e2e.py
+python 08_scripts/verification/validate_phase4_live_e2e.py --tickers NVDA --days 180 --timeout 240
+python 08_scripts/verification/validate_phase5_paper_portfolio_smoke.py
+python 08_scripts/verification/validate_phase6_multi_ticker_live.py --watchlist ai_core --save-run-history --compare-last-run --timeout 240
+python 08_scripts/verification/validate_phase14_thesis_aware_multi_ticker_live.py --watchlist ai_core --timeout 240 --json
+python 08_scripts/reporting/build_phase45_final_review_dashboard.py --json
+python 08_scripts/reporting/build_phase46_paper_watchlist_entry.py --ticker 300308.SZ --json
+python 08_scripts/reporting/build_phase46_tracking_variables.py --ticker 300308.SZ --json
+python 08_scripts/reporting/build_phase46_tracking_triggers.py --ticker 300308.SZ --json
+python 08_scripts/jobs/upsert_phase46_paper_watchlist_entry.py --ticker 300308.SZ --dry-run --json
+python 08_scripts/jobs/upsert_phase46_paper_watchlist_entry.py --ticker 300308.SZ --execute --json
+python 08_scripts/reporting/build_phase46_watchlist_audit_report.py --ticker 300308.SZ --json
+python 08_scripts/reporting/build_phase46_thesis_strength_score.py --ticker 300308.SZ --json
+python 08_scripts/jobs/update_phase46_watchlist_status.py --ticker 300308.SZ --status tracking_strengthened --dry-run --json
+python 08_scripts/jobs/update_phase46_watchlist_status.py --ticker 300308.SZ --status tracking_strengthened --execute --json
+python 08_scripts/verification/validate_phase46_watchlist_status_update.py --ticker 300308.SZ --json
+python 08_scripts/reporting/build_phase46_paper_watchlist_review_packet.py --ticker 300308.SZ --json
+python 08_scripts/reporting/build_phase46_paper_watchlist_dashboard.py --json
+```
+
 ## Phase 45: Final Research Packet Review v1
 
 Phase 45 returns `300308.SZ` from the manual evidence intake governance branch
