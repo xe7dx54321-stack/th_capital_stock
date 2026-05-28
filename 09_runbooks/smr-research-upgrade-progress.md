@@ -33,6 +33,109 @@
 | Agent run audit trail | Capture every pipeline run and block reason | Done | `agent_runs` | Real DB entries present | Useful for postmortem |
 | Daily system health report | Daily reliability summary | Done | `08_scripts/reporting/build_daily_system_health_report.py` | Validated on real data | Status reflects data health |
 
+## Phase 43: Manual Source Intake Candidate Generation v1
+
+Phase 43 turns the Phase 42 manual/authorized-source intake framework into a
+bounded candidate-generation mechanism. It uses deterministic sample payloads
+for `300308.SZ` to show which manual inputs can become candidates, which inputs
+must be rejected, and how permission and allowed-usage guards prevent manual
+source intake from contaminating confirmed research variables.
+
+Current Phase 42 checkpoint:
+
+- Commit: `b157d700433da8aa8261b814f3aea045ce14df5e`
+- Stage: `Phase 42: Follow-up Evidence Fulfillment & Manual Source Intake v1`
+- `300308.SZ`: three follow-up requests remain open/bounded.
+- `official_consensus`: authorized source required; not confirmed.
+- `supplier_share`: scenario-only; not confirmed.
+- `confirmed_customer_allocation`: proxy-only; not confirmed.
+- `pending_created=0`, `paper_order_created=0`, `promotion_allowed_true=0`
+- `300394.SZ`: remains `repair_required_before_review`
+
+### Phase 43 Goals
+
+1. Define manual source intake payload samples for official consensus, supplier
+   share scenario, and customer allocation proxy.
+2. Generate manual evidence candidates from valid sample payloads.
+3. Generate rejection records for invalid manual inputs, including internal
+   proxy attempts to impersonate official consensus.
+4. Apply permission and allowed-usage guards, including scenario/proxy
+   downgrades.
+5. Build a manual intake review queue with explicit forbidden actions.
+6. Support guarded persistence of manual candidates while keeping all
+   candidates non-confirmed and promotion-disabled.
+7. Revalidate research packet impact as better bounded but not upgraded to
+   confirmed evidence.
+8. Produce dashboard and read-only static HTML outputs.
+
+### Phase 43 Guardrails
+
+- Candidate is not confirmed evidence.
+- Supplier share scenario is not supplier share fact.
+- Customer allocation proxy is not confirmed customer allocation.
+- Authorized consensus candidate is not pending review.
+- Internal proxy cannot satisfy official consensus.
+- Unauthorized or incomplete payloads are rejected with recommended fixes.
+- `usable_for_promotion=false` for every manual candidate.
+- `pending_created=0`.
+- `paper_order_created=0`.
+- `promotion_allowed_true=0`.
+- No approved paper, paper position, broker adapter, or real trading path is
+  created.
+- Raw PDF, raw HTML, text cache, DB, log, and generated HTML artifacts are not
+  committed.
+
+### Phase 43 New Artifacts
+
+- `08_scripts/lib/smr_manual_intake_payload.py`
+- `08_scripts/lib/smr_manual_intake_candidate_generator.py`
+- `08_scripts/lib/smr_manual_intake_permission_guard.py`
+- `08_scripts/lib/smr_manual_intake_rejection.py`
+- `08_scripts/jobs/build_phase43_manual_intake_candidates.py`
+- `08_scripts/jobs/persist_phase43_manual_intake_candidates.py`
+- `08_scripts/reporting/build_phase43_manual_intake_samples.py`
+- `08_scripts/reporting/build_phase43_manual_intake_permission_audit.py`
+- `08_scripts/reporting/build_phase43_manual_intake_review_queue.py`
+- `08_scripts/reporting/build_phase43_manual_intake_rejection_report.py`
+- `08_scripts/reporting/build_phase43_manual_intake_dashboard.py`
+- `08_scripts/reporting/build_phase43_manual_intake_html.py`
+- `08_scripts/verification/validate_phase43_manual_intake_research_impact.py`
+- `docs/plans/2026-05-24-phase43-manual-source-intake-candidate-generation.md`
+
+### Phase 43 Expected Behavior
+
+For `300308.SZ`, the system should create one official-consensus candidate, one
+supplier-share scenario candidate, and one customer-allocation proxy candidate.
+The official consensus candidate remains unconfirmed, the supplier-share
+scenario remains scenario-only, and the customer-allocation proxy remains
+proxy-only. A bad internal consensus proxy sample is rejected with a recommended
+fix. The research packet gains better boundaries but no confirmed variables, no
+pending review, no paper order, and no promotion relaxation.
+
+### Phase 43 Validation Commands
+
+```bash
+python -m py_compile 08_scripts/lib/*.py 08_scripts/jobs/*.py 08_scripts/verification/*.py 08_scripts/reporting/*.py
+python -m unittest discover -s tests -v
+python 08_scripts/verification/validate_phase3_e2e.py
+python 08_scripts/verification/validate_phase4_live_e2e.py --tickers NVDA --days 180 --timeout 240
+python 08_scripts/verification/validate_phase5_paper_portfolio_smoke.py
+python 08_scripts/verification/validate_phase6_multi_ticker_live.py --watchlist ai_core --save-run-history --compare-last-run --timeout 240
+python 08_scripts/verification/validate_phase14_thesis_aware_multi_ticker_live.py --watchlist ai_core --timeout 240 --json
+python 08_scripts/reporting/build_phase42_fulfillment_dashboard.py --json
+python 08_scripts/reporting/build_phase43_manual_intake_samples.py --ticker 300308.SZ --json
+python 08_scripts/jobs/build_phase43_manual_intake_candidates.py --ticker 300308.SZ --dry-run --json
+python 08_scripts/jobs/build_phase43_manual_intake_candidates.py --ticker 300308.SZ --execute --json
+python 08_scripts/reporting/build_phase43_manual_intake_permission_audit.py --ticker 300308.SZ --json
+python 08_scripts/reporting/build_phase43_manual_intake_review_queue.py --ticker 300308.SZ --json
+python 08_scripts/jobs/persist_phase43_manual_intake_candidates.py --ticker 300308.SZ --dry-run --json
+python 08_scripts/jobs/persist_phase43_manual_intake_candidates.py --ticker 300308.SZ --execute --json
+python 08_scripts/reporting/build_phase43_manual_intake_rejection_report.py --ticker 300308.SZ --json
+python 08_scripts/verification/validate_phase43_manual_intake_research_impact.py --ticker 300308.SZ --json
+python 08_scripts/reporting/build_phase43_manual_intake_dashboard.py --json
+python 08_scripts/reporting/build_phase43_manual_intake_html.py --output 09_runbooks/generated/phase43_manual_intake.html
+```
+
 ## Phase 42: Follow-up Evidence Fulfillment & Manual Source Intake v1
 
 Phase 42 starts consuming the three Phase 41 follow-up requests for
