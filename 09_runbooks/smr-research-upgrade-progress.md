@@ -3737,3 +3737,8 @@ Phase 50: expand to multi-ticker real source monitoring or add financial stateme
 ### Phase 50: Real Source Text Extraction Evidence Candidate Pilot v1
 Metadata -> text availability -> extraction -> normalization -> chunking -> semantic extraction -> candidates -> quality gate -> review queue -> revalidation.
 Guard: source!=evidence, candidate!=confirmed, candidate!=pending, raw not committed.
+
+### Phase 51: Real Source Candidate Quality Improvement v1
+Candidate quality diagnostics, quoted span validation, source traceability scoring, chunk quality classifier,
+quality gate calibration, tracking-support candidate upsert.
+Guard: passed_tracking_support!=confirmed, candidate!=pending, no promotion allowed.
