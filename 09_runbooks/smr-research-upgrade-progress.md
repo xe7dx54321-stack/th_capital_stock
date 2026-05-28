@@ -3733,3 +3733,7 @@ Current Phase 49 checkpoint:
 
 #### Next Phase
 Phase 50: expand to multi-ticker real source monitoring or add financial statement metadata extraction.
+
+### Phase 50: Real Source Text Extraction Evidence Candidate Pilot v1
+Metadata -> text availability -> extraction -> normalization -> chunking -> semantic extraction -> candidates -> quality gate -> review queue -> revalidation.
+Guard: source!=evidence, candidate!=confirmed, candidate!=pending, raw not committed.
