@@ -33,6 +33,67 @@
 | Agent run audit trail | Capture every pipeline run and block reason | Done | `agent_runs` | Real DB entries present | Useful for postmortem |
 | Daily system health report | Daily reliability summary | Done | `08_scripts/reporting/build_daily_system_health_report.py` | Validated on real data | Status reflects data health |
 
+## Phase 39: Evidence-Strengthened Research Packet & Review Decision v1
+
+Phase 39 takes the five `300308.SZ` evidence candidates persisted in Phase 38
+and turns them into an evidence-strengthened research packet plus a conservative
+research-review decision. The key boundary is that `research_review_candidate`
+means "worth a manual research review", not investment pending and not a trade
+action.
+
+Current Phase 38 checkpoint:
+
+- Commit: `b2ad75cb5f005f33294943b73f4955f87b02f348`
+- Stage: `Phase 38: Targeted Evidence Candidate Review & Persistence v1`
+- `300308.SZ`: `candidates_total=15`, `eligible_for_persistence=12`,
+  `candidates_written=5`, `evidence_before=44`, `evidence_after=49`,
+  `quality_delta=strengthened_with_new_supporting_evidence`
+- New evidence by variable: `product_mix=3`, `order_visibility=1`,
+  `shipment=1`
+- Still missing: `supplier_share`, `official_consensus`,
+  `confirmed_customer_allocation`
+- `300394.SZ`: `repair_tasks_written=5`,
+  `research_deepening_allowed=false`
+
+### Phase 39 Goals
+
+1. Explain what each persisted evidence row supports and does not support.
+2. Build the `300308.SZ` evidence-strengthened research packet.
+3. Classify whether `300308.SZ` is a `research_review_candidate`.
+4. Generate a human research review checklist.
+5. Reinforce why the ticker is still not pending.
+6. Update next evidence priority after Phase 38 improvements.
+7. Show `300394.SZ` repair-only status without deepening research.
+8. Produce the Phase 39 review decision dashboard.
+
+### Phase 39 Guardrails
+
+- `research_review_candidate` is not `pending_human_review`.
+- Product mix is not upgraded into confirmed ASP.
+- Order visibility is not upgraded into confirmed order.
+- Shipment commentary is not a confirmed shipment number.
+- Customer allocation proxy is not confirmed allocation.
+- Internal proxy is not official consensus.
+- `promotion_allowed=false`.
+- `new_pending_created=0`.
+- `paper_order_created=0`.
+- Raw PDF, raw HTML, text cache, DB, log, and generated HTML artifacts are not
+  committed.
+
+### Phase 39 New Artifacts
+
+- `08_scripts/lib/smr_evidence_contribution_analyzer.py`
+- `08_scripts/lib/smr_research_review_candidate.py`
+- `08_scripts/reporting/build_phase39_300308_evidence_contribution.py`
+- `08_scripts/reporting/build_phase39_300308_evidence_strengthened_packet.py`
+- `08_scripts/reporting/build_phase39_research_review_candidate_decision.py`
+- `08_scripts/reporting/build_phase39_human_research_review_checklist.py`
+- `08_scripts/reporting/build_phase39_why_not_pending_reinforcement.py`
+- `08_scripts/reporting/build_phase39_next_evidence_priority_update.py`
+- `08_scripts/reporting/build_phase39_300394_repair_status_summary.py`
+- `08_scripts/reporting/build_phase39_review_decision_dashboard.py`
+- `docs/plans/2026-05-24-phase39-evidence-strengthened-research-review-decision.md`
+
 ## Phase 38: Targeted Evidence Candidate Review & Persistence v1
 
 Phase 38 takes the 15 `300308.SZ` dry-run evidence candidates created in Phase
