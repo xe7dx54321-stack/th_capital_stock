@@ -33,6 +33,101 @@
 | Agent run audit trail | Capture every pipeline run and block reason | Done | `agent_runs` | Real DB entries present | Useful for postmortem |
 | Daily system health report | Daily reliability summary | Done | `08_scripts/reporting/build_daily_system_health_report.py` | Validated on real data | Status reflects data health |
 
+## Phase 40: Research Review Workbench v1
+
+Phase 40 connects the Phase 39 `300308.SZ` `research_review_candidate` to a
+research-only workbench. The workbench lets a human researcher inspect the
+evidence-strengthened packet, checklist, why-not-pending blockers, and next
+evidence priorities, then record research actions with audit history. It remains
+outside investment pending and outside trading.
+
+Current Phase 39 checkpoint:
+
+- Commit: `342337fe14462f524aed9b43eb580c2b2da9e43b`
+- Stage: `Phase 39: Evidence-Strengthened Research Packet & Review Decision v1`
+- `300308.SZ`: `decision=research_review_candidate`, `confidence=medium`,
+  `evidence_before=44`, `evidence_after=49`
+- Strengthened variables: `product_mix`, `order_visibility`, `shipment`
+- `pending_allowed=false`, `paper_order_allowed=false`
+- `300394.SZ`: `repair_required_before_research_deepening`,
+  `research_deepening_allowed=false`
+
+### Phase 40 Goals
+
+1. Add the research review lifecycle schema.
+2. Build the research review queue and add `300308.SZ`.
+3. Build the research review workbench packet.
+4. Support research-only actions: continue evidence acquisition, deeper
+   research, specific evidence request, reviewed, deprioritized, and archived.
+5. Add append-only audit logging for executed actions.
+6. Generate specific evidence requests without fetching or writing evidence.
+7. Build the research review dashboard and post-action validator.
+8. Generate optional read-only static HTML under ignored output paths.
+
+### Phase 40 Guardrails
+
+- `research_review_candidate` is not `pending_human_review`.
+- `mark_reviewed` is not approval.
+- `request_deeper_research` is not promotion.
+- `request_specific_evidence` creates a request task only.
+- Supplier share, customer allocation, official consensus, ASP, orders, and
+  shipment values are not confirmed.
+- `promotion_allowed=false`.
+- `pending_created=0`.
+- `paper_order_created=0`.
+- No approved paper, paper position, broker adapter, or real trading path is
+  created.
+- Raw PDF, raw HTML, text cache, DB, log, and generated HTML artifacts are not
+  committed.
+
+### Phase 40 New Artifacts
+
+- `08_scripts/lib/smr_research_review_lifecycle.py`
+- `08_scripts/lib/smr_research_review_queue.py`
+- `08_scripts/lib/smr_research_review_actions.py`
+- `08_scripts/lib/smr_research_review_audit.py`
+- `08_scripts/lib/smr_specific_evidence_request.py`
+- `08_scripts/reporting/build_phase40_research_review_queue.py`
+- `08_scripts/reporting/build_phase40_research_review_workbench_packet.py`
+- `08_scripts/jobs/apply_phase40_research_review_action.py`
+- `08_scripts/reporting/build_phase40_research_review_audit_report.py`
+- `08_scripts/reporting/build_phase40_specific_evidence_requests.py`
+- `08_scripts/reporting/build_phase40_research_review_dashboard.py`
+- `08_scripts/verification/validate_phase40_research_review_post_action.py`
+- `08_scripts/reporting/build_phase40_research_review_html.py`
+- `docs/plans/2026-05-24-phase40-research-review-workbench.md`
+
+### Phase 40 Expected Behavior
+
+For `300308.SZ`, the system should show why the ticker deserves manual research
+review, what the researcher should inspect, which research-only actions are
+allowed, and why pending remains blocked. For `300394.SZ`, the system should
+continue to show repair-required status and keep it out of the research review
+queue until the evidence chain is restored.
+
+### Phase 40 Validation Commands
+
+```bash
+python -m py_compile 08_scripts/lib/*.py 08_scripts/jobs/*.py 08_scripts/verification/*.py 08_scripts/reporting/*.py
+python -m unittest discover -s tests -v
+python 08_scripts/verification/validate_phase3_e2e.py
+python 08_scripts/verification/validate_phase4_live_e2e.py --tickers NVDA --days 180 --timeout 240
+python 08_scripts/verification/validate_phase5_paper_portfolio_smoke.py
+python 08_scripts/verification/validate_phase6_multi_ticker_live.py --watchlist ai_core --save-run-history --compare-last-run --timeout 240
+python 08_scripts/verification/validate_phase14_thesis_aware_multi_ticker_live.py --watchlist ai_core --timeout 240 --json
+python 08_scripts/reporting/build_phase39_review_decision_dashboard.py --json
+python 08_scripts/reporting/build_phase40_research_review_queue.py --json
+python 08_scripts/reporting/build_phase40_research_review_workbench_packet.py --ticker 300308.SZ --json
+python 08_scripts/jobs/apply_phase40_research_review_action.py --ticker 300308.SZ --action request_deeper_research --dry-run --json
+python 08_scripts/jobs/apply_phase40_research_review_action.py --ticker 300308.SZ --action request_specific_evidence --evidence-type official_consensus --dry-run --json
+python 08_scripts/jobs/apply_phase40_research_review_action.py --ticker 300308.SZ --action request_deeper_research --execute --json
+python 08_scripts/reporting/build_phase40_research_review_audit_report.py --json
+python 08_scripts/reporting/build_phase40_specific_evidence_requests.py --ticker 300308.SZ --json
+python 08_scripts/reporting/build_phase40_research_review_dashboard.py --json
+python 08_scripts/verification/validate_phase40_research_review_post_action.py --json
+python 08_scripts/reporting/build_phase40_research_review_html.py --output 09_runbooks/generated/phase40_research_review.html
+```
+
 ## Phase 39: Evidence-Strengthened Research Packet & Review Decision v1
 
 Phase 39 takes the five `300308.SZ` evidence candidates persisted in Phase 38
