@@ -33,6 +33,107 @@
 | Agent run audit trail | Capture every pipeline run and block reason | Done | `agent_runs` | Real DB entries present | Useful for postmortem |
 | Daily system health report | Daily reliability summary | Done | `08_scripts/reporting/build_daily_system_health_report.py` | Validated on real data | Status reflects data health |
 
+## Phase 36: Targeted Evidence Acquisition Plan v1
+
+Phase 36 turns the Phase 35 single-stock research packet into a targeted
+evidence acquisition plan. It prioritizes `300308.SZ` because its research
+packet has partial evidence coverage, while `300394.SZ` first needs a repair
+diagnostic because its evidence chain is currently empty in the local state.
+
+Current Phase 35 checkpoint:
+
+- Commit: `602101c467b519699625dfec6ec539c8d33accf3`
+- Stage: `Phase 35: Single-Stock Research Packet v1`
+- `300308.SZ`: `research_quality=medium_low`, `evidence_coverage=partial`,
+  `research_readiness=needs_more_data`
+- `300394.SZ`: `research_quality=low`, `evidence_coverage=thin`,
+  `research_readiness=needs_more_data`
+- `new_pending_created=0`
+- `paper_order_created=0`
+- No buy/sell, target price, position guidance, or real trading path was
+  created.
+
+### Phase 36 Goals
+
+1. Analyze `300308.SZ` targeted evidence gaps.
+2. Plan source routes for supplier share, ASP, customer allocation, official
+   consensus, shipment/order visibility, industry forecast, and margin/product
+   mix evidence.
+3. Convert gaps and routes into execution-ready acquisition tasks.
+4. Build a focused `300308.SZ` evidence plan that targets stronger research
+   quality, not pending review.
+5. Diagnose why `300394.SZ` has an empty evidence chain.
+6. Build a `300394.SZ` repair plan without writing evidence.
+7. Score evidence acquisition readiness by impact, feasibility, source
+   availability, expected quality, safety risk, and time cost.
+8. Produce the Phase 36 evidence acquisition dashboard.
+
+### Phase 36 Guardrails
+
+- The phase is planning-only.
+- No sources are fetched by the acquisition task builders.
+- No evidence candidates, lifecycle states, pending review rows, paper orders,
+  paper positions, or trades are written.
+- Supplier share and customer allocation are not assumed to be publicly
+  confirmable.
+- ASP is not fabricated from product-mix commentary.
+- Internal proxy data is not treated as official consensus.
+- `promotion_allowed=false`.
+- `new_pending_created=0`.
+- `paper_order_created=0`.
+- No raw PDF, HTML, text cache, DB, log, or generated HTML artifacts are
+  committed.
+
+### Phase 36 New Artifacts
+
+- `08_scripts/lib/smr_targeted_evidence_gap.py`
+- `08_scripts/lib/smr_evidence_source_route_planner.py`
+- `08_scripts/lib/smr_evidence_acquisition_task.py`
+- `08_scripts/lib/smr_evidence_acquisition_readiness.py`
+- `08_scripts/lib/smr_evidence_chain_diagnostics.py`
+- `08_scripts/reporting/build_phase36_targeted_evidence_gap.py`
+- `08_scripts/reporting/build_phase36_evidence_source_routes.py`
+- `08_scripts/reporting/build_phase36_evidence_acquisition_tasks.py`
+- `08_scripts/reporting/build_phase36_300308_focused_evidence_plan.py`
+- `08_scripts/reporting/build_phase36_300394_evidence_chain_diagnostics.py`
+- `08_scripts/reporting/build_phase36_300394_evidence_repair_plan.py`
+- `08_scripts/reporting/build_phase36_acquisition_readiness_score.py`
+- `08_scripts/reporting/build_phase36_evidence_acquisition_dashboard.py`
+- `docs/plans/2026-05-24-phase36-targeted-evidence-acquisition-plan.md`
+
+### Phase 36 Expected Behavior
+
+For `300308.SZ`, the system should explain which critical variables still need
+evidence, where compliant evidence might be found, what each acquisition task
+should produce, and what each task must not infer.
+
+For `300394.SZ`, the system should explain whether the empty evidence chain is
+most likely caused by missing sources, missing text cache, semantic extraction
+not running, candidate persistence gaps, ticker mapping, or local DB/state
+absence. The repair plan remains a dry planning artifact until a separate
+approved execution step exists.
+
+### Phase 36 Validation Commands
+
+```bash
+python -m py_compile 08_scripts/lib/*.py 08_scripts/jobs/*.py 08_scripts/verification/*.py 08_scripts/reporting/*.py
+python -m unittest discover -s tests -v
+python 08_scripts/verification/validate_phase3_e2e.py
+python 08_scripts/verification/validate_phase4_live_e2e.py --tickers NVDA --days 180 --timeout 240
+python 08_scripts/verification/validate_phase5_paper_portfolio_smoke.py
+python 08_scripts/verification/validate_phase6_multi_ticker_live.py --watchlist ai_core --save-run-history --compare-last-run --timeout 240
+python 08_scripts/verification/validate_phase14_thesis_aware_multi_ticker_live.py --watchlist ai_core --timeout 240 --json
+python 08_scripts/reporting/build_phase35_research_packet_dashboard.py --json
+python 08_scripts/reporting/build_phase36_targeted_evidence_gap.py --ticker 300308.SZ --json
+python 08_scripts/reporting/build_phase36_evidence_source_routes.py --ticker 300308.SZ --json
+python 08_scripts/reporting/build_phase36_evidence_acquisition_tasks.py --ticker 300308.SZ --json
+python 08_scripts/reporting/build_phase36_300308_focused_evidence_plan.py --json
+python 08_scripts/reporting/build_phase36_300394_evidence_chain_diagnostics.py --json
+python 08_scripts/reporting/build_phase36_300394_evidence_repair_plan.py --json
+python 08_scripts/reporting/build_phase36_acquisition_readiness_score.py --ticker 300308.SZ --json
+python 08_scripts/reporting/build_phase36_evidence_acquisition_dashboard.py --json
+```
+
 ## Phase 35: Single-Stock Research Packet v1
 
 Phase 35 starts generating single-stock research work packets for the first
