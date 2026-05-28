@@ -43,6 +43,12 @@ def _matches_variable(candidate: dict[str, Any], variable: str) -> bool:
     return any(keyword.lower() in text for keyword in KEYWORDS.get(variable, []))
 
 
+def _is_synthetic_targeted_candidate(candidate: dict[str, Any]) -> bool:
+    evidence_id = str(candidate.get("evidence_id") or "")
+    payload = candidate.get("payload") or {}
+    return evidence_id.startswith(("ev_phase37_", "ev_phase38_")) or payload.get("phase") in {37, 38}
+
+
 def _chunk_from_candidate(task: dict[str, Any], candidate: dict[str, Any]) -> dict[str, Any] | None:
     quoted = str(candidate.get("quoted_span") or "").strip()
     source_url = candidate.get("source_url")
@@ -110,7 +116,11 @@ def build_targeted_source_scan(
     selected = (selection.get("controlled_acquisition_selection") or {}).get("selected_tasks") or []
     if task_id:
         selected = [task for task in selected if task.get("task_id") == task_id]
-    semantic_candidates = list_semantic_evidence_candidates(conn, ticker=ticker)
+    semantic_candidates = [
+        candidate
+        for candidate in list_semantic_evidence_candidates(conn, ticker=ticker)
+        if not _is_synthetic_targeted_candidate(candidate)
+    ]
     real_sources = discover_real_ir_sources(conn, ticker, limit=12)
     text_cache_hits = sum(1 for source in real_sources if read_text_cache(str(source.get("source_id") or ""), source.get("source_url")))
     scan_results = []

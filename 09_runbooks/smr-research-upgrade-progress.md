@@ -33,6 +33,100 @@
 | Agent run audit trail | Capture every pipeline run and block reason | Done | `agent_runs` | Real DB entries present | Useful for postmortem |
 | Daily system health report | Daily reliability summary | Done | `08_scripts/reporting/build_daily_system_health_report.py` | Validated on real data | Status reflects data health |
 
+## Phase 38: Targeted Evidence Candidate Review & Persistence v1
+
+Phase 38 takes the 15 `300308.SZ` dry-run evidence candidates created in Phase
+37 and turns them into governed research assets. The stage reviews candidate
+quality, filters noise and sensitive variables, creates a targeted review queue,
+persists only a small guarded sample, refreshes the evidence chain, and then
+revalidates whether the single-stock research packet became more solid.
+
+Current Phase 37 checkpoint:
+
+- Commit: `d2e05b843f3c6980f5bdf0de251dcb3cec12495e`
+- Stage: `Phase 37: Targeted Evidence Acquisition Execution v1`
+- `300308.SZ`: `tasks_selected=5`, `candidate_chunks_found=15`,
+  `semantic_extractions=15`, `eligible_for_persistence=15`,
+  `candidates_written=0`, `research_quality_delta=modestly_strengthened`
+- `300394.SZ`: `repair_status=partial_repair_dry_run`,
+  `after_evidence_chain_count=0`
+
+### Phase 38 Goals
+
+1. Build the `300308.SZ` candidate inventory from Phase 37 dry-run output.
+2. Review candidate quality, source traceability, duplicate risk, and sensitive
+   variable risk.
+3. Build a targeted review queue with dry-run commands only.
+4. Persist a capped, low-risk sample through the existing Phase 30 guard.
+5. Refresh the `300308.SZ` evidence chain and show before/after evidence count.
+6. Revalidate the research packet after persistence while preserving
+   `why_not_pending`.
+7. Harden `300394.SZ` evidence-chain repair root causes into repair queue tasks.
+8. Produce the Phase 38 persistence/review dashboard.
+
+### Phase 38 Guardrails
+
+- Default candidate persistence limit is 5.
+- Phase 38 does not fetch new external sources or expand the watchlist.
+- Product mix and margin commentary are not upgraded into confirmed ASP.
+- Customer allocation proxy is not upgraded into confirmed allocation.
+- Internal proxy is not treated as official consensus.
+- `usable_for_promotion=false`.
+- `promotion_allowed=false`.
+- `new_pending_created=0`.
+- `paper_order_created=0`.
+- No approved paper, paper position, or real trading path is created.
+- Raw PDF, raw HTML, text cache, DB, log, and generated HTML artifacts are not
+  committed.
+
+### Phase 38 New Artifacts
+
+- `08_scripts/lib/smr_targeted_candidate_inventory.py`
+- `08_scripts/lib/smr_targeted_candidate_quality_review.py`
+- `08_scripts/reporting/build_phase38_300308_candidate_inventory.py`
+- `08_scripts/reporting/build_phase38_300308_candidate_quality_review.py`
+- `08_scripts/reporting/build_phase38_300308_targeted_review_queue.py`
+- `08_scripts/jobs/persist_phase38_300308_targeted_candidates.py`
+- `08_scripts/reporting/build_phase38_300308_evidence_chain_refresh.py`
+- `08_scripts/verification/validate_phase38_300308_research_packet_post_persistence.py`
+- `08_scripts/reporting/build_phase38_300308_refreshed_packet_after_persistence.py`
+- `08_scripts/jobs/upsert_phase38_300394_repair_tasks.py`
+- `08_scripts/reporting/build_phase38_300394_repair_queue_summary.py`
+- `08_scripts/reporting/build_phase38_persistence_review_dashboard.py`
+- `docs/plans/2026-05-24-phase38-targeted-evidence-candidate-review-persistence.md`
+
+### Phase 38 Expected Behavior
+
+For `300308.SZ`, the system should review all 15 candidates, keep sensitive
+customer allocation proxy out of confirmed evidence, persist only a capped
+guarded sample, and report a strengthened-but-still-not-pending research packet.
+For `300394.SZ`, Phase 38 should only harden repair tasks and keep research
+deepening disabled until the evidence chain is repaired.
+
+### Phase 38 Validation Commands
+
+```bash
+python -m py_compile 08_scripts/lib/*.py 08_scripts/jobs/*.py 08_scripts/verification/*.py 08_scripts/reporting/*.py
+python -m unittest discover -s tests -v
+python 08_scripts/verification/validate_phase3_e2e.py
+python 08_scripts/verification/validate_phase4_live_e2e.py --tickers NVDA --days 180 --timeout 240
+python 08_scripts/verification/validate_phase5_paper_portfolio_smoke.py
+python 08_scripts/verification/validate_phase6_multi_ticker_live.py --watchlist ai_core --save-run-history --compare-last-run --timeout 240
+python 08_scripts/verification/validate_phase14_thesis_aware_multi_ticker_live.py --watchlist ai_core --timeout 240 --json
+python 08_scripts/reporting/build_phase37_execution_dashboard.py --json
+python 08_scripts/reporting/build_phase38_300308_candidate_inventory.py --json
+python 08_scripts/reporting/build_phase38_300308_candidate_quality_review.py --json
+python 08_scripts/reporting/build_phase38_300308_targeted_review_queue.py --json
+python 08_scripts/jobs/persist_phase38_300308_targeted_candidates.py --dry-run --json
+python 08_scripts/jobs/persist_phase38_300308_targeted_candidates.py --execute --limit 5 --json
+python 08_scripts/reporting/build_phase38_300308_evidence_chain_refresh.py --json
+python 08_scripts/verification/validate_phase38_300308_research_packet_post_persistence.py --json
+python 08_scripts/reporting/build_phase38_300308_refreshed_packet_after_persistence.py --json
+python 08_scripts/jobs/upsert_phase38_300394_repair_tasks.py --execute --json
+python 08_scripts/reporting/build_phase38_300394_repair_queue_summary.py --json
+python 08_scripts/reporting/build_phase38_persistence_review_dashboard.py --json
+```
+
 ## Phase 37: Targeted Evidence Acquisition Execution v1
 
 Phase 37 executes a small controlled slice of the Phase 36 evidence acquisition
