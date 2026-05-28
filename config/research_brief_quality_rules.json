@@ -1,0 +1,40 @@
+{
+  "brief_type": "internal_equity_research_logic_brief",
+  "target_reader": [
+    "boss",
+    "researcher"
+  ],
+  "required_business_questions": [
+    "core_value_thesis",
+    "market_expectation",
+    "our_variant_view",
+    "key_business_drivers",
+    "evidence_and_data",
+    "financial_transmission",
+    "bull_base_bear",
+    "catalysts_and_validation",
+    "current_action"
+  ],
+  "forbidden_user_visible_terms": [
+    "candidate",
+    "tracking-support",
+    "pending",
+    "validator",
+    "dashboard",
+    "quality gate",
+    "promotion_allowed",
+    "paper_order",
+    "real_trade"
+  ],
+  "style_rules": {
+    "start_with_investment_judgment": true,
+    "no_system_status_first": true,
+    "no_field_dump": true,
+    "no_ai_tone": true,
+    "no_sell_side_rating": true,
+    "no_target_price": true,
+    "must_include_variant_view": true,
+    "must_include_financial_transmission": true,
+    "must_include_disconfirming_evidence": true
+  }
+}

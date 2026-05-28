@@ -3748,3 +3748,7 @@ Human-readable intelligence summary aggregating Phase 45-51 tracking data. Decis
 
 ### Phase 53: Watchlist Daily Brief & Brief Style Contract v1
 Daily brief with executive summary + analyst detail, forbidden phrase check, style lint. Not investment advice.
+
+
+### Phase 54: Research Brief Quality Contract & Investment Logic Upgrade v1
+Upgrade from tracking brief to investment logic brief. Business value first, no system status terms.
