@@ -33,6 +33,107 @@
 | Agent run audit trail | Capture every pipeline run and block reason | Done | `agent_runs` | Real DB entries present | Useful for postmortem |
 | Daily system health report | Daily reliability summary | Done | `08_scripts/reporting/build_daily_system_health_report.py` | Validated on real data | Status reflects data health |
 
+## Phase 45: Final Research Packet Review v1
+
+Phase 45 returns `300308.SZ` from the manual evidence intake governance branch
+to the research mainline. It aggregates the current research assets, reviews
+thesis validity, evidence sufficiency, variable coverage, expectation-gap and
+valuation boundaries, bear case pressure, final research conclusion, and paper
+watchlist tracking readiness. It does not create pending human review, approved
+paper, paper order, position, target price, or real trade.
+
+Current Phase 44 checkpoint:
+
+- Commit: `b53788bf193adb3a3dc25a82439b6e0b87dbc553`
+- Stage: `Phase 44: Manual Candidate Review Closeout v1`
+- `300308.SZ`: manual candidates reviewed = 3
+- `official_consensus`: accepted as candidate, not confirmed
+- `supplier_share`: scenario-only, not confirmed
+- `customer_allocation`: proxy-only, not confirmed
+- `confirmed_variables_added=0`
+- `pending_created=0`, `paper_order_created=0`, `promotion_allowed_true=0`
+- Manual intake branch status: `closed`
+- Next mainline step: `phase45_final_research_packet_review`
+- `300394.SZ`: remains `repair_required_before_review`
+
+### Phase 45 Goals
+
+1. Build final research asset summary.
+2. Build final thesis validity review.
+3. Build final evidence sufficiency review.
+4. Build final variable coverage review.
+5. Build expectation-gap and valuation-boundary review.
+6. Build final bear case review.
+7. Build final research conclusion classifier.
+8. Build paper watchlist readiness packet.
+9. Build final research packet.
+10. Build final review dashboard.
+
+### Phase 45 Guardrails
+
+- Formal research conclusion does not mean trading recommendation.
+- `paper_watchlist_candidate` does not mean `pending_human_review`.
+- Official consensus candidate remains unconfirmed.
+- Supplier share remains scenario-only.
+- Customer allocation remains proxy-only.
+- Research sufficiency and investment pending sufficiency are separate.
+- `pending_created=0`.
+- `paper_order_created=0`.
+- `real_trade_created=0`.
+- `promotion_allowed_true=0`.
+- No target price or position guidance is generated.
+- No raw PDF, raw HTML, cache, DB, log, or generated artifacts are committed.
+
+### Phase 45 New Artifacts
+
+- `08_scripts/lib/smr_final_research_asset_aggregator.py`
+- `08_scripts/lib/smr_final_thesis_review.py`
+- `08_scripts/lib/smr_final_research_conclusion.py`
+- `08_scripts/reporting/build_phase45_final_research_asset_summary.py`
+- `08_scripts/reporting/build_phase45_final_thesis_review.py`
+- `08_scripts/reporting/build_phase45_final_evidence_sufficiency_review.py`
+- `08_scripts/reporting/build_phase45_final_variable_coverage_review.py`
+- `08_scripts/reporting/build_phase45_expectation_gap_valuation_boundary.py`
+- `08_scripts/reporting/build_phase45_final_bear_case_review.py`
+- `08_scripts/reporting/build_phase45_final_research_conclusion.py`
+- `08_scripts/reporting/build_phase45_paper_watchlist_readiness_packet.py`
+- `08_scripts/reporting/build_phase45_final_research_packet.py`
+- `08_scripts/reporting/build_phase45_final_review_dashboard.py`
+- `docs/plans/2026-05-24-phase45-final-research-packet-review.md`
+
+### Phase 45 Expected Behavior
+
+For `300308.SZ`, Phase 45 may classify the research package as
+`formal_research_conclusion_positive_watchlist` with
+`paper_watchlist_candidate` readiness, but only for tracking. It keeps
+investment pending blocked because supplier share, official consensus, customer
+allocation, and valuation support remain unconfirmed or scenario-bound. The
+next phase should be `phase46_paper_watchlist_tracking`.
+
+### Phase 45 Validation Commands
+
+```bash
+python -m py_compile 08_scripts/lib/*.py 08_scripts/jobs/*.py 08_scripts/verification/*.py 08_scripts/reporting/*.py
+python -m unittest discover -s tests -v
+python 08_scripts/verification/validate_phase3_e2e.py
+python 08_scripts/verification/validate_phase4_live_e2e.py --tickers NVDA --days 180 --timeout 240
+python 08_scripts/verification/validate_phase5_paper_portfolio_smoke.py
+python 08_scripts/verification/validate_phase6_multi_ticker_live.py --watchlist ai_core --save-run-history --compare-last-run --timeout 240
+python 08_scripts/verification/validate_phase14_thesis_aware_multi_ticker_live.py --watchlist ai_core --timeout 240 --json
+python 08_scripts/reporting/build_phase44_closeout_dashboard.py --json
+python 08_scripts/reporting/build_phase45_final_research_asset_summary.py --ticker 300308.SZ --json
+python 08_scripts/reporting/build_phase45_final_thesis_review.py --ticker 300308.SZ --json
+python 08_scripts/reporting/build_phase45_final_evidence_sufficiency_review.py --ticker 300308.SZ --json
+python 08_scripts/reporting/build_phase45_final_variable_coverage_review.py --ticker 300308.SZ --json
+python 08_scripts/reporting/build_phase45_expectation_gap_valuation_boundary.py --ticker 300308.SZ --json
+python 08_scripts/reporting/build_phase45_final_bear_case_review.py --ticker 300308.SZ --json
+python 08_scripts/reporting/build_phase45_final_research_conclusion.py --ticker 300308.SZ --json
+python 08_scripts/reporting/build_phase45_paper_watchlist_readiness_packet.py --ticker 300308.SZ --json
+python 08_scripts/reporting/build_phase45_final_research_packet.py --ticker 300308.SZ --json
+python 08_scripts/reporting/build_phase45_final_research_packet.py --ticker 300308.SZ --markdown
+python 08_scripts/reporting/build_phase45_final_review_dashboard.py --json
+```
+
 ## Phase 44: Manual Candidate Review Closeout v1
 
 Phase 44 closes the manual evidence intake / candidate governance branch for
