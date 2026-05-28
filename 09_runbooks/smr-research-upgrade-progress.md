@@ -33,6 +33,107 @@
 | Agent run audit trail | Capture every pipeline run and block reason | Done | `agent_runs` | Real DB entries present | Useful for postmortem |
 | Daily system health report | Daily reliability summary | Done | `08_scripts/reporting/build_daily_system_health_report.py` | Validated on real data | Status reflects data health |
 
+## Phase 44: Manual Candidate Review Closeout v1
+
+Phase 44 closes the manual evidence intake / candidate governance branch for
+`300308.SZ`. It reviews the three Phase 43 manual candidates with controlled
+actions, writes lifecycle and audit records, finalizes allowed usage, and
+revalidates research packet impact without confirming variables or relaxing
+promotion. After this phase, the next step returns to the main research packet
+review line rather than adding more evidence-governance phases.
+
+Current Phase 43 checkpoint:
+
+- Commit: `c204908ff68c189a7306b2ac6505a0f3407f4c69`
+- Stage: `Phase 43: Manual Source Intake Candidate Generation v1`
+- `300308.SZ`: manual candidates written = 3
+- `official_consensus_candidate`: candidate added, not confirmed
+- `supplier_share_scenario`: scenario-only, not confirmed
+- `customer_allocation_proxy`: proxy/context only, not confirmed
+- `confirmed_variables_added=0`
+- `pending_created=0`, `paper_order_created=0`, `promotion_allowed_true=0`
+- `300394.SZ`: remains `repair_required_before_review`
+
+### Phase 44 Goals
+
+1. Add manual candidate review lifecycle states.
+2. Add controlled manual candidate review actions.
+3. Write manual candidate review audit records.
+4. Finalize allowed usage for official consensus, supplier-share scenario, and
+   customer-allocation proxy candidates.
+5. Validate research packet impact as better bounded but not upgraded.
+6. Build the manual candidate closeout packet.
+7. Build the mainline transition plan pointing to Phase 45.
+8. Build closeout dashboard and optional read-only HTML.
+
+### Phase 44 Guardrails
+
+- `accept_as_candidate` does not confirm evidence.
+- Official consensus candidate remains `candidate_not_confirmed`.
+- Supplier share is closed as `scenario_analysis_only`, not fact.
+- Customer allocation is closed as proxy/context only, not confirmed
+  allocation.
+- Review actions are not connected to the promotion gate.
+- Forbidden actions such as `allow_promotion`, `create_pending`, paper order,
+  position, or trade creation are intercepted.
+- `confirmed_variables_added=0`.
+- `usable_for_promotion_true=0`.
+- `pending_created=0`.
+- `paper_order_created=0`.
+- No approved paper, paper position, broker adapter, or real trading path is
+  created.
+- Raw PDF, raw HTML, cache, DB, log, and generated HTML artifacts are not
+  committed.
+
+### Phase 44 New Artifacts
+
+- `08_scripts/lib/smr_manual_candidate_review_lifecycle.py`
+- `08_scripts/lib/smr_manual_candidate_review_actions.py`
+- `08_scripts/lib/smr_manual_candidate_review_audit.py`
+- `08_scripts/jobs/apply_phase44_manual_candidate_review_action.py`
+- `08_scripts/reporting/build_phase44_manual_candidate_review_audit.py`
+- `08_scripts/reporting/build_phase44_manual_candidate_final_usage_matrix.py`
+- `08_scripts/verification/validate_phase44_manual_candidate_research_impact_closeout.py`
+- `08_scripts/reporting/build_phase44_manual_candidate_closeout_packet.py`
+- `08_scripts/reporting/build_phase44_mainline_transition_plan.py`
+- `08_scripts/reporting/build_phase44_closeout_dashboard.py`
+- `08_scripts/reporting/build_phase44_closeout_html.py`
+- `docs/plans/2026-05-24-phase44-manual-candidate-review-closeout.md`
+
+### Phase 44 Expected Behavior
+
+For `300308.SZ`, the official consensus candidate is accepted as a candidate
+only, supplier share is marked scenario-only, and customer allocation is marked
+proxy-only. All three actions write audit records and lifecycle states. The
+manual intake branch status becomes `closed`, and the next mainline step is
+`phase45_final_research_packet_review`.
+
+### Phase 44 Validation Commands
+
+```bash
+python -m py_compile 08_scripts/lib/*.py 08_scripts/jobs/*.py 08_scripts/verification/*.py 08_scripts/reporting/*.py
+python -m unittest discover -s tests -v
+python 08_scripts/verification/validate_phase3_e2e.py
+python 08_scripts/verification/validate_phase4_live_e2e.py --tickers NVDA --days 180 --timeout 240
+python 08_scripts/verification/validate_phase5_paper_portfolio_smoke.py
+python 08_scripts/verification/validate_phase6_multi_ticker_live.py --watchlist ai_core --save-run-history --compare-last-run --timeout 240
+python 08_scripts/verification/validate_phase14_thesis_aware_multi_ticker_live.py --watchlist ai_core --timeout 240 --json
+python 08_scripts/reporting/build_phase43_manual_intake_dashboard.py --json
+python 08_scripts/jobs/apply_phase44_manual_candidate_review_action.py --ticker 300308.SZ --candidate-type official_consensus --action accept_as_candidate --dry-run --json
+python 08_scripts/jobs/apply_phase44_manual_candidate_review_action.py --ticker 300308.SZ --candidate-type supplier_share --action mark_as_scenario_only --dry-run --json
+python 08_scripts/jobs/apply_phase44_manual_candidate_review_action.py --ticker 300308.SZ --candidate-type customer_allocation --action mark_as_proxy_only --dry-run --json
+python 08_scripts/jobs/apply_phase44_manual_candidate_review_action.py --ticker 300308.SZ --candidate-type official_consensus --action accept_as_candidate --execute --json
+python 08_scripts/jobs/apply_phase44_manual_candidate_review_action.py --ticker 300308.SZ --candidate-type supplier_share --action mark_as_scenario_only --execute --json
+python 08_scripts/jobs/apply_phase44_manual_candidate_review_action.py --ticker 300308.SZ --candidate-type customer_allocation --action mark_as_proxy_only --execute --json
+python 08_scripts/reporting/build_phase44_manual_candidate_review_audit.py --ticker 300308.SZ --json
+python 08_scripts/reporting/build_phase44_manual_candidate_final_usage_matrix.py --ticker 300308.SZ --json
+python 08_scripts/verification/validate_phase44_manual_candidate_research_impact_closeout.py --ticker 300308.SZ --json
+python 08_scripts/reporting/build_phase44_manual_candidate_closeout_packet.py --ticker 300308.SZ --json
+python 08_scripts/reporting/build_phase44_mainline_transition_plan.py --json
+python 08_scripts/reporting/build_phase44_closeout_dashboard.py --json
+python 08_scripts/reporting/build_phase44_closeout_html.py --output 09_runbooks/generated/phase44_closeout.html
+```
+
 ## Phase 43: Manual Source Intake Candidate Generation v1
 
 Phase 43 turns the Phase 42 manual/authorized-source intake framework into a
