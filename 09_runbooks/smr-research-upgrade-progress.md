@@ -33,6 +33,105 @@
 | Agent run audit trail | Capture every pipeline run and block reason | Done | `agent_runs` | Real DB entries present | Useful for postmortem |
 | Daily system health report | Daily reliability summary | Done | `08_scripts/reporting/build_daily_system_health_report.py` | Validated on real data | Status reflects data health |
 
+## Phase 41: Research Review Follow-up Task Execution v1
+
+Phase 41 converts the Phase 40 research action `request_deeper_research` into
+specific, auditable follow-up evidence tasks. The stage focuses on three
+remaining `300308.SZ` gaps: official consensus, supplier share, and confirmed
+customer allocation. These are task requests and source-route checks only; they
+do not write evidence or create investment pending.
+
+Current Phase 40 checkpoint:
+
+- Commit: `15d25b6d0c047cc4644567391114032b53d64ca4`
+- Stage: `Phase 40: Research Review Workbench v1`
+- `300308.SZ`: lifecycle moved from `research_review_candidate` to
+  `reviewed_request_deeper_research`
+- `audit_records=1`, `pending_created=0`, `paper_order_created=0`
+- `300394.SZ`: `repair_required_before_review`, excluded from research
+  follow-up tasks
+
+### Phase 41 Goals
+
+1. Detect Phase 40 follow-up triggers from lifecycle and audit state.
+2. Execute controlled specific evidence requests for `official_consensus`,
+   `supplier_share`, and `confirmed_customer_allocation`.
+3. Report official consensus source availability without impersonating
+   authorized consensus.
+4. Report supplier share public availability caveats and scenario-only usage.
+5. Report customer allocation proxy boundaries and direct-confirmation routes.
+6. Build the research follow-up queue and follow-up audit report.
+7. Validate the system remains research-only after follow-up task creation.
+8. Produce the follow-up dashboard and optional read-only static HTML.
+
+### Phase 41 Guardrails
+
+- Specific evidence requests are not evidence.
+- Official consensus request is not confirmed official consensus.
+- Internal proxy remains supporting context only.
+- Supplier share remains scenario analysis unless directly disclosed.
+- Customer allocation proxy is not confirmed allocation.
+- North America customer references are not converted into NVIDIA allocation.
+- `promotion_allowed=false`.
+- `pending_created=0`.
+- `paper_order_created=0`.
+- No approved paper, paper position, broker adapter, or real trading path is
+  created.
+- Raw PDF, raw HTML, text cache, DB, log, and generated HTML artifacts are not
+  committed.
+
+### Phase 41 New Artifacts
+
+- `08_scripts/lib/smr_research_followup_trigger.py`
+- `08_scripts/lib/smr_research_followup_queue.py`
+- `08_scripts/lib/smr_research_followup_audit.py`
+- `08_scripts/lib/smr_official_consensus_availability.py`
+- `08_scripts/lib/smr_supplier_share_route.py`
+- `08_scripts/lib/smr_customer_allocation_route.py`
+- `08_scripts/jobs/execute_phase41_specific_evidence_requests.py`
+- `08_scripts/reporting/build_phase41_followup_trigger_summary.py`
+- `08_scripts/reporting/build_phase41_official_consensus_availability.py`
+- `08_scripts/reporting/build_phase41_supplier_share_route.py`
+- `08_scripts/reporting/build_phase41_customer_allocation_route.py`
+- `08_scripts/reporting/build_phase41_research_followup_queue.py`
+- `08_scripts/reporting/build_phase41_followup_audit_report.py`
+- `08_scripts/verification/validate_phase41_research_only_revalidation.py`
+- `08_scripts/reporting/build_phase41_followup_dashboard.py`
+- `08_scripts/reporting/build_phase41_followup_html.py`
+- `docs/plans/2026-05-24-phase41-research-review-followup-task-execution.md`
+
+### Phase 41 Expected Behavior
+
+For `300308.SZ`, the system should show exactly which follow-up evidence tasks
+were created, where each evidence type could be pursued, what each task may and
+may not support, and why nothing has become pending or confirmed. For
+`300394.SZ`, the system should keep the ticker in repair-only mode until the
+evidence chain is restored.
+
+### Phase 41 Validation Commands
+
+```bash
+python -m py_compile 08_scripts/lib/*.py 08_scripts/jobs/*.py 08_scripts/verification/*.py 08_scripts/reporting/*.py
+python -m unittest discover -s tests -v
+python 08_scripts/verification/validate_phase3_e2e.py
+python 08_scripts/verification/validate_phase4_live_e2e.py --tickers NVDA --days 180 --timeout 240
+python 08_scripts/verification/validate_phase5_paper_portfolio_smoke.py
+python 08_scripts/verification/validate_phase6_multi_ticker_live.py --watchlist ai_core --save-run-history --compare-last-run --timeout 240
+python 08_scripts/verification/validate_phase14_thesis_aware_multi_ticker_live.py --watchlist ai_core --timeout 240 --json
+python 08_scripts/reporting/build_phase40_research_review_dashboard.py --json
+python 08_scripts/reporting/build_phase41_followup_trigger_summary.py --json
+python 08_scripts/jobs/execute_phase41_specific_evidence_requests.py --ticker 300308.SZ --dry-run --json
+python 08_scripts/jobs/execute_phase41_specific_evidence_requests.py --ticker 300308.SZ --execute --json
+python 08_scripts/reporting/build_phase41_official_consensus_availability.py --ticker 300308.SZ --json
+python 08_scripts/reporting/build_phase41_supplier_share_route.py --ticker 300308.SZ --json
+python 08_scripts/reporting/build_phase41_customer_allocation_route.py --ticker 300308.SZ --json
+python 08_scripts/reporting/build_phase41_research_followup_queue.py --ticker 300308.SZ --json
+python 08_scripts/reporting/build_phase41_followup_audit_report.py --json
+python 08_scripts/verification/validate_phase41_research_only_revalidation.py --json
+python 08_scripts/reporting/build_phase41_followup_dashboard.py --json
+python 08_scripts/reporting/build_phase41_followup_html.py --output 09_runbooks/generated/phase41_followup.html
+```
+
 ## Phase 40: Research Review Workbench v1
 
 Phase 40 connects the Phase 39 `300308.SZ` `research_review_candidate` to a

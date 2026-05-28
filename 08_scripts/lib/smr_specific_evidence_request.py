@@ -26,33 +26,52 @@ REQUEST_TEMPLATES: dict[str, dict[str, Any]] = {
         "priority": "high_but_low_public_availability",
         "reason": "Supplier share is needed before company-specific revenue sensitivity can move beyond scenarios.",
         "allowed_source_route": "scenario_analysis_only",
+        "availability_judgment": "low_public_availability",
+        "feasibility": "manual_research_required",
+        "allowed_usage": "scenario_analysis_only",
+        "expected_output": "source route and scenario-only supplier share assumption boundary",
         "do_not_do": [
             "do not fabricate exact share",
             "do not infer share from generic demand",
+            "do not mark supplier share scenario as confirmed",
         ],
     },
     "official_consensus": {
         "priority": "high",
         "reason": "Official consensus is required to benchmark expectation gap reliably.",
         "allowed_source_route": "authorized_source_required",
+        "availability_judgment": "commercial_source_required",
+        "feasibility": "authorized_source_required",
+        "allowed_usage": "expectation_gap_benchmark_if_authorized",
+        "expected_output": "authorized consensus availability check without treating internal proxy as official consensus",
         "do_not_do": [
             "do not treat internal proxy as official consensus",
             "do not infer consensus from management commentary",
+            "do not scrape restricted consensus data",
         ],
     },
     "confirmed_customer_allocation": {
         "priority": "high",
         "reason": "Customer allocation must be confirmed before investment promotion can rely on customer-specific exposure.",
         "allowed_source_route": "customer-side public signal or company direct disclosure",
+        "availability_judgment": "proxy_only_until_direct_confirmation",
+        "feasibility": "manual_research_required",
+        "allowed_usage": "scenario_analysis_only",
+        "expected_output": "customer allocation route check with proxy boundary preserved",
         "do_not_do": [
             "do not convert customer proxy into confirmed allocation",
             "do not name a customer without direct public support",
+            "do not treat order visibility as confirmed customer allocation",
         ],
     },
     "ASP_price_proxy": {
         "priority": "medium",
         "reason": "ASP proxy evidence can support valuation context but cannot become confirmed ASP.",
         "allowed_source_route": "company disclosure or auditable pricing proxy",
+        "availability_judgment": "proxy_possible",
+        "feasibility": "medium",
+        "allowed_usage": "valuation_support",
+        "expected_output": "auditable ASP proxy route without confirming exact ASP",
         "do_not_do": [
             "do not treat product mix as exact ASP",
             "do not infer exact pricing from management tone",
@@ -62,6 +81,10 @@ REQUEST_TEMPLATES: dict[str, dict[str, Any]] = {
         "priority": "medium",
         "reason": "Customer-side public signals can help validate demand without confirming allocation.",
         "allowed_source_route": "public customer disclosure or verifiable ecosystem signal",
+        "availability_judgment": "public_signal_possible",
+        "feasibility": "medium",
+        "allowed_usage": "supporting_evidence",
+        "expected_output": "traceable customer-side signal, not confirmed allocation",
         "do_not_do": [
             "do not infer confirmed allocation from generic customer demand",
             "do not upgrade proxy evidence into named-customer confirmation",
@@ -71,6 +94,10 @@ REQUEST_TEMPLATES: dict[str, dict[str, Any]] = {
         "priority": "medium",
         "reason": "Bear-case evidence is needed to test whether stronger product and shipment support actually reduces downside risk.",
         "allowed_source_route": "public disclosure or source-backed counterevidence",
+        "availability_judgment": "available_with_manual_review",
+        "feasibility": "medium",
+        "allowed_usage": "bear_case_context",
+        "expected_output": "bear-case support or counterevidence without promotion",
         "do_not_do": [
             "do not ignore contrary evidence",
             "do not mark a bear case mitigated without source-backed support",
@@ -80,6 +107,10 @@ REQUEST_TEMPLATES: dict[str, dict[str, Any]] = {
         "priority": "medium_low",
         "reason": "Industry forecasts can add context but cannot replace company-specific evidence.",
         "allowed_source_route": "reputable public forecast or source-cited industry report",
+        "availability_judgment": "available_as_context",
+        "feasibility": "medium",
+        "allowed_usage": "supporting_context_only",
+        "expected_output": "industry context only, not company-specific order evidence",
         "do_not_do": [
             "do not treat industry forecast as company-specific order",
             "do not use unsourced forecast as official consensus",
@@ -154,6 +185,10 @@ def build_specific_evidence_request(
         "priority": template["priority"],
         "reason": template["reason"],
         "allowed_source_route": template["allowed_source_route"],
+        "availability_judgment": template["availability_judgment"],
+        "feasibility": template["feasibility"],
+        "allowed_usage": template["allowed_usage"],
+        "expected_output": template["expected_output"],
         "do_not_do": list(template["do_not_do"]),
         "status": "open",
         "source_action": source_action,
@@ -161,6 +196,10 @@ def build_specific_evidence_request(
         "updated_at": timestamp,
         "metadata": {
             "request_builder_only": True,
+            "availability_judgment": template["availability_judgment"],
+            "feasibility": template["feasibility"],
+            "allowed_usage": template["allowed_usage"],
+            "expected_output": template["expected_output"],
             "evidence_written": False,
             "pending_created": False,
             "promotion_allowed": False,
@@ -189,6 +228,10 @@ def _row_to_dict(row: sqlite3.Row | tuple[Any, ...] | None) -> dict[str, Any]:
     data = dict(zip(keys, row))
     data["do_not_do"] = loads_json(data.pop("do_not_do_json"), [])
     data["metadata"] = loads_json(data.pop("metadata_json"), {})
+    metadata = data.get("metadata") or {}
+    for key in ("availability_judgment", "feasibility", "allowed_usage", "expected_output"):
+        if key in metadata:
+            data[key] = metadata[key]
     return data
 
 
