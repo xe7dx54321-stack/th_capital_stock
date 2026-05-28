@@ -3679,3 +3679,38 @@ Tests:
 Phase 48 can extend periodic review with event-driven tracking,
 evidence refresh scheduling, or multi-ticker watchlist expansion,
 while continuing to enforce: watchlist != pending/order/trade.
+
+### Phase 48: Event-driven Watchlist Evidence Refresh v1
+
+Phase 48 adds event-driven refresh capability. Events are detected from sample fixtures
+and existing watchlist state, refresh tasks are generated, evidence refresh is executed,
+tracking variables are refreshed, and research-only revalidation is performed.
+
+Current Phase 48 checkpoint:
+- Commit: (pending)
+- Stage: Phase 48: Event-driven Watchlist Evidence Refresh v1
+- 300308.SZ: watchlist tracking continues, event-driven refresh available
+
+#### Phase 48 Goals
+1. Event trigger schema with 15 event types
+2. Event trigger detector from existing data
+3. Event refresh task generation
+4. Event evidence refresh executor
+5. Event-driven tracking variable refresh
+6. Research-only revalidation
+7. Event thesis strength update
+8. Event trigger audit
+9. Event revalidation packet
+10. Event watchlist dashboard
+11. Windows Unicode-safe output helper
+
+#### Phase 48 Guardrails
+- event trigger != pending_human_review
+- new evidence != order
+- thesis strengthened != buy signal
+- sensitive variables never auto-confirmed
+- pending/order/trade always = 0
+
+#### Next Phase
+Phase 49: expand to multi-ticker watchlist or real-source event detection
+with company announcements and IR text monitoring.
