@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """Phase 14 thesis-aware multi-ticker validation.
 
 This validator generalizes the Phase 13 thesis-aware gate without changing the
@@ -12,6 +12,7 @@ import argparse
 import json
 import sqlite3
 import sys
+from smr_safe_output import safe_print_json
 from collections import Counter
 from pathlib import Path
 from typing import Any
@@ -617,10 +618,12 @@ def main() -> int:
         conn.commit()
     finally:
         conn.close()
-    print(json.dumps(payload, ensure_ascii=False, indent=2, default=str))
+    safe_print_json(payload)
     log_run(SCRIPT_NAME, "success", "phase14 thesis-aware multi-ticker validation complete", payload)
     return 0
 
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
+

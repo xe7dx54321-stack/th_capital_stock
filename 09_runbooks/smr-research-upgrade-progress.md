@@ -3714,3 +3714,22 @@ Current Phase 48 checkpoint:
 #### Next Phase
 Phase 49: expand to multi-ticker watchlist or real-source event detection
 with company announcements and IR text monitoring.
+
+### Phase 49: Real Source Event Monitor Pilot v1
+
+Real source metadata from CNINFO (announcements, IR records, annual/quarterly reports, earnings previews) is now
+monitored and classified into watchlist events. Events are deduplicated, adapted, and fed into Phase 48 research-only
+event refresh.
+
+Current Phase 49 checkpoint:
+- Commit: (pending)
+- 300308.SZ: real source metadata monitoring enabled
+
+#### Phase 49 Guardrails
+- source metadata != evidence
+- metadata_only = true, raw_content_saved = false
+- network fail -> fixture fallback
+- event != pending, metadata != order, source != trade
+
+#### Next Phase
+Phase 50: expand to multi-ticker real source monitoring or add financial statement metadata extraction.

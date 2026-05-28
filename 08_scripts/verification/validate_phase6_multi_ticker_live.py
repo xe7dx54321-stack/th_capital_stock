@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """Phase 6 multi-ticker live reliability and portfolio risk validation."""
 
 from __future__ import annotations
@@ -8,6 +8,7 @@ import json
 import sqlite3
 import subprocess
 import sys
+from smr_safe_output import safe_print_json
 from collections import Counter
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -692,9 +693,10 @@ def main() -> int:
         **payload,
         "tickers": [compact_ticker_result(item) for item in payload.get("tickers") or []],
     }
-    print(json.dumps(output, ensure_ascii=False, indent=2, default=str))
+    safe_print_json(output)
     return 0 if summary["overall_result"] in {"partial_pass", "live_data_available_needs_promotion_work"} else 1
 
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
