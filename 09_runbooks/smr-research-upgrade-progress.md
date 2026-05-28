@@ -33,6 +33,107 @@
 | Agent run audit trail | Capture every pipeline run and block reason | Done | `agent_runs` | Real DB entries present | Useful for postmortem |
 | Daily system health report | Daily reliability summary | Done | `08_scripts/reporting/build_daily_system_health_report.py` | Validated on real data | Status reflects data health |
 
+## Phase 37: Targeted Evidence Acquisition Execution v1
+
+Phase 37 executes a small controlled slice of the Phase 36 evidence acquisition
+plan. It does not expand the watchlist or chase pending review. The goal is to
+test whether existing local sources and text cache can produce safer
+quoted-span evidence candidates and whether that makes the `300308.SZ` research
+packet modestly stronger.
+
+Current Phase 36 checkpoint:
+
+- Commit: `526991488de3548c051b462585463aa6a2b78276`
+- Stage: `Phase 36: Targeted Evidence Acquisition Plan v1`
+- `300308.SZ`: `semantic_evidence_total=44`, `critical_gaps=7`,
+  `acquisition_tasks=12`, `ASP IR readiness=86`
+- `300394.SZ`: `evidence_chain_count=0`, `diagnostic_status=needs_repair`,
+  `diagnostic_checks=14`, `recommended_repair_steps=5`
+- Phase 36 target remained stronger research packet, not pending review.
+
+### Phase 37 Goals
+
+1. Select 3-5 high-priority `300308.SZ` acquisition tasks.
+2. Run targeted source scan against existing real IR sources, text cache,
+   semantic evidence, announcements, IR records, news/evidence graph, and
+   indexed public commentary.
+3. Run deterministic targeted semantic extraction on candidate chunks.
+4. Build quoted-span evidence candidates through quality/noise/sensitive guards.
+5. Revalidate whether the `300308.SZ` research packet is modestly strengthened.
+6. Refresh the `300308.SZ` research packet with before/after evidence impact.
+7. Run `300394.SZ` evidence-chain repair dry-run and report root cause.
+8. Produce the Phase 37 execution dashboard.
+
+### Phase 37 Guardrails
+
+- Default execution is dry-run.
+- Candidate execute is implemented only behind explicit `--execute`.
+- Source scan does not perform large external fetching.
+- Raw PDF, raw HTML, text cache, DB, log, and generated HTML artifacts are not
+  committed.
+- OCR is not enabled by default.
+- Product mix evidence is not converted into exact ASP.
+- Customer demand or order visibility is not converted into confirmed order or
+  customer allocation.
+- Industry forecast is not treated as company-specific confirmed order.
+- Official consensus source availability is not treated as official consensus
+  data.
+- `usable_for_promotion=false`.
+- `new_pending_created=0`.
+- `paper_order_created=0`.
+- No approved paper, paper position, or real trading path is created.
+
+### Phase 37 New Artifacts
+
+- `08_scripts/lib/smr_controlled_acquisition_selector.py`
+- `08_scripts/lib/smr_targeted_source_scan.py`
+- `08_scripts/lib/smr_targeted_semantic_extraction.py`
+- `08_scripts/lib/smr_targeted_evidence_candidate_builder.py`
+- `08_scripts/reporting/build_phase37_controlled_acquisition_selection.py`
+- `08_scripts/jobs/run_phase37_targeted_source_scan.py`
+- `08_scripts/jobs/run_phase37_targeted_semantic_extraction.py`
+- `08_scripts/jobs/build_phase37_targeted_evidence_candidates.py`
+- `08_scripts/verification/validate_phase37_300308_post_acquisition_revalidation.py`
+- `08_scripts/reporting/build_phase37_300308_refreshed_research_packet.py`
+- `08_scripts/jobs/run_phase37_300394_evidence_chain_repair.py`
+- `08_scripts/verification/validate_phase37_300394_evidence_chain_repair.py`
+- `08_scripts/reporting/build_phase37_execution_dashboard.py`
+- `docs/plans/2026-05-24-phase37-targeted-evidence-acquisition-execution.md`
+
+### Phase 37 Expected Behavior
+
+For `300308.SZ`, the system should select a small high-readiness task set,
+scan existing local source state, validate quoted spans against chunk text,
+build guarded candidate rows, and report a conservative research-quality delta.
+The expected outcome is at most `modestly_strengthened` while supplier share,
+official consensus, and confirmed customer allocation remain missing.
+
+For `300394.SZ`, the repair job should explain why the evidence chain remains
+empty in the current local state. Dry-run repair is successful if it identifies
+source/text/cache/persistence root causes without fabricating evidence.
+
+### Phase 37 Validation Commands
+
+```bash
+python -m py_compile 08_scripts/lib/*.py 08_scripts/jobs/*.py 08_scripts/verification/*.py 08_scripts/reporting/*.py
+python -m unittest discover -s tests -v
+python 08_scripts/verification/validate_phase3_e2e.py
+python 08_scripts/verification/validate_phase4_live_e2e.py --tickers NVDA --days 180 --timeout 240
+python 08_scripts/verification/validate_phase5_paper_portfolio_smoke.py
+python 08_scripts/verification/validate_phase6_multi_ticker_live.py --watchlist ai_core --save-run-history --compare-last-run --timeout 240
+python 08_scripts/verification/validate_phase14_thesis_aware_multi_ticker_live.py --watchlist ai_core --timeout 240 --json
+python 08_scripts/reporting/build_phase36_evidence_acquisition_dashboard.py --json
+python 08_scripts/reporting/build_phase37_controlled_acquisition_selection.py --ticker 300308.SZ --json
+python 08_scripts/jobs/run_phase37_targeted_source_scan.py --ticker 300308.SZ --dry-run --json
+python 08_scripts/jobs/run_phase37_targeted_semantic_extraction.py --ticker 300308.SZ --dry-run --json
+python 08_scripts/jobs/build_phase37_targeted_evidence_candidates.py --ticker 300308.SZ --dry-run --json
+python 08_scripts/verification/validate_phase37_300308_post_acquisition_revalidation.py --json
+python 08_scripts/reporting/build_phase37_300308_refreshed_research_packet.py --json
+python 08_scripts/jobs/run_phase37_300394_evidence_chain_repair.py --dry-run --json
+python 08_scripts/verification/validate_phase37_300394_evidence_chain_repair.py --json
+python 08_scripts/reporting/build_phase37_execution_dashboard.py --json
+```
+
 ## Phase 36: Targeted Evidence Acquisition Plan v1
 
 Phase 36 turns the Phase 35 single-stock research packet into a targeted
