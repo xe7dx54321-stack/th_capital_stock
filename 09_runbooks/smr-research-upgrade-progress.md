@@ -3742,3 +3742,6 @@ Guard: source!=evidence, candidate!=confirmed, candidate!=pending, raw not commi
 Candidate quality diagnostics, quoted span validation, source traceability scoring, chunk quality classifier,
 quality gate calibration, tracking-support candidate upsert.
 Guard: passed_tracking_support!=confirmed, candidate!=pending, no promotion allowed.
+
+### Phase 52: Watchlist Tracking Intelligence Summary v1
+Human-readable intelligence summary aggregating Phase 45-51 tracking data. Decision=continue_tracking. Not investment advice.
