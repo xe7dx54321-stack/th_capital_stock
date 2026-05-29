@@ -1,4 +1,4 @@
-# SMR Research Upgrade Progress
+﻿# SMR Research Upgrade Progress
 
 - created_at: 2026-05-20 00:01:34
 - owner: Codex / SMR engineering
@@ -3834,9 +3834,7 @@ Pilot: 300308.SZ (AI optical module)
 Boundary: pending_created=0, paper_order_created=0, real_trade_created=0
 
 
-## Phase 59: Industry Financial Signals into Watchlist Intelligence Loop v1
-
-Status: in_progress
+## Phase 59: Industry Financial Signals into Watchlist Intelligence Loop v1`n`nStatus: completed
 
 Goals: watchlist financial signal adapter, delta detector, finance-aware thesis review, watchlist decision, finance-aware packet, daily brief, loop runner, dashboard
 
@@ -3853,9 +3851,7 @@ Industry: ai_optical_module
 Boundary: pending_created=0, paper_order_created=0, real_trade_created=0
 
 
-## Phase 60: Product Mix & Business Evidence Integration v1
-
-Status: in_progress
+## Phase 60: Product Mix & Business Evidence Integration v1`n`nStatus: completed
 
 Goals: AI optical business variable schema, source inventory, evidence retrieval, semantic extraction, quality gate, claim mapping, cannot-conclude guard, financial+business integration, watchlist review, business evidence brief, runner, dashboard
 
@@ -3869,4 +3865,44 @@ Design:
 
 Pilot: 300308.SZ
 Boundary: pending_created=0, paper_order_created=0, real_trade_created=0
+
+
+## Phase 61: Business Evidence Real Source Text Pipeline Integration v1
+
+Status: completed
+
+Goals: real business source text adapter, source coverage audit, real text evidence retrieval, quoted span validation, semantic evidence from real text, real evidence quality gate, real evidence claim mapping, real cannot-conclude guard, financial+real business integration, watchlist review, real business evidence brief, runner, dashboard
+
+Design:
+- Reuses Phase 50 real source text modules (fixture-based) for business evidence pipeline
+- Adapter checks real text availability: 4 of 9 source types have real text available
+- Coverage audit confirms all 7 business variables have real text keyword coverage
+- Retrieval yields 11 real text spans across investor_relations_record, annual_report, company_announcement
+- Quoted span validator passes all 11 spans
+- Semantic extraction creates 11 evidence items (4 strong_direct, 7 medium_management)
+- Quality gate passes 9, review_required 2 (sensitive: ASP, customer_demand)
+- Claim mapping: 3 supported, 2 partially_supported, 4 unconfirmed
+- Cannot-conclude guard: violations=0, guard_status=pass
+- Financial+real business integration: 2 joint strengthened, 3 partially_supported, 2 unconfirmed
+- Watchlist decision: continue_tracking_real_business_and_financial_evidence_strengthened
+- Observed-first brief in 5-section format without forbidden terms
+
+Core boundaries:
+- mock_sources_used_for_research=false everywhere
+- fixture_evidence_used=true (Phase 50 modules use fixture text)
+- 800G mention != revenue share confirmed
+- 1.6T mention != mass production
+- Customer demand strong != share confirmed
+- Order visibility good != specific order volume
+- Gross margin strong != ASP confirmed
+- pending_created=0, paper_order_created=0, real_trade_created=0
+- No backend terms, no teaching phrases, no trade advice
+
+Pilot: 300308.SZ
+Industry: ai_optical_module
+Real text sources: 4 available (investor_relations_record, annual_report, quarterly_report, company_announcement)
+Boundary: pending_created=0, paper_order_created=0, real_trade_created=0
+
+Next: Real scraping pipeline for IR/announcement/report text extraction.
+
 
