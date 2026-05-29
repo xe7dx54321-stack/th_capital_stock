@@ -1,0 +1,44 @@
+{
+  "sources": [
+    {
+      "source_id": "akshare_sina_financial",
+      "source_type": "third_party_structured_api",
+      "status": "available",
+      "allowed_usage": "primary_financial_data",
+      "requires_network": true,
+      "confidence": "real_structured",
+      "provider": "akshare/sina",
+      "statements_available": [
+        "利润表",
+        "资产负债表",
+        "现金流量表"
+      ]
+    },
+    {
+      "source_id": "local_structured_financial_db",
+      "source_type": "structured_financial_db",
+      "status": "available_if_configured",
+      "allowed_usage": "primary_financial_data",
+      "requires_network": false,
+      "confidence": "real_structured"
+    },
+    {
+      "source_id": "cninfo_financial_report_text",
+      "source_type": "report_text_fallback",
+      "status": "fallback",
+      "allowed_usage": "supporting_financial_data",
+      "requires_network": true,
+      "confidence": "real_report_text_extracted"
+    },
+    {
+      "source_id": "manual_financial_fixture",
+      "source_type": "fixture",
+      "status": "test_only",
+      "allowed_usage": "test_only_not_research_conclusion",
+      "requires_network": false,
+      "confidence": "manual_fixture"
+    }
+  ],
+  "preferred_primary": "akshare_sina_financial",
+  "note": "Real financial data sources. Fixture must never be used for research conclusions."
+}
