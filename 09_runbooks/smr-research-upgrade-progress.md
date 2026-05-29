@@ -3939,3 +3939,32 @@ Real Chinese texts: 7 fetched, 7 normalized, 12 chunks
 Boundary: pending/order/trade = 0/0/0
 
 Next: Real-time CNINFO API scraping with network connectivity, multi-ticker expansion.
+
+## Phase 63: Real Network Source Validation & PDF Text Extraction Hardening v1
+
+Status: completed
+
+Goals: Real network validation config, CNINFO real network fetch validator, controlled online text fetch validator, PDF text extractor, text extraction quality classifier, real network evidence rerun, real network brief, runner, dashboard
+
+Design:
+- Network validation config: timeout=20s, max_sources=20, save_raw=false, ocr_allowed=false, mock_fallback=false, fixture_fallback=false
+- CNINFO validator: 3 modes (dry-run, execute with real HTTP to cninfo API, skip-network with catalog). Execute safely degrades on network failure.
+- Online text fetch validator: unified fetch status with text_confidence levels (real_online_text, real_metadata_only)
+- PDF text extractor: uses pypdf library, no OCR, raw PDF not saved. Reports pdf_text_failed with reason when PDF unavailable.
+- Text quality classifier: 6 quality statuses (usable, warnings, metadata_only, too_short, parse_failed, needs_review). Metadata-only excluded from business evidence.
+- Runner: 8/8 steps ok (dry-run, execute), phase50_fixture_used=false, mock_text_used=false
+- Dashboard: network state clear, text_ok/metadata_only/failed breakdown, raw/ocr=false
+
+Core boundaries:
+- save_raw_content=false, ocr_allowed=false, allow_mock_fallback=false, allow_fixture_fallback=false
+- PDF extraction without OCR; parse failure != guessing
+- Metadata-only NOT treated as body text evidence
+- Network failure safely degraded, no mock/fixture fallback
+- pending_created=0, paper_order_created=0, real_trade_created=0
+- No backend terms, no teaching phrases, no trade advice
+
+Pilot: 300308.SZ (中际旭创)
+Text quality: 2 usable, 5 warnings, 3 metadata_only, 0 too_short
+Boundary: pending/order/trade = 0/0/0
+
+Next: Download and extract real PDFs from CNINFO, expand to more tickers.

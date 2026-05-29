@@ -1,0 +1,43 @@
+﻿{
+  "version": "1.0",
+  "description": "Real network source validation rules for Phase 63. Controls network request constraints, safety boundaries, and fallback policies.",
+  "network_validation": {
+    "default_timeout_seconds": 20,
+    "max_sources_per_run": 20,
+    "max_retry": 1,
+    "respect_robots_or_platform_limits": true,
+    "save_raw_content": false,
+    "ocr_allowed": false,
+    "allow_pdf_text_extraction": true,
+    "allow_html_text_extraction": true,
+    "allow_mock_fallback": false,
+    "allow_fixture_fallback": false
+  },
+  "source_limits": {
+    "cninfo": {
+      "max_sources_per_run": 15,
+      "allowed_source_types": [
+        "cninfo_investor_relations_record",
+        "cninfo_annual_report",
+        "cninfo_semiannual_report",
+        "cninfo_quarterly_report",
+        "cninfo_announcement"
+      ]
+    },
+    "irm": {
+      "max_sources_per_run": 10
+    },
+    "company_site": {
+      "max_sources_per_run": 10
+    }
+  },
+  "fetch_statuses": [
+    "network_ok", "network_unavailable", "request_failed", "rate_limited",
+    "blocked_by_anti_bot", "metadata_ok", "metadata_only", "text_ok",
+    "pdf_text_ok", "pdf_text_failed", "text_too_short", "parse_failed",
+    "unsupported_format", "skipped_by_policy", "unknown"
+  ],
+  "text_confidence_levels": [
+    "real_online_text", "real_pdf_text_extracted", "real_metadata_only", "unavailable"
+  ]
+}
