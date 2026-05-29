@@ -3815,3 +3815,21 @@ Pilot: 300308.SZ
 Second ticker validation: 688041.SH (fallback 002230.SZ)
 Boundary: pending_created=0, paper_order_created=0, real_trade_created=0
 
+
+## Phase 58: AI Optical Module Industry Financial Variable Template v1
+
+Status: in_progress
+
+Goals: AI optical module financial variable schema, signal-to-industry-variable mapping, variable interpretation, cannot-conclude guard, industry financial thesis impact, industry-aware brief section, integrated brief, generalization report, dashboard
+
+Design:
+- 6 AI optical module industry financial variables defined
+- Each variable maps financial signals to business meaning with strict boundaries
+- Cannot-conclude guard blocks 9 forbidden over-attributions
+- Financial signals support/weaken business judgments but never confirm product/customer/ASP directly
+- Observed-first: financial facts first, then business implications, then what cannot be concluded
+- Industry template is industry-specific, not claimed for all stocks
+
+Pilot: 300308.SZ (AI optical module)
+Boundary: pending_created=0, paper_order_created=0, real_trade_created=0
+

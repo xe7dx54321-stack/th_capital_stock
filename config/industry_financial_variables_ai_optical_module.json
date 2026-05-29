@@ -1,0 +1,128 @@
+﻿{
+  "industry": "ai_optical_module",
+  "description": "AI光模块行业财务变量模板 - 将财务信号映射到行业业务变量，明确可判断/不可判断边界",
+  "financial_variables": [
+    {
+      "variable": "high_end_product_mix_signal",
+      "description": "高端产品结构变化的财务侧信号",
+      "related_financial_metrics": [
+        "revenue_yoy",
+        "gross_margin",
+        "gross_margin_delta"
+      ],
+      "can_support": [
+        "收入增长可能部分来自高端产品",
+        "毛利率变化方向可能与产品结构改善方向一致"
+      ],
+      "cannot_conclude_from_financials_alone": [
+        "800G revenue share",
+        "1.6T revenue share",
+        "specific product mix percentage"
+      ]
+    },
+    {
+      "variable": "shipment_revenue_conversion",
+      "description": "出货或交付是否进入收入端的财务侧信号",
+      "related_financial_metrics": [
+        "revenue_yoy",
+        "revenue_qoq",
+        "inventory_to_revenue",
+        "accounts_receivable_to_revenue"
+      ],
+      "can_support": [
+        "收入端已出现明显兑现",
+        "库存/收入比和应收/收入比可辅助判断收入确认节奏"
+      ],
+      "cannot_conclude_from_financials_alone": [
+        "exact shipment volume",
+        "specific customer order volume",
+        "delivery schedule"
+      ]
+    },
+    {
+      "variable": "margin_resilience",
+      "description": "产品结构升级与价格压力共同作用后的毛利率表现",
+      "related_financial_metrics": [
+        "gross_margin",
+        "gross_margin_yoy_delta",
+        "gross_margin_qoq_delta",
+        "cost_of_revenue"
+      ],
+      "can_support": [
+        "毛利率处于较强水平支持利润质量较好",
+        "毛利率稳定性可反映定价权和成本管理能力"
+      ],
+      "cannot_conclude_from_financials_alone": [
+        "ASP trend",
+        "product-level margin",
+        "customer-level pricing"
+      ]
+    },
+    {
+      "variable": "order_visibility_financial_proxy",
+      "description": "订单能见度的财务代理信号",
+      "related_financial_metrics": [
+        "contract_liabilities",
+        "inventory",
+        "operating_cash_flow",
+        "accounts_receivable"
+      ],
+      "can_support": [
+        "合同负债增加可能暗示预收款或定金增加",
+        "存货增加可能暗示备货生产意愿较强"
+      ],
+      "cannot_conclude_from_financials_alone": [
+        "confirmed backlog",
+        "customer allocation",
+        "specific order amount"
+      ]
+    },
+    {
+      "variable": "customer_demand_financial_proxy",
+      "description": "客户需求强弱的财务代理信号",
+      "related_financial_metrics": [
+        "revenue_yoy",
+        "accounts_receivable_to_revenue",
+        "operating_cash_flow_to_net_profit"
+      ],
+      "can_support": [
+        "收入高增说明需求侧确实较强",
+        "现金流/净利润比可辅助判断收入质量"
+      ],
+      "cannot_conclude_from_financials_alone": [
+        "specific customer demand",
+        "NVIDIA/hyperscaler allocation",
+        "customer market share"
+      ]
+    },
+    {
+      "variable": "capacity_preparation_signal",
+      "description": "产能准备或扩产压力的财务侧信号",
+      "related_financial_metrics": [
+        "capex",
+        "capex_to_revenue",
+        "inventory"
+      ],
+      "can_support": [
+        "capex增加可能暗示公司在准备扩产",
+        "capex/收入比可反映扩产强度"
+      ],
+      "cannot_conclude_from_financials_alone": [
+        "new capacity utilization",
+        "customer certification status",
+        "actual production ramp timeline"
+      ]
+    }
+  ],
+  "forbidden_attributions": [
+    "收入增长证明800G放量",
+    "收入增长证明1.6T放量",
+    "收入增长证明客户份额提升",
+    "毛利率强证明ASP改善",
+    "毛利率强证明高端产品占比提升",
+    "存货增加证明订单增强",
+    "合同负债增加证明客户订单确认",
+    "应收增加证明需求增强",
+    "capex增加证明扩产成功"
+  ]
+}
