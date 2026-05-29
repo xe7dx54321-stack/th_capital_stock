@@ -1,0 +1,98 @@
+﻿{
+  "meta": {
+    "phase": "64",
+    "version": "1.0",
+    "description": "A-share disclosure source endpoint registry for Phase 64 connector repair",
+    "raw_content_saved": false,
+    "ocr_allowed": false,
+    "mock_allowed": false,
+    "fixture_allowed": false
+  },
+  "sources": [
+    {
+      "source_id": "cninfo_his_announcement_query",
+      "platform": "cninfo",
+      "endpoint_type": "metadata_api",
+      "method": "POST",
+      "url": "https://www.cninfo.com.cn/new/hisAnnouncement/query",
+      "content_type": "application/x-www-form-urlencoded",
+      "allowed_usage": "disclosure_metadata",
+      "requires_headers": true,
+      "requires_network": true,
+      "raw_content_saved": false,
+      "ocr_allowed": false,
+      "fallback_priority": 1,
+      "notes": "HTTPS works (HTTP times out). Returns JSON. Parameter format for stock code needs verification."
+    },
+    {
+      "source_id": "cninfo_disclosure_page",
+      "platform": "cninfo",
+      "endpoint_type": "disclosure_page",
+      "method": "GET",
+      "url": "https://www.cninfo.com.cn/new/disclosure",
+      "allowed_usage": "disclosure_page_diagnostics",
+      "requires_headers": true,
+      "requires_network": true,
+      "raw_content_saved": false,
+      "ocr_allowed": false,
+      "fallback_priority": 2,
+      "notes": "HTTP returns 500; HTTPS may differ."
+    },
+    {
+      "source_id": "irm_questions",
+      "platform": "irm",
+      "endpoint_type": "interactive_qa",
+      "method": "GET",
+      "url": "https://irm.cninfo.com.cn/ircs/interaction/questions",
+      "allowed_usage": "interactive_qa_text",
+      "requires_headers": true,
+      "requires_network": true,
+      "raw_content_saved": false,
+      "ocr_allowed": false,
+      "fallback_priority": 3,
+      "notes": "Returns HTML not JSON. HTML parsing needed for QA extraction. POST returns 405."
+    },
+    {
+      "source_id": "szse_disclosure",
+      "platform": "szse",
+      "endpoint_type": "metadata_or_page",
+      "method": "GET",
+      "url": "https://www.szse.cn/api/disc/announcement/annList",
+      "allowed_usage": "disclosure_metadata_fallback",
+      "requires_headers": true,
+      "requires_network": true,
+      "raw_content_saved": false,
+      "ocr_allowed": false,
+      "fallback_priority": 4,
+      "notes": "Main site reachable (HTTP 200). API endpoints return HTTP 500 with all method attempts (GET/POST_JSON/POST_FORM). Disclosure metadata may require different endpoint or parameters."
+    },
+    {
+      "source_id": "szse_main_page",
+      "platform": "szse",
+      "endpoint_type": "main_page",
+      "method": "GET",
+      "url": "https://www.szse.cn",
+      "allowed_usage": "site_reachability_diagnostics",
+      "requires_headers": true,
+      "requires_network": true,
+      "raw_content_saved": false,
+      "ocr_allowed": false,
+      "fallback_priority": 5,
+      "notes": "Reachable, HTTP 200, ~31KB HTML. Used for connectivity diagnostics only."
+    },
+    {
+      "source_id": "company_official_site",
+      "platform": "company_site",
+      "endpoint_type": "ir_page",
+      "method": "GET",
+      "url": "not_configured",
+      "allowed_usage": "company_ir_page_text",
+      "requires_headers": true,
+      "requires_network": true,
+      "raw_content_saved": false,
+      "ocr_allowed": false,
+      "fallback_priority": 6,
+      "notes": "No URL configured yet for 300308.SZ company site."
+    }
+  ]
+}
