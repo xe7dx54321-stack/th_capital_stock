@@ -3833,3 +3833,22 @@ Design:
 Pilot: 300308.SZ (AI optical module)
 Boundary: pending_created=0, paper_order_created=0, real_trade_created=0
 
+
+## Phase 59: Industry Financial Signals into Watchlist Intelligence Loop v1
+
+Status: in_progress
+
+Goals: watchlist financial signal adapter, delta detector, finance-aware thesis review, watchlist decision, finance-aware packet, daily brief, loop runner, dashboard
+
+Design:
+- Reads Phase 58 industry financial variables and feeds into watchlist tracking loop
+- Detects variable deltas: strengthened/weakened/unchanged/unjudgeable
+- Maps variable changes to thesis dimensions (9 dimensions)
+- Generates watchlist decision without triggering trades
+- Outputs finance-aware watchlist packet and daily brief in observed-first style
+- Cannot-conclude guard active throughout
+
+Pilot: 300308.SZ
+Industry: ai_optical_module
+Boundary: pending_created=0, paper_order_created=0, real_trade_created=0
+
