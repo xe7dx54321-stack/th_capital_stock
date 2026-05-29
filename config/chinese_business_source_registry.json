@@ -1,0 +1,67 @@
+﻿{
+  "version": "1.0",
+  "description": "Chinese business source registry - defines which Chinese disclosure sources are available for scraping, what their priority is, and access constraints.",
+  "sources": [
+    {
+      "source_id": "cninfo_disclosure",
+      "source_platform": "cninfo",
+      "source_types": [
+        "cninfo_announcement",
+        "cninfo_annual_report",
+        "cninfo_semiannual_report",
+        "cninfo_quarterly_report",
+        "cninfo_investor_relations_record"
+      ],
+      "priority": "P0",
+      "requires_network": true,
+      "raw_content_saved": false,
+      "ocr_allowed": false,
+      "allowed_usage": "primary_company_business_text",
+      "api_base": "http://www.cninfo.com.cn/new/hisAnnouncement/query",
+      "note": "CNINFO is China's official listed company disclosure platform (Juchao Zixun)."
+    },
+    {
+      "source_id": "szse_irm",
+      "source_platform": "irm",
+      "source_types": [
+        "irm_interactive_qa"
+      ],
+      "priority": "P1",
+      "requires_network": true,
+      "raw_content_saved": false,
+      "ocr_allowed": false,
+      "allowed_usage": "company_interaction_text",
+      "api_base": "https://irm.cninfo.com.cn/ircs/company/companyQuestion",
+      "note": "Shenzhen Stock Exchange Interactive Easy platform for investor Q&A."
+    },
+    {
+      "source_id": "company_official_site",
+      "source_platform": "company_site",
+      "source_types": [
+        "company_official_news",
+        "company_ir_page"
+      ],
+      "priority": "P2",
+      "requires_network": true,
+      "raw_content_saved": false,
+      "ocr_allowed": false,
+      "allowed_usage": "company_official_text",
+      "api_base": "",
+      "note": "Company official website news and IR pages. P2 priority."
+    },
+    {
+      "source_id": "industry_public",
+      "source_platform": "public",
+      "source_types": [
+        "industry_public_source"
+      ],
+      "priority": "P3",
+      "requires_network": true,
+      "raw_content_saved": false,
+      "ocr_allowed": false,
+      "allowed_usage": "industry_context_only",
+      "api_base": "",
+      "note": "Industry-level public materials. Not company-direct evidence."
+    }
+  ]
+}

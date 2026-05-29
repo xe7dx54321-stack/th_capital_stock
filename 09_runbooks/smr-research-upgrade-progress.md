@@ -3906,3 +3906,36 @@ Boundary: pending_created=0, paper_order_created=0, real_trade_created=0
 Next: Real scraping pipeline for IR/announcement/report text extraction.
 
 
+
+## Phase 62: Real Chinese Business Text Scraping & Extraction Pipeline v1
+
+Status: completed
+
+Goals: Chinese business source registry, CNINFO metadata connector, controlled Chinese text fetcher, text normalizer, text chunker, Phase 61 adapter real text integration, business evidence rerun, real Chinese business evidence brief, runner, dashboard
+
+Design:
+- Chinese business source registry: 4 sources (P0 cninfo, P1 irm, P2 company_site, P3 industry_public)
+- All sources: raw_content_saved=false, ocr_allowed=false
+- CNINFO metadata connector supports 3 modes: dry-run, execute (HTTP to cninfo API), skip-network (catalog)
+- Controlled text fetcher: 10 sources checked, 7 text fetched, 3 metadata_only
+- Text normalizer: 7 texts normalized, 5 QA structures detected, 2 disclaimers removed
+- Text chunker: 12 chunks (8 QA pairs, 4 product sections), each with source_id and hash
+- Phase 61 adapter: phase50_fixture_replaced=true, fixture_text_used_for_research=false
+- Business evidence rerun: based on real Chinese text chunks
+- Runner: 9/9 steps ok, real_chinese_text_used=true, phase50_fixture_used=false
+- Brief: 5-section observed-first format in Chinese, no forbidden terms
+
+Core boundaries:
+- raw_content_saved=false, ocr_used=false
+- metadata-only NOT treated as body text evidence
+- phase50_fixture NOT used for formal research judgment
+- Network failure safely degraded, no mock fallback
+- Cannot-conclude guard: pass
+- pending_created=0, paper_order_created=0, real_trade_created=0
+- No backend terms, no teaching phrases, no trade advice
+
+Pilot: 300308.SZ (中际旭创)
+Real Chinese texts: 7 fetched, 7 normalized, 12 chunks
+Boundary: pending/order/trade = 0/0/0
+
+Next: Real-time CNINFO API scraping with network connectivity, multi-ticker expansion.
