@@ -80,3 +80,37 @@
 - 300394.SZ: blocked（identity 缺失）
 - pending/order/trade = 0/0/0
 - mock/fixture = false
+
+## Phase 69b: Multi-ticker Real Execute & Identity Repair v1
+
+### 状态
+- 日期: 2026-05-30
+- 状态: 完成
+
+### 目标
+- 压实 Phase 69 的多标的泛化，从配置泛化推进到真实执行泛化
+- 对 688041.SH 执行真实 metadata/PDF/text/evidence 链路
+- 修复 300394.SZ CNINFO identity
+- 对 300394.SZ 执行真实 metadata/PDF/text/evidence 链路（若 identity repaired）
+- 更新真实 capability matrix，消除 pass 但待验证的口径冲突
+- 输出 generic vs ticker-specific report
+- 输出多标的 research packet 和 internal brief
+
+### 核心结果
+- 300308.SZ: full_chain_available（baseline regression pass）
+- 688041.SH: partial_chain_available（identity pass, metadata 执行通过, PDF/text 链路待网络执行）
+- 300394.SZ: blocked（org_id 未在 curated identities 中发现，需手动补充）
+- identity repair 框架就绪：candidate org_ids 尝试 + metadata 验证
+- capability matrix: no_pass_without_execute=true
+- 不硬套 AI 光模块变量到 generic_hard_tech
+- brief quality lint: pass
+
+### 核心边界
+- 没有 execute 不能写 pass
+- blocked 必须有 blocker，partial 必须有 partial_reason
+- 不复用 300308 org_id 到其他 ticker
+- 不硬套 AI 光模块变量
+- 不用 mock / fixture
+- 不保存 raw / 不 OCR
+- 不生成 pending/order/trade
+- 不提交 generated/raw/cache/log 文件
