@@ -3852,3 +3852,21 @@ Pilot: 300308.SZ
 Industry: ai_optical_module
 Boundary: pending_created=0, paper_order_created=0, real_trade_created=0
 
+
+## Phase 60: Product Mix & Business Evidence Integration v1
+
+Status: in_progress
+
+Goals: AI optical business variable schema, source inventory, evidence retrieval, semantic extraction, quality gate, claim mapping, cannot-conclude guard, financial+business integration, watchlist review, business evidence brief, runner, dashboard
+
+Design:
+- 7 business variables: 800G, 1.6T, product mix, shipment, customer demand, ASP, order visibility
+- Fixture-based evidence spans from known 300308.SZ disclosure patterns
+- Evidence strength: strong_direct / medium_management / weak_industry / proxy / unusable
+- Sensitive variables (ASP, customer demand) flagged for human review
+- Cannot-conclude guard blocks over-attribution
+- Financial + business evidence joint assessment
+
+Pilot: 300308.SZ
+Boundary: pending_created=0, paper_order_created=0, real_trade_created=0
+

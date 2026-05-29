@@ -1,0 +1,65 @@
+﻿{
+  "industry": "ai_optical_module",
+  "description": "AI光模块行业业务证据变量模板 - 从公司材料中提取产品结构、出货、客户、价格、订单相关业务证据",
+  "business_variables": [
+    {
+      "variable": "800G_product_signal",
+      "description": "800G产品需求、出货、交付、量产或客户验证相关信号",
+      "evidence_keywords": ["800G", "八百G", "高速光模块"],
+      "can_support": ["product_upgrade_cycle", "shipment_revenue_conversion", "high_end_product_mix"],
+      "cannot_conclude_without_direct_disclosure": ["800G revenue share", "specific customer allocation", "specific order volume"]
+    },
+    {
+      "variable": "1_6T_product_signal",
+      "description": "1.6T产品送样、验证、量产、出货节奏相关信号",
+      "evidence_keywords": ["1.6T", "1.6 T", "一点六T", "下一代光模块"],
+      "can_support": ["next_generation_product_ramp", "future_product_mix_optionality"],
+      "cannot_conclude_without_direct_disclosure": ["1.6T revenue contribution", "mass production scale", "customer-specific adoption"]
+    },
+    {
+      "variable": "high_end_product_mix",
+      "description": "高端产品结构变化相关信号",
+      "evidence_keywords": ["高端产品", "产品结构", "产品升级", "产品占比"],
+      "can_support": ["revenue_quality", "margin_resilience"],
+      "cannot_conclude_without_direct_disclosure": ["exact product revenue mix", "product-level margin"]
+    },
+    {
+      "variable": "shipment_delivery_signal",
+      "description": "出货、交付、排产、量产相关信号",
+      "evidence_keywords": ["出货", "交付", "量产", "排产", "产能利用"],
+      "can_support": ["shipment_revenue_conversion", "order_visibility"],
+      "cannot_conclude_without_direct_disclosure": ["exact shipment volume", "specific order amount"]
+    },
+    {
+      "variable": "customer_demand_signal",
+      "description": "客户需求、云厂商、海外大客户、AI客户等需求相关口径",
+      "evidence_keywords": ["客户需求", "海外客户", "云厂商", "AI客户", "大客户"],
+      "can_support": ["customer_demand_proxy", "order_visibility"],
+      "cannot_conclude_without_direct_disclosure": ["specific customer allocation", "customer share", "NVIDIA allocation"]
+    },
+    {
+      "variable": "asp_price_signal",
+      "description": "ASP、价格、降价、价格竞争、产品单价相关信号",
+      "evidence_keywords": ["ASP", "价格", "单价", "降价", "价格竞争"],
+      "can_support": ["margin_resilience", "profit_elasticity"],
+      "cannot_conclude_without_direct_disclosure": ["exact ASP trend", "customer-level pricing", "product-level margin"]
+    },
+    {
+      "variable": "order_visibility_signal",
+      "description": "订单、在手订单、订单能见度、需求能见度相关信号",
+      "evidence_keywords": ["订单", "在手订单", "能见度", "需求能见度"],
+      "can_support": ["revenue_visibility", "shipment_revenue_conversion"],
+      "cannot_conclude_without_direct_disclosure": ["confirmed backlog", "specific order amount", "customer-specific order"]
+    }
+  ],
+  "forbidden_attributions": [
+    "800G提及=800G收入占比确认",
+    "1.6T提及=1.6T已大规模放量",
+    "客户需求强=客户份额提升",
+    "订单能见度好=具体订单量确认",
+    "出货顺利=具体出货量确认",
+    "毛利率强=ASP改善",
+    "产品结构优化=产品级毛利率提升",
+    "海外客户需求强=NVIDIA allocation确认"
+  ]
+}
