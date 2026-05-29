@@ -3968,3 +3968,34 @@ Text quality: 2 usable, 5 warnings, 3 metadata_only, 0 too_short
 Boundary: pending/order/trade = 0/0/0
 
 Next: Download and extract real PDFs from CNINFO, expand to more tickers.
+
+## Phase 63b: Local Real Network Execution Verification v1
+
+Status: completed
+
+Goals: Real network execution audit, CNINFO fetch verification, PDF download verification, source coverage report, evidence gain report, real network dashboard
+
+Design:
+- Honest audit of 6 network endpoints with real HTTP calls
+- Records success/failure with specific reasons, no mock, no fixture
+- Network results: 3/6 sources reachable (IRM, SZSE), 2/6 failed (CNINFO), 1 not tested
+- CNINFO (www.cninfo.com.cn): connection_timed_out - firewall/network blocking
+- CNINFO disclosure API: http_error_500
+- IRM (irm.cninfo.com.cn): HTTP 200 but returns HTML, not JSON - API endpoint may have changed
+- SZSE (www.szse.cn): HTTP 200, 90KB HTML - accessible
+- PDF sources: all blocked because CNINFO metadata is not reachable
+
+Key findings:
+- CNINFO metadata API is NOT reachable from this network environment
+- IRM interactive easy platform IS reachable but returns HTML instead of JSON API
+- SZSE main site IS reachable
+- Real network text did NOT add new business evidence (delta = 0)
+- All reports: mock_used=false, fixture_used=false, raw_content_saved=false, ocr_used=false
+
+Boundary: pending/order/trade = 0/0/0
+
+Next steps:
+- Try CNINFO from a mainland China network or proxy
+- Update IRM API endpoint to match current platform format
+- Consider using SZSE API directly for disclosure data
+- Or continue building with Phase 62-style known-source catalog while network access is being resolved
