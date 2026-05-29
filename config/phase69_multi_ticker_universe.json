@@ -1,0 +1,38 @@
+{
+  "phase": "phase69",
+  "tickers": [
+    {
+      "ticker": "300308.SZ",
+      "company_name": "中际旭创",
+      "market": "SZ",
+      "board": "ChiNext",
+      "industry_template": "ai_optical_module",
+      "role": "baseline",
+      "expected_status": "full_chain_available"
+    },
+    {
+      "ticker": "688041.SH",
+      "company_name": "海光信息",
+      "market": "SH",
+      "board": "STAR",
+      "industry_template": "generic_hard_tech",
+      "role": "second_exchange_validation",
+      "expected_status": "metadata_and_pdf_validation"
+    },
+    {
+      "ticker": "300394.SZ",
+      "company_name": "天孚通信",
+      "market": "SZ",
+      "board": "ChiNext",
+      "industry_template": "ai_optical_module",
+      "role": "repair_required_validation",
+      "expected_status": "repair_or_blocker_identified"
+    }
+  ],
+  "safety": {
+    "research_only": true,
+    "pending_allowed": false,
+    "paper_order_allowed": false,
+    "real_trade_allowed": false
+  }
+}

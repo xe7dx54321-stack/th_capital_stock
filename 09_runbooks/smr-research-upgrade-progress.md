@@ -60,3 +60,23 @@
 - 不出现系统后台词、教学式提醒
 - 不使用 mock/fixture
 - 不提交 generated evidence memory
+
+## Phase 69: Multi-ticker Disclosure Pipeline Generalization v1
+
+### 状态
+- 日期: 2026-05-30
+- 状态: 完成
+
+### 目标
+- 从 300308.SZ 单票链路扩展为多标的披露证据链路
+- 覆盖 300308.SZ / 688041.SH / 300394.SZ
+- 多标的 identity resolver（复用 curated identities）
+- 多标的 metadata/high-value/PDF/deep evidence/evidence memory
+- capability matrix + research packet + internal brief
+
+### 核心结果
+- 300308.SZ: full_chain_available（baseline 不回退）
+- 688041.SH: partial_chain_available（identity 已配置）
+- 300394.SZ: blocked（identity 缺失）
+- pending/order/trade = 0/0/0
+- mock/fixture = false
