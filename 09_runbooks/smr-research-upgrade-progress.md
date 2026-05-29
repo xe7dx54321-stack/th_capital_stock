@@ -3795,3 +3795,23 @@ Design: real structured data priority, fixture for testing only, no AI guessing
 Pilot: 300308.SZ via akshare/sina financial report API
 
 Boundary: pending_created=0, paper_order_created=0, real_trade_created=0
+
+## Phase 57: Quarterly Financial Signal Refinement & Multi-ticker Validation v1
+
+Status: in_progress
+
+Goals: capex field matching, cumulative-to-single-quarter conversion, quarterly metric coverage, refined quarterly financial signals, financial signal interpretation, financial thesis impact update, second ticker validation, integrated investment brief, dashboard
+
+Design:
+- Cumulative income/cash flow items differenced to single quarter
+- Balance sheet items preserved as period-end values
+- Capex matched via fuzzy column name search
+- Second ticker validates framework generality, not investment thesis
+- Financial signals integrated into observed-first investment brief
+- No AI guessing financial data
+- No automatic attribution of revenue growth to product mix or ASP
+
+Pilot: 300308.SZ
+Second ticker validation: 688041.SH (fallback 002230.SZ)
+Boundary: pending_created=0, paper_order_created=0, real_trade_created=0
+

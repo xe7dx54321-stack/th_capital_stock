@@ -36,19 +36,32 @@ def _safe_float(val):
         return fv
     except (ValueError, TypeError): return None
 
+def _find_capex_col(df):
+    for col in df.columns:
+        s = str(col)
+        if '固定资产' in s and '支付' in s and '处置' not in s:
+            return s
+    return None
+
 def _extract(df, col_map):
     records = []
     period_col = df.columns[0]
+    has_capex = any('capex' in str(v) for v in col_map.values())
+    capex_col = _find_capex_col(df) if has_capex else None
     for _, row in df.iterrows():
         period = _to_q(row[period_col])
         if not period: continue
         for cn_name, our_name in col_map.items():
-            if cn_name not in df.columns: continue
-            fv = _safe_float(row[cn_name])
+            actual_col = cn_name
+            if cn_name not in df.columns:
+                if 'capex' in our_name and capex_col:
+                    actual_col = capex_col
+                else:
+                    continue
+            fv = _safe_float(row[actual_col])
             if fv is not None and fv != 0:
                 records.append({'period': period, 'period_type': 'cumulative', 'metric': our_name, 'value': fv, 'unit': 'CNY', 'source_type': 'akshare_sina_financial', 'confidence': 'real_structured'})
     return records
-
 def fetch_structured_financial_data(ticker='300308.SZ', mode='dry-run'):
     is_dry = mode == 'dry-run'
     skip_net = mode == 'skip-network'
@@ -87,7 +100,7 @@ def fetch_structured_financial_data(ticker='300308.SZ', mode='dry-run'):
             'confidence': 'real_structured', 'fixture_used': False,
             'raw_content_saved': False, 'errors': errors,
             'records_written': len(records), 'records': records,
-            'note': 'Real structured financial data via akshare/sina. Cumulative period type.'}}
+            'note': 'Real structured financial data via akshare/sina. Cumulative period type. Capex uses fuzzy column matching.'}}
     except ImportError:
         return {'ticker': ticker, 'structured_financial_data_fetch': {
             'mode': mode, 'real_data_available': False, 'source_id': None,
