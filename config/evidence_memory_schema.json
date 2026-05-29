@@ -1,0 +1,72 @@
+{
+  "schema_version": "1.0",
+  "schema_name": "evidence_memory",
+  "required_fields": [
+    "evidence_id",
+    "ticker",
+    "company_name",
+    "industry",
+    "phase_source",
+    "source_id",
+    "source_type",
+    "source_title",
+    "business_variable",
+    "claim_type",
+    "evidence_strength",
+    "confidence",
+    "limitation",
+    "cannot_conclude",
+    "allowed_usage",
+    "requires_human_review",
+    "created_at"
+  ],
+  "optional_fields": [
+    "publish_date",
+    "pdf_url_hash_or_source_url_hash",
+    "text_hash",
+    "quoted_span",
+    "span_location_or_hash",
+    "quality_grade",
+    "keywords_hit",
+    "review_status",
+    "updated_at"
+  ],
+  "evidence_strength_enum": [
+    "strong_direct_disclosure",
+    "management_commentary",
+    "financial_report_context",
+    "business_context",
+    "proxy_signal",
+    "risk_or_contradictory_signal",
+    "review_required"
+  ],
+  "confidence_enum": [
+    "high",
+    "medium",
+    "low_medium",
+    "low"
+  ],
+  "allowed_usage_enum": [
+    "research_memory",
+    "watchlist_tracking",
+    "brief_support",
+    "review_required_only",
+    "do_not_use_for_claim"
+  ],
+  "review_status_enum": [
+    "none",
+    "review_required",
+    "reviewed_ok",
+    "reviewed_rejected"
+  ],
+  "business_variables": [
+    "800G_product_signal",
+    "1_6T_product_signal",
+    "high_end_product_mix",
+    "shipment_delivery_signal",
+    "customer_demand_signal",
+    "order_visibility_signal",
+    "asp_price_signal",
+    "capacity_expansion_signal"
+  ]
+}
