@@ -1,0 +1,51 @@
+{
+  "ticker": "300308.SZ",
+  "industry": "ai_optical_module",
+  "priority_categories": [
+    {
+      "category_key": "investor_relations_record",
+      "priority": "P0",
+      "reason": "最可能出现800G/1.6T/出货/客户需求/订单能见度问答",
+      "max_sources": 12
+    },
+    {
+      "category_key": "annual_report",
+      "priority": "P0",
+      "reason": "最可能出现产品结构/业务分部/产能信息",
+      "max_sources": 3
+    },
+    {
+      "category_key": "semiannual_report",
+      "priority": "P0",
+      "reason": "更新周期较高",
+      "max_sources": 3
+    },
+    {
+      "category_key": "quarterly_report",
+      "priority": "P0",
+      "reason": "财务和经营变化观察",
+      "max_sources": 6
+    },
+    {
+      "category_key": "performance_briefing_or_earnings_call",
+      "priority": "P1",
+      "reason": "可能包含经营层对需求/订单的解释",
+      "max_sources": 5
+    },
+    {
+      "category_key": "major_announcement",
+      "priority": "P1",
+      "reason": "补充重大事项和产能投资信息",
+      "max_sources": 5
+    }
+  ],
+  "business_variables": [
+    "800G_product_signal",
+    "1_6T_product_signal",
+    "high_end_product_mix",
+    "shipment_delivery_signal",
+    "customer_demand_signal",
+    "asp_price_signal",
+    "order_visibility_signal"
+  ]
+}
