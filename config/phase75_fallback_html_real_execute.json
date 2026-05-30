@@ -1,0 +1,51 @@
+{
+  "phase": "phase75",
+  "real_execute_required": true,
+  "tickers": [
+    "300308.SZ",
+    "688041.SH",
+    "300394.SZ"
+  ],
+  "sources": {
+    "irm_html": {
+      "enabled": true,
+      "tickers": [
+        "300394.SZ",
+        "300308.SZ"
+      ],
+      "max_pages": 3
+    },
+    "sse_html": {
+      "enabled": true,
+      "tickers": [
+        "688041.SH"
+      ],
+      "max_pages": 3
+    },
+    "hygon_ir_html": {
+      "enabled": true,
+      "tickers": [
+        "688041.SH"
+      ],
+      "max_pages": 3
+    },
+    "seeded_url_html": {
+      "enabled": true,
+      "tickers": [
+        "688041.SH",
+        "300394.SZ"
+      ],
+      "max_urls_per_ticker": 5
+    }
+  },
+  "safety": {
+    "save_raw_html": false,
+    "save_raw_pdf": false,
+    "ocr_allowed": false,
+    "mock_allowed": false,
+    "fixture_allowed": false,
+    "pending_allowed": false,
+    "paper_order_allowed": false,
+    "real_trade_allowed": false
+  }
+}

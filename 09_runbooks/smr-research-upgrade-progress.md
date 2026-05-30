@@ -261,3 +261,26 @@
 - company context != strong_direct
 - 不使用 mock / fixture
 - 不保存 raw / 不 OCR
+
+## Phase 75: Fallback HTML Real Execute & Evidence Breakthrough v1
+
+### 目标
+- 真实执行 IRM HTML QA parser
+- 真实执行 SSE HTML disclosure parser
+- 真实执行 Hygon IR HTML parser
+- 真实执行 seeded URL HTML text extractor
+- 合并 fallback text pool
+- 执行 quality classification
+- 执行 fallback evidence extraction
+- 写入 evidence memory
+- 更新 multi-source capability matrix
+- 输出 research packet 和 internal brief
+
+### 核心边界
+- HTML link metadata != 正文
+- management commentary != confirmed
+- company context != strong_direct
+- metadata-only 不当正文
+- 不使用 mock / fixture
+- 不保存 raw / 不 OCR
+- 不生成 pending/order/trade
