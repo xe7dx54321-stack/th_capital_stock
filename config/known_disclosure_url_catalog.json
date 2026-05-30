@@ -1,0 +1,26 @@
+﻿{
+  "catalog": [
+    {
+      "ticker": "300394.SZ",
+      "company_name": "天孚通信",
+      "source_type": "company_site_or_exchange_page",
+      "title": "投资者关系或公告页面",
+      "url": "",
+      "url_status": "manual_fill_required",
+      "expected_content_type": "html_or_pdf",
+      "raw_saved": false,
+      "ocr_allowed": false
+    },
+    {
+      "ticker": "688041.SH",
+      "company_name": "海光信息",
+      "source_type": "sse_or_company_ir",
+      "title": "公司公告或投资者关系页面",
+      "url": "",
+      "url_status": "manual_fill_required",
+      "expected_content_type": "html_or_pdf",
+      "raw_saved": false,
+      "ocr_allowed": false
+    }
+  ]
+}

@@ -1,0 +1,59 @@
+﻿{
+  "phase": "phase71",
+  "sources": [
+    {
+      "source_id": "irm_szse",
+      "source_type": "irm",
+      "market": "SZ",
+      "priority": "P0",
+      "supports": ["qa_text", "investor_interaction"],
+      "endpoint_hint": "https://irm.cninfo.com.cn/ircs/interaction/getInteraction",
+      "raw_saved": false,
+      "ocr_allowed": false
+    },
+    {
+      "source_id": "szse_disclosure_page",
+      "source_type": "exchange_disclosure",
+      "market": "SZ",
+      "priority": "P1",
+      "supports": ["metadata", "announcement_url"],
+      "endpoint_hint": "https://www.szse.cn/disclosure/listed/notice/index.html",
+      "raw_saved": false,
+      "ocr_allowed": false
+    },
+    {
+      "source_id": "sse_disclosure_page",
+      "source_type": "exchange_disclosure",
+      "market": "SH",
+      "priority": "P1",
+      "supports": ["metadata", "announcement_url"],
+      "endpoint_hint": "https://www.sse.com.cn/disclosure/listedinfo/announcement/",
+      "raw_saved": false,
+      "ocr_allowed": false
+    },
+    {
+      "source_id": "company_ir_page",
+      "source_type": "company_site",
+      "market": "ALL",
+      "priority": "P2",
+      "supports": ["metadata", "text_page", "pdf_url"],
+      "raw_saved": false,
+      "ocr_allowed": false
+    },
+    {
+      "source_id": "known_source_url_catalog",
+      "source_type": "known_url_catalog",
+      "market": "ALL",
+      "priority": "P0",
+      "supports": ["known_metadata", "known_text_url", "known_pdf_url"],
+      "raw_saved": false,
+      "ocr_allowed": false
+    }
+  ],
+  "safety": {
+    "research_only": true,
+    "pending_allowed": false,
+    "paper_order_allowed": false,
+    "real_trade_allowed": false
+  }
+}

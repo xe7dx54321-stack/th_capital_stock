@@ -1,0 +1,18 @@
+﻿{
+  "companies": [
+    {
+      "ticker": "300394.SZ",
+      "company_name": "天孚通信",
+      "official_site": "",
+      "ir_page": "",
+      "status": "manual_fill_required"
+    },
+    {
+      "ticker": "688041.SH",
+      "company_name": "海光信息",
+      "official_site": "",
+      "ir_page": "",
+      "status": "manual_fill_required"
+    }
+  ]
+}

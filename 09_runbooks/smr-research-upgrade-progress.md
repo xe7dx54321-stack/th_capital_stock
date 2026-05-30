@@ -146,3 +146,37 @@
 - 不用 mock / fixture
 - 不保存 raw / 不 OCR
 - 不生成 pending/order/trade
+
+## Phase 71: Alternative Disclosure Sources & IRM/SZSE/Company Site Fallback v1
+
+### 状态
+- 日期: 2026-05-30
+- 状态: 完成
+
+### 目标
+- 从 CNINFO 单点扩展到多源 fallback（5个替代源）
+- 建立 alternative source registry、fallback route engine、known URL catalog
+- 接入 IRM 互动易、SZSE/SSE 交易所披露页、公司 IR 页
+- 建立 fallback text fetch / normalize / evidence extraction
+- 输出 multi-source capability matrix 和 fallback evidence gain
+
+### 核心结果
+- 300308.SZ: CNINFO full_chain_available，fallback optional
+- 688041.SH: CNINFO metadata pass/pdf blocked，SSE page 已配置为 fallback
+- 300394.SZ: CNINFO identity blocked，IRM + SZSE page 已配置为 fallback
+- 5 个替代源 registry 完成，fallback route engine 完成
+- Known URL catalog 和 company IR page 需手动填写 URL
+- brief quality lint: pass
+
+### 阻塞点
+- company IR page URL 需手动查找填写
+- known source URL catalog 需手动补充
+- IRM 和交易所页面的真实文本提取需网络环境执行
+
+### 核心边界
+- fallback attempt 不等于 pass
+- management commentary 不等于 confirmed
+- 公司官网文案不等于强证据
+- 不使用 mock / fixture
+- 不保存 raw / 不 OCR
+- 不生成 pending/order/trade
