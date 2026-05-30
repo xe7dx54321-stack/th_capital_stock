@@ -1,0 +1,78 @@
+{
+  "phase": "phase77",
+  "strategy": "pdf_evidence_deep_extraction_and_source_reliability",
+  "document_types": [
+    "annual_report",
+    "semiannual_report",
+    "quarterly_report",
+    "earnings_preview",
+    "supervision_report",
+    "legal_opinion",
+    "shareholder_meeting_resolution",
+    "governance_policy",
+    "administrative_announcement",
+    "unknown"
+  ],
+  "source_reliability": {
+    "annual_report": 0.95,
+    "semiannual_report": 0.92,
+    "quarterly_report": 0.9,
+    "supervision_report": 0.78,
+    "earnings_preview": 0.75,
+    "legal_opinion": 0.55,
+    "shareholder_meeting_resolution": 0.5,
+    "governance_policy": 0.4,
+    "administrative_announcement": 0.35,
+    "unknown": 0.2
+  },
+  "business_relevance_policy": {
+    "high": [
+      "product",
+      "revenue",
+      "r&d",
+      "customer",
+      "order",
+      "capacity",
+      "localization",
+      "risk"
+    ],
+    "medium": [
+      "governance_context",
+      "capital_operation",
+      "supervision_commentary"
+    ],
+    "low": [
+      "legal_procedure",
+      "shareholder_vote",
+      "board_resolution",
+      "policy_rule"
+    ]
+  },
+  "evidence_strength_policy": {
+    "strong_direct": [
+      "annual_report_business_section",
+      "quarterly_report_financial_section"
+    ],
+    "medium_context": [
+      "supervision_report",
+      "earnings_preview"
+    ],
+    "weak_context": [
+      "company_governance",
+      "legal_opinion"
+    ],
+    "not_business_evidence": [
+      "pure_legal_procedure",
+      "shareholder_meeting_vote"
+    ]
+  },
+  "safety": {
+    "mock_allowed": false,
+    "fixture_allowed": false,
+    "ocr_allowed": false,
+    "raw_save_allowed": false,
+    "pending_allowed": false,
+    "paper_order_allowed": false,
+    "real_trade_allowed": false
+  }
+}

@@ -301,3 +301,22 @@
 - company_context != strong_direct
 - 不使用 mock / fixture / OCR
 - 不生成 pending/order/trade
+
+## Phase 77: PDF Evidence Quality Scoring & Source Reliability Tightening v1
+
+### 目标
+- 对 688041.SH 已出水 PDF 做 document type classification
+- PDF source reliability scoring + business relevance scoring
+- 法律/治理类 PDF 降权
+- 对业务相关 PDF 做 deep evidence extraction
+- claim map + cannot-conclude guard
+- evidence memory 写入（含 reliability score）
+- watchlist intelligence 接入
+
+### 核心边界
+- 法律意见书 != 业务强证据
+- 股东会决议 != 客户/订单/产品证据
+- report_text != confirmed
+- context_supported != confirmed
+- 不使用 mock/fixture/OCR
+- 不生成 pending/order/trade
