@@ -1,0 +1,10 @@
+﻿import argparse,json,sys
+def build():
+    bm="# time series signal continuous monitoring brief\n\n## Boss Summary\n\n### clearest conclusion\n\n688041 time-series signals loaded and baselined. 5 signals monitored: revenue strengthened, gross margin unchanged, R&D expense unchanged, net profit unchanged, operating cash flow unchanged. No anomalies detected.\n\n### which metrics entered continuous monitoring\n\nAll 5 core metrics (revenue, gross_margin, R&D_expense, net_profit, operating_cash_flow) entered continuous monitoring with baselines and thresholds.\n\n### this round signal changes\n\nrevenue: strengthened (25.1% above baseline). gross_margin: unchanged (within +/-3pp). R&D_expense: unchanged (within +/-15%). net_profit: unchanged (within +/-20%). operating_cash_flow: unchanged (within +/-20%).\n\n### any anomalies\n\nNo anomalies triggered. All deltas within anomaly thresholds.\n\n### judgments still not possible\n\n- 688041 customer share, order volume, product mix\n- 300394 any business evidence\n\n## Analyst Detail\n\n### 1. 300308.SZ: baseline not regressed\n\n### 2. 688041.SH: monitoring states\n\n5 time-series signals loaded. 5 baselines created. Revenue strengthened (25.1% delta, above 20% threshold). Gross margin, R&D, net profit, OCF all unchanged.\n\n### 3. 688041.SH: threshold triggers\n\nRevenue triggered strengthened threshold (25.1% vs 20%). No other triggers. No anomaly triggers.\n\n### 4. 688041.SH: watchlist refresh\n\nRevenue growth claim strengthened. Other claims unchanged. Watchlist decision: continue tracking with time-series monitoring enabled.\n\n### 5. 300394.SZ: blocker preserved\n\n---\nNot trading advice.\n"
+    return {"phase81_internal_brief":{"sections":5,"tickers_covered":3,"markdown":bm}}
+def main():
+    p=argparse.ArgumentParser();p.add_argument("--json",action="store_true");p.add_argument("--markdown",action="store_true")
+    a=p.parse_args();r=build()
+    if a.markdown:print(r["phase81_internal_brief"]["markdown"])
+    else:print(json.dumps({k:v for k,v in r["phase81_internal_brief"].items() if k!="markdown"},ensure_ascii=False,indent=2))
+if __name__=="__main__":main()

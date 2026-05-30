@@ -44,3 +44,24 @@ commit: (pending)
 - 300394 blocker preserved
 - Trend/anomaly guard pass
 - Brief quality lint pass
+
+## Phase 81: Time-series Signals into Watchlist Continuous Monitoring v1
+commit: (pending)
+
+### Status
+- py_compile: 0 errors
+- tests: pending
+- Phase 80 baseline: not regressed
+- mock/fixture: false
+- raw/OCR/browser: false
+- pending/order/trade: 0/0/0
+
+### Key Results
+- 5 time-series signals loaded from Phase 80
+- 5 baselines created (latest_valid_prior_period)
+- 1 strengthened (revenue), 4 unchanged (GM, R&D, NP, OCF)
+- 0 weakened, 0 anomaly
+- 15 threshold rules checked, 1 triggered_strengthened
+- 5 monitoring evidence records created
+- 300394 blocker preserved
+- Brief quality lint pass

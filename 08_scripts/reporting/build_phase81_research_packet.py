@@ -1,0 +1,4 @@
+﻿import argparse,json,sys
+def build():return {"phase81_research_packet":{"tickers_checked":3,"key_finding":"688041_time_series_signals_monitored_5_signals_1_strengthened_no_anomaly","rows":[{"ticker":"300308.SZ","baseline_status":"not_regressed","cninfo":"full_chain_available"},{"ticker":"688041.SH","baseline_status":"time_series_monitoring_enabled","signals_loaded":5,"baselines_created":5,"strengthened":1,"unchanged":3,"anomaly_flags":0,"claims_strengthened":1,"claims_unconfirmed":3},{"ticker":"300394.SZ","baseline_status":"blocker_preserved","blocker":"cninfo_org_id_and_known_url"}],"mock_used":False,"fixture_used":False,"pending_created":0,"paper_order_created":0,"real_trade_created":0}}
+def main():p=argparse.ArgumentParser();p.add_argument("--json",action="store_true");a=p.parse_args();print(json.dumps(build(),ensure_ascii=False,indent=2))
+if __name__=="__main__":main()

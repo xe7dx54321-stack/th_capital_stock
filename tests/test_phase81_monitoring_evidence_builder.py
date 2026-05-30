@@ -1,0 +1,8 @@
+﻿import unittest,sys
+from pathlib import Path
+L=Path(__file__).resolve().parents[1]/"08_scripts"/"lib"
+if str(L) not in sys.path:sys.path.insert(0,str(L))
+class TestMonitoringEvidence(unittest.TestCase):
+    def test_build(self):from smr_phase81_time_series_signal_loader import load_signals;from smr_phase81_time_series_baseline_builder import build_baselines;from smr_phase81_signal_delta_detector import detect_delta;from smr_phase81_threshold_rule_engine import run_threshold_rules;from smr_phase81_monitoring_evidence_builder import build_monitoring_evidence;from smr_phase81_monitoring_config import load_config;s=load_signals()["phase81_signal_loader"]["rows"];b=build_baselines(s);c=load_config();d=detect_delta(b,c);t=run_threshold_rules(d,c);e=build_monitoring_evidence(d,t,c);rr=e["phase81_monitoring_evidence"];self.assertGreater(rr["monitoring_evidence_created"],0)
+    def test_all_have_limitation(self):from smr_phase81_time_series_signal_loader import load_signals;from smr_phase81_time_series_baseline_builder import build_baselines;from smr_phase81_signal_delta_detector import detect_delta;from smr_phase81_threshold_rule_engine import run_threshold_rules;from smr_phase81_monitoring_evidence_builder import build_monitoring_evidence;from smr_phase81_monitoring_config import load_config;s=load_signals()["phase81_signal_loader"]["rows"];b=build_baselines(s);c=load_config();d=detect_delta(b,c);t=run_threshold_rules(d,c);e=build_monitoring_evidence(d,t,c);rows=e["phase81_monitoring_evidence"]["rows"];self.assertTrue(all(len(r["limitation"])>0 for r in rows))
+if __name__=="__main__":unittest.main()
