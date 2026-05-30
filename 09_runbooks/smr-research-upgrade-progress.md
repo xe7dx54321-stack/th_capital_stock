@@ -114,3 +114,35 @@
 - 不保存 raw / 不 OCR
 - 不生成 pending/order/trade
 - 不提交 generated/raw/cache/log 文件
+
+## Phase 70: Ticker Identity & PDF Extraction Hardening v1
+
+### 状态
+- 日期: 2026-05-30
+- 状态: 完成
+
+### 目标
+- 修复 688041.SH PDF 下载与文本提取链路
+- 诊断 688041.SH PDF URL 问题
+- 查找并验证 300394.SZ CNINFO org_id（扩展查找范围至9个备选）
+- 固化 300394.SZ curated identity（如找到）
+- 对 300394.SZ 执行真实 metadata/PDF/text/evidence 链路
+- 更新三票真实 capability matrix
+
+### 核心结果
+- 300308.SZ: full_chain_available（baseline 不回退）
+- 688041.SH: PDF URL 诊断完成（55条PDF链接，格式正常），download/text 硬化代码就绪
+- 300394.SZ: 扩展9个备选org_id查找，均未通过CNINFO metadata验证，需手动从CNINFO页面提取
+
+### 阻塞点
+- 688041.SH: PDF下载/text提取需稳定网络环境执行
+- 300394.SZ: verified org_id 未找到（扩展后仍失败），需手动查找
+
+### 核心边界
+- no pass without execute
+- candidate org_id 未验证不得写 verified
+- 不复用其他 ticker org_id
+- 不硬套行业变量
+- 不用 mock / fixture
+- 不保存 raw / 不 OCR
+- 不生成 pending/order/trade
