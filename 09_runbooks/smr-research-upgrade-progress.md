@@ -216,3 +216,25 @@
 - 不使用 mock / fixture
 - 不保存 raw / 不 OCR
 - 不生成 pending/order/trade
+
+## Phase 73: Fallback Source Endpoint Repair & Manual URL Seeding v1
+
+### 目标
+- 修复 IRM HTTP 405：8 个端点变量
+- 修复 SSE HTTP 404：8 个 URL 变量
+- 诊断 SZSE HTTP 500：8 个端点组合
+- 688041 补入 Hygon 官网和 IR 页面 URL
+- 300394 company IR 标记 manual_fill_required_after_attempt
+
+### 产出
+- py_compile: 0 errors
+- unittest: 64/64
+- Phase 72 未回退
+- 新文件: 43 个
+
+### 核心边界
+- fallback attempt != pass
+- management commentary != confirmed
+- company context != strong_direct
+- 不使用 mock / fixture
+- 不生成 pending/order/trade
