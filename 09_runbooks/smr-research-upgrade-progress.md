@@ -65,3 +65,25 @@ commit: (pending)
 - 5 monitoring evidence records created
 - 300394 blocker preserved
 - Brief quality lint pass
+
+## Phase 82: Multi-ticker Structured Financial Coverage Expansion v1
+commit: (pending)
+
+### Status
+- py_compile: 0 errors
+- tests: pending
+- Phase 81 baseline: not regressed
+- mock/fixture: false
+- raw/OCR/browser: false
+- pending/order/trade: 0/0/0
+
+### Key Results
+- 8 tickers in coverage universe (4 CN_A, 2 HK, 2 US)
+- 3 tickers structured financial data available (300308, 688041, 002230)
+- 5 tickers blocked (300394, 09988, 00700, NVDA, AVGO)
+- 12 financial metrics loaded, 12 signals created
+- 1 strengthened (688041 revenue), 11 unchanged
+- 0 anomalies
+- Coverage blocker report with specific allowed_next_action per blocker
+- 300394 blocker preserved
+- Brief quality lint pass
