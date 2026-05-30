@@ -1,0 +1,43 @@
+{
+  "phase": "phase76",
+  "strategy": "pdf_recovery_and_known_url_breakthrough",
+  "tickers": [
+    "300308.SZ",
+    "688041.SH",
+    "300394.SZ"
+  ],
+  "pdf_recovery": {
+    "enabled": true,
+    "tickers": [
+      "688041.SH"
+    ],
+    "source": "cninfo",
+    "max_metadata": 60,
+    "max_pdfs": 10,
+    "download_timeout_seconds": 60,
+    "stream_download": true,
+    "save_raw_pdf": false,
+    "ocr_allowed": false
+  },
+  "known_url_breakthrough": {
+    "enabled": true,
+    "tickers": [
+      "300394.SZ"
+    ],
+    "max_urls_per_ticker": 10,
+    "allowed_content_types": [
+      "html",
+      "pdf"
+    ],
+    "save_raw_html": false,
+    "save_raw_pdf": false,
+    "ocr_allowed": false
+  },
+  "safety": {
+    "mock_allowed": false,
+    "fixture_allowed": false,
+    "pending_allowed": false,
+    "paper_order_allowed": false,
+    "real_trade_allowed": false
+  }
+}

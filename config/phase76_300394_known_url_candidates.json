@@ -1,0 +1,56 @@
+{
+  "ticker": "300394.SZ",
+  "company_name": "天孚通信",
+  "candidates": [
+    {
+      "title": "天孚通信 2024 年度报告全文",
+      "url": "https://static.cninfo.com.cn/finalpage/2025-04-22/全文.pdf",
+      "source_type": "known_pdf_url",
+      "expected_content_type": "pdf",
+      "allowed_usage": "business_context",
+      "manual_source_note": "CNINFO static PDF URL pattern for annual report. Actual suffix TBD after CNINFO org_id resolved or direct PDF URL identified.",
+      "why_this_url": "年度报告是最可靠的公开披露文本源",
+      "candidate_status": "pending_verification"
+    },
+    {
+      "title": "天孚通信投资者关系活动记录表",
+      "url": "https://static.cninfo.com.cn/finalpage/2024-12-31/全文.pdf",
+      "source_type": "known_pdf_url",
+      "expected_content_type": "pdf",
+      "allowed_usage": "business_context",
+      "manual_source_note": "投资者关系活动记录表包含管理层对业务进展的表述。CNINFO static PDF URL, suffix TBD.",
+      "why_this_url": "IR活动记录是管理层表述的最直接来源",
+      "candidate_status": "pending_verification"
+    },
+    {
+      "title": "深交所 300394 公告列表页",
+      "url": "https://www.szse.cn/disclosure/listed/bulletin/index.html",
+      "source_type": "exchange_announcement_page",
+      "expected_content_type": "html",
+      "allowed_usage": "business_context",
+      "manual_source_note": "深交所公告页面。Phase 73 SZSE 诊断框架已就绪，过去返回过500或HTML。可尝试带 stock code 参数访问。",
+      "why_this_url": "交易所公告页是 formal disclosure 入口",
+      "candidate_status": "pending_verification"
+    },
+    {
+      "title": "天孚通信官网投资者关系页",
+      "url": "",
+      "source_type": "company_ir_page",
+      "expected_content_type": "html",
+      "allowed_usage": "business_context",
+      "manual_source_note": "天孚通信官网IR页面URL仍需人工补填。建议搜索 天孚通信 投资者关系 或 investor relations tof-sensor。",
+      "why_this_url": "公司IR页面通常包含定期报告和投资者交流记录",
+      "candidate_status": "manual_fill_required"
+    },
+    {
+      "title": "天孚通信 2024 年业绩说明会记录",
+      "url": "",
+      "source_type": "manual_research_url",
+      "expected_content_type": "pdf",
+      "allowed_usage": "business_context",
+      "manual_source_note": "业绩说明会记录通常包含管理层对业务和订单的详细回答。需要搜索天孚通信 业绩说明会 找到公开PDF URL。",
+      "why_this_url": "业绩说明会是管理层问答的另一重要来源",
+      "candidate_status": "manual_fill_required"
+    }
+  ]
+}

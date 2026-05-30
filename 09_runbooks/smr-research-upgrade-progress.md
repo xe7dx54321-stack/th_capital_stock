@@ -284,3 +284,20 @@
 - 不使用 mock / fixture
 - 不保存 raw / 不 OCR
 - 不生成 pending/order/trade
+
+## Phase 76: CNINFO PDF Text Recovery & Known URL Breakthrough v1
+
+### 目标
+- 静态 HTML fallback 失败后转向 PDF recovery + known URL
+- 对 688041.SH 执行 CNINFO PDF inventory / download / text extraction
+- 对 688041.SH 执行 generic_hard_tech evidence extraction
+- 对 300394.SZ 建立 known URL candidates + controlled fetch
+- 执行 PDF/HTML text extraction + evidence generation
+- 写入 evidence memory + 更新 multi-source matrix
+
+### 核心边界
+- PDF URL metadata != 正文
+- report_text != confirmed
+- company_context != strong_direct
+- 不使用 mock / fixture / OCR
+- 不生成 pending/order/trade
