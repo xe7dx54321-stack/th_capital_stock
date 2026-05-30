@@ -238,3 +238,26 @@
 - company context != strong_direct
 - 不使用 mock / fixture
 - 不生成 pending/order/trade
+
+## Phase 74: Fallback HTML Parsing & Text Extraction v1
+
+### 目标
+- 通用HTML解析工具：visible text, link extraction, PDF detection, boilerplate removal
+- IRM HTML QA解析器：正则匹配问/答模式
+- SSE HTML公告解析器：链接和PDF提取
+- Hygon IR HTML解析器：三页面文本抽取
+- HTML文本质量分类器
+- fallback evidence extraction / gain / memory
+
+### 产出
+- py_compile: 0 errors
+- unittest: 57/57
+- Phase 73 未回退
+- 新文件: 40 个
+
+### 核心边界
+- HTML link metadata != 正文
+- management commentary != confirmed
+- company context != strong_direct
+- 不使用 mock / fixture
+- 不保存 raw / 不 OCR
