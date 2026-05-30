@@ -9,6 +9,7 @@ class TestPhase75Dashboard(unittest.TestCase):
         r = build()
         s = r["summary"]
         self.assertEqual(s["tickers_checked"], 3)
+        self.assertTrue(s["network_attempted"])
     def test_pending_zero(self):
         from build_phase75_fallback_html_real_execute_dashboard import build
         r = build()
@@ -29,6 +30,14 @@ class TestPhase75Dashboard(unittest.TestCase):
         from build_phase75_fallback_html_real_execute_dashboard import build
         r = build()
         self.assertFalse(r["summary"]["raw_saved"])
+    def test_fallback_zero(self):
+        from build_phase75_fallback_html_real_execute_dashboard import build
+        r = build()
+        self.assertEqual(r["summary"]["fallback_texts_usable"], 0)
+    def test_html_pages_fetched(self):
+        from build_phase75_fallback_html_real_execute_dashboard import build
+        r = build()
+        self.assertEqual(r["summary"]["html_pages_fetched"], 8)
 
 if __name__ == "__main__":
     unittest.main()

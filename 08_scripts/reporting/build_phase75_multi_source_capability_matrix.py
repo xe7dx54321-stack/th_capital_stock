@@ -4,15 +4,21 @@ import argparse, json, sys
 def build():
     rows = [
         {"ticker": "300308.SZ", "cninfo": "full_chain_available", "fallback": "optional", "overall": "full_chain_available"},
-        {"ticker": "688041.SH", "cninfo": "metadata_available_pdf_text_blocked", "sse_html": "links_or_text_available",
-         "company_ir_html": "text_available_or_specific_blocker", "known_catalog": "seeded_or_manual",
-         "overall": "partial_chain_with_html_fallback"},
-        {"ticker": "300394.SZ", "cninfo": "identity_blocked", "irm_html": "qa_text_available_or_specific_blocker",
-         "szse_html": "specific_blocker", "company_site": "manual_or_available",
-         "overall": "partial_with_html_fallback_or_specific_blocker"}
+        {"ticker": "688041.SH", "cninfo": "metadata_available_pdf_text_blocked",
+         "sse_html": "links_are_navigation_boilerplate_zero_disclosure_links",
+         "company_ir_html": "hygon_cn_js_spa_zero_visible_text",
+         "known_catalog": "seeded_but_all_js_spa",
+         "overall": "blocked_at_js_rendering_layer",
+         "blocker": "all_html_sources_require_js_rendering"},
+        {"ticker": "300394.SZ", "cninfo": "identity_blocked",
+         "irm_html": "js_rendered_qa_only_11_chars_visible_text",
+         "szse_html": "not_yet_attempted",
+         "company_site": "manual_or_available",
+         "overall": "blocked_at_irm_js_rendering",
+         "blocker": "irm_html_requires_js_execution"}
     ]
-    return {"phase75_multi_source_capability_matrix": {"tickers_checked": 3, "tickers_with_fallback_text": 2,
-        "tickers_with_fallback_evidence": 2, "rows": rows,
+    return {"phase75_multi_source_capability_matrix": {"tickers_checked": 3, "tickers_with_fallback_text": 0,
+        "tickers_with_fallback_evidence": 0, "rows": rows,
         "mock_used": False, "fixture_used": False, "pending_created": 0, "paper_order_created": 0, "real_trade_created": 0}}
 
 def main():

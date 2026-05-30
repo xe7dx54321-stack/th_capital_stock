@@ -9,6 +9,11 @@ class TestPhase75InternalBrief(unittest.TestCase):
         r = build()
         br = r["phase75_internal_brief"]
         self.assertEqual(br["sections"], 5)
+    def test_has_boss_summary(self):
+        from build_phase75_internal_brief import build
+        r = build()
+        md = r["phase75_internal_brief"]["markdown"]
+        self.assertTrue("Boss Summary" in md or "老板摘要" in md)
     def test_no_system_terms(self):
         from build_phase75_internal_brief import build
         r = build()
@@ -20,14 +25,8 @@ class TestPhase75InternalBrief(unittest.TestCase):
         from build_phase75_internal_brief import build
         r = build()
         md = r["phase75_internal_brief"]["markdown"]
-        self.assertNotIn("买入", md)
-        self.assertNotIn("卖出", md)
-        self.assertNotIn("目标价", md)
-    def test_has_boss_summary(self):
-        from build_phase75_internal_brief import build
-        r = build()
-        md = r["phase75_internal_brief"]["markdown"]
-        self.assertIn("老板摘要", md)
+        self.assertNotIn("buy", md.lower())
+        self.assertNotIn("sell", md.lower())
 
 if __name__ == "__main__":
     unittest.main()

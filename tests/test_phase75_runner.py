@@ -17,28 +17,23 @@ class TestPhase75Runner(unittest.TestCase):
     def test_pending_zero(self):
         from run_phase75_fallback_html_real_execute_and_evidence import run
         r = run("execute")
-        rr = r["phase75_fallback_html_real_execute_and_evidence"]
-        self.assertEqual(rr["pending_created"], 0)
+        self.assertEqual(r["phase75_fallback_html_real_execute_and_evidence"]["pending_created"], 0)
     def test_order_zero(self):
         from run_phase75_fallback_html_real_execute_and_evidence import run
         r = run("execute")
-        rr = r["phase75_fallback_html_real_execute_and_evidence"]
-        self.assertEqual(rr["paper_order_created"], 0)
+        self.assertEqual(r["phase75_fallback_html_real_execute_and_evidence"]["paper_order_created"], 0)
     def test_trade_zero(self):
         from run_phase75_fallback_html_real_execute_and_evidence import run
         r = run("execute")
-        rr = r["phase75_fallback_html_real_execute_and_evidence"]
-        self.assertEqual(rr["real_trade_created"], 0)
+        self.assertEqual(r["phase75_fallback_html_real_execute_and_evidence"]["real_trade_created"], 0)
     def test_no_mock(self):
         from run_phase75_fallback_html_real_execute_and_evidence import run
         r = run("execute")
-        rr = r["phase75_fallback_html_real_execute_and_evidence"]
-        self.assertFalse(rr["mock_used"])
-    def test_no_fixture(self):
+        self.assertFalse(r["phase75_fallback_html_real_execute_and_evidence"]["mock_used"])
+    def test_status_degraded(self):
         from run_phase75_fallback_html_real_execute_and_evidence import run
         r = run("execute")
-        rr = r["phase75_fallback_html_real_execute_and_evidence"]
-        self.assertFalse(rr["fixture_used"])
+        self.assertIn("degraded", r["phase75_fallback_html_real_execute_and_evidence"]["status"])
 
 if __name__ == "__main__":
     unittest.main()

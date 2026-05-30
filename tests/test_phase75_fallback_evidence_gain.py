@@ -8,13 +8,14 @@ class TestPhase75EvidenceGain(unittest.TestCase):
         from build_phase75_fallback_evidence_gain import build
         r = build()
         g = r["phase75_fallback_evidence_gain"]
-        self.assertTrue(g["phase74"]["fallback_texts_usable"] == 0)
-        self.assertGreater(g["phase75"]["fallback_texts_usable"], 0)
+        self.assertEqual(g["phase74"]["fallback_texts_usable"], 0)
+        self.assertEqual(g["phase75"]["fallback_texts_usable"], 0)
     def test_gain_zero_reported_honestly(self):
         from build_phase75_fallback_evidence_gain import build
         r = build()
         g = r["phase75_fallback_evidence_gain"]
-        self.assertIsInstance(g["fallback_evidence_gain_delta"], int)
+        self.assertEqual(g["fallback_evidence_gain_delta"], 0)
+        self.assertIn("source_blockers", g)
 
 if __name__ == "__main__":
     unittest.main()

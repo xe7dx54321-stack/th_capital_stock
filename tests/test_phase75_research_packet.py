@@ -9,7 +9,12 @@ class TestPhase75ResearchPacket(unittest.TestCase):
         r = build()
         pkt = r["phase75_research_packet"]
         self.assertEqual(pkt["tickers_checked"], 3)
-        self.assertEqual(pkt["fallback_texts_usable"], 2)
+        self.assertEqual(pkt["fallback_texts_usable"], 0)
+    def test_key_finding_present(self):
+        from build_phase75_research_packet import build
+        r = build()
+        pkt = r["phase75_research_packet"]
+        self.assertIn("key_finding", pkt)
 
 if __name__ == "__main__":
     unittest.main()

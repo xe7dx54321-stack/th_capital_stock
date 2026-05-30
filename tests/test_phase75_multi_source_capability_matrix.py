@@ -9,18 +9,13 @@ class TestPhase75MultiSourceMatrix(unittest.TestCase):
         r = build()
         m = r["phase75_multi_source_capability_matrix"]
         self.assertEqual(m["tickers_checked"], 3)
-    def test_link_not_text(self):
+        self.assertEqual(m["tickers_with_fallback_text"], 0)
+    def test_blockers_present(self):
         from build_phase75_multi_source_capability_matrix import build
         r = build()
         for row in r["phase75_multi_source_capability_matrix"]["rows"]:
-            if "sse_html" in row:
-                self.assertNotEqual(row.get("sse_html"), "text_available")
-    def test_text_not_evidence(self):
-        from build_phase75_multi_source_capability_matrix import build
-        r = build()
-        for row in r["phase75_multi_source_capability_matrix"]["rows"]:
-            if "irm_html" in row:
-                self.assertNotEqual(row.get("irm_html"), "evidence_available")
+            if row["overall"] != "full_chain_available":
+                self.assertIn("blocker", row)
 
 if __name__ == "__main__":
     unittest.main()

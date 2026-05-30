@@ -3,17 +3,21 @@ import argparse, json, sys
 
 def build():
     rows = [
-        {"ticker": "688041.SH", "source_type": "company_ir_page", "business_variable": "product_progress",
-         "evidence_strength": "company_context", "claim_type": "product_progress_context_supported",
-         "limitation": "公司官网HTML文本只能作为业务背景，不确认客户、订单或收入规模。",
-         "cannot_conclude": ["customer_share", "specific_order_volume", "revenue_share"]},
+        {"ticker": "688041.SH", "source_type": "sse_html", "business_variable": "exchange_disclosure",
+         "evidence_strength": "no_evidence", "claim_type": "none",
+         "limitation": "SSE HTML get 186 links but all are SSE navigation boilerplate, not 688041-specific disclosures. Announcement list is JS-rendered.",
+         "blocker": "sse_announcement_list_js_rendered"},
+        {"ticker": "688041.SH", "source_type": "hygon_ir_html", "business_variable": "company_context",
+         "evidence_strength": "no_evidence", "claim_type": "none",
+         "limitation": "hygon.cn is a JS SPA, visible text extraction returns 0 chars from static HTML.",
+         "blocker": "hygon_cn_js_spa"},
         {"ticker": "300394.SZ", "source_type": "irm_html", "business_variable": "customer_demand_signal",
-         "evidence_strength": "management_commentary", "claim_type": "customer_demand_proxy_supported",
-         "limitation": "互动问答HTML抽取，只能作为管理层表述，不确认客户份额或订单量。",
-         "cannot_conclude": ["customer_share", "specific_order_volume"]}
+         "evidence_strength": "no_evidence", "claim_type": "none",
+         "limitation": "IRM GET HTML returns HTTP 200 but only 11 chars visible text. QA content is JS-rendered.",
+         "blocker": "irm_html_js_rendered_qa"}
     ]
-    return {"phase75_fallback_evidence_extraction": {"texts_scanned": 2, "deep_evidence_created": 2,
-        "tickers_with_evidence": 2, "rows": rows, "guard_status": "pass",
+    return {"phase75_fallback_evidence_extraction": {"texts_scanned": 8, "deep_evidence_created": 0,
+        "tickers_with_evidence": 0, "rows": rows, "guard_status": "pass",
         "mock_used": False, "fixture_used": False, "pending_created": 0, "paper_order_created": 0, "real_trade_created": 0}}
 
 def main():
