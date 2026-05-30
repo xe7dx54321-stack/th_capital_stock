@@ -1,0 +1,9 @@
+﻿{
+  "phase":"phase84",
+  "strategy":"scheduled_daily_monitoring_runner_and_portfolio_watch_board",
+  "schedule":{"mode":"manual_runner_ready","recommended_frequency":"daily","timezone":"Asia/Shanghai","run_window":"after_market_close_or_morning_review","cron_enabled":false},
+  "universe":{"tickers":["300308.SZ","688041.SH","300394.SZ","002230.SZ","09988.HK","00700.HK","NVDA","AVGO"],"covered_tickers":["300308.SZ","688041.SH","002230.SZ","09988.HK","00700.HK","NVDA","AVGO"],"blocked_tickers":["300394.SZ"]},
+  "history":{"enabled":true,"path":"09_runbooks/generated/phase84_daily_monitoring_history.jsonl","gitignored":true,"max_history_runs":30},
+  "board":{"sections":["strengthened","weakened","unchanged","anomaly","blocked"],"include_market_breakdown":true,"include_currency_boundary":true},
+  "safety":{"mock_allowed":false,"fixture_allowed":false,"raw_save_allowed":false,"ocr_allowed":false,"browser_automation_allowed":false,"pending_allowed":false,"paper_order_allowed":false,"real_trade_allowed":false,"valuation_enabled":false,"portfolio_construction_enabled":false}
+}

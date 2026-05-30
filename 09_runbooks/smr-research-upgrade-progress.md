@@ -110,3 +110,25 @@ commit: (pending)
 - Coverage blocker report: all blockers have specific allowed_next_action
 - 300394 blocker preserved
 - Brief quality lint pass
+## Phase 84: Scheduled Daily Monitoring Runner & Portfolio Watch Board v1
+commit: (pending)
+
+### Status
+- py_compile: 0 errors
+- tests: pending
+- Phase 83 baseline: not regressed
+- mock/fixture: false
+- raw/OCR/browser: false
+- pending/order/trade: 0/0/0
+
+### Key Results
+- Daily monitoring runner: dry-run / execute / skip-network all operational
+- 8 ticker universe: 7 daily_monitoring_enabled, 1 blocked (300394.SZ)
+- Portfolio watch board: 5 sections (strengthened/weakened/unchanged/anomaly/blocked)
+- Daily run history written to gitignored path
+- Previous run comparison: first_run_baseline supported
+- Daily status classifier: blocked > anomaly > strengthened > weakened > unchanged
+- Daily internal brief: boss summary + analyst detail, 5 sections
+- Daily brief quality lint: pass
+- 300394 blocker preserved
+- Cron disabled, valuation disabled, portfolio construction disabled

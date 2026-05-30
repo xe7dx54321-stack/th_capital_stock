@@ -1,0 +1,6 @@
+﻿{
+  "phase":"phase84",
+  "schema_version":"v1",
+  "run_state_fields":["run_id","run_date","run_mode","started_at","finished_at","duration_seconds","universe_count","covered_count","blocked_count","ticker_results","signal_summary","board_summary","safety_summary","brief_quality_status"],
+  "ticker_result_fields":["ticker","market","run_status","coverage_status","signals_checked","strengthened_count","weakened_count","unchanged_count","anomaly_count","blocker","failure_reason","pending_created","paper_order_created","real_trade_created"]
+}
