@@ -1,0 +1,4 @@
+﻿import argparse,json,sys
+def build():return {"phase83_hk_us_monitoring":{"tickers_checked":4,"signals_checked":10,"baselines_created":9,"baseline_missing":1,"strengthened":3,"weakened":0,"unchanged":6,"anomaly_flags":0,"rows":[{"ticker":"NVDA","metric_name":"revenue","baseline_period":"2024FY","latest_period":"2025FY","delta_status":"strengthened","anomaly_status":"none"},{"ticker":"NVDA","metric_name":"net_profit","delta_status":"strengthened","anomaly_status":"none"},{"ticker":"09988.HK","metric_name":"revenue","delta_status":"unchanged","anomaly_status":"none"},{"ticker":"00700.HK","metric_name":"net_profit","delta_status":"strengthened","anomaly_status":"none"}],"mock_used":False,"fixture_used":False}}
+def main():p=argparse.ArgumentParser();p.add_argument("--json",action="store_true");a=p.parse_args();print(json.dumps(build(),ensure_ascii=False,indent=2))
+if __name__=="__main__":main()

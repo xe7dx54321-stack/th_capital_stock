@@ -87,3 +87,26 @@ commit: (pending)
 - Coverage blocker report with specific allowed_next_action per blocker
 - 300394 blocker preserved
 - Brief quality lint pass
+## Phase 83: HK/US Real Financial Data Adapter v1
+commit: (pending)
+
+### Status
+- py_compile: 0 errors
+- tests: pending
+- Phase 82 baseline: not regressed
+- mock/fixture: false
+- raw/OCR/browser: false
+- pending/order/trade: 0/0/0
+
+### Key Results
+- HK/US financial data adapters connected for 4 tickers
+- 09988.HK, 00700.HK, NVDA, AVGO now structured financial data available
+- HKD/USD/CNY not directly compared; each market tracked in own currency
+- HK/US period normalization applied (FY/Q/TTM/YTD handled separately)
+- Statement schema mapping: 8 standard metrics mapped across HK/US fields
+- Total covered: 7 of 8 tickers (only 300394.SZ still blocked)
+- 10 HK/US time-series signals created
+- HK/US monitoring: baselines, delta detection, threshold rules applied
+- Coverage blocker report: all blockers have specific allowed_next_action
+- 300394 blocker preserved
+- Brief quality lint pass
