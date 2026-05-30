@@ -1,0 +1,56 @@
+﻿{
+  "phase": "phase78",
+  "strategy": "chinese_keyword_matching_repair",
+  "variables": {
+    "product_progress": {
+      "english_keywords": ["product", "chip", "processor", "DCU", "CPU", "GPU"],
+      "chinese_keywords": ["产品", "芯片", "处理器", "加速器", "深算", "海光一号", "海光二号", "海光三号", "高端处理器", "协处理器"],
+      "negative_keywords": ["股东大会", "法律意见", "章程"]
+    },
+    "R&D": {
+      "english_keywords": ["R&D", "research", "development"],
+      "chinese_keywords": ["研发", "研发投入", "研发费用", "技术研发", "研发人员", "核心技术", "技术路线"],
+      "negative_keywords": ["审议", "表决", "法律"]
+    },
+    "revenue_growth": {
+      "english_keywords": ["revenue", "sales"],
+      "chinese_keywords": ["营业收入", "收入", "营收", "销售收入", "主营业务收入", "收入增长"],
+      "negative_keywords": ["会议收入", "非经营性"]
+    },
+    "gross_margin": {
+      "english_keywords": ["gross margin", "margin"],
+      "chinese_keywords": ["毛利率", "毛利", "综合毛利率", "主营业务毛利率"],
+      "negative_keywords": []
+    },
+    "customer_demand": {
+      "english_keywords": ["customer", "demand"],
+      "chinese_keywords": ["客户", "需求", "下游客户", "市场需求", "客户需求", "算力需求", "服务器客户"],
+      "negative_keywords": ["股东", "投资者"]
+    },
+    "order_visibility": {
+      "english_keywords": ["order", "backlog"],
+      "chinese_keywords": ["订单", "在手订单", "订单能见度", "合同", "交付", "采购"],
+      "negative_keywords": ["会议通知", "议案"]
+    },
+    "capacity": {
+      "english_keywords": ["capacity", "production"],
+      "chinese_keywords": ["产能", "生产能力", "产线", "扩产", "供应能力", "交付能力"],
+      "negative_keywords": []
+    },
+    "localization": {
+      "english_keywords": ["localization", "domestic"],
+      "chinese_keywords": ["国产化", "自主可控", "国产替代", "信创", "国产高端处理器", "安全可控"],
+      "negative_keywords": []
+    },
+    "risk_signal": {
+      "english_keywords": ["risk"],
+      "chinese_keywords": ["风险", "不确定性", "竞争风险", "供应链风险", "技术迭代风险", "客户集中风险"],
+      "negative_keywords": []
+    }
+  },
+  "safety": {
+    "keyword_hit_not_confirmed": true,
+    "context_required": true,
+    "legal_governance_exclusion_required": true
+  }
+}

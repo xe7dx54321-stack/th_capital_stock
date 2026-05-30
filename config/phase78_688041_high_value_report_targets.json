@@ -1,0 +1,32 @@
+﻿{
+  "ticker": "688041.SH",
+  "company_name": "海光信息",
+  "target_reports": [
+    {
+      "report_type": "annual_report",
+      "priority": "P0",
+      "search_terms": ["年度报告", "年报", "2024年年度报告", "2023年年度报告"]
+    },
+    {
+      "report_type": "quarterly_report",
+      "priority": "P0",
+      "search_terms": ["季度报告", "一季报", "三季报", "2025年三季度报告"]
+    },
+    {
+      "report_type": "prospectus",
+      "priority": "P0",
+      "search_terms": ["招股说明书", "科创板首次公开发行股票招股说明书"]
+    },
+    {
+      "report_type": "investor_relations_record",
+      "priority": "P1",
+      "search_terms": ["投资者关系活动记录", "调研活动", "业绩说明会"]
+    }
+  ],
+  "safety": {
+    "save_raw_pdf": false,
+    "ocr_allowed": false,
+    "mock_allowed": false,
+    "fixture_allowed": false
+  }
+}
