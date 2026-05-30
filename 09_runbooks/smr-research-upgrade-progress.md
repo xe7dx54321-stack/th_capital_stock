@@ -180,3 +180,39 @@
 - 不使用 mock / fixture
 - 不保存 raw / 不 OCR
 - 不生成 pending/order/trade
+
+## Phase 72: Fallback Source Real Text Acquisition & URL Catalog Filling v1
+
+### 状态
+- 日期: 2026-05-30
+- 状态: 完成
+
+### 目标
+- 从 fallback 架构推进到 fallback 真实取数
+- 建立 URL catalog filling helper、company IR candidate patch、known URL catalog patch
+- 对 IRM / exchange / company IR / known URL 执行真实 execute hardening
+- 建立 fallback text quality classifier
+- 执行 fallback evidence rerun
+- 统计 fallback evidence gain
+
+### 核心结果
+- URL catalog filling: 688041 SSE candidate URL registered
+- Company IR patch: 688041 SSE page candidate, 300394 manual required
+- IRM real execute: framework ready, 300394 SZ market supported
+- Exchange real execute: framework ready for SSE/SZSE
+- Source-level blockers identified for each source
+- brief quality lint: pass
+
+### 阻塞点
+- 688041: SSE page candidate registered, network execution pending
+- 300394: IRM QA + SZSE page need network execution; company IR URL manual
+- fallback_texts_usable = 0 (waiting for network execution)
+
+### 核心边界
+- fallback attempt != pass
+- management commentary != confirmed
+- company context != strong_direct
+- metadata-only 不当正文
+- 不使用 mock / fixture
+- 不保存 raw / 不 OCR
+- 不生成 pending/order/trade
