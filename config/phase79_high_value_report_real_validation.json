@@ -1,0 +1,50 @@
+﻿{
+  "phase": "phase79",
+  "strategy": "high_value_report_real_network_validation_and_quantitative_extraction",
+  "tickers": ["300308.SZ", "688041.SH", "300394.SZ"],
+  "real_network_validation": {
+    "enabled": true,
+    "tickers": ["688041.SH"],
+    "reports": [
+      "2024年度报告",
+      "2025年第三季度报告",
+      "招股说明书",
+      "2023年度报告",
+      "投资者关系活动记录",
+      "业绩说明会"
+    ],
+    "max_pdfs": 10,
+    "download_timeout_seconds": 90,
+    "stream_download": true,
+    "save_raw_pdf": false,
+    "save_raw_html": false,
+    "ocr_allowed": false,
+    "browser_automation_allowed": false
+  },
+  "quantitative_extraction": {
+    "enabled": true,
+    "metrics": [
+      "revenue",
+      "gross_profit",
+      "gross_margin",
+      "net_profit",
+      "R&D_expense",
+      "R&D_expense_ratio",
+      "sales_expense",
+      "admin_expense",
+      "operating_cash_flow",
+      "total_assets",
+      "total_liabilities",
+      "inventory",
+      "accounts_receivable"
+    ],
+    "periods": ["annual", "quarterly", "prospectus_historical"]
+  },
+  "safety": {
+    "mock_allowed": false,
+    "fixture_allowed": false,
+    "pending_allowed": false,
+    "paper_order_allowed": false,
+    "real_trade_allowed": false
+  }
+}
