@@ -1,0 +1,7 @@
+def build_subsystem_registry():
+    subs=[{"subsystem_id":"daily_financial_monitoring","phase":"phase84","input_modules":["smr_phase84_daily_monitoring_runner","smr_phase84_portfolio_watch_board"],"fallback":"phase84_daily_monitoring_history.jsonl","critical":True,"can_degrade":True},
+    {"subsystem_id":"valuation","phase":"phase85_85b","input_modules":["smr_phase85b_closeout_audit","smr_phase85_valuation_band_classifier"],"fallback":"phase85_valuation_dashboard","critical":True,"can_degrade":True},
+    {"subsystem_id":"pricing_expectation","phase":"phase86","input_modules":["smr_phase86_pricing_adapter","smr_phase86_expectation_adapter","smr_phase86_integration"],"fallback":"phase86_dashboard","critical":True,"can_degrade":True},
+    {"subsystem_id":"external_source_evidence","phase":"phase87","input_modules":["smr_phase87_external_evidence","smr_phase87_external_claim_map"],"fallback":"phase87_external_watch_board","critical":False,"can_degrade":True},
+    {"subsystem_id":"external_daily_delta","phase":"phase88","input_modules":["smr_phase88_daily_delta_engine","smr_phase88_dedup_engine","smr_phase88_freshness_detector","smr_phase88_novelty_detector"],"fallback":"phase87_external_evidence","critical":False,"can_degrade":True}]
+    return {"phase89_subsystem_registry":{"subsystems_defined":len(subs),"critical_subsystems":sum(1 for s in subs if s["critical"]),"degradable_subsystems":sum(1 for s in subs if s["can_degrade"]),"rows":subs,"mock_used":False,"fixture_used":False}}

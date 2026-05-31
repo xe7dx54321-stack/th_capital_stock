@@ -274,3 +274,31 @@ commit: (pending)
 - Novelty: topic change detection with keyword overlap scoring
 - Daily delta: new/duplicate/stale signals separated per ticker
 - 300394 blocker preserved
+
+---
+
+## Phase 89: Unified Daily Intelligence Runner v1
+
+**Status:** complete
+
+### What was done
+- Unified config: 8 tickers, 5 subsystems, fallback policy defined
+- Subsystem dependency registry: 5 subsystems mapped to phases 84-88
+  - Each with input modules, fallback paths, critical/degradable flags
+- Unified ticker state: per-ticker status across all 5 subsystems
+  - full_coverage / partial_coverage / degraded_coverage / blocked
+- Source health summary: 5 subsystems x 3 statuses (available/degraded/blocked)
+- Opportunity/risk classifier: monitoring_active / partial / degraded / blocked
+  - Explicitly labeled as monitoring classification (NOT buy/sell/hold)
+- Unified watch board: 4 sections (full/partial/degraded/blocked)
+- Known gaps preserved: 688041.SH pricing+valuation, 300394.SZ blocked
+- Guard: pass (watch-only, no trade signals)
+- No mock, no fixture, no pending/order/trade
+
+### Key Results
+- 8 tickers all present in unified board
+- 5 subsystems integrated into single unified state
+- Fallback/degradation policy: subsystems can degrade without blocking pipeline
+- 688041 gaps preserved (pricing_unavailable, valuation_unavailable)
+- 300394 blocker preserved
+- All cannot_conclude guards present

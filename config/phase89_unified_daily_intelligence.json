@@ -1,0 +1,52 @@
+{
+  "phase": "phase89",
+  "strategy": "unified_daily_intelligence_runner_watch_only",
+  "universe": [
+    "300308.SZ",
+    "688041.SH",
+    "002230.SZ",
+    "300394.SZ",
+    "09988.HK",
+    "00700.HK",
+    "NVDA",
+    "AVGO"
+  ],
+  "known_blocked": [
+    "300394.SZ"
+  ],
+  "known_gaps": {
+    "688041.SH": [
+      "pricing_unavailable",
+      "valuation_unavailable"
+    ]
+  },
+  "subsystems": [
+    "daily_financial_monitoring",
+    "valuation",
+    "pricing_expectation",
+    "external_source_evidence",
+    "external_daily_delta"
+  ],
+  "required_outputs": [
+    "unified_ticker_state",
+    "unified_watch_board",
+    "unified_source_health",
+    "unified_internal_brief"
+  ],
+  "fallback_policy": {
+    "allow_recent_history_fallback": true,
+    "allow_subsystem_degraded": true,
+    "require_blocker_for_degraded": true
+  },
+  "safety": {
+    "watch_only": true,
+    "mock_allowed": false,
+    "fixture_allowed": false,
+    "raw_save_allowed": false,
+    "pending_allowed": false,
+    "paper_order_allowed": false,
+    "real_trade_allowed": false,
+    "target_price_output_allowed": false,
+    "position_sizing_allowed": false
+  }
+}
