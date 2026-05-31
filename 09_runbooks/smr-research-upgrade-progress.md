@@ -437,3 +437,47 @@ Build the first hard data source for Phase 91 highest-priority gap: order/contra
 - Tender != contract award, bid candidate != final award
 - Framework agreement != actual order
 - Order signal != trade signal
+
+---
+
+## Phase 93: Customer Capex + Supply Chain Hard Source Integration v1
+
+### Status: COMPLETE
+
+### Objective
+Build customer capex/procurement + supply chain hard data sources. Close two highest-priority gaps identified in Phase 91. Build structured order database foundation and order-customer-supply linkage.
+
+### Key Deliverables
+- Config: `config/phase93_customer_capex_supply_chain_sources.json`
+- Customer capex source registry: 11 sources
+- Supply chain source registry: 11 sources
+- Entity resolver: 8 tickers with key customers and suppliers mapped
+- Customer exploration: 378 capex/procurement hits across 7 tickers
+- Supply exploration: 334 supply chain hits across 7 tickers
+- Evidence extraction: customer + supply evidence with cannot-conclude guard
+- Quality gate + cannot-conclude guard: violations=0, pass
+- Linkage builder: customer + supplier relationships linked to order evidence
+- Structured order DB foundation: schema with 10 fields, gitignored path
+- Coverage matrices: customer 7/8 text_found, supply 7/8 text_found
+- Gap closeout: both dimensions partially addressed
+- Backlog update: phase94 -> product_pricing + management_guidance
+- Master runner: dry-run/execute/skip-network all pass
+
+### Key Findings
+1. Customer capex text found for 7/8 tickers (300394 blocked)
+2. Supply chain text found for 7/8 tickers (300394 blocked)
+3. Customer capex != company order confirmed (guard enforced)
+4. Supply chain signal != revenue confirmed (guard enforced)
+5. NVDA has richest customer/supplier entity mapping (6 customers, 6 suppliers)
+6. 300394.SZ blocker preserved throughout
+7. 688041.SH pricing/valuation gap preserved
+8. Structured order database foundation created (needs Phase 94+ population)
+9. Order-customer-supply linkage framework built
+
+### Boundaries Enforced
+- No new research frameworks
+- No mock, fixture, raw, OCR, browser automation
+- No pending/order/trade/target_price/position_sizing
+- Customer capex != company order
+- Supply chain signal != trade signal
+- All evidence has cannot_conclude guard
