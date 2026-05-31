@@ -185,3 +185,33 @@ commit: (pending)
 - 300394.SZ: blocker preserved (cninfo_org_id_missing)
 - Valuation coverage: 6/8 available (up from 2-4 in Phase 85)
 - All safety boundaries maintained
+
+---
+
+## Phase 86: Expectation & Market Pricing Integration v1
+
+**Status:** complete
+
+### What was done
+- Phase 86 config: 8 tickers, pricing + expectation sources per market
+- Market pricing adapter: yfinance + akshare, 7/8 tickers pricing_available
+  - Only 688041.SH pricing_unavailable (yfinance 404, akshare spot connection error)
+- Relative performance: index-relative for CN (000300.SS), HK (^HSI), US (^GSPC)
+- Expectation adapter: akshare THS forecast (CN), etnet HK forecast, yfinance analyst (US)
+  - 7/8 tickers expectation_available
+  - Target price hidden per policy
+- Integration: pricing + valuation + expectation combined
+- Expectation-aware watch board: 5 sections (trend up/down/flat, expectation avail/blocked)
+- Expectation/pricing guard: pass (no target price output, no trade signals)
+- Closeout audit: pricing=6, expectation=7, valuation=6, blocked=1
+- Brief quality lint: pass
+- All safety boundaries maintained
+- No mock, no fixture, no raw, no OCR, no browser, no pending/order/trade
+
+### Key Results
+- 7/8 tickers have pricing data
+- 7/8 tickers have expectation/consensus data
+- Target price: hidden from all outputs (count=0)
+- Position sizing: disabled (count=0)
+- 300394 blocker preserved
+- 688041.SH: pricing unavailable (yfinance 404), expectation available via THS forecast

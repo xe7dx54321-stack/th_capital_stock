@@ -1,0 +1,37 @@
+﻿{
+  "phase":"phase86",
+  "strategy":"expectation_and_market_pricing_integration",
+  "target_tickers":["300308.SZ","688041.SH","002230.SZ","300394.SZ","09988.HK","00700.HK","NVDA","AVGO"],
+  "known_blocked":["300394.SZ"],
+  "pricing":{
+    "sources":{
+      "CN_A":["yfinance_price_history","akshare_stock_zh_a_spot_em","akshare_stock_kc_a_spot_em","akshare_stock_sz_a_spot_em","sina_stock_spot"],
+      "HK":["yfinance_price_history","akshare_stock_hk_spot_em"],
+      "US":["yfinance_price_history","yfinance_fast_info"]
+    },
+    "ticker_format_map":{"09988.HK":"9988.HK","00700.HK":"0700.HK","NVDA":"NVDA","AVGO":"AVGO","300308.SZ":"300308.SZ","688041.SH":"688041.SH","002230.SZ":"002230.SZ","300394.SZ":"300394.SZ"},
+    "periods":["1d","5d","1mo","3mo","6mo","1y"],
+    "indices":{"CN_A":"000300.SS","HK":"^HSI","US":"^GSPC"}
+  },
+  "expectation":{
+    "sources":{
+      "CN_A":["akshare_stock_profit_forecast_ths","akshare_stock_profit_forecast_em","akshare_stock_analyst_rank_em","akshare_stock_analyst_detail_em"],
+      "HK":["akshare_stock_hk_profit_forecast_et","yfinance_analyst_info"],
+      "US":["yfinance_analyst_info","yfinance_recommendations"]
+    },
+    "metrics":["revenue_forecast","eps_forecast","net_profit_forecast","analyst_count","rating_distribution","consensus_available"],
+    "target_price_policy":"hidden_never_output_to_user",
+    "rating_policy":"observation_only_not_trade_signal"
+  },
+  "integration":{
+    "enabled":true,
+    "combines":["phase84_daily_signal","phase85b_valuation","phase86_pricing","phase86_expectation"],
+    "watch_board_sections":["pricing_trend_strengthened","pricing_trend_weakened","fundamental_valuation_divergence","expectation_available","expectation_unavailable","blocked"]
+  },
+  "safety":{
+    "mock_allowed":false,"fixture_allowed":false,"raw_save_allowed":false,"ocr_allowed":false,"browser_automation_allowed":false,
+    "pending_allowed":false,"paper_order_allowed":false,"real_trade_allowed":false,
+    "target_price_allowed":false,"position_sizing_allowed":false,
+    "target_price_output_count":0,"position_sizing_created":0
+  }
+}
