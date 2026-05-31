@@ -1,0 +1,96 @@
+{
+  "phase": "phase91",
+  "strategy": "information_source_reality_audit_watch_only",
+  "universe": [
+    "300308.SZ",
+    "688041.SH",
+    "002230.SZ",
+    "300394.SZ",
+    "09988.HK",
+    "00700.HK",
+    "NVDA",
+    "AVGO"
+  ],
+  "known_blocked": [
+    "300394.SZ"
+  ],
+  "known_gaps": {
+    "688041.SH": [
+      "pricing_unavailable",
+      "valuation_unavailable"
+    ],
+    "300394.SZ": [
+      "cninfo_org_id_missing",
+      "structured_financial_blocked",
+      "all_sources_blocked"
+    ]
+  },
+  "information_dimensions": [
+    "financial_structured",
+    "financial_statements",
+    "price_daily",
+    "valuation",
+    "pricing_expectation",
+    "industry_news",
+    "order_contract",
+    "customer_capex",
+    "supply_chain",
+    "product_pricing",
+    "peer_benchmark",
+    "macro",
+    "sentiment",
+    "filings_regulatory",
+    "management_guidance"
+  ],
+  "audit_scope": {
+    "existing_registries": [
+      "financial_source_registry.json",
+      "chinese_business_source_registry.json",
+      "phase87_external_source_integration.json"
+    ],
+    "existing_adapters": [
+      "phase83_hk_financial_adapter",
+      "phase83_us_financial_adapter",
+      "phase85_valuation_adapters",
+      "phase86_pricing_adapter",
+      "phase87_external_adapter",
+      "phase88_connector_registry"
+    ],
+    "existing_pipelines": [
+      "phase84_daily_monitoring",
+      "phase89_unified_daily",
+      "phase90_automation"
+    ],
+    "existing_catalogs": [
+      "ai_optical_business_keywords.json",
+      "chinese_business_source_registry.json",
+      "known_disclosure_url_catalog.json",
+      "alternative_disclosure_sources.json"
+    ]
+  },
+  "source_classification_taxonomy": [
+    "real_daily_source",
+    "real_on_demand_source",
+    "partial_real_source",
+    "fallback_only_source",
+    "history_pool_source",
+    "registry_only_source",
+    "curated_catalog_source",
+    "blocked_source",
+    "manual_required_source",
+    "unknown_needs_probe"
+  ],
+  "safety": {
+    "mock_allowed": false,
+    "fixture_allowed": false,
+    "raw_save_allowed": false,
+    "ocr_allowed": false,
+    "browser_automation_allowed": false,
+    "pending_allowed": false,
+    "paper_order_allowed": false,
+    "real_trade_allowed": false,
+    "target_price_output_allowed": false,
+    "position_sizing_allowed": false,
+    "research_framework_creation_allowed": false
+  }
+}

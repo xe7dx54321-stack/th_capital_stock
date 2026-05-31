@@ -330,3 +330,54 @@ commit: (pending)
 - 6 failure scenarios with retry and fallback policies
 - Run lock prevents duplicate concurrent execution
 - All generated artifacts in gitignored paths
+
+---
+
+## Phase 91: Information Source Reality Audit v1
+
+### Status: COMPLETE
+
+### Objective
+Audit all information sources in the system. Distinguish real sources from registries, history pools, curated catalogs, and blocked sources. Map information dimension coverage across all 8 tickers.
+
+### Key Deliverables
+- Config: `config/phase91_information_source_reality_audit.json`
+- Source inventory: 32 sources across 11 categories
+- Reality classifier: 10-class taxonomy applied to all sources
+- Source execution probe: dry-run / execute / skip-network modes
+- Ticker source profiles: 8 tickers with depth scores (avg 5.6/10)
+- Information dimension coverage: 15 dimensions mapped per ticker
+- Hard data gap report: 14 gap dimensions identified
+- Source depth scoring: 22 sources scored
+- Freshness reality audit: 10 sources audited for staleness risk
+- Reliability vs reality crosscheck: 8 claims checked, 7 gaps found
+- Source backlog priority: 10 prioritized gaps for Phase 92-96
+- Master runner: dry-run / execute / skip-network all pass
+- Dashboard: complete audit summary
+
+### Source Classification Summary
+- real_on_demand_source: 9 (yfinance, akshare, eastmoney, sec_edgar, cninfo, etc.)
+- partial_real_source: 7 (valuation adapters, expectation/pricing, local DB)
+- history_pool_source: 4 (evidence_memory, watchlist_intelligence, run/delivery history)
+- registry_only_source: 4 (phase82/84/89 boards, phase90 outbox)
+- curated_catalog_source: 4 (ai_optical_keywords, business_registry, URL catalogs)
+- fallback_only_source: 2 (exchange_report_text, sec_10k_10q_text)
+- blocked_source: 1 (cninfo_300394)
+- manual_required_source: 1 (company_ir_pages)
+
+### Key Findings
+1. Registry-only sources are NOT real data sources (boards, outbox, catalogs)
+2. History pools are NOT live sources (evidence memory, watchlist records)
+3. Curated keyword catalogs are NOT hard data sources
+4. 300394.SZ is the only completely blocked ticker
+5. 688041.SH has known pricing/valuation gaps
+6. order_contract, customer_capex, supply_chain are the biggest hard data gaps (all 8 tickers)
+7. Phase 83 HK/US claim confirmed: 4/4 tickers available (only claim with zero reliability gap)
+8. Phase92-96 highest priority: order/contract, customer/capex, supply/chain sources
+
+### Boundaries Enforced
+- No new research frameworks created
+- No mock, fixture, raw, OCR, browser automation
+- No pending/order/trade/target_price/position_sizing
+- All outputs are audit/classification, not investment advice
+- registry-only / history-pool / curated-catalog clearly distinguished from real sources
