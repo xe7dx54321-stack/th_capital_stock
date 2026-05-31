@@ -381,3 +381,59 @@ Audit all information sources in the system. Distinguish real sources from regis
 - No pending/order/trade/target_price/position_sizing
 - All outputs are audit/classification, not investment advice
 - registry-only / history-pool / curated-catalog clearly distinguished from real sources
+
+---
+
+## Phase 92: Order / Contract / Tender Hard Source Integration v1
+
+### Status: COMPLETE
+
+### Objective
+Build the first hard data source for Phase 91 highest-priority gap: order/contract/tender/bid sources. Explore real sources, classify signals, extract evidence, close the order_contract gap.
+
+### Key Deliverables
+- Config: `config/phase92_order_contract_tender_sources.json`
+- Order source registry: 13 sources across CN_A/HK/US markets
+- Ticker entity resolver: 8 tickers with CN/EN search terms
+- Order source exploration: 40 source attempts, 125 keyword hits
+- Order text collection: keyword-matched disclosure text
+- Order signal classifier: 10 signal types (tender/bid/award/contract/framework/procurement)
+- Order evidence extraction: evidence with cannot-conclude guard
+- Quality gate: evidence validation and gate status
+- Cannot-conclude guard: 0 violations (pass)
+- Order coverage matrix: 7/8 tickers with order text found
+- Gap closeout: partially addressed (text found, structured data still gap)
+- Backlog update: order_contract moved to partially_addressed
+- Master runner: dry-run/execute/skip-network all pass
+- Dashboard: complete integration summary
+
+### Source Exploration Results
+- Sources registered: 13 (cninfo, tender platforms, procurement, IR pages, SEC, yfinance, etc.)
+- Sources attempted: 40 across all 8 tickers
+- Text units collected: varies by market depth
+- Order keyword hits: 125 total
+- Tickers with order text: 7 (all except 300394.SZ which is blocked)
+
+### Classification
+- tender_announcement != contract_award (clearly distinguished)
+- bid_candidate != signed_contract (clearly distinguished)
+- framework_agreement != actual order (clearly distinguished)
+- All classified as company_order_disclosure with medium confidence
+- Cannot-conclude guard: no trade signals, no target prices, no position sizing
+
+### Key Findings
+1. Order-related text exists in disclosure/news for 7/8 tickers
+2. 300394.SZ remains blocked (cninfo org_id missing)
+3. 688041.SH pricing/valuation gap preserved
+4. Keyword-based order text is NOT structured order/contract data
+5. order_contract gap partially addressed, not fully closed
+6. Structured order database identified as new gap for Phase 93
+7. Phase 93 recommendation: focus on customer_capex + supply_chain + structured_order_database
+
+### Boundaries Enforced
+- No new research frameworks created
+- No mock, fixture, raw, OCR, browser automation
+- No pending/order/trade/target_price/position_sizing
+- Tender != contract award, bid candidate != final award
+- Framework agreement != actual order
+- Order signal != trade signal

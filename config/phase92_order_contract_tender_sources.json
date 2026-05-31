@@ -1,0 +1,196 @@
+{
+  "phase": "phase92",
+  "strategy": "order_contract_tender_hard_source_integration_watch_only",
+  "universe": [
+    "300308.SZ",
+    "688041.SH",
+    "002230.SZ",
+    "300394.SZ",
+    "09988.HK",
+    "00700.HK",
+    "NVDA",
+    "AVGO"
+  ],
+  "known_blocked": [
+    "300394.SZ"
+  ],
+  "known_gaps": {
+    "688041.SH": [
+      "pricing_unavailable",
+      "valuation_unavailable"
+    ],
+    "300394.SZ": [
+      "cninfo_org_id_missing",
+      "structured_financial_blocked"
+    ]
+  },
+  "signal_types": [
+    "tender_announcement",
+    "bid_candidate",
+    "contract_award",
+    "signed_contract",
+    "framework_agreement",
+    "procurement_notice",
+    "customer_procurement_signal",
+    "company_order_disclosure",
+    "rumor_or_unverified",
+    "not_order_related"
+  ],
+  "source_types": [
+    "cninfo_disclosure",
+    "exchange_announcement",
+    "government_procurement",
+    "public_tender_platform",
+    "operator_procurement",
+    "cloud_customer_procurement",
+    "company_ir_news",
+    "company_official_news",
+    "existing_text_pool",
+    "fallback_news_search"
+  ],
+  "order_keywords": {
+    "cn": [
+      "订单",
+      "合同",
+      "重大合同",
+      "中标",
+      "预中标",
+      "招标",
+      "采购",
+      "框架协议",
+      "销售合同",
+      "供货协议",
+      "项目合同",
+      "客户",
+      "供应商",
+      "采购订单",
+      "中标候选人",
+      "中标公告",
+      "合同公告",
+      "重大销售合同",
+      "签订合同",
+      "签署协议",
+      "获订单",
+      "中标通知书"
+    ],
+    "en": [
+      "order",
+      "contract",
+      "tender",
+      "bid",
+      "award",
+      "procurement",
+      "purchase agreement",
+      "supply agreement",
+      "framework agreement",
+      "customer order",
+      "contract win",
+      "booking",
+      "backlog",
+      "design win",
+      "purchase order"
+    ]
+  },
+  "exploration_methods": [
+    "cninfo_keyword_search",
+    "existing_disclosure_text_pool",
+    "known_url_catalog",
+    "tender_platform_search",
+    "procurement_platform_search",
+    "company_ir_page_scan",
+    "company_news_scan",
+    "external_news_connector",
+    "sec_filing_keyword",
+    "yfinance_news"
+  ],
+  "ticker_entities": {
+    "300308.SZ": {
+      "display_name": "中际旭创",
+      "search_terms": [
+        "中际旭创",
+        "Zhongji Innolight",
+        "旭创",
+        "Innolight"
+      ],
+      "market": "CN_A"
+    },
+    "688041.SH": {
+      "display_name": "海光信息",
+      "search_terms": [
+        "海光信息",
+        "Hygon",
+        "海光"
+      ],
+      "market": "CN_A"
+    },
+    "002230.SZ": {
+      "display_name": "科大讯飞",
+      "search_terms": [
+        "科大讯飞",
+        "iFlytek",
+        "讯飞"
+      ],
+      "market": "CN_A"
+    },
+    "300394.SZ": {
+      "display_name": "天孚通信",
+      "search_terms": [
+        "天孚通信",
+        "Tianfu Communication",
+        "天孚"
+      ],
+      "market": "CN_A",
+      "blocked": true
+    },
+    "09988.HK": {
+      "display_name": "阿里巴巴",
+      "search_terms": [
+        "阿里巴巴",
+        "Alibaba",
+        "阿里"
+      ],
+      "market": "HK"
+    },
+    "00700.HK": {
+      "display_name": "腾讯控股",
+      "search_terms": [
+        "腾讯控股",
+        "Tencent",
+        "腾讯"
+      ],
+      "market": "HK"
+    },
+    "NVDA": {
+      "display_name": "NVIDIA",
+      "search_terms": [
+        "NVIDIA",
+        "Nvidia",
+        "NVDA"
+      ],
+      "market": "US"
+    },
+    "AVGO": {
+      "display_name": "Broadcom",
+      "search_terms": [
+        "Broadcom",
+        "AVGO",
+        "博通"
+      ],
+      "market": "US"
+    }
+  },
+  "safety": {
+    "mock_allowed": false,
+    "fixture_allowed": false,
+    "raw_save_allowed": false,
+    "ocr_allowed": false,
+    "browser_automation_allowed": false,
+    "pending_allowed": false,
+    "paper_order_allowed": false,
+    "real_trade_allowed": false,
+    "target_price_output_allowed": false,
+    "position_sizing_allowed": false,
+    "research_framework_creation_allowed": false,
+    "opportunity_scoring_allowed": false
+  }
+}
