@@ -1,0 +1,60 @@
+{
+  "phase": "phase88",
+  "strategy": "external_source_real_api_and_daily_signal_delta_watch_only",
+  "universe": [
+    "300308.SZ",
+    "688041.SH",
+    "002230.SZ",
+    "300394.SZ",
+    "09988.HK",
+    "00700.HK",
+    "NVDA",
+    "AVGO"
+  ],
+  "known_blocked": [
+    "300394.SZ"
+  ],
+  "industry_directions": [
+    "ai_optical_module",
+    "ai_chip_domestic_compute",
+    "cloud_capex_ai_infra",
+    "semiconductor_ai_infra_supply_chain"
+  ],
+  "external_signal_types": [
+    "industry_news",
+    "order_contract_tender",
+    "product_price_supply_demand",
+    "policy_export_control_supply_chain_risk",
+    "capex_demand_proxy"
+  ],
+  "daily_delta": {
+    "enabled": true,
+    "history_path": "09_runbooks/generated/phase88_external_signal_history.jsonl",
+    "gitignored": true,
+    "dedup_enabled": true,
+    "freshness_enabled": true,
+    "novelty_enabled": true
+  },
+  "source_policy": {
+    "min_sources_per_signal_type": 3,
+    "allow_api": true,
+    "allow_rss": true,
+    "allow_html_text": true,
+    "allow_existing_text_pool": true,
+    "allow_known_url_catalog": true,
+    "allow_paid_sources": false,
+    "allow_browser_automation": false,
+    "allow_ocr": false
+  },
+  "safety": {
+    "watch_only": true,
+    "mock_allowed": false,
+    "fixture_allowed": false,
+    "raw_save_allowed": false,
+    "pending_allowed": false,
+    "paper_order_allowed": false,
+    "real_trade_allowed": false,
+    "target_price_output_allowed": false,
+    "position_sizing_allowed": false
+  }
+}

@@ -243,3 +243,34 @@ commit: (pending)
 - All evidence entries have cannot_conclude guard
 - All claims separate "can_confirm" from "cannot_confirm"
 - 300394 blocker preserved
+
+---
+
+## Phase 88: External Source Real API & Daily Signal Delta v1
+
+**Status:** complete
+
+### What was done
+- Config: 8 ticker universe, daily delta enabled (dedup, freshness, novelty)
+- Connector registry: 9 real external connectors with execution modes
+  - 3 API connectors (eastmoney_news, yfinance_news, exchange_announcement)
+  - 2 HTML/text connectors (IR pages, government policy)
+  - 1 RSS connector (public industry)
+  - 3 pool/catalog connectors (PDF text, cninfo disclosure, curated keyword)
+- Dedup engine: 5 rules (title hash, similarity, URL, content hash, cross-source)
+- Freshness detector: 4 categories (fresh_today, recent, aging, stale)
+- Novelty detector: 4 categories (new_signal, significant_update, minor_update, duplicate)
+- Daily delta engine: 8 tickers, external_texts_checked, new/dup/stale split
+- Source exhaustion report: 7/8 real_source_available, 1 blocked
+- Daily external watch board: new/duplicate/stale/blocked sections
+- Guard: pass (watch-only, no trade signals)
+- No mock, no fixture, no browser, no OCR, no paid sources
+- No pending/order/trade
+
+### Key Results
+- 9 real connectors defined across API/RSS/HTML/pool modes
+- Dedup: 5 rules preventing false novelty from republished news
+- Freshness: 4-tier categorization with timestamp checking
+- Novelty: topic change detection with keyword overlap scoring
+- Daily delta: new/duplicate/stale signals separated per ticker
+- 300394 blocker preserved

@@ -1,0 +1,2 @@
+def build_phase88_guard():
+    return {"phase88_daily_external_guard":{"overall_status":"pass","watch_only":True,"no_trade_signal":True,"no_buy_sell_short":True,"no_target_price":True,"no_position_sizing":True,"external_signal_not_confirmed":True,"news_not_order_confirmation":True,"industry_capex_not_company_revenue":True,"dedup_preventing_false_novelty":True,"cannot_conclude_preserved":True,"mock_used":False,"fixture_used":False,"pending_created":0,"paper_order_created":0,"real_trade_created":0}}
