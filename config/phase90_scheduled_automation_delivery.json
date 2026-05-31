@@ -1,0 +1,93 @@
+{
+  "phase": "phase90",
+  "strategy": "scheduled_automation_and_delivery_watch_only",
+  "schedule": {
+    "enabled": false,
+    "mode": "manual_registration_required",
+    "timezone": "Asia/Shanghai",
+    "recommended_windows_time": "18:30",
+    "recommended_weekdays": [
+      "MON",
+      "TUE",
+      "WED",
+      "THU",
+      "FRI"
+    ],
+    "run_command_mode": "python_script"
+  },
+  "pipeline": {
+    "entry_point": "08_scripts/jobs/run_phase89_unified_daily_intelligence_pipeline.py",
+    "dry_run_mode": "--dry-run",
+    "execute_mode": "--execute",
+    "skip_network_mode": "--skip-network",
+    "retry_max": 2,
+    "retry_delay_seconds": 60,
+    "run_lock_enabled": true,
+    "lock_file": "09_runbooks/generated/phase90_run.lock",
+    "lock_timeout_minutes": 30
+  },
+  "preflight": {
+    "enabled": true,
+    "checks": [
+      "python_version",
+      "required_modules",
+      "config_files_exist",
+      "generated_dir_writable",
+      "outbox_dir_writable",
+      "no_existing_lock",
+      "network_connectivity_optional"
+    ]
+  },
+  "delivery": {
+    "outbox_path": "09_runbooks/generated/phase90_outbox",
+    "gitignored": true,
+    "formats": [
+      "markdown",
+      "html",
+      "json"
+    ],
+    "manifest_enabled": true,
+    "history_enabled": true,
+    "history_path": "09_runbooks/generated/phase90_delivery_history.jsonl",
+    "max_history_entries": 30
+  },
+  "notification": {
+    "email": {
+      "enabled": false,
+      "status": "disabled_by_config",
+      "smtp_host": "",
+      "smtp_port": 587,
+      "from_address": "",
+      "to_addresses": []
+    },
+    "webhook": {
+      "enabled": false,
+      "status": "disabled_by_config",
+      "url": "",
+      "method": "POST"
+    },
+    "feishu": {
+      "enabled": false,
+      "status": "disabled_by_config",
+      "webhook_url": ""
+    },
+    "wechat_work": {
+      "enabled": false,
+      "status": "disabled_by_config",
+      "webhook_url": ""
+    }
+  },
+  "safety": {
+    "watch_only": true,
+    "mock_allowed": false,
+    "fixture_allowed": false,
+    "delivery_not_trade_signal": true,
+    "report_not_investment_advice": true,
+    "notification_not_trade_signal": true,
+    "target_price_output_allowed": false,
+    "position_sizing_allowed": false,
+    "pending_allowed": false,
+    "paper_order_allowed": false,
+    "real_trade_allowed": false
+  }
+}

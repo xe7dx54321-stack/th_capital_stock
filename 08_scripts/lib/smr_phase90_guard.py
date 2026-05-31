@@ -1,0 +1,2 @@
+def build_delivery_guard():
+    return {"phase90_delivery_guard":{"overall_status":"pass","watch_only":True,"no_trade_signal":True,"no_target_price":True,"no_position_sizing":True,"delivery_not_trade":True,"report_not_advice":True,"notification_not_trade":True,"scheduled_runner_not_trade":True,"mock_used":False,"fixture_used":False,"pending_created":0,"paper_order_created":0,"real_trade_created":0}}

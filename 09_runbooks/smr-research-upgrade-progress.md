@@ -302,3 +302,31 @@ commit: (pending)
 - 688041 gaps preserved (pricing_unavailable, valuation_unavailable)
 - 300394 blocker preserved
 - All cannot_conclude guards present
+
+---
+
+## Phase 90: Scheduled Automation & Delivery v1
+
+**Status:** complete
+
+### What was done
+- Scheduled automation config: daily runner, retry policy, run lock
+- Preflight check: 7+ health checks before pipeline execution
+- Scheduler command generator: Windows Task Scheduler + cron commands
+- Delivery artifact builder: Markdown + HTML + JSON + manifest
+- Delivery outbox: local path, gitignored
+- Delivery history: JSONL with max 30 entries
+- Failure report: 6 scenarios with retry/fallback/next_action
+- Notification adapters: email/webhook/feishu/wechat (all disabled_by_config)
+- Delivery guard: pass (watch-only, no trade signals)
+- Scheduled runner: preflight + Phase 89 pipeline + delivery
+- No mock, no fixture, no pending/order/trade
+
+### Key Results
+- Preflight: python_version, module imports, config files, writable dirs, lock check
+- Scheduler commands: Windows (schtasks) + Linux/Mac (cron) generated
+- Delivery: Markdown/HTML/JSON/manifest in local outbox
+- All external notification adapters disabled by default
+- 6 failure scenarios with retry and fallback policies
+- Run lock prevents duplicate concurrent execution
+- All generated artifacts in gitignored paths
