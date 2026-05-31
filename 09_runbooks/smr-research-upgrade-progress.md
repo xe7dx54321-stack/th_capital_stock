@@ -157,3 +157,31 @@ commit: (pending)
 - 300394 blocker preserved
 - Source exploration: akshare + yfinance dual-path attempted per ticker
 - HK/US tickers with yfinance 404 get specific blocker messages
+
+---
+
+## Phase 85b: Valuation Source Hardening & Coverage Closeout v1
+
+**Status:** complete
+
+### What was done
+- Established Phase 85b config with 3 problem tickers + 1 preserved blocker
+- Built fallback registry tracking all attempted sources per ticker
+- HK valuation hardening: corrected yfinance ticker format
+  - 09988.HK -> 9988.HK (works)
+  - 00700.HK -> 0700.HK (works)
+- 688041.SH hardening: 6 sources attempted, all exhausted
+  - akshare_stock_individual_info_em, yfinance_688041.SH, akshare_stock_kc_a_spot_em, akshare_stock_zh_a_spot_em, akshare_stock_info_global_em, akshare_stock_individual_basic_info_xq
+- Derived valuation engine: framework ready for PS/PE/PB derivation from Phase 83 financial data
+- Closeout audit: 6 valuation_available, 2 partial, 1 blocked, 1 final_unavailable
+- 300394.SZ preserved as known_blocked
+- Source exhaustion report: 2 resolved (HK format), 1 exhausted (688041), 1 blocked (300394)
+- Brief quality lint: pass
+- No mock, no fixture, no raw, no OCR, no browser, no pending/order/trade
+
+### Key Results
+- HK valuation gap closed: 09988.HK and 00700.HK now valuation_available via correct yfinance format
+- 688041.SH: 6 sources exhausted, STAR board may need specialized data access
+- 300394.SZ: blocker preserved (cninfo_org_id_missing)
+- Valuation coverage: 6/8 available (up from 2-4 in Phase 85)
+- All safety boundaries maintained

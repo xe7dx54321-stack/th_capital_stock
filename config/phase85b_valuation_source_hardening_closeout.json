@@ -1,0 +1,15 @@
+﻿{
+  "phase":"phase85b",
+  "strategy":"valuation_source_hardening_and_coverage_closeout",
+  "problem_tickers":[
+    {"ticker":"688041.SH","market":"CN_A","original_status":"unavailable","original_blocker":"valuation_metrics_unavailable","fallback_priority":["akshare_stock_individual_info_em","akshare_stock_kc_a_spot_em","akshare_stock_zh_a_spot_em","yfinance_688041_SH","derived_valuation_from_financial_data"]},
+    {"ticker":"09988.HK","market":"HK","original_status":"unavailable","original_blocker":"valuation_metrics_unavailable_yfinance_404_or_no_fields","fallback_priority":["yfinance_9988_HK","yfinance_BABA_ADR_proxy","derived_valuation_from_financial_data"]},
+    {"ticker":"00700.HK","market":"HK","original_status":"unavailable","original_blocker":"valuation_metrics_unavailable_yfinance_404_or_no_fields","fallback_priority":["yfinance_0700_HK","yfinance_TCEHY_ADR_proxy","derived_valuation_from_financial_data"]}
+  ],
+  "preserved_blocked":["300394.SZ"],
+  "ticker_format_map":{"09988.HK":"9988.HK","00700.HK":"0700.HK","NVDA":"NVDA","AVGO":"AVGO"},
+  "derived_valuation":{"enabled":true,"metrics":["ps_derived","pe_derived","pb_derived"],"requires":["market_cap","revenue","net_profit","book_value"],"flags":["derived=true","source_not_direct","confidence_lower_than_direct"]},
+  "proxy":{"enabled":true,"pairs":[{"original":"09988.HK","proxy":"BABA","market":"US","note":"ADR_diagnostic_only"},{"original":"00700.HK","proxy":"TCEHY","market":"US","note":"ADR_diagnostic_only"}],"usage":"diagnostic_validation_only_not_final_metrics"},
+  "final_status_options":["valuation_available","partial_valuation_available","derived_valuation_available","final_unavailable_with_exhausted_sources","known_blocked"],
+  "safety":{"mock_allowed":false,"fixture_allowed":false,"raw_save_allowed":false,"ocr_allowed":false,"browser_automation_allowed":false,"pending_allowed":false,"paper_order_allowed":false,"real_trade_allowed":false,"target_price_allowed":false,"position_sizing_allowed":false}
+}
