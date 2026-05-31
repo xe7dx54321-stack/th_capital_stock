@@ -1,0 +1,228 @@
+{
+  "phase": "phase94",
+  "strategy": "product_pricing_management_guidance_hard_source_integration_watch_only",
+  "universe": [
+    "300308.SZ",
+    "688041.SH",
+    "002230.SZ",
+    "300394.SZ",
+    "09988.HK",
+    "00700.HK",
+    "NVDA",
+    "AVGO"
+  ],
+  "known_blocked": [
+    "300394.SZ"
+  ],
+  "known_gaps": {
+    "688041.SH": [
+      "pricing_unavailable",
+      "valuation_unavailable"
+    ],
+    "300394.SZ": [
+      "cninfo_org_id_missing",
+      "all_sources_blocked"
+    ]
+  },
+  "product_pricing_signal_types": [
+    "product_price_reported",
+    "asp_reported",
+    "asp_proxy",
+    "price_trend_commentary",
+    "procurement_unit_price",
+    "tender_unit_price",
+    "supply_demand_balance",
+    "lead_time_signal",
+    "delivery_cycle_proxy",
+    "shortage_signal",
+    "inventory_signal",
+    "capacity_tightness",
+    "pricing_power_commentary",
+    "margin_pressure_signal"
+  ],
+  "management_guidance_signal_types": [
+    "management_guidance",
+    "revenue_guidance",
+    "margin_guidance",
+    "capex_guidance",
+    "demand_commentary",
+    "order_visibility_commentary",
+    "capacity_guidance",
+    "product_roadmap_commentary",
+    "customer_demand_commentary",
+    "risk_warning_commentary",
+    "earnings_call_commentary",
+    "investor_relations_qa",
+    "performance_briefing",
+    "annual_report_discussion"
+  ],
+  "source_types": [
+    "annual_report",
+    "quarterly_report",
+    "earnings_call_transcript",
+    "investor_day_presentation",
+    "ir_interaction",
+    "exchange_inquiry",
+    "company_announcement",
+    "industry_news",
+    "supply_chain_upstream",
+    "cloud_provider_pricing",
+    "tender_procurement",
+    "sec_filing",
+    "hk_disclosure",
+    "existing_pdf_pool",
+    "existing_news_pool",
+    "known_url_catalog"
+  ],
+  "key_products": {
+    "300308.SZ": [
+      "800G",
+      "1.6T",
+      "硅光模块",
+      "LPO",
+      "CPO",
+      "高速光模块",
+      "光芯片"
+    ],
+    "688041.SH": [
+      "DCU",
+      "AI加速器",
+      "服务器CPU",
+      "GPU",
+      "海光芯片"
+    ],
+    "002230.SZ": [
+      "AI教育",
+      "AI医疗",
+      "AI司法",
+      "语音识别",
+      "自然语言处理"
+    ],
+    "300394.SZ": [
+      "光器件",
+      "光无源器件",
+      "光连接器"
+    ],
+    "09988.HK": [
+      "阿里云",
+      "AI云服务",
+      "通义千问",
+      "电商",
+      "物流"
+    ],
+    "00700.HK": [
+      "腾讯云",
+      "混元大模型",
+      "微信",
+      "游戏",
+      "广告"
+    ],
+    "NVDA": [
+      "H100",
+      "H200",
+      "B100",
+      "B200",
+      "GB200",
+      "GPU",
+      "AI accelerator",
+      "CUDA"
+    ],
+    "AVGO": [
+      "AI芯片",
+      "交换芯片",
+      "定制ASIC",
+      "Tomahawk",
+      "Jericho",
+      "PCIe switch"
+    ]
+  },
+  "pricing_keywords": {
+    "cn": [
+      "价格",
+      "单价",
+      "ASP",
+      "均价",
+      "报价",
+      "定价",
+      "涨价",
+      "降价",
+      "价格趋势",
+      "毛利率",
+      "成本",
+      "供应",
+      "需求",
+      "产能",
+      "交付周期",
+      "交期",
+      "紧缺",
+      "短缺",
+      "瓶颈"
+    ],
+    "en": [
+      "price",
+      "pricing",
+      "ASP",
+      "average selling price",
+      "cost",
+      "margin",
+      "supply",
+      "demand",
+      "lead time",
+      "delivery",
+      "shortage",
+      "tight",
+      "capacity",
+      "quote"
+    ]
+  },
+  "guidance_keywords": {
+    "cn": [
+      "展望",
+      "预期",
+      "目标",
+      "规划",
+      "指引",
+      "预测",
+      "管理层",
+      "经营计划",
+      "收入",
+      "利润",
+      "毛利率",
+      "研发",
+      "订单可见度",
+      "需求",
+      "产能",
+      "风险"
+    ],
+    "en": [
+      "guidance",
+      "outlook",
+      "expect",
+      "target",
+      "plan",
+      "forecast",
+      "management",
+      "revenue",
+      "margin",
+      "demand",
+      "order visibility",
+      "capacity",
+      "risk",
+      "opportunity"
+    ]
+  },
+  "safety": {
+    "mock_allowed": false,
+    "fixture_allowed": false,
+    "raw_save_allowed": false,
+    "ocr_allowed": false,
+    "browser_automation_allowed": false,
+    "pending_allowed": false,
+    "paper_order_allowed": false,
+    "real_trade_allowed": false,
+    "target_price_output_allowed": false,
+    "position_sizing_allowed": false,
+    "research_framework_creation_allowed": false,
+    "opportunity_scoring_allowed": false
+  }
+}

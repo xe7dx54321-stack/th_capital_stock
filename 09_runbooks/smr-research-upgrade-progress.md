@@ -481,3 +481,46 @@ Build customer capex/procurement + supply chain hard data sources. Close two hig
 - Customer capex != company order
 - Supply chain signal != trade signal
 - All evidence has cannot_conclude guard
+
+---
+
+## Phase 94: Product Pricing + Management Guidance Hard Source Integration v1
+
+### Status: COMPLETE
+
+### Objective
+Build product pricing/ASP/supply-demand and management guidance/IR/earnings commentary hard data sources. Close two high-priority gaps: product_pricing and management_guidance.
+
+### Key Deliverables
+- Config, pricing registry (11 sources), guidance registry (13 sources)
+- Entity resolver: 8 tickers with key products mapped
+- Pricing exploration: 678 hits across 7 tickers
+- Guidance exploration: 366 hits across 7 tickers
+- Evidence extraction: pricing + guidance with cannot-conclude guard
+- Quality gate + guard: violations=0, pass
+- Linkage: product-pricing and guidance linked to order/customer/supply evidence
+- Coverage matrices: pricing 7/8 text_found, guidance 7/8 text_found
+- Gap closeout: both dimensions partially addressed
+- Backlog updated: Phase95 -> 300394_cninfo_resolution_and_688041_valuation_gap_close
+- Master runner + dashboard: all pass
+
+### Key Findings
+1. Product pricing text found for 7/8 tickers
+2. Management guidance text found for 7/8 tickers
+3. Product price rumor != ASP confirmed (guard enforced)
+4. Management optimistic outlook != confirmed performance (guard enforced)
+5. NVDA has richest product mapping (H100/H200/B100/B200/GB200)
+6. 300394.SZ blocker preserved
+7. 688041.SH pricing/valuation gap preserved (market pricing gap != product pricing text)
+8. Phase91 all 5 highest-priority hard data gaps now partially addressed
+
+### Phase 91-94 Summary
+| Gap | Phase | Status |
+|-----|-------|--------|
+| order_contract | Phase92 | partially_addressed |
+| customer_capex | Phase93 | partially_addressed |
+| supply_chain | Phase93 | partially_addressed |
+| product_pricing | Phase94 | partially_addressed |
+| management_guidance | Phase94 | partially_addressed |
+
+All 5 highest-priority hard data gaps from Phase91 have been explored with real source registries, text collection, evidence extraction, and cannot-conclude guard.
