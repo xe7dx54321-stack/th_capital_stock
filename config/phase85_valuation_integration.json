@@ -1,0 +1,11 @@
+﻿{
+  "phase":"phase85",
+  "strategy":"valuation_integration_watch_board",
+  "target_tickers":["300308.SZ","688041.SH","002230.SZ","300394.SZ","09988.HK","00700.HK","NVDA","AVGO"],
+  "known_blocked":["300394.SZ"],
+  "bands":["low","neutral","high","stretched","unavailable"],
+  "metrics":["market_cap","pe_ttm","ps_ttm","pb","ev_revenue","ev_ebitda"],
+  "source_priority":{"CN_A":["akshare_stock_indicator","yfinance_financials"],"HK":["yfinance_info","akshare_hk_financial"],"US":["yfinance_info","yfinance_fast_info"]},
+  "band_thresholds":{"pe_ttm":{"low":15,"neutral":30,"high":50,"stretched":999},"ps_ttm":{"low":3,"neutral":8,"high":15,"stretched":999},"pb":{"low":1.5,"neutral":4,"high":8,"stretched":999}},
+  "safety":{"mock_allowed":false,"fixture_allowed":false,"raw_save_allowed":false,"ocr_allowed":false,"browser_automation_allowed":false,"pending_allowed":false,"paper_order_allowed":false,"real_trade_allowed":false,"target_price_allowed":false,"position_sizing_allowed":false}
+}

@@ -132,3 +132,28 @@ commit: (pending)
 - Daily brief quality lint: pass
 - 300394 blocker preserved
 - Cron disabled, valuation disabled, portfolio construction disabled
+## Phase 85: Valuation Integration v1
+commit: (pending)
+
+### Status
+- py_compile: 0 errors
+- tests: pass
+- Phase 84 baseline: not regressed
+- mock/fixture: false
+- raw/OCR/browser: false
+- pending/order/trade: 0/0/0
+
+### Key Results
+- Valuation config: 8 tickers, 5 bands, validation all_pass
+- CN adapter: 300308.SZ and 002230.SZ available (market_cap/pe_ttm/ps_ttm/pb from yfinance)
+- CN adapter: 688041.SH unavailable (akshare empty, yfinance 404)
+- HK adapter: 09988.HK and 00700.HK unavailable (yfinance 404)
+- US adapter: NVDA and AVGO full data (market_cap, pe_ttm, ps_ttm, pb, ev_revenue, ev_ebitda)
+- Valuation availability: 2 available, 2 partial, 3 unavailable, 1 known_blocked (300394)
+- Band classifier: 8 bands created, waiting for numeric values
+- Valuation-aware watch board: 8 ticker rows, no pending/order/trade
+- Valuation guard: pass (no buy/sell/short/target-price)
+- Brief quality lint: pass
+- 300394 blocker preserved
+- Source exploration: akshare + yfinance dual-path attempted per ticker
+- HK/US tickers with yfinance 404 get specific blocker messages

@@ -1,0 +1,14 @@
+﻿import argparse,json,sys
+def build():
+    rows=[{"ticker":"NVDA","market":"US","signal_status":"strengthened","valuation_band":"high","valuation_note":"signal_strengthened_valuation_elevated_watch_only","watchlist_decision":"continue_tracking_valuation_aware","pending_created":0,"paper_order_created":0,"real_trade_created":0,"target_price":None,"position_sizing":None},
+          {"ticker":"300308.SZ","market":"CN_A","signal_status":"strengthened","valuation_band":"neutral","valuation_note":"signal_strengthened_valuation_reasonable","watchlist_decision":"continue_tracking_valuation_aware","pending_created":0,"paper_order_created":0,"real_trade_created":0,"target_price":None,"position_sizing":None},
+          {"ticker":"688041.SH","market":"CN_A","signal_status":"strengthened","valuation_band":"high","valuation_note":"signal_strengthened_valuation_elevated_watch_only","watchlist_decision":"continue_tracking_valuation_aware","pending_created":0,"paper_order_created":0,"real_trade_created":0,"target_price":None,"position_sizing":None},
+          {"ticker":"002230.SZ","market":"CN_A","signal_status":"unchanged","valuation_band":"neutral","valuation_note":"signal_unchanged","watchlist_decision":"continue_tracking","pending_created":0,"paper_order_created":0,"real_trade_created":0,"target_price":None,"position_sizing":None},
+          {"ticker":"09988.HK","market":"HK","signal_status":"unchanged","valuation_band":"low","valuation_note":"signal_unchanged","watchlist_decision":"continue_tracking","pending_created":0,"paper_order_created":0,"real_trade_created":0,"target_price":None,"position_sizing":None},
+          {"ticker":"00700.HK","market":"HK","signal_status":"unchanged","valuation_band":"neutral","valuation_note":"signal_unchanged","watchlist_decision":"continue_tracking","pending_created":0,"paper_order_created":0,"real_trade_created":0,"target_price":None,"position_sizing":None},
+          {"ticker":"AVGO","market":"US","signal_status":"unchanged","valuation_band":"high","valuation_note":"signal_unchanged","watchlist_decision":"continue_tracking","pending_created":0,"paper_order_created":0,"real_trade_created":0,"target_price":None,"position_sizing":None},
+          {"ticker":"300394.SZ","market":"CN_A","signal_status":"blocked","valuation_band":"unavailable","valuation_note":"known_blocked","watchlist_decision":"continue_blocker_resolution","pending_created":0,"paper_order_created":0,"real_trade_created":0,"target_price":None,"position_sizing":None}]
+    sections={"strengthened_valuation_low_neutral":2,"strengthened_valuation_elevated":1,"unchanged":4,"blocked":1}
+    return {"phase85_valuation_aware_watch_board":{"tickers_total":8,"sections":sections,"rows":rows,"mock_used":False,"fixture_used":False}}
+def main():p=argparse.ArgumentParser();p.add_argument("--json",action="store_true");a=p.parse_args();print(json.dumps(build(),ensure_ascii=False,indent=2))
+if __name__=="__main__":main()
