@@ -1,0 +1,15 @@
+﻿{
+  "phase":"phase87",
+  "strategy":"industry_news_order_external_source_integration_watch_only",
+  "universe":["300308.SZ","688041.SH","002230.SZ","300394.SZ","09988.HK","00700.HK","NVDA","AVGO"],
+  "known_blocked":["300394.SZ"],
+  "industry_directions":[
+    {"id":"ai_optical_module","label":"AI Optical / Transceiver","tickers":["300308.SZ"],"keywords":["800G","1.6T","silicon photonics","LPO","CPO","optical module price","cloud capex","data center interconnect","overseas customer demand","lead time","order visibility","optical transceiver","light counting"]},
+    {"id":"ai_chip_domestic_compute","label":"AI Chip / Domestic Compute","tickers":["688041.SH","002230.SZ"],"keywords":["GPU","GPGPU","DCU","AI accelerator","domestic substitution","xinchuang","cloud procurement","compute cluster","export control","policy support","Haid Guang","Cambricon"]},
+    {"id":"cloud_capex_ai_infra","label":"Cloud Capex / AI Infrastructure","tickers":["09988.HK","00700.HK","NVDA","AVGO","300308.SZ","688041.SH"],"keywords":["AI capex","data center construction","inference demand","cloud revenue","GPU procurement","network architecture upgrade","AI infra spend","hyperscaler capex","Microsoft capex","Google capex","Amazon capex","Meta capex"]},
+    {"id":"semiconductor_ai_supply_chain","label":"Semiconductor / AI Supply Chain","tickers":["NVDA","AVGO","688041.SH","300308.SZ","002230.SZ"],"keywords":["advanced packaging","HBM","Ethernet","switch chip","supply chain bottleneck","export restriction","production capacity","ASP","CoWoS","TSMC","silicon interposer"]}
+  ],
+  "external_signal_types":["industry_news","order_contract_tender","product_price_supply_demand","policy_export_control_risk","capex_demand_proxy"],
+  "source_policy":{"min_sources_per_signal_type":3,"allow_curated_known_url":true,"allow_existing_disclosure_reuse":true,"allow_public_news_text":true,"allow_paid_sources":false,"allow_browser_automation":false,"allow_ocr":false},
+  "safety":{"watch_only":true,"mock_allowed":false,"fixture_allowed":false,"raw_save_allowed":false,"pending_allowed":false,"paper_order_allowed":false,"real_trade_allowed":false,"target_price_output_allowed":false,"position_sizing_allowed":false}
+}

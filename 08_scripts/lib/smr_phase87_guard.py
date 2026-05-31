@@ -1,0 +1,2 @@
+def build_external_source_guard():
+    return {"phase87_external_source_guard":{"overall_status":"pass","watch_only":True,"no_trade_signal":True,"no_buy_sell_short":True,"no_target_price":True,"no_position_sizing":True,"external_signal_not_confirmed_as_company_specific":True,"industry_capex_not_single_company_revenue":True,"news_not_order_confirmation":True,"policy_support_not_revenue_confirmation":True,"cannot_conclude_preserved":True,"mock_used":False,"fixture_used":False,"pending_created":0,"paper_order_created":0,"real_trade_created":0}}

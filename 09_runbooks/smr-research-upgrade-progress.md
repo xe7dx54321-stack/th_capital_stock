@@ -215,3 +215,31 @@ commit: (pending)
 - Position sizing: disabled (count=0)
 - 300394 blocker preserved
 - 688041.SH: pricing unavailable (yfinance 404), expectation available via THS forecast
+---
+
+## Phase 87: Industry / News / Order External Source Integration v1
+
+**Status:** complete
+
+### What was done
+- Config: 8 ticker universe, 4 industry directions, 5 external signal types
+- External source registry: 9 curated source types (eastmoney_news, disclosure_pool, yfinance_news, cninfo, IR pages, government policy, PDF text pool, RSS, keyword catalog)
+- Industry-ticker signal mapping: all 8 tickers mapped to industry directions with keywords
+- External evidence extractor: 37 evidence entries generated via curated source catalog
+- Reliability/relevance scoring: 9 sources scored (avg reliability 0.67, avg relevance 0.68)
+- External claim map: 5 claims with can_confirm / cannot_conclude boundaries
+- Coverage blocker: 7/8 source_available, 1 blocked (300394)
+- External-source-aware watch board: signals_found + partial + blocked sections
+- External source guard: pass (watch-only, no trade signals)
+- Integration: 37 evidence entries mapped across 8 tickers
+- Brief quality lint: pass
+- No mock, no fixture, no browser, no OCR, no paid sources
+- No pending/order/trade
+
+### Key Results
+- 9 external source types defined
+- 4 industry directions: AI optical, AI chip, cloud capex, semiconductor supply chain
+- 37 external evidence entries across all tickers
+- All evidence entries have cannot_conclude guard
+- All claims separate "can_confirm" from "cannot_confirm"
+- 300394 blocker preserved
