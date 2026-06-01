@@ -575,3 +575,39 @@ All 5 highest-priority hard data gaps from Phase91 have been explored with real 
 - all DB artifacts gitignored
 - mock/fixture/raw=false
 - pending/order/trade=0
+
+## Phase 97: Automated DB Refresh + Incremental Hard Data Update v1
+
+**Commit**: (pending)
+
+**Goal**: Build automated DB refresh engine with incremental updates, dedup, delta detection, lifecycle management, and quality gating for the Phase 96 hard data database.
+
+**Key Deliverables**:
+- Config loader with refresh policy, dedup, stale days settings
+- Phase96 DB compatibility checker (db_path, categories, universe, schema all pass)
+- Source refresh policy: 7 sources, 4 refreshable, 3 blocked
+- Source refresh planner (dry-run/execute/skip-network)
+- Incremental loader from existing Phase96 DB (gitignored path)
+- SHA256 record fingerprint engine + dedup with as_of_date conflict resolution
+- Lifecycle classifier (fresh 7d / stale 90d / expired)
+- Delta detector (add/change/remove/unchanged)
+- Stale/expired per-record detection
+- Incremental writer with rollback manifest + run history JSONL
+- Manifest versioning with rollback availability check
+- Refresh run history reader from gitignored JSONL
+- Source-level refresh status board
+- Refresh quality gate (dedup/delta/write checks, overall pass)
+- Cannot-conclude guard against over-claiming in refresh
+- Backlog update (8 items, phase98 recommendation: live_data_source_monitoring_and_alerting)
+- Dashboard + master runner + tests
+
+**Core Boundaries**:
+- All DB/manifest/history paths gitignored
+- Dedup engine active (SHA256 fingerprint)
+- Delta detection tracks add/change/remove
+- Stale detection: 7d stale, 90d expired
+- Rollback manifest saved before each write
+- Phase96 regression preserved
+- mock/fixture/raw/OCR/browser = false
+- pending/order/trade/target_price/position_sizing = 0
+- 300394 cninfo refresh still blocked_per_source, IRM partial only
