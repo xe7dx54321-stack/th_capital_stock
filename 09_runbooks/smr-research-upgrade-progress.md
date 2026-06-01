@@ -723,3 +723,38 @@ All 5 highest-priority hard data gaps from Phase91 have been explored with real 
 - 688041 partial valuation preserved
 - mock/fixture/raw/OCR/browser = false
 - pending/order/trade = 0
+
+## Phase 101: Live Trading System Readiness Assessment v1
+
+**Commit**: (pending)
+
+**Goal**: Assess whether the Phase91-100 system has the engineering preconditions for safely discussing future live trading. Pure assessment — no trading implementation.
+
+**Key Deliverables**:
+- Assessment config: assessment_only=true, live_trading_enabled=false
+- Readiness domain registry: 12 domains across data/ops/signal/risk/safety/compliance
+- Phase100 production baseline capture
+- 12 per-domain readiness assessments (score, status, blockers)
+- Readiness scorecard: 67.3% overall, NOT_READY
+- Go/no-go: NO_GO (4 critical blockers, 3 major gaps)
+- Markdown readiness report
+- Backlog (8 items)
+- Dashboard + master runner + tests
+
+**Critical Blockers**:
+1. risk_control_missing — no position limits, exposure caps, drawdown controls
+2. human_approval_missing — no approval before order gate
+3. kill_switch_missing — no emergency control or forced position closure
+4. backtest_missing — signal validation not backtested
+
+**Major Gaps**: audit_log_incomplete, data_source_incomplete, evidence_signal_unverified
+
+**Domains Ready**: data_source, hard_data_db (partial), production_monitoring, paper_live_boundary, execution_lockdown, compliance_guardrail, system_stability (partial)
+
+**Core Boundaries**:
+- assessment_only=true — NO trading implementation
+- GO_LIVE_TRADING intentionally never output
+- broker/order/live paths all disabled
+- 300394 blocker preserved, 688041 partial preserved
+- mock/fixture/raw/OCR/browser = false
+- pending/order/trade/target_price/position_sizing = 0
