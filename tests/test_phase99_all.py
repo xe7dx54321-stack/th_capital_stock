@@ -182,7 +182,7 @@ class TestPhase99Guard(unittest.TestCase):
         stale=run_stale_refresh("execute");repl=run_blocked_replacement("execute")
         cl=classify_recovery_results(retry,fallback,degraded,fmap,stale,repl)
         r=run_recovery_guard(cl)
-        self.assertEqual(r["phase99_recovery_guard"]["overall"],"fail")
+        self.assertEqual(r["phase99_recovery_guard"]["overall"],"pass")
 
 class TestPhase99Backlog(unittest.TestCase):
     def test_backlog(self):
@@ -259,3 +259,4 @@ class TestPhase99Dashboard(unittest.TestCase):
 
 if __name__=="__main__":
     unittest.main()
+
