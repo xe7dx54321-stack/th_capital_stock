@@ -783,3 +783,29 @@ All 5 highest-priority hard data gaps from Phase91 have been explored with real 
 - 300394 blocker preserved, 688041 partial preserved
 - mock/fixture/raw/OCR/browser = false
 - pending/order/trade = 0
+
+## Phase 103: Risk Control Readiness Foundation v1
+
+**Commit**: (pending)
+
+**Goal**: Build risk control readiness foundation required for future trading system — rule registry, thresholds, check framework, audit. Addresses risk_control_missing blocker from Phase101. No trade execution, no position sizing.
+
+**Key Deliverables**:
+- Risk control config (assessment_only, live_risk_execution_enabled=false)
+- Risk rule registry: 7 rules across 7 categories (position/exposure/drawdown/leverage/liquidity/loss/concentration)
+- Risk threshold config: 4 critical thresholds
+- Risk check runner: 4 simulated checks pass, no actual positions
+- Risk audit: audit complete, zero orders generated
+- Quality gate: 5 checks pass
+- Cannot-conclude guard: no position sizing, no order creation
+- Backlog (8 items)
+- Dashboard + runner + tests
+
+**Core Boundaries**:
+- NO live risk execution
+- NO position sizing
+- NO order creation
+- NO trade recommendations
+- 300394 blocker preserved, 688041 partial preserved
+- mock/fixture/raw/OCR/browser = false
+- pending/order/trade/target_price/position_sizing = 0

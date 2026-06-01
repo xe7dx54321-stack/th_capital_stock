@@ -1,0 +1,28 @@
+﻿{
+  "phase": "phase103",
+  "strategy": "risk_control_readiness_foundation",
+  "risk_control": {
+    "assessment_only": true,
+    "live_risk_execution_enabled": false,
+    "paper_risk_execution_enabled": false,
+    "live_trading_enabled": false,
+    "broker_integration_allowed": false,
+    "order_creation_allowed": false,
+    "position_sizing_allowed": false,
+    "rules": {
+      "max_position_per_ticker_pct": 20,
+      "max_sector_exposure_pct": 40,
+      "max_drawdown_pct": 15,
+      "max_leverage": 1.0,
+      "min_liquidity_required": true,
+      "daily_loss_limit_pct": 5,
+      "concentration_limit_tickers": 10
+    }
+  },
+  "safety": {
+    "mock_allowed": false, "fixture_allowed": false, "raw_save_allowed": false,
+    "ocr_allowed": false, "browser_automation_allowed": false,
+    "pending_allowed": false, "paper_order_allowed": false, "real_trade_allowed": false,
+    "target_price_allowed": false, "position_sizing_allowed": false
+  }
+}
