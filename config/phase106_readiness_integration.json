@@ -1,0 +1,57 @@
+{
+  "phase": "phase106",
+  "strategy": "readiness_integration_test_cross_gate_consistency",
+  "integration": {
+    "assessment_only": true,
+    "integration_test_only": true,
+    "paper_trading_enabled": false,
+    "live_trading_enabled": false,
+    "broker_integration_allowed": false,
+    "order_creation_allowed": false,
+    "position_sizing_allowed": false,
+    "modules": [
+      "phase102_historical_replay",
+      "phase103_risk_control",
+      "phase104_human_approval",
+      "phase105_kill_switch"
+    ],
+    "dependency_pairs": [
+      [
+        "historical_replay",
+        "risk_control"
+      ],
+      [
+        "risk_control",
+        "human_approval"
+      ],
+      [
+        "human_approval",
+        "kill_switch"
+      ],
+      [
+        "kill_switch",
+        "historical_replay"
+      ],
+      [
+        "risk_control",
+        "kill_switch"
+      ],
+      [
+        "historical_replay",
+        "human_approval"
+      ]
+    ]
+  },
+  "safety": {
+    "mock_allowed": false,
+    "fixture_allowed": false,
+    "raw_save_allowed": false,
+    "ocr_allowed": false,
+    "browser_automation_allowed": false,
+    "pending_allowed": false,
+    "paper_order_allowed": false,
+    "real_trade_allowed": false,
+    "target_price_allowed": false,
+    "position_sizing_allowed": false
+  }
+}
