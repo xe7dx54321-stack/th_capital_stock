@@ -1,0 +1,37 @@
+{
+  "phase": "phase104",
+  "strategy": "human_approval_workflow_readiness",
+  "human_approval": {
+    "assessment_only": true,
+    "approval_execution_allowed": false,
+    "approval_to_order_allowed": false,
+    "live_trading_enabled": false,
+    "broker_integration_allowed": false,
+    "order_creation_allowed": false,
+    "position_sizing_allowed": false,
+    "policies": {
+      "two_step_required": true,
+      "approver_roles": [
+        "operator",
+        "supervisor"
+      ],
+      "expiration_hours": 24,
+      "max_revocation_window_hours": 72,
+      "operator_identity_required": true,
+      "audit_log_required": true,
+      "manual_override_requires_supervisor": true
+    }
+  },
+  "safety": {
+    "mock_allowed": false,
+    "fixture_allowed": false,
+    "raw_save_allowed": false,
+    "ocr_allowed": false,
+    "browser_automation_allowed": false,
+    "pending_allowed": false,
+    "paper_order_allowed": false,
+    "real_trade_allowed": false,
+    "target_price_allowed": false,
+    "position_sizing_allowed": false
+  }
+}
