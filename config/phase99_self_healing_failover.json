@@ -1,0 +1,29 @@
+﻿{
+  "phase": "phase99",
+  "strategy": "self_healing_source_failover_and_auto_recovery",
+  "recovery": {
+    "enabled": true,
+    "primary_retry": {"enabled": true, "max_retries": 1, "backoff_seconds": 5},
+    "fallback": {"enabled": true, "timeout_seconds": 30},
+    "degraded_parser": {"enabled": true},
+    "alternative_field_mapping": {"enabled": true},
+    "stale_refresh": {"enabled": true},
+    "blocked_replacement": {"enabled": true, "attempt_unblocked_only": true}
+  },
+  "failover_registry": {
+    "yfinance_financials": {"primary": true, "fallback_sources": ["akshare_sina_financial", "eastmoney_financial"]},
+    "akshare_sina_financial": {"primary": true, "fallback_sources": ["eastmoney_financial", "yfinance_financials"]},
+    "eastmoney_financial": {"primary": true, "fallback_sources": ["akshare_sina_financial", "yfinance_financials"]},
+    "sec_edgar_companyfacts": {"primary": true, "fallback_sources": ["yfinance_financials"]},
+    "cninfo_disclosure": {"primary": true, "fallback_sources": ["irm_news"], "blocked": true, "replacement_sources": ["irm_news"]},
+    "szse_disclosure": {"primary": true, "fallback_sources": ["irm_news"], "blocked": true},
+    "irm_news": {"primary": true, "fallback_sources": [], "blocked": false, "note": "partial_only_for_300394"}
+  },
+  "recovery_history": {"path": "09_runbooks/generated/phase99_recovery_history.jsonl", "gitignored": true},
+  "safety": {
+    "mock_allowed": false, "fixture_allowed": false, "raw_save_allowed": false,
+    "ocr_allowed": false, "browser_automation_allowed": false,
+    "pending_allowed": false, "paper_order_allowed": false, "real_trade_allowed": false,
+    "target_price_allowed": false, "position_sizing_allowed": false
+  }
+}

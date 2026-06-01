@@ -649,3 +649,49 @@ All 5 highest-priority hard data gaps from Phase91 have been explored with real 
 - Alert != investment conclusion
 - mock/fixture/raw/OCR/browser = false
 - pending/order/trade/target_price/position_sizing = 0
+
+## Phase 99: Self-healing Source Failover + Auto-recovery v1
+
+**Commit**: (pending)
+
+**Goal**: When live sources fail, are blocked, stale, have schema drift, or field regressions, the system auto-attempts fallback, failover, degraded parsing, re-refresh, and replacement. Recovery results are logged to trackable history.
+
+**Key Deliverables**:
+- Self-healing recovery config with failover registry (7 sources)
+- Alert-to-recovery action mapper (Phase98 alerts -> recovery actions)
+- Source failover registry with fallback mappings
+- Fallback source selector
+- Recovery planner
+- Primary source retry (dry-run/execute/skip-network)
+- Fallback execution runner
+- Degraded parser runner (partial text for blocked sources)
+- Alternative field mapping runner
+- Stale source re-refresh runner
+- Blocked source replacement runner (irm_news as replacement)
+- Recovery result classifier (recovered/partially/fallback/degraded/still_blocked)
+- Recovery history writer (gitignored JSONL)
+- Source incident update
+- Recovered source health refresh
+- Recovery quality gate + cannot-conclude guard
+- Phase91-98 backlog update (10 items, phase100 recommendation)
+- Dashboard + master runner + tests
+
+**Key Results** (execute mode):
+- retry_attempts=7, retry_recovered=4 (3 blocked sources failed)
+- fallback_attempts=3, fallback_recovered=3 (cninfo/szse/irm fallback)
+- degraded_parser_attempts=2, degraded_recovered=2
+- field_mapping_attempts=3, fields_recovered=3
+- stale_refresh_attempts=7, stale_refresh_recovered=5
+- replacement_attempts=2, replacement_recovered=2
+- total_recovered + partially_recovered > 0
+
+**Core Boundaries**:
+- fallback_recovered != primary_recovered
+- degraded_recovered != full_recovered
+- stale refresh failed != fresh
+- alternate field != original reported field
+- 300394 CNINFO blocker not resolved (irm fallback active but structured data still unavailable)
+- 688041 partial valuation preserved
+- All recovery history gitignored
+- mock/fixture/raw/OCR/browser = false
+- pending/order/trade/target_price/position_sizing = 0
