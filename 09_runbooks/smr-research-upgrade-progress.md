@@ -695,3 +695,31 @@ All 5 highest-priority hard data gaps from Phase91 have been explored with real 
 - All recovery history gitignored
 - mock/fixture/raw/OCR/browser = false
 - pending/order/trade/target_price/position_sizing = 0
+
+## Phase 100: Continuous Production Monitoring + Reporting Automation v1
+
+**Commit**: (pending)
+
+**Goal**: Integrate Phase97 (DB refresh), Phase98 (source monitoring), Phase99 (self-healing recovery) into a continuous daily production pipeline with automated reports, history, manifest, quality gate, and guard.
+
+**Key Deliverables**:
+- Production config with pipeline order [phase97, phase98, phase99]
+- Daily production runner chaining all three sub-pipelines
+- Production status report (pass/fail per sub-pipeline)
+- Exception/blocker report (300394 cninfo, 688041 valuation)
+- Operator summary (Markdown, no investment advice)
+- Production run history (gitignored JSONL)
+- Production manifest (gitignored JSON)
+- Production quality gate (5 checks)
+- Production cannot-conclude guard (no buy/sell/target/position in reports)
+- Backlog update (8 items, phase101: live trading system readiness assessment)
+- Dashboard + tests
+
+**Core Boundaries**:
+- All reports/history/manifest gitignored
+- Reports are production status, NOT investment advice
+- No buy/sell/target_price/position_sizing anywhere
+- 300394 blocker preserved
+- 688041 partial valuation preserved
+- mock/fixture/raw/OCR/browser = false
+- pending/order/trade = 0
