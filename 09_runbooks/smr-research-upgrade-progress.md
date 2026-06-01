@@ -524,3 +524,26 @@ Build product pricing/ASP/supply-demand and management guidance/IR/earnings comm
 | management_guidance | Phase94 | partially_addressed |
 
 All 5 highest-priority hard data gaps from Phase91 have been explored with real source registries, text collection, evidence extraction, and cannot-conclude guard.
+
+## Phase 95: 300394 CNINFO Resolution + 688041 Valuation/Pricing Gap Close
+
+**Commit**: (pending)
+
+**Goal**: Resolve 300394.SZ CNINFO blocker and close 688041.SH valuation/pricing gaps.
+
+**Key Deliverables**:
+- 300394 resolver: 10 resolution methods attempted; cninfo/szse/irm/pdf exhausted; IR news partial; identity_found=false; source_exhausted=true
+- 688041 valuation hardening: akshare/eastmoney market_cap/pe_ttm/pb available; derived valuation_available=true; ev_ebitda/ps_ttm still gap
+- 688041 pricing hardening: daily price resolved via akshare/eastmoney
+- Coverage update: 6 covered, 1 partial (688041), 1 blocked (300394)
+- Gap closeout: pricing_resolved=1, valuation_partial=1, still_blocked=1
+- Backlog: Phase96 -> peer_benchmark_hard_data_and_db_population
+- Evidence memory writer
+- Dashboard + master runner + tests
+
+**Core Boundaries**:
+- mock/fixture/raw/OCR/browser = false
+- pending/order/trade/target_price/position_sizing = 0
+- 300394 blocker persists after exhaustive attempts
+- 300394 allowed_next_action: manual_cninfo_org_id_resolution
+- 688041 pricing resolved, valuation partial

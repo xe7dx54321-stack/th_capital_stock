@@ -1,0 +1,94 @@
+{
+  "phase": "phase95",
+  "strategy": "300394_cninfo_resolution_688041_valuation_pricing_gap_close_watch_only",
+  "universe": [
+    "300308.SZ",
+    "688041.SH",
+    "002230.SZ",
+    "300394.SZ",
+    "09988.HK",
+    "00700.HK",
+    "NVDA",
+    "AVGO"
+  ],
+  "targets": {
+    "300394": {
+      "blocker": "cninfo_org_id_missing_and_known_url_not_usable",
+      "resolution_methods": [
+        "cninfo_identity_discovery",
+        "cninfo_search_endpoint",
+        "cninfo_metadata_validation",
+        "szse_disclosure_fallback",
+        "irm_interaction_page",
+        "company_ir_news",
+        "known_url_catalog_correction",
+        "disclosure_pdf_url_validation"
+      ],
+      "candidate_org_ids": [
+        "gssz0000308",
+        "300394",
+        "tianfu",
+        "tianfu_communication"
+      ],
+      "search_terms": [
+        "300394",
+        "天孚通信",
+        "Tianfu",
+        "天孚"
+      ],
+      "known_urls": [
+        "http://www.cninfo.com.cn/new/disclosure/stock?stockCode=300394&orgId=gssz0000308",
+        "http://www.szse.cn/disclosure/listed/fixed/index.html"
+      ]
+    },
+    "688041": {
+      "gaps": [
+        "valuation_unavailable",
+        "pricing_unavailable"
+      ],
+      "valuation_methods": [
+        "akshare_individual_info",
+        "eastmoney_quote",
+        "sina_market",
+        "yfinance_fallback",
+        "exchange_quote_derived",
+        "financial_plus_shares_outstanding_derived"
+      ],
+      "pricing_methods": [
+        "akshare_daily",
+        "eastmoney_daily",
+        "sina_daily",
+        "yfinance_fallback",
+        "exchange_quote_page"
+      ],
+      "valuation_fields": [
+        "market_cap",
+        "pe_ttm",
+        "pb",
+        "ps_ttm",
+        "ev_ebitda",
+        "shares_outstanding"
+      ],
+      "pricing_fields": [
+        "close",
+        "open",
+        "high",
+        "low",
+        "volume",
+        "amount"
+      ]
+    }
+  },
+  "safety": {
+    "mock_allowed": false,
+    "fixture_allowed": false,
+    "raw_save_allowed": false,
+    "ocr_allowed": false,
+    "browser_automation_allowed": false,
+    "pending_allowed": false,
+    "paper_order_allowed": false,
+    "real_trade_allowed": false,
+    "target_price_output_allowed": false,
+    "position_sizing_allowed": false
+  }
+}
