@@ -758,3 +758,28 @@ All 5 highest-priority hard data gaps from Phase91 have been explored with real 
 - 300394 blocker preserved, 688041 partial preserved
 - mock/fixture/raw/OCR/browser = false
 - pending/order/trade/target_price/position_sizing = 0
+
+## Phase 102: Backtest Readiness + Historical Replay Framework v1
+
+**Commit**: (pending)
+
+**Goal**: Build historical data replay and non-trading backtest readiness framework to validate Phase91-101 components on historical timelines. Addresses backtest_missing blocker from Phase101.
+
+**Key Deliverables**:
+- Backtest readiness config (assessment_only, no_trade_backtest_only, pnl_backtest_allowed=false)
+- Historical DB integrity checker (3 generated artifacts)
+- Historical coverage checker (8 tickers x 3 periods, 87.5% coverage)
+- Replay period registry (5 periods replayable)
+- Backtest signal validator (7 tickers, 5 metrics, 35 total — no PnL calculation)
+- Backtest quality gate (4 checks, pass)
+- Backtest cannot-conclude guard (pnl_forbidden reminder active)
+- Backlog (7 items)
+- Dashboard + runner + tests
+
+**Core Boundaries**:
+- NO PnL backtest — signal validation only
+- NO buy/sell/target_price/position_sizing — compliance guard enforced
+- assessment_only=true
+- 300394 blocker preserved, 688041 partial preserved
+- mock/fixture/raw/OCR/browser = false
+- pending/order/trade = 0

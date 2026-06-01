@@ -1,0 +1,23 @@
+﻿{
+  "phase": "phase102",
+  "strategy": "backtest_readiness_and_historical_replay_framework",
+  "backtest": {
+    "assessment_only": true,
+    "no_trade_backtest_only": true,
+    "live_trading_enabled": false,
+    "broker_integration_allowed": false,
+    "order_creation_allowed": false,
+    "pnl_backtest_allowed": false,
+    "signal_validation_only": true,
+    "replay_periods": ["FY2023","FY2024","FY2025","Q1_2025","Q2_2025"],
+    "tickers_min_required": 4,
+    "metrics_min_required": 6,
+    "coverage_threshold_pct": 50
+  },
+  "safety": {
+    "mock_allowed": false, "fixture_allowed": false, "raw_save_allowed": false,
+    "ocr_allowed": false, "browser_automation_allowed": false,
+    "pending_allowed": false, "paper_order_allowed": false, "real_trade_allowed": false,
+    "target_price_allowed": false, "position_sizing_allowed": false
+  }
+}
