@@ -1,0 +1,17 @@
+import json,os
+def build_emergency_domain_registry():
+    domains=[
+        {"domain_id":"ks01","domain_name":"kill_switch_policy","readiness_status":"ready","policy_defined":True,"schema_defined":True,"audit_supported":True,"simulation_supported":True,"blockers":[],"manual_actions":[],"allowed_next_action":"none"},
+        {"domain_id":"ks02","domain_name":"emergency_stop_state_machine","readiness_status":"ready","policy_defined":True,"schema_defined":True,"audit_supported":True,"simulation_supported":True,"blockers":[],"manual_actions":[],"allowed_next_action":"none"},
+        {"domain_id":"ks03","domain_name":"disable_live_mode","readiness_status":"ready","policy_defined":True,"schema_defined":True,"audit_supported":True,"simulation_supported":True,"blockers":[],"manual_actions":[],"allowed_next_action":"none"},
+        {"domain_id":"ks04","domain_name":"disable_order_creation","readiness_status":"ready","policy_defined":True,"schema_defined":True,"audit_supported":True,"simulation_supported":True,"blockers":[],"manual_actions":[],"allowed_next_action":"none"},
+        {"domain_id":"ks05","domain_name":"safe_mode","readiness_status":"ready","policy_defined":True,"schema_defined":True,"audit_supported":True,"simulation_supported":True,"blockers":[],"manual_actions":[],"allowed_next_action":"none"},
+        {"domain_id":"ks06","domain_name":"rollback_manifest","readiness_status":"partial_ready","policy_defined":True,"schema_defined":True,"audit_supported":True,"simulation_supported":True,"blockers":[],"manual_actions":["define_rollback_procedure_steps"],"allowed_next_action":"add_rollback_steps"},
+        {"domain_id":"ks07","domain_name":"last_good_state_registry","readiness_status":"partial_ready","policy_defined":True,"schema_defined":True,"audit_supported":True,"simulation_supported":True,"blockers":[],"manual_actions":["define_state_snapshot_interval"],"allowed_next_action":"configure_snapshot_schedule"},
+        {"domain_id":"ks08","domain_name":"emergency_incident_escalation","readiness_status":"partial_ready","policy_defined":True,"schema_defined":True,"audit_supported":True,"simulation_supported":True,"blockers":[],"manual_actions":["define_escalation_contacts"],"allowed_next_action":"add_escalation_roster"},
+        {"domain_id":"ks09","domain_name":"manual_override_lockdown","readiness_status":"ready","policy_defined":True,"schema_defined":True,"audit_supported":True,"simulation_supported":True,"blockers":[],"manual_actions":[],"allowed_next_action":"none"},
+        {"domain_id":"ks10","domain_name":"emergency_audit_log","readiness_status":"ready","policy_defined":True,"schema_defined":True,"audit_supported":True,"simulation_supported":True,"blockers":[],"manual_actions":[],"allowed_next_action":"none"},
+        {"domain_id":"ks11","domain_name":"no_order_emergency_simulation","readiness_status":"ready","policy_defined":True,"schema_defined":True,"audit_supported":True,"simulation_supported":True,"blockers":[],"manual_actions":[],"allowed_next_action":"none"},
+        {"domain_id":"ks12","domain_name":"emergency_guardrail","readiness_status":"partial_ready","policy_defined":True,"schema_defined":True,"audit_supported":True,"simulation_supported":True,"blockers":[],"manual_actions":["define_guardrail_severity_levels"],"allowed_next_action":"add_severity_levels"}
+    ]
+    return {"phase105_emergency_domain_registry":{"total_domains":len(domains),"domains":domains,"mock_used":False,"fixture_used":False}}

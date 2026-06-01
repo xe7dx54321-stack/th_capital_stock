@@ -1,0 +1,32 @@
+{
+  "phase": "phase105",
+  "strategy": "kill_switch_emergency_control_readiness",
+  "emergency_control": {
+    "assessment_only": true,
+    "kill_switch_execution_allowed": false,
+    "emergency_order_action_allowed": false,
+    "live_trading_enabled": false,
+    "broker_integration_allowed": false,
+    "order_creation_allowed": false,
+    "position_sizing_allowed": false,
+    "safe_mode": {
+      "disable_live": true,
+      "disable_order": true,
+      "disable_trade": true,
+      "disable_broker": true,
+      "disable_position_sizing": true
+    }
+  },
+  "safety": {
+    "mock_allowed": false,
+    "fixture_allowed": false,
+    "raw_save_allowed": false,
+    "ocr_allowed": false,
+    "browser_automation_allowed": false,
+    "pending_allowed": false,
+    "paper_order_allowed": false,
+    "real_trade_allowed": false,
+    "target_price_allowed": false,
+    "position_sizing_allowed": false
+  }
+}
