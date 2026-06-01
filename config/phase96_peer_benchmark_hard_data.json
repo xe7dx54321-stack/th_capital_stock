@@ -1,0 +1,25 @@
+﻿{
+  "phase":"phase96",
+  "strategy":"peer_benchmark_hard_data_and_database_population",
+  "universe":["300308.SZ","688041.SH","300394.SZ","002230.SZ","09988.HK","00700.HK","NVDA","AVGO"],
+  "hard_data_categories":["order_contract","customer_capex","supply_chain","product_pricing","management_guidance","valuation_pricing"],
+  "source_phases":{"order_contract":"phase92","customer_capex":"phase93","supply_chain":"phase93","product_pricing":"phase94","management_guidance":"phase94","valuation_pricing":"phase95"},
+  "peer_groups":{
+    "ai_optical_transceiver":["300308.SZ","300394.SZ","688041.SH"],
+    "ai_semiconductor":["NVDA","AVGO"],
+    "china_internet_platform":["09988.HK","00700.HK"],
+    "ai_voice_nlp":["002230.SZ"]
+  },
+  "peer_benchmark_sources":["yfinance_financials","company_filings","industry_reports_text","peer_public_disclosures"],
+  "db":{
+    "path":"09_runbooks/generated/phase96_hard_data_db.jsonl",
+    "gitignored":true,
+    "manifest_path":"09_runbooks/generated/phase96_hard_data_manifest.json"
+  },
+  "field_data_type_enum":["reported_structured","derived_from_reported","text_evidence","proxy_estimate","peer_context_only","unknown","unavailable","source_exhausted"],
+  "safety":{
+    "mock_allowed":false,"fixture_allowed":false,"raw_save_allowed":false,
+    "ocr_allowed":false,"browser_automation_allowed":false,
+    "pending_allowed":false,"paper_order_allowed":false,"real_trade_allowed":false
+  }
+}

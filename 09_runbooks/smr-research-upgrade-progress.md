@@ -547,3 +547,31 @@ All 5 highest-priority hard data gaps from Phase91 have been explored with real 
 - 300394 blocker persists after exhaustive attempts
 - 300394 allowed_next_action: manual_cninfo_org_id_resolution
 - 688041 pricing resolved, valuation partial
+
+## Phase 96: Peer Benchmark Hard Data + Database Population v1
+
+**Goal**: Populate Phase 92-95 hard source evidence into structured database with peer benchmark comparison.
+
+**Key Deliverables**:
+- Hard data DB schema (16 fields)
+- Evidence loader: 6 hard data categories x 8 tickers
+- Hard data normalizer with data type classification
+- DB writer to gitignored JSONL
+- Ticker hard data profiles with depth scores
+- Peer group registry (4 peer groups, 8 tickers mapped)
+- Peer benchmark source resolver
+- Peer benchmark hard data matrix
+- Field missingness report
+- Source trace index
+- DB quality gate (pass)
+- Cannot-conclude guard (pass)
+- Backlog update (10 items, phase97 recommendation)
+- Dashboard + master runner + tests
+
+**Core Boundaries**:
+- peer data != own data
+- text evidence != confirmed structured field
+- proxy != reported
+- all DB artifacts gitignored
+- mock/fixture/raw=false
+- pending/order/trade=0
