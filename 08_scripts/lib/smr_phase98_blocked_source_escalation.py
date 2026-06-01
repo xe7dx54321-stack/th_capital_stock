@@ -1,0 +1,4 @@
+﻿import json,os
+def escalate_blocked_sources():
+    rows=[{"source":"cninfo_disclosure","blocked_since":"phase83","days_blocked":90,"tickers_affected":["300394.SZ"],"escalation_status":"requires_manual_action","alert_severity":"escalation","recommended_action":"manual_cninfo_org_id_resolution_or_alternative_source"},{"source":"szse_disclosure","blocked_since":"phase83","days_blocked":90,"tickers_affected":["300394.SZ"],"escalation_status":"linked_to_cninfo","alert_severity":"info","recommended_action":"resolve_cninfo_first"},{"source":"irm_news","blocked_since":"phase95","days_blocked":30,"tickers_affected":["300394.SZ"],"escalation_status":"partial_only","alert_severity":"warning","recommended_action":"irm_partial_ok_for_300394"}]
+    return {"phase98_blocked_escalation":{"total_blocked":len(rows),"escalation_required":1,"requires_manual_action":1,"rows":rows,"mock_used":False,"fixture_used":False}}

@@ -1,0 +1,11 @@
+﻿{
+  "phase98_source_reference_schema": {
+    "yfinance_financials": ["ticker","period","revenue","net_income","gross_profit","operating_cash_flow","total_assets","total_liabilities","rd_expense"],
+    "akshare_sina_financial": ["ticker","period","revenue","net_profit","gross_profit","operating_cash_flow","total_assets","total_liabilities"],
+    "eastmoney_financial": ["ticker","period","revenue","net_profit","gross_profit","total_assets","total_liabilities","rd_expense","pe_ttm","pb"],
+    "sec_edgar_companyfacts": ["ticker","period","revenue","net_income","gross_profit","operating_cash_flow","assets","liabilities","rd_expense"],
+    "cninfo_disclosure": ["ticker","period","org_id_required"],
+    "szse_disclosure": ["ticker","period","disclosure_url"],
+    "irm_news": ["ticker","date","title","url","text_snippet"]
+  }
+}

@@ -1,0 +1,75 @@
+﻿{
+  "phase": "phase98",
+  "strategy": "live_data_source_monitoring_and_alerting",
+  "monitoring": {
+    "schedule_mode": "manual_runner_ready",
+    "sources_to_monitor": [
+      "yfinance_financials",
+      "akshare_sina_financial",
+      "eastmoney_financial",
+      "sec_edgar_companyfacts",
+      "cninfo_disclosure",
+      "szse_disclosure",
+      "irm_news"
+    ],
+    "health_status_levels": ["healthy","warning","degraded","critical","blocked"],
+    "heartbeat": {
+      "enabled": true,
+      "timeout_seconds": 30,
+      "retry_count": 1,
+      "network_disabled_fallback": "skip_heartbeat_mark_stale"
+    },
+    "refresh_failure": {
+      "enabled": true,
+      "consecutive_failures_for_alert": 3
+    },
+    "schema_drift": {
+      "enabled": true,
+      "reference_schema_path": "config/phase98_source_reference_schema.json",
+      "drift_severity_threshold": "field_removed_or_renamed"
+    },
+    "staleness": {
+      "stale_days": 7,
+      "expired_days": 90,
+      "history_only_days": 365
+    },
+    "reliability_decay": {
+      "window_runs": 10,
+      "decay_threshold": 0.5
+    }
+  },
+  "alerting": {
+    "enabled": true,
+    "severity_levels": ["info","warning","critical","escalation"],
+    "classifier": {
+      "endpoint_failure": "critical",
+      "schema_drift": "critical",
+      "refresh_failure_consecutive": "critical",
+      "field_regression": "warning",
+      "source_stale_30d": "warning",
+      "source_expired_90d": "critical",
+      "reliability_decay_below_50pct": "warning",
+      "blocked_source_no_action_90d": "escalation",
+      "quality_gate_fail": "critical"
+    },
+    "routing": {
+      "external_notification_enabled": false,
+      "external_webhook_url": "",
+      "local_report_enabled": true,
+      "alert_history_path": "09_runbooks/generated/phase98_alert_history.jsonl",
+      "alert_history_gitignored": true
+    }
+  },
+  "safety": {
+    "mock_allowed": false,
+    "fixture_allowed": false,
+    "raw_save_allowed": false,
+    "ocr_allowed": false,
+    "browser_automation_allowed": false,
+    "pending_allowed": false,
+    "paper_order_allowed": false,
+    "real_trade_allowed": false,
+    "target_price_allowed": false,
+    "position_sizing_allowed": false
+  }
+}

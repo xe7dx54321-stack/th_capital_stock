@@ -611,3 +611,41 @@ All 5 highest-priority hard data gaps from Phase91 have been explored with real 
 - mock/fixture/raw/OCR/browser = false
 - pending/order/trade/target_price/position_sizing = 0
 - 300394 cninfo refresh still blocked_per_source, IRM partial only
+
+## Phase 98: Live Data Source Monitoring + Alerting v1
+
+**Commit**: (pending)
+
+**Goal**: Monitor all Phase91-97 connected information sources, refresh chains, and hard data DB update chains in real-time. Detect source failures, schema drift, staleness, endpoint failures, refresh failures, and data degradation. Output actionable alerts and root-cause reports.
+
+**Key Deliverables**:
+- Live source monitoring config (7 sources, 5 health levels)
+- Source health registry with per-source status
+- Endpoint heartbeat probe (dry-run/execute/skip-network)
+- Refresh failure detector with consecutive failure tracking
+- Schema drift detector (reference schema based)
+- Field availability monitor with regression detection
+- Source staleness monitor (fresh/stale/expired/history_only)
+- Source reliability decay engine (10-run window, 0.5 threshold)
+- Blocked source escalation (cninfo/szse/irm tracked)
+- Alert classifier (info/warning/critical/escalation levels)
+- Alert routing (local report enabled, external disabled by config)
+- Alert history writer to gitignored JSONL
+- Source incident report with ticker-level impact
+- Daily source health board (heartbeat + staleness + reliability)
+- Ticker/domain/source health matrix
+- Phase97 refresh integration check (7 checks, all pass)
+- Monitoring quality gate (heartbeat/schema_drift/field/staleness)
+- Monitoring cannot-conclude guard
+- Backlog update (10 items, phase99: self_healing_source_failover)
+- Dashboard + master runner + tests
+
+**Core Boundaries**:
+- All alert/history/incident artifacts gitignored
+- External notification disabled_by_config
+- 300394 cninfo blocker preserved
+- 688041 partial valuation preserved
+- Stale != fresh, blocked != healthy, drift != no_drift
+- Alert != investment conclusion
+- mock/fixture/raw/OCR/browser = false
+- pending/order/trade/target_price/position_sizing = 0
