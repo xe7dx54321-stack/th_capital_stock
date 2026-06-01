@@ -1,0 +1,48 @@
+{
+  "phase": "phase111",
+  "strategy": "personal_owner_mode_simplification",
+  "personal_use": {
+    "personal_use_system": true,
+    "owner_mode_enabled": true,
+    "modes_enabled": ["research_support_mode","opportunity_discovery_mode","watchlist_tracking_mode"]
+  },
+  "multi_user": {
+    "multi_user_assignment_required": false,
+    "team_approval_required": false,
+    "supervisor_required_for_personal_mode": false,
+    "role_deprecation": {
+      "operator":"replaced_by_owner",
+      "reviewer":"replaced_by_owner_review",
+      "approver":"replaced_by_owner_confirmation",
+      "supervisor":"not_required",
+      "kill_switch":"replaced_by_owner_safety_pause"
+    }
+  },
+  "execution": {
+    "paper_execution_enabled": false,
+    "paper_order_creation_allowed": false,
+    "paper_trade_allowed": false,
+    "paper_position_allowed": false,
+    "paper_pnl_calculation_allowed": false,
+    "live_trading_enabled": false,
+    "broker_integration_allowed": false
+  },
+  "owner_confirmation": {
+    "owner_confirmation_required": true,
+    "owner_identity_must_be_set": true,
+    "confirmation_gate_required": true
+  },
+  "safety": {
+    "mock_allowed": false,
+    "fixture_allowed": false,
+    "raw_save_allowed": false,
+    "ocr_allowed": false,
+    "browser_automation_allowed": false,
+    "pending_allowed": false,
+    "paper_order_allowed": false,
+    "real_trade_allowed": false,
+    "target_price_allowed": false,
+    "position_sizing_allowed": false
+  },
+  "next_phase": "phase112_opportunity_radar_v1"
+}
