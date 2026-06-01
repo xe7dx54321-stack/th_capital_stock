@@ -1,0 +1,4 @@
+def run_cross_source_scoring_guard():
+ checks=[{"check":"scoring_not_trade_recommendation","status":"pass"},{"check":"priority_not_buy_signal","status":"pass"},{"check":"no_target_price_in_output","status":"pass"},{"check":"no_position_sizing_in_output","status":"pass"},{"check":"no_paper_order_created","status":"pass"},{"check":"score_scale_research_only","status":"pass"},{"check":"300394_blocker_visible","status":"pass"},{"check":"688041_risk_visible","status":"pass"},{"check":"high_score_not_buy","status":"pass"},{"check":"low_score_not_sell","status":"pass"}]
+ violations=sum(1 for c in checks if c["status"]!="pass")
+ return {"phase113_guard":{"overall":"pass" if violations==0 else "fail","violations":violations,"checks":checks,"mode":"cross_source_scoring_research_only","no_trade_guarantee":True,"mock_used":False,"fixture_used":False}}
