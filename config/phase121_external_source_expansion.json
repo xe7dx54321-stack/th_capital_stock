@@ -1,0 +1,48 @@
+{
+  "phase": "phase121",
+  "strategy": "external_data_source_expansion",
+  "research_only": true,
+  "external_source_expansion_enabled": true,
+  "hk_us_source_expansion_enabled": true,
+  "source_probe_enabled": true,
+  "trade_recommendation_allowed": false,
+  "target_price_output_allowed": false,
+  "position_sizing_allowed": false,
+  "universe": {
+    "hk_targets": [
+      "09988.HK",
+      "00700.HK"
+    ],
+    "us_targets": [
+      "NVDA",
+      "AVGO"
+    ],
+    "existing_covered": [
+      "300308.SZ",
+      "688041.SH",
+      "002230.SZ"
+    ],
+    "blocked": [
+      "300394.SZ"
+    ]
+  },
+  "source_access_policy": {
+    "no_login": true,
+    "no_captcha": true,
+    "no_paywall": true,
+    "raw_save_denied": true,
+    "ocr_denied": true,
+    "browser_denied": true
+  },
+  "safety": {
+    "mock": false,
+    "fixture": false,
+    "raw": false,
+    "ocr": false,
+    "browser": false,
+    "paper_order": 0,
+    "paper_trade": 0,
+    "target_price": 0,
+    "position_sizing": 0
+  }
+}

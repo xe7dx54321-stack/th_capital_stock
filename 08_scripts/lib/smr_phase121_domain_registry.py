@@ -1,0 +1,3 @@
+def build_domain_registry():
+ d={"external_source_candidate_registry":{"desc":"source candidate registry"},"official_filing_registry":{"desc":"official filings"},"market_quote_registry":{"desc":"market quotes"},"news_event_registry":{"desc":"news events"},"transcript_guidance_registry":{"desc":"transcripts"},"source_access_policy":{"desc":"access policy"},"hk_external_adapter":{"desc":"HK adapter"},"us_external_adapter":{"desc":"US adapter"},"source_availability_probe":{"desc":"probe"},"source_coverage_matrix":{"desc":"coverage matrix"},"cross_source_reliability":{"desc":"reliability"}}
+ return {"phase121_domain_registry":{"total":len(d),"all_research_only":True,"domains":{k:{**v,"research_only":True} for k,v in d.items()},"mock_used":False,"fixture_used":False}}
