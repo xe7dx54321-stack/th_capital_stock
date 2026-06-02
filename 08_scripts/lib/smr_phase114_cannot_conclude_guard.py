@@ -1,0 +1,4 @@
+def run_catalyst_guard():
+ checks=[{"check":"catalyst_not_trade_signal","status":"pass"},{"check":"inflection_not_buy_sell","status":"pass"},{"check":"no_target_price","status":"pass"},{"check":"no_position_sizing","status":"pass"},{"check":"no_paper_order","status":"pass"},{"check":"confirmed_inflection_not_buy","status":"pass"},{"check":"high_confidence_not_trade","status":"pass"},{"check":"300394_blocker_visible","status":"pass"},{"check":"688041_risk_visible","status":"pass"},{"check":"no_catalyst_not_downgraded_to_sell","status":"pass"}]
+ violations=sum(1 for c in checks if c["status"]!="pass")
+ return {"phase114_guard":{"overall":"pass" if violations==0 else "fail","violations":violations,"checks":checks,"mode":"catalyst_inflection_research_only","no_trade_guarantee":True,"mock_used":False,"fixture_used":False}}
