@@ -1,0 +1,2 @@
+def build_decision_schema():
+ return {"phase124_schema":{"version":"v1","fields":["decision_id","created_at","decision_type","target_entity","target_ticker","summary","rationale","evidence_ids","feedback_ids","watchlist_status_before","watchlist_status_after","confidence_level","limitations_cannot_conclude","follow_up_plan","review_date","owner_id"],"not_trade_mandatory":True,"research_only":True,"mock_used":False,"fixture_used":False}}

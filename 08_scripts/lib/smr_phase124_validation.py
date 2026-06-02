@@ -1,0 +1,2 @@
+def build_decision_validation():
+ return {"phase124_validation":{"blocked_terms":["buy","sell","short","add","reduce","target_price","position_sizing","portfolio_weight","entry_price","exit_price","stop_loss","take_profit"],"rules":["reject_trade_terms","reject_price_mention","reject_position_mention","require_decision_type","require_rationale","require_limitations"],"trade_rejected":True,"mock_used":False,"fixture_used":False}}

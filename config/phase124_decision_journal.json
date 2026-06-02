@@ -1,0 +1,36 @@
+{
+  "phase": "phase124",
+  "strategy": "decision_journal",
+  "research_only": true,
+  "decision_journal_enabled": true,
+  "decision_rationale_enabled": true,
+  "decision_follow_up_enabled": true,
+  "trade_recommendation_allowed": false,
+  "target_price_output_allowed": false,
+  "position_sizing_allowed": false,
+  "decision_types": [
+    "watchlist_escalate",
+    "watchlist_demote",
+    "deep_dive_trigger",
+    "signal_override",
+    "source_trust_shift",
+    "opportunity_priority",
+    "risk_tolerance",
+    "research_focus",
+    "gap_acceptance",
+    "manual_override"
+  ],
+  "journal_path": "09_runbooks/generated/phase124_decision_journal.jsonl",
+  "journal_gitignored": true,
+  "safety": {
+    "mock": false,
+    "fixture": false,
+    "raw": false,
+    "ocr": false,
+    "browser": false,
+    "paper_order": 0,
+    "paper_trade": 0,
+    "target_price": 0,
+    "position_sizing": 0
+  }
+}
