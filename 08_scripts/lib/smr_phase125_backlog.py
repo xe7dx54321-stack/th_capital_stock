@@ -1,0 +1,2 @@
+def build_backlog():
+ return {"phase125_backlog":{"phase124_status":"decision_journal_complete","phase125_status":"outcome_tracking_v1","outcome_tracking_missing":"addressed","outcome_learning_signal_missing":"addressed","signal_effectiveness_review_missing":"open","next_phase":"phase126_signal_effectiveness_review","deprecated_forever":["paper_order","paper_trade","paper_position","paper_pnl","broker","live_trading","target_price","position_sizing","profit_loss_tracking","return_tracking"],"mock_used":False,"fixture_used":False}}

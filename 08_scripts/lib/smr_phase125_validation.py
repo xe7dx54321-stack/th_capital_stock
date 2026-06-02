@@ -1,0 +1,2 @@
+def build_validation():
+ return {"phase125_validation":{"blocked_terms":["profit","loss","return","pnl","gain","yield","performance","alpha","beta","sharpe","drawdown","win_rate","buy","sell","target_price","position_sizing"],"rules":["reject_financial_terms","reject_profit_loss","reject_return_metrics","reject_trade_terms","reject_price_terms","require_outcome_type","require_linked_decision"],"finance_tracking_rejected":True,"mock_used":False,"fixture_used":False}}

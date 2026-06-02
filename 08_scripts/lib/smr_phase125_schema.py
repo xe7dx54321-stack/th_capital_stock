@@ -1,0 +1,2 @@
+def build_schema():
+ return {"phase125_schema":{"version":"v1","fields":["outcome_id","linked_decision_id","created_at","outcome_type","target_ticker","target_entity","outcome_summary","evidence_changes","watchlist_status_after","catalyst_status","signal_accuracy_assessment","learning_points","follow_up_plan"],"no_profit_loss_fields":True,"no_return_fields":True,"research_only":True,"mock_used":False,"fixture_used":False}}

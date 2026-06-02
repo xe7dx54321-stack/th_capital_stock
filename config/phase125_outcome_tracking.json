@@ -1,0 +1,40 @@
+{
+  "phase": "phase125",
+  "strategy": "outcome_tracking",
+  "research_only": true,
+  "outcome_tracking_enabled": true,
+  "decision_outcome_linking_enabled": true,
+  "outcome_learning_signal_enabled": true,
+  "trade_recommendation_allowed": false,
+  "target_price_output_allowed": false,
+  "position_sizing_allowed": false,
+  "profit_loss_tracking_allowed": false,
+  "return_tracking_allowed": false,
+  "outcome_types": [
+    "evidence_confirmed",
+    "evidence_weakened",
+    "catalyst_realized",
+    "catalyst_failed",
+    "risk_materialized",
+    "risk_dissolved",
+    "signal_accurate",
+    "signal_noise",
+    "source_refreshed",
+    "source_stale",
+    "deep_dive_completed",
+    "decision_reversed"
+  ],
+  "outcome_path": "09_runbooks/generated/phase125_outcome_tracking.jsonl",
+  "outcome_gitignored": true,
+  "safety": {
+    "mock": false,
+    "fixture": false,
+    "raw": false,
+    "ocr": false,
+    "browser": false,
+    "paper_order": 0,
+    "paper_trade": 0,
+    "target_price": 0,
+    "position_sizing": 0
+  }
+}
