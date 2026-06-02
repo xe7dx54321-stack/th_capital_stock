@@ -1,0 +1,32 @@
+{
+  "phase": "phase122",
+  "strategy": "daily_research_brief_v2",
+  "research_only": true,
+  "daily_research_brief_enabled": true,
+  "observed_first_brief_enabled": true,
+  "multi_source_evidence_digest_enabled": true,
+  "trade_recommendation_allowed": false,
+  "target_price_output_allowed": false,
+  "position_sizing_allowed": false,
+  "brief_sections": [
+    "observed_first",
+    "multi_source_digest",
+    "ticker_cards",
+    "opportunity_catalyst",
+    "risk_gap_pending",
+    "owner_actions"
+  ],
+  "brief_archive_path": "09_runbooks/generated/phase122_daily_brief_archive.jsonl",
+  "archive_gitignored": true,
+  "safety": {
+    "mock": false,
+    "fixture": false,
+    "raw": false,
+    "ocr": false,
+    "browser": false,
+    "paper_order": 0,
+    "paper_trade": 0,
+    "target_price": 0,
+    "position_sizing": 0
+  }
+}
