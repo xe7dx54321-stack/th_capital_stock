@@ -1,0 +1,3 @@
+def build_risk_catalyst_panel():
+ items=[{"candidate_id":"cand_005","ticker":"688041.SH","risk_type":"valuation_gap","severity":"high","impact":"blocks_priority_upgrade_and_catalyst_assessment","not_trade":True},{"candidate_id":"cand_003","ticker":"09988.HK","risk_type":"low_confidence_catalyst","severity":"medium","impact":"potential_false_positive","not_trade":True},{"candidate_id":"cand_004","ticker":"00700.HK","risk_type":"stale_signal","severity":"low","impact":"no_actionable_catalyst","not_trade":True}]
+ return {"phase115_risk_catalyst_panel":{"total":len(items),"all_not_trade":True,"items":items,"research_only":True,"mock_used":False,"fixture_used":False}}

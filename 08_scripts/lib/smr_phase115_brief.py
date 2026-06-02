@@ -1,0 +1,17 @@
+def build_candidate_board_brief_md():
+ lines=[]
+ lines.append("# \u5019\u9009\u6807\u7684\u770b\u677f\u65e5\u62a5")
+ lines.append("## \u8001\u677f\u6458\u8981")
+ lines.append("### \u5df2\u786e\u8ba4\u50ac\u5316\u5242 (\u6700\u4f18\u5148)")
+ lines.append("- **NVDA**: \u786e\u8ba4\u62d0\u70b9(\u4fe1\u5fc3\u5ea690)\uff0c\u5efa\u8bae3\u5929\u5185\u590d\u76d8\u3002")
+ lines.append("- **AVGO**: \u672a\u786e\u8ba4\u4fe1\u53f7(\u4fe1\u5fc3\u5ea660)\uff0c5\u5929\u5185\u4ea4\u53c9\u9a8c\u8bc1\u3002")
+ lines.append("### \u6f5c\u5728\u8f6c\u6298\u70b9")
+ lines.append("- **09988.HK**: \u4e91/AI\u590d\u82cf\u8ff9\u8c61(\u4fe1\u5fc3\u5ea635)\uff0c2\u5468\u5185\u76d1\u63a7\u3002")
+ lines.append("### \u5ef6\u8fdf\u5904\u7406")
+ lines.append("- **00700.HK**: \u4fe1\u53f7\u9648\u65e7\uff0c\u63a8\u8fdf\u3002")
+ lines.append("### \u5361\u4f4f\u7684\u6807\u7684")
+ lines.append("- **688041.SH**: \u4f30\u503c\u7f3a\u53e3\u3002")
+ lines.append("- **300394.SZ**: CNINFO blocker\u3002")
+ lines.append("### \u7cfb\u7edf\u8fb9\u754c")
+ lines.append("\u672c\u770b\u677f\u4ec5\u7528\u4e8e\u7814\u7a76\u4f18\u5148\u7ea7\u7ba1\u7406\uff0c\u4e0d\u6784\u6210\u4efb\u4f55\u4e70\u5356\u5efa\u8bae\u3002")
+ return "\n".join(lines)

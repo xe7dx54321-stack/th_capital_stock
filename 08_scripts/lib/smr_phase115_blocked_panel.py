@@ -1,0 +1,3 @@
+def build_blocked_panel():
+ items=[{"candidate_id":"cand_006","ticker":"300394.SZ","blocker":"cninfo_org_id_missing","blocked_since":"phase82","days_blocked":180,"allowed_next_action":"manual_cninfo_identity_resolution","not_trade":True},{"candidate_id":"cand_005","ticker":"688041.SH","blocker":"valuation_data_gap","blocked_since":"phase94","days_blocked":90,"allowed_next_action":"complete_peer_comparison_and_dcf","not_trade":True}]
+ return {"phase115_blocked_panel":{"total":len(items),"300394_visible":True,"688041_visible":True,"all_not_trade":True,"items":items,"research_only":True,"mock_used":False,"fixture_used":False}}

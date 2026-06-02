@@ -1,0 +1,3 @@
+def build_new_opportunity_board():
+ items=[{"candidate_id":"cand_003","ticker":"09988.HK","market":"HK","opportunity_type":"new_financial_signal","novelty":"high","confidence":35,"not_trade":True,"detail":"09988首次出现结构化财务数据信号(云和AI需求复苏迹象)。新颖性高但证据弱。"},{"candidate_id":"cand_001","ticker":"NVDA","market":"US","opportunity_type":"catalyst_strengthened","novelty":"significant","confidence":90,"not_trade":True,"detail":"NVDA催化剂确认加强(DC AI加速+管理层上调指引)。"}]
+ return {"phase115_new_opportunity_board":{"total":len(items),"all_not_trade":True,"items":items,"research_only":True,"mock_used":False,"fixture_used":False}}

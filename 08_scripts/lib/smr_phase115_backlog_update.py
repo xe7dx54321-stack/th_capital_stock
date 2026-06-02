@@ -1,0 +1,2 @@
+def build_backlog_update():
+ return {"phase115_backlog":{"phase114_status":"catalyst_inflection_detector_v1","phase115_status":"candidate_board_v1","candidate_board_missing":["real_time_monitoring_dashboard","automated_screening_pipeline","external_idea_sourcing","quant_screen_integration"],"candidate_board_capable":True,"next_phase_recommendation":"phase116_watchlist_research_loop","deprecated_forever":["paper_order","paper_trade","paper_position","paper_pnl","broker_integration","live_trading","target_price","position_sizing"],"mock_used":False,"fixture_used":False}}
