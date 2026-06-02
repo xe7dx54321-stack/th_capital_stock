@@ -1,0 +1,3 @@
+def plan_source_refresh():
+ tasks=[{"ticker":"09988.HK","action":"add_hk_exchange_source","priority":"medium","auto_fix":False,"not_trade":True},{"ticker":"AVGO","action":"add_sec_10q_cross_check","priority":"medium","auto_fix":False,"not_trade":True},{"ticker":"300394.SZ","action":"find_alternative_cn_data_source","priority":"critical","auto_fix":False,"not_trade":True}]
+ return {"phase119_source_refresh_planner":{"total":len(tasks),"all_not_trade":True,"tasks":tasks,"research_only":True,"mock_used":False,"fixture_used":False}}

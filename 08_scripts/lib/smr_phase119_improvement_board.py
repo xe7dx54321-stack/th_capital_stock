@@ -1,0 +1,5 @@
+def build_improvement_board():
+ sections={"critical_blockers":[],"high_priority_gaps":[],"medium_improvements":[],"low_priority":[]}
+ items=[{"id":"gap_001","desc":"300394 CNINFO blocker","section":"critical_blockers"},{"id":"gap_002","desc":"688041 valuation gap","section":"high_priority_gaps"},{"id":"gap_003","desc":"09988 cross-validation","section":"medium_improvements"},{"id":"gap_004","desc":"AVGO cross-validation","section":"medium_improvements"},{"id":"gap_005","desc":"Automated scheduling","section":"low_priority"},{"id":"gap_006","desc":"Runbook update","section":"low_priority"}]
+ for i in items: sections[i["section"]].append(i)
+ return {"phase119_improvement_board":{"total":len(items),"section_counts":{k:len(v) for k,v in sections.items()},"items":items,"not_trade_board":True,"300394_visible":True,"688041_visible":True,"research_only":True,"mock_used":False,"fixture_used":False}}

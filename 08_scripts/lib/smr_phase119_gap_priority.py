@@ -1,0 +1,3 @@
+def classify_gap_priorities():
+ items=[{"gap_id":"gap_001","priority":"critical","resolution_impact":"unlocks_entire_coverage","timeline":"requires_external_action","not_trade":True},{"gap_id":"gap_002","priority":"high","resolution_impact":"unlocks_valuation_and_catalyst_assessment","timeline":"requires_research_work","not_trade":True},{"gap_id":"gap_003","priority":"medium","resolution_impact":"improves_confidence_from_35_to_60","timeline":"2_weeks","not_trade":True},{"gap_id":"gap_005","priority":"low","resolution_impact":"enables_automated_daily_runs","timeline":"future_phase","not_trade":True}]
+ return {"phase119_gap_priority":{"total":len(items),"all_not_trade":True,"items":items,"research_only":True,"mock_used":False,"fixture_used":False}}

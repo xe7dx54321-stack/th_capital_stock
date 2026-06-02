@@ -1,0 +1,3 @@
+def plan_blocker_resolution():
+ plans=[{"blocker":"300394_cninfo","resolution":"manual_cninfo_identity_resolution","timeline":"no_estimate","blocking_phases":["phase82+"],"not_trade":True},{"blocker":"688041_valuation","resolution":"complete_peer_comparison_and_dcf","timeline":"owner_schedule","blocking_phases":["phase94+"],"not_trade":True}]
+ return {"phase119_blocker_planner":{"total":len(plans),"all_not_trade":True,"plans":plans,"research_only":True,"mock_used":False,"fixture_used":False}}

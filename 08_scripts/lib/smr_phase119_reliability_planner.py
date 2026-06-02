@@ -1,0 +1,3 @@
+def plan_reliability_improvement():
+ items=[{"area":"test_coverage","current":130,"target":150,"gap":20,"priority":"low","not_trade":True},{"area":"automated_scheduling","current":"manual_only","target":"cron_ready","gap":"needs_implementation","priority":"low","not_trade":True},{"area":"notification_push","current":"none","target":"feishu_or_email","gap":"needs_implementation","priority":"low","not_trade":True}]
+ return {"phase119_reliability_planner":{"total":len(items),"all_not_trade":True,"items":items,"research_only":True,"mock_used":False,"fixture_used":False}}

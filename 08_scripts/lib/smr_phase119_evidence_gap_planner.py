@@ -1,0 +1,3 @@
+def plan_evidence_gap_close():
+ tasks=[{"ticker":"NVDA","evidence_gap":"customer_capex_detail","action":"search_dc_capex_guidance","priority":"high","not_trade":True},{"ticker":"09988.HK","evidence_gap":"cloud_competitive_position","action":"search_cloud_market_share","priority":"medium","not_trade":True},{"ticker":"688041.SH","evidence_gap":"peer_comparison","action":"collect_peer_financials","priority":"high","not_trade":True}]
+ return {"phase119_evidence_gap_planner":{"total":len(tasks),"all_not_trade":True,"tasks":tasks,"research_only":True,"mock_used":False,"fixture_used":False}}

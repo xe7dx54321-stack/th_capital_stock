@@ -1,0 +1,3 @@
+def build_feedback_intake_schema():
+ fields=[{"field":"gap_id","description":"缺口ID","required":True},{"field":"owner_decision","description":"Owner决策","options":["accept_priority","defer","close_as_wont_fix","assign_manual_work"],"required":True},{"field":"owner_notes","description":"Owner备注","required":False}]
+ return {"phase119_feedback_intake":{"total_fields":len(fields),"all_not_trade":True,"fields":fields,"research_only":True,"mock_used":False,"fixture_used":False}}

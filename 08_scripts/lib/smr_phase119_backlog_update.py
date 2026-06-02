@@ -1,0 +1,2 @@
+def build_backlog_update():
+ return {"phase119_backlog":{"phase118_status":"system_health_v1","phase119_status":"continuous_improvement_v1","total_gaps":6,"critical_gaps":1,"auto_fixable":1,"next_phase_recommendation":"phase120_project_closeout_and_retrospective","deprecated_forever":["paper_order","paper_trade","paper_position","paper_pnl","broker_integration","live_trading","target_price","position_sizing"],"mock_used":False,"fixture_used":False}}

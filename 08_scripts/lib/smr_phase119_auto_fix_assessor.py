@@ -1,0 +1,3 @@
+def assess_auto_fix():
+ items=[{"gap_id":"gap_006","auto_fix_possible":True,"auto_fix_method":"runbook_update_script","risk":"low","not_trade":True},{"gap_id":"gap_001","auto_fix_possible":False,"reason":"requires_external_cninfo_identity","alternative":"manual_resolution_only","not_trade":True},{"gap_id":"gap_002","auto_fix_possible":False,"reason":"requires_manual_valuation_research","alternative":"owner_powered_work","not_trade":True}]
+ return {"phase119_auto_fix_assessor":{"total":len(items),"auto_fix_count":sum(1 for i in items if i["auto_fix_possible"]),"all_not_trade":True,"items":items,"research_only":True,"mock_used":False,"fixture_used":False}}

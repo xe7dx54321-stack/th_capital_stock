@@ -1,0 +1,2 @@
+def build_memory_writer():
+ return {"phase119_memory_writer":{"enabled":True,"path":"09_runbooks/generated/phase119_improvement_state.jsonl","gitignored":True,"write_mode":"execute_only","not_trade":True,"mock_used":False,"fixture_used":False}}

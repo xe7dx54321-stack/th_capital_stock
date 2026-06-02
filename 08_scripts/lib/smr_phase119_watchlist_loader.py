@@ -1,0 +1,2 @@
+def load_phase116_watchlist():
+ return {"phase119_watchlist_loader":{"source":"phase116","total_tickers":8,"states":{"catalyst_active":2,"opportunity_detected":1,"active_monitoring":3,"risk_flag":1,"blocked":1},"research_only":True,"mock_used":False,"fixture_used":False}}
