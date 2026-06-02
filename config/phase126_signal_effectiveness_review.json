@@ -1,0 +1,36 @@
+{
+  "phase": "phase126",
+  "strategy": "signal_effectiveness_review",
+  "research_only": true,
+  "signal_effectiveness_review_enabled": true,
+  "outcome_learning_signal_integration_enabled": true,
+  "scoring_adjustment_recommendation_enabled": true,
+  "trade_recommendation_allowed": false,
+  "target_price_output_allowed": false,
+  "position_sizing_allowed": false,
+  "profit_loss_tracking_allowed": false,
+  "return_tracking_allowed": false,
+  "signal_types": [
+    "opportunity_radar",
+    "catalyst",
+    "cross_source_evidence",
+    "risk_alert",
+    "source_update",
+    "feedback_signal",
+    "watchlist_status_change",
+    "brief_section_impact"
+  ],
+  "review_path": "09_runbooks/generated/phase126_signal_review.jsonl",
+  "review_gitignored": true,
+  "safety": {
+    "mock": false,
+    "fixture": false,
+    "raw": false,
+    "ocr": false,
+    "browser": false,
+    "paper_order": 0,
+    "paper_trade": 0,
+    "target_price": 0,
+    "position_sizing": 0
+  }
+}

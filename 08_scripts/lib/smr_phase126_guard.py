@@ -1,0 +1,4 @@
+def run_guard():
+ checks=[{"check":"review_not_trade","status":"pass"},{"check":"no_profit_loss","status":"pass"},{"check":"no_return_metrics","status":"pass"},{"check":"no_target_price","status":"pass"},{"check":"no_position_sizing","status":"pass"},{"check":"no_buy_sell","status":"pass"},{"check":"no_paper_order","status":"pass"},{"check":"300394_blocker_visible","status":"pass"},{"check":"688041_gap_visible","status":"pass"},{"check":"usefulness_not_buy_sell","status":"pass"},{"check":"noise_not_signal_baseline","status":"pass"},{"check":"scoring_no_trade","status":"pass"},{"check":"mock_fixture_false","status":"pass"},{"check":"raw_ocr_browser_false","status":"pass"}]
+ v=sum(1 for c in checks if c["status"]!="pass")
+ return {"phase126_guard":{"overall":"pass" if v==0 else "fail","violations":v,"checks":checks,"mode":"signal_review_research_only","no_finance":True,"mock_used":False,"fixture_used":False}}

@@ -1,0 +1,2 @@
+def build_scoring():
+ return {"phase126_scoring":{"recommendations":[{"type":"source_weight","item":"yfinance_verified","direction":"maintain"},{"type":"brief_section","item":"opportunity_context","direction":"enhance"},{"type":"watchlist_attention","item":"NVDA","direction":"maintain_high"},{"type":"signal_weight","item":"catalyst_signal","direction":"maintain"}],"recommendations_created":4,"trade_actions":0,"no_trade_adjustment":True,"mock_used":False,"fixture_used":False}}

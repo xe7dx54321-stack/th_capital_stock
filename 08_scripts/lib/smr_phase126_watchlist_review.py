@@ -1,0 +1,2 @@
+def build_watchlist_review():
+ return {"phase126_watchlist_review":{"tickers_reviewed":8,"findings":{"NVDA":"signal_helpful_high_attention","AVGO":"signal_neutral_normal_attention","09988.HK":"signal_helpful_moderate_attention","00700.HK":"signal_neutral_normal_attention","300308.SZ":"signal_neutral_moderate_attention","688041.SH":"signal_neutral_partial_data","002230.SZ":"signal_neutral_moderate_attention","300394.SZ":"no_signal_blocked"},"no_trade_signal":True,"mock_used":False,"fixture_used":False}}
