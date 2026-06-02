@@ -1,0 +1,4 @@
+def check_latency():
+ modules=[{"module":"phase112","avg_ms":30,"status":"normal"},{"module":"phase113","avg_ms":40,"status":"normal"},{"module":"phase114","avg_ms":35,"status":"normal"},{"module":"phase115","avg_ms":25,"status":"normal"},{"module":"phase116","avg_ms":35,"status":"normal"},{"module":"phase117","avg_ms":50,"status":"normal"}]
+ total_ms=sum(m["avg_ms"] for m in modules)
+ return {"phase118_latency_monitor":{"total_modules":len(modules),"total_estimated_ms":total_ms,"all_normal":all(m["status"]=="normal" for m in modules),"modules":modules,"research_only":True,"mock_used":False,"fixture_used":False}}

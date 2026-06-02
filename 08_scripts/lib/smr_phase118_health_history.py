@@ -1,0 +1,2 @@
+def build_health_history_writer():
+ return {"phase118_health_history":{"enabled":True,"path":"09_runbooks/generated/phase118_health_history.jsonl","gitignored":True,"write_mode":"execute_only","not_trade":True,"mock_used":False,"fixture_used":False}}

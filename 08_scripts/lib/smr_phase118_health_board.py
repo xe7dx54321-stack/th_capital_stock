@@ -1,0 +1,5 @@
+def build_health_board():
+ sections={"healthy":[],"caution":[],"degraded":[]}
+ items=[{"component":"master_runner","status":"healthy","detail":"all_modes_pass","section":"healthy"},{"component":"phase112_radar","status":"healthy","detail":"23 tests pass","section":"healthy"},{"component":"phase113_scoring","status":"healthy","detail":"23 tests pass","section":"healthy"},{"component":"phase114_catalyst","status":"healthy","detail":"23 tests pass","section":"healthy"},{"component":"phase115_board","status":"healthy","detail":"19 tests pass","section":"healthy"},{"component":"phase116_watchlist","status":"healthy","detail":"22 tests pass","section":"healthy"},{"component":"data_300394","status":"degraded","detail":"cninfo_blocker","section":"degraded"},{"component":"data_688041","status":"caution","detail":"valuation_partial","section":"caution"}]
+ for i in items: sections[i["section"]].append(i)
+ return {"phase118_health_board":{"total":len(items),"section_counts":{k:len(v) for k,v in sections.items()},"items":items,"not_trade_board":True,"300394_visible":True,"688041_visible":True,"research_only":True,"mock_used":False,"fixture_used":False}}

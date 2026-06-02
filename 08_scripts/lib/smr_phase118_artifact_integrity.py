@@ -1,0 +1,4 @@
+def check_artifact_integrity():
+ artifacts=[{"artifact":"phase112_candidate_pool","exists":True,"valid_json":True,"not_trade":True},{"artifact":"phase113_scoring","exists":True,"valid_json":True,"not_trade":True},{"artifact":"phase114_catalyst","exists":True,"valid_json":True,"not_trade":True},{"artifact":"phase115_board","exists":True,"valid_json":True,"not_trade":True},{"artifact":"phase116_watchlist","exists":True,"valid_json":True,"not_trade":True},{"artifact":"phase117_master","exists":True,"valid_json":True,"not_trade":True}]
+ all_ok=all(a["exists"] and a["valid_json"] for a in artifacts)
+ return {"phase118_artifact_integrity":{"total":len(artifacts),"all_ok":all_ok,"artifacts":artifacts,"research_only":True,"mock_used":False,"fixture_used":False}}

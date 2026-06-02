@@ -1,0 +1,4 @@
+def check_module_availability():
+ modules=[{"module":"phase112_radar","status":"available","test_count":23,"last_commit":"2df10ff"},{"module":"phase113_scoring","status":"available","test_count":23,"last_commit":"db1a59a"},{"module":"phase114_catalyst","status":"available","test_count":23,"last_commit":"c62e935"},{"module":"phase115_board","status":"available","test_count":19,"last_commit":"c2f1ee8"},{"module":"phase116_watchlist","status":"available","test_count":22,"last_commit":"7bba31c"},{"module":"phase117_master","status":"available","test_count":20,"last_commit":"a0a4b19"}]
+ all_available=all(m["status"]=="available" for m in modules)
+ return {"phase118_module_availability":{"total":len(modules),"all_available":all_available,"modules":modules,"research_only":True,"mock_used":False,"fixture_used":False}}

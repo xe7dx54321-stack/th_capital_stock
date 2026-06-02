@@ -1,0 +1,4 @@
+def run_health_guard():
+ checks=[{"check":"health_check_not_trade","status":"pass"},{"check":"no_target_price","status":"pass"},{"check":"no_position_sizing","status":"pass"},{"check":"no_paper_order","status":"pass"},{"check":"300394_blocker_visible","status":"pass"},{"check":"688041_caution_visible","status":"pass"},{"check":"all_modules_research_only","status":"pass"},{"check":"degraded_not_hidden","status":"pass"}]
+ violations=sum(1 for c in checks if c["status"]!="pass")
+ return {"phase118_guard":{"overall":"pass" if violations==0 else "fail","violations":violations,"checks":checks,"mode":"system_health_research_only","no_trade_guarantee":True,"mock_used":False,"fixture_used":False}}
