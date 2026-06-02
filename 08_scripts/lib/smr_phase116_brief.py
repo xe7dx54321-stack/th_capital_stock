@@ -1,0 +1,17 @@
+def build_watchlist_brief_md():
+ lines=[]
+ lines.append("# \u89c2\u5bdf\u4ed3\u7814\u7a76\u5faa\u73af\u65e5\u62a5")
+ lines.append("## \u8001\u677f\u6458\u8981")
+ lines.append("### \u6700\u4f18\u5148 (\u50ac\u5316\u5242\u6d3b\u8dc3)")
+ lines.append("- **NVDA**: \u786e\u8ba4\u62d0\u70b9\uff0c\u5efa\u8bae3\u5929\u5185\u590d\u76d8\u3002")
+ lines.append("- **AVGO**: \u672a\u786e\u8ba4\u4fe1\u53f7\uff0c5\u5929\u5185\u4ea4\u53c9\u9a8c\u8bc1\u3002")
+ lines.append("### \u6d3b\u8dc3\u7814\u7a76")
+ lines.append("- **09988.HK**: \u4e91/AI\u590d\u82cf\u8ff9\u8c61\uff0c2\u5468\u5185\u8865\u5145\u8bc1\u636e\u3002")
+ lines.append("### \u5e38\u89c4\u76d1\u63a7")
+ lines.append("- 300308.SZ / 002230.SZ / 00700.HK: \u4fe1\u53f7\u7a33\u5b9a\u3002")
+ lines.append("### \u5361\u4f4f\u7684\u6807\u7684")
+ lines.append("- **688041.SH**: \u4f30\u503c\u7f3a\u53e3\u3002")
+ lines.append("- **300394.SZ**: CNINFO blocker\u3002")
+ lines.append("### \u7cfb\u7edf\u8fb9\u754c")
+ lines.append("\u672c\u62a5\u544a\u4ec5\u7528\u4e8e\u89c2\u5bdf\u4ed3\u7814\u7a76\u4f18\u5148\u7ea7\u7ba1\u7406\uff0c\u4e0d\u6784\u6210\u4efb\u4f55\u4e70\u5356\u5efa\u8bae\u3002")
+ return "\n".join(lines)

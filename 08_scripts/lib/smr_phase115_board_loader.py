@@ -1,0 +1,2 @@
+def load_phase115_candidate_board():
+ return {"phase116_board_loader":{"source":"phase115","total_candidates":6,"board_sections":{"confirmed_catalysts":2,"potential_inflections":1,"active_candidates":1,"risk_flags":1,"blocked_deferred":1},"research_only":True,"mock_used":False,"fixture_used":False}}

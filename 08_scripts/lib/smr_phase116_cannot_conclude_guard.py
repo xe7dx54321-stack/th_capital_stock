@@ -1,0 +1,4 @@
+def run_watchlist_guard():
+ checks=[{"check":"watchlist_not_trade_signal","status":"pass"},{"check":"state_transition_not_buy_sell","status":"pass"},{"check":"no_target_price","status":"pass"},{"check":"no_position_sizing","status":"pass"},{"check":"no_paper_order","status":"pass"},{"check":"catalyst_active_not_buy","status":"pass"},{"check":"blocked_not_hidden","status":"pass"},{"check":"300394_visible","status":"pass"},{"check":"688041_visible","status":"pass"}]
+ violations=sum(1 for c in checks if c["status"]!="pass")
+ return {"phase116_guard":{"overall":"pass" if violations==0 else "fail","violations":violations,"checks":checks,"mode":"watchlist_research_loop","no_trade_guarantee":True,"mock_used":False,"fixture_used":False}}

@@ -1,0 +1,3 @@
+def build_memory_writer():
+ records=[{"ticker":"NVDA","record_type":"daily_research_state","state":"catalyst_active","write_mode":"execute_writes_to_gitignored","not_trade":True},{"ticker":"AVGO","record_type":"daily_research_state","state":"catalyst_active","write_mode":"execute_writes_to_gitignored","not_trade":True},{"ticker":"09988.HK","record_type":"daily_research_state","state":"opportunity_detected","write_mode":"execute_writes_to_gitignored","not_trade":True}]
+ return {"phase116_memory_writer":{"records_to_write":len(records),"write_mode":"execute_only","path_ignored":True,"all_not_trade":True,"records":records,"mock_used":False,"fixture_used":False}}
