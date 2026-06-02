@@ -1,0 +1,2 @@
+def build_runbook():
+ return {"phase127_runbook":{"daily_commands":["run_phase117_master_daily_runner.py --execute","run_phase122_markdown_brief.py --markdown"],"weekly_commands":["run_phase119_continuous_improvement.py --execute","run_phase126_signal_effectiveness_review.py --execute"],"after_change":["py_compile check","unittest discover","phase126 regression check"],"research_only":True,"mock_used":False,"fixture_used":False}}

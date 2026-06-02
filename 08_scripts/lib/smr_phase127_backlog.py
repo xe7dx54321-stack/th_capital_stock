@@ -1,0 +1,2 @@
+def build_backlog():
+ return {"phase127_backlog":{"phase126_status":"signal_effectiveness_complete","phase127_status":"mainline_closeout_v1","phase111_126_mainline":"closed","next_phase":"phase128_source_probe_or_blocker_resolution","deprecated_forever":["paper_order","paper_trade","paper_position","paper_pnl","broker","live_trading","target_price","position_sizing","profit_loss","return_tracking"],"mock_used":False,"fixture_used":False}}

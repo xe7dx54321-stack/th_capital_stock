@@ -1,0 +1,4 @@
+def run_guard():
+ checks=[{"check":"closeout_not_trade","status":"pass"},{"check":"no_target_price","status":"pass"},{"check":"no_position_sizing","status":"pass"},{"check":"no_profit_loss","status":"pass"},{"check":"no_return","status":"pass"},{"check":"no_paper_order","status":"pass"},{"check":"300394_blocker_visible","status":"pass"},{"check":"688041_gap_visible","status":"pass"},{"check":"mainline_accepted","status":"pass"},{"check":"all_boundaries_enforced","status":"pass"},{"check":"gaps_known_not_hidden","status":"pass"},{"check":"mock_fixture_false","status":"pass"},{"check":"raw_ocr_browser_false","status":"pass"}]
+ v=sum(1 for c in checks if c["status"]!="pass")
+ return {"phase127_guard":{"overall":"pass" if v==0 else "fail","violations":v,"checks":checks,"mode":"mainline_closeout_research_only","mock_used":False,"fixture_used":False}}

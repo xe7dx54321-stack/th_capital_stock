@@ -1,0 +1,3 @@
+def build_board():
+ items=[{"section":"status","item":"phases_deployed","detail":"16 phases (111-126)","status":"complete"},{"section":"status","item":"coverage","detail":"7/8 tickers","status":"operational"},{"section":"status","item":"safety","detail":"10 boundaries enforced","status":"green"},{"section":"gaps","item":"300394","detail":"permanent blocker","status":"acknowledged"},{"section":"gaps","item":"688041","detail":"owner scheduled","status":"acknowledged"},{"section":"gaps","item":"network_probe","detail":"12 pending","status":"acknowledged"}]
+ return {"phase127_board":{"total":len(items),"not_trade_board":True,"items":items,"mock_used":False,"fixture_used":False}}

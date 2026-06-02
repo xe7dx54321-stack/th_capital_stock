@@ -1,0 +1,2 @@
+def build_maintenance():
+ return {"phase127_maintenance":{"checklist":[{"task":"daily_master_run","freq":"daily"},{"task":"brief_generation","freq":"daily"},{"task":"health_check","freq":"daily"},{"task":"compile_check","freq":"after_code_change"},{"task":"all_tests","freq":"after_code_change"},{"task":"improvement_review","freq":"weekly"},{"task":"signal_review","freq":"weekly"}],"mock_used":False,"fixture_used":False}}

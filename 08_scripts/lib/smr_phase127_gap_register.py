@@ -1,0 +1,3 @@
+def build_gap_register():
+ gaps=[{"id":"300394_cninfo","severity":"critical","ticker":"300394.SZ","status":"permanent_blocker","resolution":"manual"},{"id":"688041_valuation","severity":"high","ticker":"688041.SH","status":"owner_scheduled","resolution":"owner_research"},{"id":"network_probe_pending","severity":"medium","ticker":"all_hk_us","status":"pending","resolution":"network_probe"},{"id":"09988_single_source","severity":"low","ticker":"09988.HK","status":"monitored","resolution":"multi_source_in_progress"},{"id":"AVGO_single_source","severity":"low","ticker":"AVGO","status":"monitored","resolution":"multi_source_in_progress"}]
+ return {"phase127_gap_register":{"total":len(gaps),"all_known":True,"gaps":gaps,"mock_used":False,"fixture_used":False}}

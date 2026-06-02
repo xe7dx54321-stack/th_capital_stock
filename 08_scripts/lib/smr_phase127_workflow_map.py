@@ -1,0 +1,3 @@
+def build_workflow_map():
+ steps=["1.load_configs","2.build_opportunity_universe","3.detect_catalyst_signals","4.run_cross_source_scoring","5.classify_candidates","6.build_candidate_board","7.map_to_watchlist","8.run_master_aggregation","9.load_external_sources","10.generate_daily_brief","11.collect_owner_feedback","12.log_research_decision","13.track_outcome","14.review_signal_effectiveness","15.check_system_health","16.run_safety_guard","17.write_history","18.generate_closeout"]
+ return {"phase127_workflow_map":{"total":len(steps),"all_not_trade":True,"steps":steps,"mock_used":False,"fixture_used":False}}

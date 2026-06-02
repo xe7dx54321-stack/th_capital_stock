@@ -1,0 +1,26 @@
+{
+  "phase": "phase127",
+  "strategy": "mainline_closeout",
+  "research_only": true,
+  "mainline_closeout_enabled": true,
+  "phase111_126_mainline_complete": true,
+  "phase111_126_mainline_accepted": true,
+  "trade_recommendation_allowed": false,
+  "target_price_output_allowed": false,
+  "position_sizing_allowed": false,
+  "profit_loss_tracking_allowed": false,
+  "return_tracking_allowed": false,
+  "phases": 16,
+  "total_files": 800,
+  "safety": {
+    "mock": false,
+    "fixture": false,
+    "raw": false,
+    "ocr": false,
+    "browser": false,
+    "paper_order": 0,
+    "paper_trade": 0,
+    "target_price": 0,
+    "position_sizing": 0
+  }
+}

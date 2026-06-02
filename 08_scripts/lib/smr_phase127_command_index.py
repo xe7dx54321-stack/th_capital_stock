@@ -1,0 +1,3 @@
+def build_command_index():
+ cmds=[{"purpose":"full_daily_run","cmd":"python 08_scripts/jobs/run_phase117_master_daily_runner.py --execute --json"},{"purpose":"health_check","cmd":"python 08_scripts/jobs/run_phase118_system_health.py --execute --json"},{"purpose":"compile_check","cmd":"python -m py_compile 08_scripts/lib/*.py 08_scripts/jobs/*.py 08_scripts/reporting/*.py"},{"purpose":"run_all_tests","cmd":"python -m unittest discover -s tests -v"},{"purpose":"brief_generation","cmd":"python 08_scripts/reporting/build_phase122_markdown_brief.py --markdown"},{"purpose":"dashboard","cmd":"python 08_scripts/reporting/build_phase117_dashboard.py --json"}]
+ return {"phase127_command_index":{"total":len(cmds),"commands":cmds,"mock_used":False,"fixture_used":False}}
