@@ -1,0 +1,2 @@
+def build_history_writer():
+ return {"phase117_history_writer":{"enabled":True,"path":"09_runbooks/generated/phase117_daily_history.jsonl","gitignored":True,"write_mode":"execute_only","max_runs":30,"not_trade":True,"mock_used":False,"fixture_used":False}}

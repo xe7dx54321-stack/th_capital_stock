@@ -1,0 +1,3 @@
+def build_execution_planner():
+ plan={"mode":"master_daily_run","execution_order":["load_config","check_dependencies","run_phase112","run_phase113","run_phase114","run_phase115","run_phase116","aggregate_all","run_safety_guard","write_history"],"parallel_possible":False,"timeout_per_module_seconds":10,"total_estimated_seconds":30,"research_only":True}
+ return {"phase117_execution_planner":plan,"mock_used":False,"fixture_used":False}

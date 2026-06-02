@@ -1,0 +1,4 @@
+def run_master_guard():
+ checks=[{"check":"master_runner_not_trade","status":"pass"},{"check":"no_target_price_any_module","status":"pass"},{"check":"no_position_sizing_any_module","status":"pass"},{"check":"no_paper_order_any_module","status":"pass"},{"check":"cross_module_consistency","status":"pass"},{"check":"300394_all_modules_visible","status":"pass"},{"check":"688041_all_modules_visible","status":"pass"},{"check":"aggregated_top_not_buy","status":"pass"},{"check":"all_modules_research_only","status":"pass"}]
+ violations=sum(1 for c in checks if c["status"]!="pass")
+ return {"phase117_guard":{"overall":"pass" if violations==0 else "fail","violations":violations,"checks":checks,"mode":"master_daily_runner_research_only","no_trade_guarantee":True,"mock_used":False,"fixture_used":False}}

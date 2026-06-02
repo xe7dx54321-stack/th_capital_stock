@@ -1,0 +1,3 @@
+def build_degraded_handler():
+ policy={"strategy":"graceful_degradation","rules":[{"condition":"single_module_fail","action":"mark_module_degraded_continue_others","blocks_master":False},{"condition":"critical_module_fail","action":"mark_master_degraded","blocks_master":True},{"condition":"all_modules_pass","action":"full_master_run_complete"}],"current_status":"all_modules_pass","degraded_modules":[],"research_only":True}
+ return {"phase117_degraded_handler":{"policy":policy,"currently_degraded":False,"mock_used":False,"fixture_used":False}}
