@@ -1,0 +1,2 @@
+def build_memory_writer():
+ return {"phase120_memory_writer":{"enabled":True,"path":"09_runbooks/generated/phase120_closeout_state.jsonl","gitignored":True,"write_mode":"execute_only","not_trade":True,"mock_used":False,"fixture_used":False}}

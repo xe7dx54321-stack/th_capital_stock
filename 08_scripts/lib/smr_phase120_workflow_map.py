@@ -1,0 +1,3 @@
+def build_daily_workflow_map():
+ steps=["1. load_all_configs","2. build_opportunity_universe","3. detect_catalyst_signals","4. run_cross_source_scoring","5. classify_candidates","6. build_candidate_board","7. map_to_watchlist","8. run_master_aggregation","9. check_system_health","10. generate_daily_brief","11. run_safety_guard","12. write_history"]
+ return {"phase120_workflow_map":{"total_steps":len(steps),"estimated_time_seconds":30,"research_only":True,"all_not_trade":True,"steps":steps,"mock_used":False,"fixture_used":False}}

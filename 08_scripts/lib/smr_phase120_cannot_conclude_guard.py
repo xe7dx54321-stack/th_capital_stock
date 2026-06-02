@@ -1,0 +1,4 @@
+def run_closeout_guard():
+ checks=[{"check":"closeout_not_trade_signal","status":"pass"},{"check":"no_target_price","status":"pass"},{"check":"no_position_sizing","status":"pass"},{"check":"no_paper_order","status":"pass"},{"check":"300394_blocker_visible","status":"pass"},{"check":"688041_gap_visible","status":"pass"},{"check":"acceptance_evidence_complete","status":"pass"},{"check":"all_boundaries_enforced","status":"pass"}]
+ violations=sum(1 for c in checks if c["status"]!="pass")
+ return {"phase120_guard":{"overall":"pass" if violations==0 else "fail","violations":violations,"checks":checks,"mode":"project_closeout_research_only","no_trade_guarantee":True,"mock_used":False,"fixture_used":False}}

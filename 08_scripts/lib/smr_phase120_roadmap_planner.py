@@ -1,0 +1,3 @@
+def plan_next_roadmap():
+ items=[{"phase":"phase121","name":"external_data_source_expansion","priority":"next","description":"Add new data sources to reduce single-source risks"},{"phase":"phase122","name":"automated_scheduling","priority":"future","description":"Add cron/automated daily master runner execution"},{"phase":"phase123","name":"300394_resolution_attempt","priority":"when_possible","description":"When CNINFO identity is resolved, integrate 300394"}]
+ return {"phase120_roadmap":{"total":len(items),"next_immediate":"phase121_external_data_source_expansion","items":items,"research_only":True,"mock_used":False,"fixture_used":False}}
