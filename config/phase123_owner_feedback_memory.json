@@ -1,0 +1,38 @@
+{
+  "phase": "phase123",
+  "strategy": "owner_feedback_memory",
+  "research_only": true,
+  "owner_feedback_enabled": true,
+  "feedback_memory_enabled": true,
+  "feedback_to_research_loop_enabled": true,
+  "trade_recommendation_allowed": false,
+  "target_price_output_allowed": false,
+  "position_sizing_allowed": false,
+  "feedback_types": [
+    "opportunity_quality",
+    "brief_quality",
+    "evidence_quality",
+    "source_quality",
+    "risk_alert",
+    "gap_alert",
+    "action_feedback",
+    "ticker_priority",
+    "research_direction",
+    "noise_reduction",
+    "report_format",
+    "owner_note"
+  ],
+  "feedback_memory_path": "09_runbooks/generated/phase123_owner_feedback_memory.jsonl",
+  "memory_gitignored": true,
+  "safety": {
+    "mock": false,
+    "fixture": false,
+    "raw": false,
+    "ocr": false,
+    "browser": false,
+    "paper_order": 0,
+    "paper_trade": 0,
+    "target_price": 0,
+    "position_sizing": 0
+  }
+}

@@ -1,0 +1,2 @@
+def build_backlog_update():
+ return {"phase123_backlog":{"phase122_status":"daily_research_brief_v2_complete","phase123_status":"owner_feedback_memory_v1","owner_feedback_memory_missing":"addressed","feedback_to_research_loop_missing":"addressed","decision_journal_missing":"open","outcome_tracking_missing":"open","next_phase":"phase124_decision_journal","deprecated_forever":["paper_order","paper_trade","paper_position","paper_pnl","broker","live_trading","target_price","position_sizing"],"mock_used":False,"fixture_used":False}}
