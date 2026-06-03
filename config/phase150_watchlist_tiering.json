@@ -1,0 +1,30 @@
+{
+  "phase": "phase150",
+  "strategy": "watchlist_tiering_and_capacity_management",
+  "research_only": true,
+  "max_capacity": 50,
+  "current_active": 8,
+  "candidates_count": 5,
+  "tiers": {
+    "core": {
+      "max": 10,
+      "coverage_depth": "full",
+      "description": "Deep research, daily monitoring, detail pages, agent coverage"
+    },
+    "watch": {
+      "max": 20,
+      "coverage_depth": "standard",
+      "description": "Financial monitoring, thesis tracking, periodic review"
+    },
+    "candidate": {
+      "max": 20,
+      "coverage_depth": "light",
+      "description": "Onboarding pipeline, pre-activation planning only"
+    }
+  },
+  "safety": {
+    "mock": false,
+    "fixture": false,
+    "trade_recommendation_allowed": false
+  }
+}

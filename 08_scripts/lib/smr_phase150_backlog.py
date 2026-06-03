@@ -1,0 +1,2 @@
+def build_phase150_backlog():
+ return {'phase150_backlog': {'items': 3, 'backlog': [{'id': 'BL-150-01', 'title': 'Auto-promote candidate to watch on activation', 'priority': 'medium', 'status': 'backlog'}, {'id': 'BL-150-02', 'title': 'Add tier-based resource allocation dashboard', 'priority': 'low', 'status': 'backlog'}, {'id': 'BL-150-03', 'title': 'Scale to 30+ tickers and test capacity alerts', 'priority': 'low', 'status': 'backlog'}], 'not_trade': True, 'mock_used': False, 'fixture_used': False}}
