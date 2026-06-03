@@ -1,0 +1,43 @@
+{
+  "phase": "phase152",
+  "strategy": "candidate_admission_scoring",
+  "research_only": true,
+  "auto_add_to_watchlist_allowed": false,
+  "auto_promote_to_watch_allowed": false,
+  "auto_promote_to_core_allowed": false,
+  "owner_review_required": true,
+  "scoring_dimensions": [
+    "identity_confidence",
+    "source_availability",
+    "financial_route_readiness",
+    "valuation_route_readiness",
+    "theme_fit",
+    "evidence_readiness",
+    "catalyst_novelty",
+    "risk_limitation_penalty",
+    "capacity_fit",
+    "owner_relevance",
+    "activation_effort"
+  ],
+  "admission_buckets": [
+    "admit_to_onboarding_review",
+    "watch_for_more_evidence",
+    "manual_identity_or_source_review",
+    "defer",
+    "reject_for_now"
+  ],
+  "safety": {
+    "mock_allowed": false,
+    "fixture_allowed": false,
+    "raw_save_allowed": false,
+    "ocr_allowed": false,
+    "browser_automation_allowed": false,
+    "llm_api_enabled": false,
+    "live_llm_call_allowed": false,
+    "broker_integration_allowed": false,
+    "target_price_output_allowed": false,
+    "position_sizing_allowed": false,
+    "trade_recommendation_allowed": false,
+    "paper_order_allowed": false
+  }
+}
