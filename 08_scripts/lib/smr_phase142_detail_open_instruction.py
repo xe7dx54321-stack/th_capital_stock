@@ -1,0 +1,2 @@
+def build_detail_open_instruction():
+    return {"phase142_detail_open_instruction": {"static_html_only": True, "external_js_allowed": False, "external_cdn_allowed": False, "local_server_enabled": False, "browser_automation_allowed": False, "open_method": "Navigate to 09_runbooks/generated/phase142_ticker_details/ and open index.html or any ticker HTML file in a browser.", "output_dir": "09_runbooks/generated/phase142_ticker_details", "output_path_ignored": True}}

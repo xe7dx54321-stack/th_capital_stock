@@ -1,0 +1,2 @@
+def build_detail_backlog_update():
+    return {"phase142_detail_backlog_update": {"items": 3, "backlog": [{"id": "BL-142-01", "title": "Add interactive thesis timeline (JS-free CSS-only animations)", "priority": "low", "status": "backlog"}, {"id": "BL-142-02", "title": "Add financial chart section per ticker", "priority": "medium", "status": "backlog"}, {"id": "BL-142-03", "title": "Resolve 300394 CNINFO org_id", "priority": "high", "status": "blocked", "blocker": "cninfo_org_id_missing"}], "not_trade": True, "mock_used": False, "fixture_used": False}}
