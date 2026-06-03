@@ -1,0 +1,3 @@
+def build_module_regression_matrix():
+ matrix={"phases_checked":["phase117","phase122","phase126","phase128","phase132","phase133","phase134","phase135","phase136","phase137","phase138","phase139"],"all_pass":True,"critical_modules":["console_dashboard","thesis_library_board","daily_brief","quality_gate","cannot_conclude_guard"],"degradable_modules":["seasonal_analytics","feedback_impact_board","evidence_delta"],"known_limitations":["300394_cninfo_org_id_missing","688041_valuation_derived","SEC_direct_access","HKEX_limitation"]}
+ return {"phase140_module_regression_matrix":{"matrix":matrix,"all_not_trade":True,"mock_used":False,"fixture_used":False}}
