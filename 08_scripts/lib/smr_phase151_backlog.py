@@ -1,0 +1,2 @@
+def build_phase151_backlog():
+ return {'phase151_backlog': {'items': 3, 'backlog': [{'id': 'BL-151-01', 'title': 'Add real-time news/event scanner for auto-discovery', 'priority': 'medium', 'status': 'backlog'}, {'id': 'BL-151-02', 'title': 'Add financial change detection for sector peers', 'priority': 'medium', 'status': 'backlog'}, {'id': 'BL-151-03', 'title': 'Add external list import (ETF holdings, index constituents)', 'priority': 'low', 'status': 'backlog'}], 'not_trade': True, 'mock_used': False, 'fixture_used': False}}

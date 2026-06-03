@@ -1,0 +1,25 @@
+{
+  "phase": "phase151",
+  "strategy": "auto_candidate_discovery",
+  "research_only": true,
+  "auto_add_to_watchlist": false,
+  "auto_add_to_core": false,
+  "discovery_sources": [
+    "theme_based",
+    "peer_based",
+    "industry_chain",
+    "news_event",
+    "financial_change",
+    "customer_capex",
+    "product_roadmap",
+    "supply_chain",
+    "external_public_lists"
+  ],
+  "max_discovery_queue": 30,
+  "candidates_discovered_count": 8,
+  "safety": {
+    "mock": false,
+    "fixture": false,
+    "trade_recommendation_allowed": false
+  }
+}
