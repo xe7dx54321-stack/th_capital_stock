@@ -1,0 +1,29 @@
+{
+  "phase": "phase144",
+  "strategy": "owner_feedback_form_and_manual_confirmation_workflow",
+  "research_only": true,
+  "feedback_form_enabled": true,
+  "manual_confirmation_enabled": true,
+  "checklist_per_ticker_enabled": true,
+  "feedback_to_pipeline_enabled": true,
+  "static_html_only": true,
+  "external_js_allowed": false,
+  "target_tickers": [
+    "300308.SZ",
+    "688041.SH",
+    "300394.SZ",
+    "002230.SZ",
+    "09988.HK",
+    "00700.HK",
+    "NVDA",
+    "AVGO"
+  ],
+  "safety": {
+    "mock": false,
+    "fixture": false,
+    "raw": false,
+    "ocr": false,
+    "browser": false,
+    "trade_recommendation_allowed": false
+  }
+}
