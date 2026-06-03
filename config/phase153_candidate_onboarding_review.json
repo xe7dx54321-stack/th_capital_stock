@@ -1,0 +1,48 @@
+﻿{
+  "phase": "phase153",
+  "strategy": "candidate_onboarding_review_and_judge_gated_activation_packets",
+  "research_only": true,
+  "candidate_onboarding_review_enabled": true,
+  "judge_gated_review_enabled": true,
+  "activation_allowed": false,
+  "formal_watchlist_update_allowed": false,
+  "auto_add_to_watchlist_allowed": false,
+  "auto_promote_to_watch_allowed": false,
+  "auto_promote_to_core_allowed": false,
+  "owner_review_required": true,
+  "judge_review_required": true,
+  "review_packet_types": [
+    "identity_review",
+    "source_route_review",
+    "financial_route_review",
+    "valuation_route_review",
+    "evidence_requirement_review",
+    "risk_limitation_review",
+    "initial_thesis_seed_review",
+    "owner_approval_checklist",
+    "judge_agent_review"
+  ],
+  "judge_decisions": [
+    "ready_for_owner_approval",
+    "needs_evidence_agent_follow_up",
+    "needs_risk_agent_follow_up",
+    "needs_identity_confirmation",
+    "needs_source_route_confirmation",
+    "defer_until_better_evidence",
+    "blocked_for_now"
+  ],
+  "safety": {
+    "mock_allowed": false,
+    "fixture_allowed": false,
+    "raw_save_allowed": false,
+    "ocr_allowed": false,
+    "browser_automation_allowed": false,
+    "llm_api_enabled": false,
+    "live_llm_call_allowed": false,
+    "broker_integration_allowed": false,
+    "target_price_output_allowed": false,
+    "position_sizing_allowed": false,
+    "trade_recommendation_allowed": false,
+    "paper_order_allowed": false
+  }
+}
