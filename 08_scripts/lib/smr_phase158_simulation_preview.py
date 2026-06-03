@@ -1,0 +1,2 @@
+﻿def build_simulation_preview():
+    return {"phase158_simulation_preview":{"preview":"After you submit decisions, the system will SIMULATE (not execute) what happens next: approved -> research activation plan, deferred -> re-queue, rejected -> archive. All executions are BLOCKED by dependency checker until owner final sign-off.","simulation_is_not_execution":True,"execution_blocked":True,"mock_used":False,"fixture_used":False}}

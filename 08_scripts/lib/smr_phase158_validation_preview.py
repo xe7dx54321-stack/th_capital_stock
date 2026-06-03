@@ -1,0 +1,2 @@
+﻿def build_validation_preview():
+    return {"phase158_validation_preview":{"preview":"If you fill the template and import, the validator will check: (1) decision is in allowed set, (2) no trade language in rationale, (3) all tickers have a decision. Invalid entries will be rejected and remain pending.","allowed_decisions_count":6,"forbidden_terms_checked":["buy","sell","target_price","position_sizing","trade_action","short","add","reduce"],"mock_used":False,"fixture_used":False}}

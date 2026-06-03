@@ -1,0 +1,2 @@
+﻿def build_allowed_decision_options():
+    return {"phase158_decision_options":{"allowed_options":["approve_research_activation","defer_to_next_review","request_more_evidence","request_identity_confirmation","request_source_route_confirmation","reject_for_now"],"forbidden_options":["buy","sell","trade","target_price","position_sizing"],"default":"pending_owner_review","options_displayed_not_executed":True,"mock_used":False,"fixture_used":False}}

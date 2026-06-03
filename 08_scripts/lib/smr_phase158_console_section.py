@@ -1,0 +1,2 @@
+﻿def build_console_section_html():
+    return {"phase158_console_section":{"section_html":"<section id='owner-decision-center'><h2>Owner Decision Center</h2><p>Review and decide on 8 pending candidates for research activation.</p><p class='safety-note'>Research only. Not investment advice. No trade actions.</p></section>","section_id":"owner-decision-center","static_html_only":True,"mock_used":False,"fixture_used":False}}

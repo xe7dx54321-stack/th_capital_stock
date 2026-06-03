@@ -1,0 +1,2 @@
+﻿def build_console_page_html():
+    return {"phase158_console_page":{"page_html":"<!DOCTYPE html><html><head><title>Owner Decision Center</title><link rel='stylesheet' href='phase158_decision_ui.css'></head><body><h1>Owner Decision Center</h1><div id='decision-cards'></div><div id='template-section'></div><div id='simulation-preview'></div><p class='footer'>Research only. Not investment advice. Execution blocked.</p></body></html>","page_generated":True,"static_html":True,"external_js":False,"mock_used":False,"fixture_used":False}}
