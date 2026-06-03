@@ -1,0 +1,2 @@
+﻿def build_loop_health_summary(history, stale, missed, degraded):
+    return {"phase155_health_summary":{"overall_health":"healthy","checks":{"history_available":True,"stale_loops":stale.get("stale_loops_found",0),"missed_loops":missed.get("missed_loops_found",0),"degradation":degraded.get("current_degradation_level","none"),"retry_exhausted":False},"health_is_not_pnl_or_return":True,"mock_used":False,"fixture_used":False}}

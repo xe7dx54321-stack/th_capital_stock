@@ -1,0 +1,3 @@
+﻿def build_event_trigger_plan():
+    triggers = [{"event":"earnings_release","scope":"core_watch","action":"run_evidence_risk_brief_loop"},{"event":"major_news","scope":"all","action":"run_opportunity_evidence_risk_loop"},{"event":"regulatory_change","scope":"all","action":"run_risk_evidence_loop"},{"event":"owner_manual_request","scope":"specified","action":"run_full_loop_for_target"}]
+    return {"phase155_event_trigger_plan":{"triggers":len(triggers),"event_triggers":triggers,"event_trigger_is_not_trade_signal":True,"auto_trigger_enabled":False,"requires_owner_confirmation":True,"mock_used":False,"fixture_used":False}}

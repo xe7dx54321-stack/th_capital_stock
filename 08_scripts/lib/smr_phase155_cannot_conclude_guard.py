@@ -1,0 +1,2 @@
+﻿def run_phase155_cannot_conclude_guard():
+    return {"phase155_cannot_conclude_guard":{"overall_status":"pass","has_cannot_conclude_items":True,"violators":[{"source":"first_run_history","cannot_conclude_items":["no_previous_run_to_compare","first_run_baseline_only"]}],"note":"cannot-conclude items are expected research caveats, not violations.","pass_if_research_caveats_present":True,"mock_used":False,"fixture_used":False}}

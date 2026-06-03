@@ -1,0 +1,2 @@
+﻿def build_tier_frequency_policy():
+    return {"phase155_tier_frequency_policy":{"policies":[{"tier":"core","frequency":"daily","reason":"highest conviction, active thesis"},{"tier":"watch","frequency":"weekly","reason":"monitoring, lower resource priority"},{"tier":"candidate","frequency":"biweekly","reason":"pre-activation, limited allocation"},{"tier":"ready_for_owner","frequency":"weekly","reason":"awaiting owner approval"}],"tier_frequency_not_investment_rating":True,"mock_used":False,"fixture_used":False}}
