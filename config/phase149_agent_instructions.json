@@ -1,0 +1,15 @@
+{
+  "phase": "phase149",
+  "strategy": "research_agent_instruction_system",
+  "research_only": true,
+  "agent_count": 8,
+  "instruction_version": "1.0",
+  "safety": {
+    "mock": false,
+    "fixture": false,
+    "raw": false,
+    "ocr": false,
+    "browser": false,
+    "trade_recommendation_allowed": false
+  }
+}
