@@ -1,0 +1,24 @@
+{
+  "phase": "phase147",
+  "strategy": "new_ticker_onboarding_and_watchlist_expansion",
+  "research_only": true,
+  "onboarding_enabled": true,
+  "onboarding_stages": [
+    "candidate",
+    "identity_verified",
+    "source_available",
+    "financial_loaded",
+    "thesis_formed",
+    "monitoring_enabled",
+    "display_ready"
+  ],
+  "max_onboarding_tickers": 20,
+  "safety": {
+    "mock": false,
+    "fixture": false,
+    "raw": false,
+    "ocr": false,
+    "browser": false,
+    "trade_recommendation_allowed": false
+  }
+}

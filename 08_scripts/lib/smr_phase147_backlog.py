@@ -1,0 +1,2 @@
+def build_phase147_backlog():
+ return {'phase147_backlog': {'items': 3, 'backlog': [{'id': 'BL-147-01', 'title': 'Onboard TSM candidate', 'priority': 'medium', 'status': 'backlog'}, {'id': 'BL-147-02', 'title': 'Onboard ASML candidate', 'priority': 'medium', 'status': 'backlog'}, {'id': 'BL-147-03', 'title': 'Auto-advance candidate through pipeline stages', 'priority': 'low', 'status': 'backlog'}], 'not_trade': True, 'mock_used': False, 'fixture_used': False}}
