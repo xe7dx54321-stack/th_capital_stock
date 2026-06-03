@@ -1,0 +1,3 @@
+def build_daily_research_run_plan():
+ plan={"plan_id":"DRP-2026-06-03","date":"2026-06-03","type":"daily","steps":[{"step":1,"module":"console_dashboard","action":"python 08_scripts/reporting/build_phase134_dashboard.py --json","priority":"required","degradable":False},{"step":2,"module":"thesis_library_board","action":"python 08_scripts/reporting/build_phase138_thesis_library_board_report.py --json","priority":"required","degradable":False},{"step":3,"module":"daily_brief","action":"python 08_scripts/reporting/build_phase134_console_markdown_report.py --markdown","priority":"recommended","degradable":True}],"all_research_only":True,"not_trade":True}
+ return {"phase139_daily_research_run_plan":{"plan":plan,"mock_used":False,"fixture_used":False}}

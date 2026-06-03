@@ -1,0 +1,3 @@
+def build_run_schedule_profile():
+ schedule={"daily":{"frequency":"daily","recommended_time":"morning_review","modules":["console_dashboard","thesis_library_board","daily_brief","watchlist_status","source_signal_quality","gap_risk_center"],"estimated_duration":"< 2 min"},"weekly":{"frequency":"weekly","recommended_time":"weekend_review","modules":["seasonal_analytics","deep_dive_status","feedback_impact_board","evidence_delta_review","thesis_change_log","cross_ticker_theme_map","decision_journal_review"],"estimated_duration":"< 5 min"}}
+ return {"phase139_run_schedule_profile":{"schedule":schedule,"all_research_only":True,"mock_used":False,"fixture_used":False}}

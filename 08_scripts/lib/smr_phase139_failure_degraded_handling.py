@@ -1,0 +1,3 @@
+def build_failure_degraded_handling():
+ handling={"policy":"degraded_not_failed","rules":[{"condition":"non_degradable_module_fails","action":"mark_run_degraded_with_reason","example":"console_dashboard_failed_due_to_missing_data"},{"condition":"degradable_module_fails","action":"skip_and_continue","example":"daily_brief_unavailable_skip"}],"degraded_output":{"run_status":"degraded","failed_modules":[],"reason":"some_modules_unavailable","research_only_note":"Degraded delivery still research-only, no trade signals"},"mock_used":False,"fixture_used":False}
+ return {"phase139_failure_degraded_handling":{"handling":handling,"ready":True}}

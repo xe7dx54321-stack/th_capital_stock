@@ -1,0 +1,3 @@
+def build_weekly_review_plan():
+ plan={"plan_id":"WRP-2026-W23","date":"2026-06-03","type":"weekly","steps":[{"step":1,"module":"thesis_change_log_review","action":"python 08_scripts/reporting/build_phase138_thesis_change_log_report.py --json","priority":"required"},{"step":2,"module":"evidence_delta_review","action":"python 08_scripts/reporting/build_phase137_evidence_delta_classifier_report.py --json","priority":"required"},{"step":3,"module":"seasonal_analytics","action":"python 08_scripts/reporting/build_phase133_dashboard.py --json","priority":"recommended"}],"all_research_only":True}
+ return {"phase139_weekly_research_review_run_plan":{"plan":plan,"mock_used":False,"fixture_used":False}}

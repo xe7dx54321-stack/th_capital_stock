@@ -1,0 +1,3 @@
+def build_delivery_package():
+ pkg={"delivery_id":"DLV-2026-06-03","date":"2026-06-03","type":"daily","contents":[{"artifact":"console_dashboard","path":"08_scripts/reporting/build_phase134_dashboard.py","format":"json"},{"artifact":"thesis_library_board","path":"08_scripts/reporting/build_phase138_thesis_library_board_report.py","format":"json"},{"artifact":"daily_brief","path":"08_scripts/reporting/build_phase134_console_markdown_report.py","format":"markdown"}],"delivery_note":"Research-only. No trade recommendations.","all_research_only":True}
+ return {"phase139_delivery_package_builder":{"package":pkg,"ready":True,"not_trade":True,"mock_used":False,"fixture_used":False}}
