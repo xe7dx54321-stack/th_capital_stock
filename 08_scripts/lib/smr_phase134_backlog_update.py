@@ -1,0 +1,2 @@
+def build_backlog_update():
+ return {"phase134_backlog_update":{"phase134_status":"personal_research_console_v1_deployed","console_panels":13,"coverage_status":"all_8_full_coverage","blocked":0,"partial":0,"milestone":"owner_first_research_console_available","next_phase":"phase135_owner_feedback_integration_or_deepening","deprecated_forever":["paper_order","paper_trade","paper_position","paper_pnl","broker","live_trading","target_price","position_sizing","profit_loss","return_tracking"],"mock_used":False,"fixture_used":False}}

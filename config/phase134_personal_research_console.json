@@ -1,0 +1,57 @@
+{
+  "phase": "phase134",
+  "strategy": "personal_research_console",
+  "research_only": true,
+  "personal_research_console_enabled": true,
+  "console_panels": [
+    "ticker_cards",
+    "market_sections",
+    "research_priority",
+    "seasonal_insight",
+    "watchlist_status",
+    "opportunity_catalyst",
+    "source_signal_quality",
+    "gap_risk",
+    "owner_action_center",
+    "daily_brief_preview",
+    "memory_feedback_decision",
+    "system_health_snapshot",
+    "artifact_link_index"
+  ],
+  "universe_tickers": [
+    "300308.SZ",
+    "688041.SH",
+    "300394.SZ",
+    "002230.SZ",
+    "09988.HK",
+    "00700.HK",
+    "NVDA",
+    "AVGO"
+  ],
+  "markets": [
+    "CN_A",
+    "HK",
+    "US"
+  ],
+  "output_formats": [
+    "json",
+    "markdown",
+    "html"
+  ],
+  "safety": {
+    "mock": false,
+    "fixture": false,
+    "raw": false,
+    "ocr": false,
+    "browser": false,
+    "paper_order": 0,
+    "paper_trade": 0,
+    "target_price": 0,
+    "position_sizing": 0,
+    "trade_recommendation_allowed": false,
+    "target_price_output_allowed": false,
+    "position_sizing_allowed": false,
+    "profit_loss_tracking_allowed": false,
+    "return_tracking_allowed": false
+  }
+}
