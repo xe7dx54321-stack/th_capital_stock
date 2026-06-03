@@ -1,0 +1,36 @@
+{
+  "phase": "phase130",
+  "strategy": "300394_cninfo_manual_resolution_and_alternative_disclosure_source_integration",
+  "research_only": true,
+  "resolution_target": "300394.SZ",
+  "blocker_type": "cninfo_org_id_missing",
+  "resolution_phases": [
+    "identity_verification",
+    "known_url_validation",
+    "alternative_source_construction",
+    "manual_action_template"
+  ],
+  "fallback_disclosure_sources": [
+    "szse_disclosure",
+    "cninfo_alternative_identity",
+    "irm_interaction_platform",
+    "company_ir_website",
+    "eastmoney_disclosure"
+  ],
+  "safety": {
+    "mock": false,
+    "fixture": false,
+    "raw": false,
+    "ocr": false,
+    "browser": false,
+    "paper_order": 0,
+    "paper_trade": 0,
+    "target_price": 0,
+    "position_sizing": 0,
+    "trade_recommendation_allowed": false,
+    "target_price_output_allowed": false,
+    "position_sizing_allowed": false,
+    "profit_loss_tracking_allowed": false,
+    "return_tracking_allowed": false
+  }
+}

@@ -1,0 +1,2 @@
+def build_hard_data_readiness():
+ return {"phase130_hard_data_readiness":{"ticker":"300394.SZ","previous_status":"blocked_cninfo","current_status":"alternative_source_mapped","financial_data_feasible":True,"preferred_source":"eastmoney_300394","fallback_source":"szse_disclosure","data_format":"structured_financial_data_available_via_third_party","readiness_for_quant_monitoring":"ready_if_alternative_source_integrated","blocker_resolution":"partially_resolved_source_identified_owner_verification_needed","mock_used":False,"fixture_used":False}}

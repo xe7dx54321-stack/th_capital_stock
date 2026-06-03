@@ -1,0 +1,2 @@
+def build_backlog_update():
+    return {"phase130_backlog_update":{"phase130_status":"300394_cninfo_resolution_attempted","blocker_status":"partially_resolved_alternative_sources_mapped","cninfo_org_id":"still_missing","owner_action_required":True,"next_phase":"phase131_alternative_source_integration_or_owner_decision","deprecated_forever":["paper_order","paper_trade","paper_position","paper_pnl","broker","live_trading","target_price","position_sizing","profit_loss","return_tracking"],"300394_retained":True,"688041_retained":True,"mock_used":False,"fixture_used":False}}
