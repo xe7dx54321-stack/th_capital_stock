@@ -1,0 +1,2 @@
+﻿def build_submission_schema():
+    return {"phase159_submission_schema":{"required_top_level":"list","item_schema":{"ticker":"string(required)","decision":"string(required, must be in allowed set)","rationale":"string(required, non-empty)","requested_tier":"string(optional, candidate only)"},"forbidden_fields":["buy","sell","target_price","position_sizing","trade","order"],"mock_used":False,"fixture_used":False}}
