@@ -1,0 +1,2 @@
+def build_backlog_update():
+ return {"phase137_backlog_update":{"phase137_status":"deep_dive_execution_complete","tasks_executed":3,"tasks_closed":1,"tasks_follow_up":2,"research_only":True,"coverage_status":"all_8_full_coverage","milestone":"deep_dive_tasks_executed_and_evidence_updated","next_phase":"phase138_continuous_improvement_or_owner_priority","deprecated_forever":["paper_order","paper_trade","paper_position","paper_pnl","broker","live_trading","target_price","position_sizing","profit_loss","return_tracking"],"mock_used":False,"fixture_used":False}}

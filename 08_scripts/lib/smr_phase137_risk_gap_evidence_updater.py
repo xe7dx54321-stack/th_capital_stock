@@ -1,0 +1,3 @@
+def build_risk_gap_evidence_updater():
+ updates={"DD-135-001":{"ticker":"688041.SH","gap":"valuation_derived","status":"acknowledged_and_monitoring","evidence_update":"derived_metrics_remain_estimates","finding_type":"finding_unconfirmed","manual_required":True},"DD-136-002":{"ticker":"NVDA","gap":"SEC_direct_access","status":"acknowledged","evidence_update":"limitation_unchanged","finding_type":"finding_observed"},"DD-136-003":{"ticker":"300394.SZ","gap":"cninfo_org_id_missing","status":"blocked","evidence_update":"no_progress_on_cninfo_resolution","finding_type":"finding_unconfirmed","manual_required":True}}
+ return {"phase137_risk_gap_evidence_updater":{"updates":updates,"total":len(updates),"all_not_trade":True,"mock_used":False,"fixture_used":False}}

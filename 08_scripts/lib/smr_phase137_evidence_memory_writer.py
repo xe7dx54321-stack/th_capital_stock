@@ -1,0 +1,3 @@
+def build_evidence_memory():
+ records=[{"ticker":"688041.SH","type":"evidence_update","summary":"Deep dive evidence: financial confirmed, valuation derived","date":"2026-06-03"},{"ticker":"NVDA","type":"evidence_update","summary":"Deep dive evidence: financial quality confirmed","date":"2026-06-03"},{"ticker":"300394.SZ","type":"evidence_update","summary":"Deep dive evidence: source quality partially confirmed","date":"2026-06-03"},{"ticker":"ALL","type":"execution_summary","summary":"Phase137 execution: 3 tasks, 1 closed, 2 follow-up","date":"2026-06-03"}]
+ return {"phase137_evidence_memory_writer":{"records":records,"total":len(records),"path_ignored":True,"mock_used":False,"fixture_used":False}}

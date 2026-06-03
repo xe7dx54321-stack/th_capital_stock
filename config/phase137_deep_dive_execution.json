@@ -1,0 +1,38 @@
+{
+  "phase": "phase137",
+  "strategy": "deep_dive_execution_and_evidence_update",
+  "research_only": true,
+  "deep_dive_execution_enabled": true,
+  "evidence_update_enabled": true,
+  "target_tickers": [
+    "300308.SZ",
+    "688041.SH",
+    "300394.SZ",
+    "002230.SZ",
+    "09988.HK",
+    "00700.HK",
+    "NVDA",
+    "AVGO"
+  ],
+  "execution_tasks": [
+    "DD-135-001",
+    "DD-136-002",
+    "DD-136-003"
+  ],
+  "safety": {
+    "mock": false,
+    "fixture": false,
+    "raw": false,
+    "ocr": false,
+    "browser": false,
+    "paper_order": 0,
+    "paper_trade": 0,
+    "target_price": 0,
+    "position_sizing": 0,
+    "trade_recommendation_allowed": false,
+    "target_price_output_allowed": false,
+    "position_sizing_allowed": false,
+    "profit_loss_tracking_allowed": false,
+    "return_tracking_allowed": false
+  }
+}

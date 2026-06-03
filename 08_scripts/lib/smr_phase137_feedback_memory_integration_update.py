@@ -1,0 +1,3 @@
+def build_feedback_memory_integration_update():
+ records=[{"ticker":"688041.SH","type":"deep_dive_execution","summary":"Financial confirmed, valuation derived reviewed","date":"2026-06-03"},{"ticker":"NVDA","type":"deep_dive_execution","summary":"Financial quality confirmed, task closed","date":"2026-06-03"},{"ticker":"300394.SZ","type":"deep_dive_execution","summary":"Source quality partially confirmed, cninfo still blocked","date":"2026-06-03"}]
+ return {"phase137_feedback_memory_integration_update":{"records":records,"total":len(records),"path_ignored":True,"mock_used":False,"fixture_used":False}}

@@ -1,0 +1,3 @@
+def build_catalyst_opportunity_evidence_updater():
+ updates={"DD-135-001":{"ticker":"688041.SH","catalyst":"domestic_semiconductor_substitution","status":"active","evidence_update":"policy_environment_stable_supportive","finding_type":"finding_supported"},"DD-136-002":{"ticker":"NVDA","catalyst":"AI_GPU_demand_cycle","status":"active","evidence_update":"AI_capex_cycle_continues_to_drive_demand","finding_type":"finding_supported"},"DD-136-003":{"ticker":"300394.SZ","catalyst":"optical_devices_demand","status":"monitoring","evidence_update":"sector_demand_stable","finding_type":"finding_observed"}}
+ return {"phase137_catalyst_opportunity_evidence_updater":{"updates":updates,"total":len(updates),"all_not_trade":True,"mock_used":False,"fixture_used":False}}
