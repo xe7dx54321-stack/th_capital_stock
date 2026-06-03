@@ -1,0 +1,2 @@
+def build_signal_effectiveness_update():
+ return {"phase131_signal_effectiveness_update":{"300394_added_to_signal_sample":True,"signal_types_applicable":["revenue_trend","net_profit_trend","gross_margin_trend","ocf_trend","rd_intensity"],"baseline_source":"eastmoney","first_signal_period":"pending_first_data_load","signal_confidence":"medium_pending_verification","cannot_conclude":["confirmed_trend","buy_signal","sell_signal"],"mock_used":False,"fixture_used":False}}

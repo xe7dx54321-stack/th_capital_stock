@@ -1,0 +1,32 @@
+{
+  "phase": "phase131",
+  "strategy": "300394_alternative_source_integration",
+  "research_only": true,
+  "target_ticker": "300394.SZ",
+  "integration_mode": "eastmoney_as_cninfo_alternative",
+  "alternative_sources_integrated": [
+    "eastmoney_financials",
+    "szse_disclosure_metadata",
+    "irm_interaction_metadata",
+    "company_ir_metadata"
+  ],
+  "primary_financial_source": "eastmoney",
+  "fallback_financial_source": "szse_disclosure",
+  "owner_confirmation_status": "assumed_for_integration",
+  "safety": {
+    "mock": false,
+    "fixture": false,
+    "raw": false,
+    "ocr": false,
+    "browser": false,
+    "paper_order": 0,
+    "paper_trade": 0,
+    "target_price": 0,
+    "position_sizing": 0,
+    "trade_recommendation_allowed": false,
+    "target_price_output_allowed": false,
+    "position_sizing_allowed": false,
+    "profit_loss_tracking_allowed": false,
+    "return_tracking_allowed": false
+  }
+}

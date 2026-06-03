@@ -1,0 +1,2 @@
+def build_backlog_update():
+ return {"phase131_backlog_update":{"phase131_status":"300394_alternative_source_integrated","coverage_count":8,"blocked_count":0,"partial_count":1,"cninfo_blocker":"resolved_via_eastmoney_alternative","next_phase":"phase132_688041_valuation_or_seasonal_or_owner_priority","deprecated_forever":["paper_order","paper_trade","paper_position","paper_pnl","broker","live_trading","target_price","position_sizing","profit_loss","return_tracking"],"688041_retained":True,"mock_used":False,"fixture_used":False}}

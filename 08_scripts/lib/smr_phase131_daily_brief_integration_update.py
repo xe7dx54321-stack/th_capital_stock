@@ -1,0 +1,2 @@
+def build_daily_brief_integration_update():
+ return {"phase131_daily_brief_integration_update":{"300394_added_to_daily_monitoring":True,"preferred_source":"eastmoney","metrics_to_include":["revenue","net_profit","gross_margin","operating_cash_flow","rd_expense_ratio"],"brief_section":"CN_A_monitoring","cannot_conclude":["customer_share","specific_order_volume","product_mix_confirmation"],"mock_used":False,"fixture_used":False}}

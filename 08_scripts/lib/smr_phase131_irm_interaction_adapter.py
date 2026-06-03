@@ -1,0 +1,3 @@
+def build_irm_interaction_adapter():
+ adapter={"source_id":"irm_300394","source_type":"investor_relations","ticker":"300394.SZ","cninfo_irm_url":"https://irm.cninfo.com.cn","szse_einteraction_url":"https://irm.szse.cn","data_available":True,"content_types":["investor_qa","management_discussion","business_updates"],"data_format":"unstructured_qa_text","access_method":"url_known_search_by_stock_code","complementary_to_financials":True,"use_case":"qualitative_business_insight_and_management_tone","mock_used":False,"fixture_used":False}
+ return {"phase131_irm_interaction_adapter":{"adapter":adapter,"coverage":"investor_relations_metadata","not_financial_data_source":True,"mock_used":False,"fixture_used":False}}

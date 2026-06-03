@@ -1,0 +1,3 @@
+def build_company_ir_adapter():
+ adapter={"source_id":"tianfu_ir","source_type":"company_ir","ticker":"300394.SZ","company_name":"Tianfu Communication","ir_url":"https://www.tfc-sz.com","data_available":"assumed_requires_verification","content_types":["financial_reports","company_announcements","ir_presentations"],"data_format":"company_published_documents","access_method":"url_assumed_owner_verification_recommended","complementary_to_eastmoney":True,"use_case":"company_direct_publications_and_ir_materials","mock_used":False,"fixture_used":False}
+ return {"phase131_company_ir_adapter":{"adapter":adapter,"coverage":"company_ir_metadata","requires_owner_url_verification":True,"mock_used":False,"fixture_used":False}}
