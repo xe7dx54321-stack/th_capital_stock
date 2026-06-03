@@ -1,0 +1,2 @@
+def build_probe_policy():
+ return {"phase128_probe_policy":{"rules":{"max_timeout_seconds":30,"max_retries":1,"respect_robots_txt":True,"user_agent":"th_capital_research/1.0","save_raw_content":False,"save_to_git":False,"ocr_enabled":False,"browser_automation_enabled":False},"classification_levels":["available","metadata_only","blocked","manual_required","api_key_required","unsupported","degraded_with_reason"],"mock_used":False,"fixture_used":False}}

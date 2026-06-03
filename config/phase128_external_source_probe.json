@@ -1,0 +1,31 @@
+{
+  "phase": "phase128",
+  "strategy": "external_network_source_probe_and_validation",
+  "research_only": true,
+  "external_network_probe_enabled": true,
+  "pending_network_validation_enabled": true,
+  "total_pending_sources_to_probe": 12,
+  "source_categories": [
+    "official",
+    "third_party",
+    "quote_market",
+    "news_event",
+    "transcript_guidance"
+  ],
+  "safety": {
+    "mock": false,
+    "fixture": false,
+    "raw": false,
+    "ocr": false,
+    "browser": false,
+    "paper_order": 0,
+    "paper_trade": 0,
+    "target_price": 0,
+    "position_sizing": 0,
+    "trade_recommendation_allowed": false,
+    "target_price_output_allowed": false,
+    "position_sizing_allowed": false,
+    "profit_loss_tracking_allowed": false,
+    "return_tracking_allowed": false
+  }
+}
