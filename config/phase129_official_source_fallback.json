@@ -1,0 +1,40 @@
+{
+  "phase": "phase129",
+  "strategy": "official_source_access_fallback_and_mirror",
+  "research_only": true,
+  "official_source_fallback_enabled": true,
+  "target_blocked_sources": [
+    "sec_edgar",
+    "sec_10k",
+    "sec_10q",
+    "sec_8k",
+    "hkex_news",
+    "hkex_filing",
+    "transcript_guidance_manual"
+  ],
+  "fallback_categories": [
+    "direct_available",
+    "mirror_available",
+    "third_party_equivalent",
+    "api_key_required",
+    "proxy_required",
+    "manual_required",
+    "persistent_blocked"
+  ],
+  "safety": {
+    "mock": false,
+    "fixture": false,
+    "raw": false,
+    "ocr": false,
+    "browser": false,
+    "paper_order": 0,
+    "paper_trade": 0,
+    "target_price": 0,
+    "position_sizing": 0,
+    "trade_recommendation_allowed": false,
+    "target_price_output_allowed": false,
+    "position_sizing_allowed": false,
+    "profit_loss_tracking_allowed": false,
+    "return_tracking_allowed": false
+  }
+}
