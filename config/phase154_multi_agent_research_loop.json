@@ -1,0 +1,31 @@
+﻿{
+  "phase": "phase154",
+  "strategy": "multi_agent_research_loop",
+  "research_only": true,
+  "multi_agent_research_loop_enabled": true,
+  "judge_agent_required": true,
+  "agent_simulation_only": true,
+  "live_llm_call_allowed": false,
+  "llm_api_enabled": false,
+  "broker_integration_allowed": false,
+  "activation_allowed": false,
+  "formal_watchlist_update_allowed": false,
+  "auto_add_to_watchlist_allowed": false,
+  "auto_promote_to_core_allowed": false,
+  "target_price_output_allowed": false,
+  "position_sizing_allowed": false,
+  "agent_loop": {
+    "agents": ["OpportunityAgent", "EvidenceAgent", "RiskAgent", "ThesisAgent", "DeepDiveAgent", "BriefAgent", "FeedbackAgent", "JudgeAgent"],
+    "loop_max_iterations": 1,
+    "handoff_required": true,
+    "judge_review_required": true
+  },
+  "safety": {
+    "mock_allowed": false, "fixture_allowed": false, "raw_save_allowed": false,
+    "ocr_allowed": false, "browser_automation_allowed": false,
+    "llm_api_enabled": false, "live_llm_call_allowed": false,
+    "broker_integration_allowed": false, "target_price_output_allowed": false,
+    "position_sizing_allowed": false, "trade_recommendation_allowed": false,
+    "paper_order_allowed": false
+  }
+}
