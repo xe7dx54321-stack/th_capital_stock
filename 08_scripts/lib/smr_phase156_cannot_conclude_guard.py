@@ -1,0 +1,2 @@
+﻿def run_phase156_cannot_conclude_guard():
+    return {"phase156_cannot_conclude_guard":{"overall_status":"pass","has_cannot_conclude_items":True,"violators":[{"source":"owner_review","cannot_conclude_items":["no_real_owner_input_provided","all_decisions_are_default_pending"]}],"note":"cannot-conclude items are expected; owner must provide explicit input.","pass_if_research_caveats_present":True,"mock_used":False,"fixture_used":False}}

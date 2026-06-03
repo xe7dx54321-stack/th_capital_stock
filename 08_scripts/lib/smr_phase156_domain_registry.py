@@ -1,0 +1,2 @@
+﻿def build_phase156_domain_registry():
+    return {"phase156_domain_registry":{"domains":[{"domain":"owner_manual_activation_review","description":"Owner manual activation review and research activation queue","status":"active"}],"cross_phase_dependencies":[{"phase":"phase155","dependency":"owner_digest_schedule","usage":"load owner review digest"},{"phase":"phase153","dependency":"onboarding_review_packets","usage":"load candidate review packets"},{"phase":"phase152","dependency":"admission_scoring","usage":"load admission scores"}],"mock_used":False,"fixture_used":False}}

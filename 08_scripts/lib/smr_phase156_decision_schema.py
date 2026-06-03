@@ -1,0 +1,2 @@
+﻿def build_owner_decision_schema():
+    return {"phase156_decision_schema":{"decision_types":["approve_research_activation","defer_to_next_review","request_more_evidence","request_identity_confirmation","request_source_route_confirmation","reject_for_now"],"required_fields":["ticker","owner_decision","rationale","timestamp"],"default_decision":"pending_owner_review","auto_approval_not_allowed":True,"mock_used":False,"fixture_used":False}}
