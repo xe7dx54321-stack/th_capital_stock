@@ -1,0 +1,3 @@
+def build_cross_ticker_theme_map():
+ themes=[{"theme":"AI_GPU_and_Infrastructure","tickers":["NVDA","AVGO"],"relationship":"complementary","note":"NVDA GPU + AVGO networking"},{"theme":"Semiconductor_Domestic_and_Global","tickers":["688041.SH","AVGO"],"relationship":"parallel","note":"different markets same sector"},{"theme":"China_Tech_Ecosystem","tickers":["688041.SH","300308.SZ","002230.SZ","300394.SZ"],"relationship":"diversified","note":"semiconductor_optical_AI_software"}]
+ return {"phase138_cross_ticker_theme_map":{"themes":themes,"total":len(themes),"not_trade_signal":True,"mock_used":False,"fixture_used":False}}

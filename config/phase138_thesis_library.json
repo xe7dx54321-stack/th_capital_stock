@@ -1,0 +1,33 @@
+{
+  "phase": "phase138",
+  "strategy": "thesis_library_and_research_memory_graph",
+  "research_only": true,
+  "thesis_library_enabled": true,
+  "research_memory_graph_enabled": true,
+  "target_tickers": [
+    "300308.SZ",
+    "688041.SH",
+    "300394.SZ",
+    "002230.SZ",
+    "09988.HK",
+    "00700.HK",
+    "NVDA",
+    "AVGO"
+  ],
+  "safety": {
+    "mock": false,
+    "fixture": false,
+    "raw": false,
+    "ocr": false,
+    "browser": false,
+    "paper_order": 0,
+    "paper_trade": 0,
+    "target_price": 0,
+    "position_sizing": 0,
+    "trade_recommendation_allowed": false,
+    "target_price_output_allowed": false,
+    "position_sizing_allowed": false,
+    "profit_loss_tracking_allowed": false,
+    "return_tracking_allowed": false
+  }
+}

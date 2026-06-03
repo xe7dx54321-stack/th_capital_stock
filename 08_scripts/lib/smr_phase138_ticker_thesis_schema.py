@@ -1,0 +1,3 @@
+def build_ticker_thesis_schema():
+ schema={"thesis_fields":["ticker","market","thesis_id","thesis_statement","thesis_status","evidence_supporting","evidence_contradicting","risk_flags","confidence_level","last_updated","source_phase","next_verification","manual_confirmation_required","cannot_conclude"],"thesis_statuses":["thesis_observed","thesis_supported","thesis_context_supported","thesis_unconfirmed","thesis_strengthened","thesis_weakened","thesis_unchanged"],"confidence_levels":["high","medium","low","insufficient_evidence"],"all_research_only":True}
+ return {"phase138_ticker_thesis_schema":{"schema":schema,"mock_used":False,"fixture_used":False}}

@@ -1,0 +1,4 @@
+def build_research_memory_graph():
+ nodes=[{"id":"TH-NVDA-001","type":"thesis","ticker":"NVDA","label":"AI GPU beneficiary"},{"id":"TH-688041-001","type":"thesis","ticker":"688041.SH","label":"Semiconductor substitution"},{"id":"TH-300394-001","type":"thesis","ticker":"300394.SZ","label":"Optical devices"}]
+ edges=[{"from":"Phase137_NVDA_execution","to":"TH-NVDA-001","type":"strengthened"},{"from":"Phase137_688041_execution","to":"TH-688041-001","type":"unchanged"},{"from":"Phase137_300394_execution","to":"TH-300394-001","type":"unchanged"},{"from":"TH-NVDA-001","to":"AVGO_thesis","type":"related_sector"},{"from":"TH-688041-001","to":"TH-300394-001","type":"related_market"}]
+ return {"phase138_research_memory_graph_builder":{"nodes":nodes,"edges":edges,"graph_type":"research_memory","all_research_only":True,"mock_used":False,"fixture_used":False}}

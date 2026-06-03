@@ -1,0 +1,3 @@
+def build_thesis_library_board():
+ board={"sections":{"strengthened":[{"ticker":"NVDA","thesis":"AI GPU beneficiary","confidence":"high"}],"supported":[{"ticker":"AVGO","thesis":"AI networking"},{"ticker":"688041.SH","thesis":"Semiconductor substitution"}],"observed":[{"ticker":"09988.HK","thesis":"Cloud acceleration"},{"ticker":"00700.HK","thesis":"Gaming/ad recovery"}],"context_supported":[{"ticker":"300308.SZ","thesis":"Optical demand"},{"ticker":"002230.SZ","thesis":"AI/software stable"}],"unconfirmed":[{"ticker":"300394.SZ","thesis":"Optical devices - source limitation"}]}}
+ return {"phase138_thesis_library_board":{"board":board,"total_tickers":8,"not_trade_signal":True,"mock_used":False,"fixture_used":False}}

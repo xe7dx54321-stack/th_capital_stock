@@ -1,0 +1,3 @@
+def load_phase137_execution():
+ tasks=[{"task_id":"DD-135-001","ticker":"688041.SH","status":"needs_follow_up","evidence":"strengthened","key_finding":"financial_confirmed_valuation_derived"},{"task_id":"DD-136-002","ticker":"NVDA","status":"closed_research_only","evidence":"strengthened","key_finding":"financial_quality_confirmed"},{"task_id":"DD-136-003","ticker":"300394.SZ","status":"needs_follow_up","evidence":"partially_confirmed","key_finding":"cninfo_still_blocked"}] 
+ return {"phase138_phase137_execution_loader":{"phase137_commit":"7abf9d7","tasks":tasks,"total":len(tasks),"all_not_trade":True,"mock_used":False,"fixture_used":False}}
