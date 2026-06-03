@@ -1,0 +1,2 @@
+def build_phase145_backlog():
+    return {"phase145_backlog": {"items": 3, "backlog": [{"id": "BL-145-01", "title": "Add parallel task execution engine", "priority": "medium", "status": "backlog"}, {"id": "BL-145-02", "title": "Add agent performance metrics dashboard", "priority": "low", "status": "backlog"}, {"id": "BL-145-03", "title": "Add automatic task retry with exponential backoff", "priority": "low", "status": "backlog"}], "not_trade": True, "mock_used": False, "fixture_used": False}}

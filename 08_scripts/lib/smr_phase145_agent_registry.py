@@ -1,0 +1,12 @@
+def build_agent_registry():
+    agents = [
+        {"id": "opportunity_agent", "name": "Opportunity Agent", "role": "Monitor watchlist for emerging opportunities", "inputs": ["watchlist", "market_data", "financial_signals"], "outputs": ["opportunity_flags", "priority_scores"], "downgrade_policy": "skip_if_blocked", "research_only": True},
+        {"id": "evidence_agent", "name": "Evidence Agent", "role": "Gather and validate evidence for thesis claims", "inputs": ["thesis_statements", "source_capability_matrix"], "outputs": ["evidence_chain", "source_quality_scores"], "downgrade_policy": "use_cached_if_unavailable", "research_only": True},
+        {"id": "risk_agent", "name": "Risk Agent", "role": "Identify and track risks and gaps", "inputs": ["coverage_status", "source_limitations", "financial_snapshots"], "outputs": ["risk_flags", "gap_reports"], "downgrade_policy": "report_as_unknown", "research_only": True},
+        {"id": "thesis_agent", "name": "Thesis Agent", "role": "Maintain thesis library and timeline", "inputs": ["thesis_statements", "evidence_chain", "feedback"], "outputs": ["thesis_status_updates", "timeline_entries"], "downgrade_policy": "mark_unconfirmed", "research_only": True},
+        {"id": "deep_dive_agent", "name": "Deep Dive Agent", "role": "Execute deep-dive investigations", "inputs": ["deep_dive_triggers", "research_questions"], "outputs": ["deep_dive_reports", "findings"], "downgrade_policy": "queue_for_manual", "research_only": True},
+        {"id": "brief_agent", "name": "Brief Agent", "role": "Generate research briefs and summaries", "inputs": ["agent_outputs", "watchlist_status", "feedback"], "outputs": ["daily_brief", "weekly_summary"], "downgrade_policy": "use_last_known", "research_only": True},
+        {"id": "feedback_agent", "name": "Feedback Agent", "role": "Process owner feedback and route to relevant agents", "inputs": ["feedback_forms", "confirmation_checklists"], "outputs": ["feedback_routes", "action_items"], "downgrade_policy": "queue_pending", "research_only": True},
+        {"id": "judge_agent", "name": "Judge Agent", "role": "Audit agent outputs for quality and compliance", "inputs": ["all_agent_outputs", "safety_rules"], "outputs": ["quality_audit", "compliance_report"], "downgrade_policy": "flag_for_review", "research_only": True},
+    ]
+    return {"phase145_agent_registry": {"agents": len(agents), "registry": agents, "all_research_only": True, "mock_used": False, "fixture_used": False}}

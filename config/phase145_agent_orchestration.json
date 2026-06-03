@@ -1,0 +1,18 @@
+{
+  "phase": "phase145",
+  "strategy": "research_agent_orchestration",
+  "research_only": true,
+  "agent_count": 8,
+  "orchestration_mode": "manual_dispatch_readonly",
+  "auto_dispatch_allowed": false,
+  "max_parallel_tasks": 3,
+  "task_timeout_minutes": 30,
+  "safety": {
+    "mock": false,
+    "fixture": false,
+    "raw": false,
+    "ocr": false,
+    "browser": false,
+    "trade_recommendation_allowed": false
+  }
+}
