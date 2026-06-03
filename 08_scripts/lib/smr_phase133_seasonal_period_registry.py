@@ -1,0 +1,3 @@
+def build_seasonal_period_registry():
+ periods={"Q1":{"months":[1,2,3],"label":"Q1_Jan_Mar","fiscal_quarter":1},"Q2":{"months":[4,5,6],"label":"Q2_Apr_Jun","fiscal_quarter":2},"Q3":{"months":[7,8,9],"label":"Q3_Jul_Sep","fiscal_quarter":3},"Q4":{"months":[10,11,12],"label":"Q4_Oct_Dec","fiscal_quarter":4},"H1":{"months":[1,2,3,4,5,6],"label":"H1_First_Half","aggregation":"Q1+Q2"},"H2":{"months":[7,8,9,10,11,12],"label":"H2_Second_Half","aggregation":"Q3+Q4"},"FY":{"months":[1,2,3,4,5,6,7,8,9,10,11,12],"label":"FY_Full_Year","aggregation":"Q1+Q2+Q3+Q4"}}
+ return {"phase133_seasonal_period_registry":{"periods":periods,"total_periods":len(periods),"comparison_dimensions":["QoQ","YoY","HoH","sequential"],"mock_used":False,"fixture_used":False}}

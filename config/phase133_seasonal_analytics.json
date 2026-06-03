@@ -1,0 +1,56 @@
+{
+  "phase": "phase133",
+  "strategy": "seasonal_analytics_dashboard",
+  "research_only": true,
+  "seasonal_panels": [
+    "financial_trend",
+    "valuation_trend",
+    "cross_market_comparison",
+    "opportunity_catalyst",
+    "watchlist_status",
+    "source_coverage",
+    "signal_effectiveness",
+    "gap_risk",
+    "owner_action_queue"
+  ],
+  "universe_tickers": [
+    "300308.SZ",
+    "688041.SH",
+    "300394.SZ",
+    "002230.SZ",
+    "09988.HK",
+    "00700.HK",
+    "NVDA",
+    "AVGO"
+  ],
+  "seasonal_periods": [
+    "Q1",
+    "Q2",
+    "Q3",
+    "Q4",
+    "H1",
+    "H2",
+    "FY"
+  ],
+  "markets": [
+    "CN_A",
+    "HK",
+    "US"
+  ],
+  "safety": {
+    "mock": false,
+    "fixture": false,
+    "raw": false,
+    "ocr": false,
+    "browser": false,
+    "paper_order": 0,
+    "paper_trade": 0,
+    "target_price": 0,
+    "position_sizing": 0,
+    "trade_recommendation_allowed": false,
+    "target_price_output_allowed": false,
+    "position_sizing_allowed": false,
+    "profit_loss_tracking_allowed": false,
+    "return_tracking_allowed": false
+  }
+}

@@ -1,0 +1,2 @@
+def build_backlog_update():
+ return {"phase133_backlog_update":{"phase133_status":"seasonal_analytics_dashboard_v1_complete","seasonal_panels":9,"coverage_status":"all_8_full_coverage","blocked":0,"partial":0,"milestone":"seasonal_analytics_layer_deployed","next_phase":"phase134_owner_priority_or_deepening","deprecated_forever":["paper_order","paper_trade","paper_position","paper_pnl","broker","live_trading","target_price","position_sizing","profit_loss","return_tracking"],"mock_used":False,"fixture_used":False}}

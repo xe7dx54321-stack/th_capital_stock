@@ -1,0 +1,3 @@
+def build_watchlist_status_panel():
+ panel={"title":"Watchlist Seasonal Status Panel","tickers_total":8,"coverage_status":"all_8_full_coverage","blocked":0,"partial":0,"status_by_market":{"CN_A":{"covered":4,"blocked":0},"HK":{"covered":2,"blocked":0},"US":{"covered":2,"blocked":0}},"seasonal_note":"watchlist_status_is_coverage_status_not_investment_status","cannot_conclude":["full_coverage_does_not_mean_all_attractive","watchlist_is_monitoring_not_portfolio"],"mock_used":False,"fixture_used":False}
+ return {"phase133_watchlist_status_panel_builder":{"panel":panel,"not_investment_advice":True,"mock_used":False,"fixture_used":False}}

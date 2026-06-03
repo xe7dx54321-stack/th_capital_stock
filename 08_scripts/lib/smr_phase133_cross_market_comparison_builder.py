@@ -1,0 +1,4 @@
+def build_cross_market_comparison():
+ markets={"CN_A":{"tickers":["300308.SZ","688041.SH","300394.SZ","002230.SZ"],"count":4,"currency":"CNY","sectors":["Optical Communication","Semiconductor","Optical Devices","AI/Software"]},"HK":{"tickers":["09988.HK","00700.HK"],"count":2,"currency":"HKD","sectors":["E-commerce/Cloud","Internet/Gaming"]},"US":{"tickers":["NVDA","AVGO"],"count":2,"currency":"USD","sectors":["AI/GPU","Semiconductor/Infra"]}}
+ comparison={"market_comparison":markets,"cross_market_insights":["CN_A_and_US_both_have_semiconductor_exposure","HK_focused_on_internet_platform","currency_diversification_CNY_HKD_USD"],"currency_boundary":"currencies_not_directly_compared_across_markets","cannot_conclude":["cross_market_performance_ranking","which_market_outperforms"],"mock_used":False,"fixture_used":False}
+ return {"phase133_cross_market_comparison_builder":{"comparison":comparison,"not_investment_advice":True,"mock_used":False,"fixture_used":False}}

@@ -1,0 +1,3 @@
+def build_owner_action_queue():
+ actions=[{"priority":"low","action":"verify_eastmoney_300394_data_freshness","ticker":"300394.SZ","frequency":"quarterly","status":"pending_owner"},{"priority":"low","action":"verify_688041_valuation_derived_metrics","ticker":"688041.SH","frequency":"quarterly","status":"pending_owner"},{"priority":"medium","action":"manual_earnings_transcript_review","ticker":"all_HK_US","frequency":"quarterly_per_earnings","status":"pending_owner"},{"priority":"low","action":"review_seasonal_analytics_dashboard","ticker":"all","frequency":"quarterly","status":"new_in_phase133"}]
+ return {"phase133_owner_action_queue_builder":{"total":len(actions),"all_research_only":True,"actions":actions,"no_trade_actions":True,"mock_used":False,"fixture_used":False}}

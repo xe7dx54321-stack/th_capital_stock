@@ -1,0 +1,3 @@
+def build_signal_effectiveness_panel():
+ panel={"title":"Signal Effectiveness Seasonal Panel","signal_types_tracked":["financial_trend","valuation_trend","catalyst_occurrence","cross_source_consistency"],"tickers_with_signals":8,"signal_count":22,"signal_status":"signals_defined_since_phase126","seasonal_view":"signal_effectiveness_to_be_tracked_across_periods","usefulness_ratings":"pending_seasonal_accumulation","noise_levels":"pending_seasonal_accumulation","cannot_conclude":["signal_effectiveness_requires_multiple_seasons","single_period_insufficient_for_effectiveness_judgment"],"mock_used":False,"fixture_used":False}
+ return {"phase133_signal_effectiveness_panel_builder":{"panel":panel,"first_seasonal_snapshot":True,"mock_used":False,"fixture_used":False}}
