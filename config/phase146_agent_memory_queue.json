@@ -1,0 +1,19 @@
+{
+  "phase": "phase146",
+  "strategy": "agent_memory_update_and_task_queue_integration",
+  "research_only": true,
+  "agent_memory_enabled": true,
+  "task_queue_enabled": true,
+  "handoff_enabled": true,
+  "delivery_integration_enabled": true,
+  "memory_persistence": "gitignored_jsonl",
+  "queue_mode": "manual_consume",
+  "safety": {
+    "mock": false,
+    "fixture": false,
+    "raw": false,
+    "ocr": false,
+    "browser": false,
+    "trade_recommendation_allowed": false
+  }
+}
