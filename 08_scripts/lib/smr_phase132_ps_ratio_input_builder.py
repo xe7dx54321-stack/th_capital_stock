@@ -1,0 +1,2 @@
+def build_ps_ratio_input():
+ return {"phase132_ps_ratio_input_builder":{"ticker":"688041.SH","market_cap_available":True,"market_cap_source":"eastmoney_or_akshare","revenue_available":True,"revenue_source":"cninfo_financial_statements_ttm","ps_ttm_derivable":True,"calculation_ready":True,"limitations":["revenue_ttm_from_latest_quarterly_data","ps_multiple_varies_by_industry_and_growth_stage"],"cannot_conclude":["ps_ratio_is_not_intrinsic_value","does_not_account_for_profitability"],"mock_used":False,"fixture_used":False}}

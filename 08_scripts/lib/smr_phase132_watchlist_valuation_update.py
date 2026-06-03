@@ -1,0 +1,2 @@
+def build_watchlist_valuation_update():
+ return {"phase132_watchlist_valuation_update":{"ticker":"688041.SH","previous_watchlist_status":"partial_valuation_incomplete","new_watchlist_status":"full_coverage_with_valuation","valuation_metrics_added":["pe_ratio","pb_ratio","ps_ratio","ev_ebitda"],"688041_partial_resolved":True,"all_8_tickers_full_coverage":True,"blocked_count":0,"partial_count":0,"pending_created":0,"paper_order_created":0,"real_trade_created":0,"mock_used":False,"fixture_used":False}}

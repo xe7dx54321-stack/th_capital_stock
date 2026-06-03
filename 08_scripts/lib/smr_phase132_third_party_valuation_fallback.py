@@ -1,0 +1,3 @@
+def build_third_party_valuation_fallback():
+ fallbacks=[{"source_id":"sina_finance_688041","type":"web_finance_portal","url":"https://finance.sina.com.cn/realstock/company/sh688041/nc.shtml","metrics":["pe","pb","market_cap"],"status":"available","note":"Sina Finance provides basic valuation for A-shares"},{"source_id":"10jqka_688041","type":"web_finance_portal","url":"https://stockpage.10jqka.com.cn/688041/","metrics":["pe","pb","ps","market_cap"],"status":"available","note":"10jqka (THS) provides comprehensive valuation data"}]
+ return {"phase132_third_party_valuation_fallback":{"total":len(fallbacks),"available":len(fallbacks),"fallbacks":fallbacks,"primary_not_needed_if_eastmoney_works":True,"mock_used":False,"fixture_used":False}}

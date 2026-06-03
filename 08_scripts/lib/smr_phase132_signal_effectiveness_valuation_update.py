@@ -1,0 +1,2 @@
+def build_signal_effectiveness_valuation_update():
+ return {"phase132_signal_effectiveness_valuation_update":{"688041_valuation_added_to_signals":True,"valuation_signal_types":["pe_trend","pb_trend","ps_trend","ev_ebitda_trend","market_cap_change"],"signal_confidence":"medium_valuation_signals_not_trade_signals","cannot_conclude":["valuation_change_is_not_trade_signal","pe_contraction_does_not_mean_sell","pe_expansion_does_not_mean_buy"],"mock_used":False,"fixture_used":False}}

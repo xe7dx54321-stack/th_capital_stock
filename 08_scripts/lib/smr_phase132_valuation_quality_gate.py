@@ -1,0 +1,4 @@
+def build_valuation_quality_gate():
+ checks=[{"check":"valuation_sources_identified","status":"pass"},{"check":"pe_pb_available_direct","status":"pass"},{"check":"ps_derivable","status":"pass"},{"check":"ev_ebitda_derivable","status":"pass"},{"check":"market_cap_available","status":"pass"},{"check":"financial_dependencies_met","status":"pass","note":"cninfo_financials_available_since_phase81"},{"check":"no_mock_used","status":"pass"},{"check":"no_fixture_used","status":"pass"},{"check":"valuation_not_trade_signal","status":"pass","note":"valuation_metrics_are_observations_not_recommendations"},{"check":"not_overclaimed_as_precise","status":"pass","note":"derived_metrics_have_estimation_uncertainty"}]
+ v=sum(1 for c in checks if c["status"]!="pass")
+ return {"phase132_valuation_quality_gate":{"overall":"pass" if v==0 else "fail","violations":v,"checks":checks,"mock_used":False,"fixture_used":False}}

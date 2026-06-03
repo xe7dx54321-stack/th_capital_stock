@@ -1,0 +1,41 @@
+{
+  "phase": "phase132",
+  "strategy": "688041_valuation_source_hardening",
+  "research_only": true,
+  "target_ticker": "688041.SH",
+  "company_name_cn": "海光信息",
+  "company_name_en": "Hygon Information Technology",
+  "market": "CN_A_STAR",
+  "sector": "semiconductor",
+  "valuation_gap": "valuation_metrics_partial_since_phase83",
+  "valuation_metrics_targeted": [
+    "pe_ratio",
+    "pb_ratio",
+    "ps_ratio",
+    "ev_ebitda",
+    "market_cap",
+    "enterprise_value"
+  ],
+  "valuation_sources": [
+    "eastmoney_valuation",
+    "akshare_star_valuation",
+    "third_party_fallback"
+  ],
+  "owner_scheduled_resolution": true,
+  "safety": {
+    "mock": false,
+    "fixture": false,
+    "raw": false,
+    "ocr": false,
+    "browser": false,
+    "paper_order": 0,
+    "paper_trade": 0,
+    "target_price": 0,
+    "position_sizing": 0,
+    "trade_recommendation_allowed": false,
+    "target_price_output_allowed": false,
+    "position_sizing_allowed": false,
+    "profit_loss_tracking_allowed": false,
+    "return_tracking_allowed": false
+  }
+}
