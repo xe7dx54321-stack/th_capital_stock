@@ -1,0 +1,22 @@
+{
+  "phase": "phase148",
+  "strategy": "candidate_activation_planning_and_placeholder_generation",
+  "research_only": true,
+  "auto_add_to_watchlist": false,
+  "candidate_count": 5,
+  "candidates": [
+    "TSM",
+    "ASML",
+    "SNOW",
+    "MU",
+    "AMD"
+  ],
+  "safety": {
+    "mock": false,
+    "fixture": false,
+    "raw": false,
+    "ocr": false,
+    "browser": false,
+    "trade_recommendation_allowed": false
+  }
+}
