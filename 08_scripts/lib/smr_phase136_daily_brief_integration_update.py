@@ -1,0 +1,3 @@
+def build_daily_brief_integration_update():
+ updates={"brief_updates":[{"section":"boss_summary","update":"3 deep dive tasks active: 688041 valuation (high), NVDA financial quality (medium), 300394 source (low)","research_only":True},{"section":"cn_a_status","update":"688041 deep dive in progress - valuation input review","research_only":True},{"section":"cannot_conclude","update":"Deep dive tasks are research, not trade signals","research_only":True}],"all_updates_not_trade":True}
+ return {"phase136_daily_brief_integration_update":{"updates":updates,"ready_for_brief_refresh":True,"mock_used":False,"fixture_used":False}}

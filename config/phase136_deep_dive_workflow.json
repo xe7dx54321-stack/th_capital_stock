@@ -1,0 +1,49 @@
+{
+  "phase": "phase136",
+  "strategy": "deep_dive_workflow_and_research_task_execution",
+  "research_only": true,
+  "deep_dive_workflow_enabled": true,
+  "research_task_execution_enabled": true,
+  "evidence_requirement_enabled": true,
+  "source_plan_enabled": true,
+  "research_packet_enabled": true,
+  "deep_dive_brief_enabled": true,
+  "console_integration_enabled": true,
+  "daily_brief_integration_enabled": true,
+  "target_tickers": [
+    "300308.SZ",
+    "688041.SH",
+    "300394.SZ",
+    "002230.SZ",
+    "09988.HK",
+    "00700.HK",
+    "NVDA",
+    "AVGO"
+  ],
+  "task_types": [
+    "company_deep_dive",
+    "industry_deep_dive",
+    "financial_quality_review",
+    "valuation_input_review",
+    "source_quality_review",
+    "catalyst_follow_up",
+    "risk_follow_up",
+    "gap_resolution_follow_up"
+  ],
+  "safety": {
+    "mock": false,
+    "fixture": false,
+    "raw": false,
+    "ocr": false,
+    "browser": false,
+    "paper_order": 0,
+    "paper_trade": 0,
+    "target_price": 0,
+    "position_sizing": 0,
+    "trade_recommendation_allowed": false,
+    "target_price_output_allowed": false,
+    "position_sizing_allowed": false,
+    "profit_loss_tracking_allowed": false,
+    "return_tracking_allowed": false
+  }
+}

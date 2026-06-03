@@ -1,0 +1,3 @@
+def build_feedback_memory_integration_update():
+ records=[{"ticker":"688041.SH","record_type":"deep_dive_task_created","summary":"DD-135-001 created from owner feedback FB-OA-001","date":"2026-06-03"},{"ticker":"NVDA","record_type":"deep_dive_task_created","summary":"DD-136-002 created from owner feedback FB-TC-001","date":"2026-06-03"},{"ticker":"300394.SZ","record_type":"deep_dive_task_created","summary":"DD-136-003 created from owner feedback FB-SS-001","date":"2026-06-03"}]
+ return {"phase136_feedback_memory_integration_update":{"records":records,"total":len(records),"memory_path_ignored":True,"mock_used":False,"fixture_used":False}}

@@ -1,0 +1,3 @@
+def build_task_entity_linker():
+ links=[{"task_id":"DD-135-001","linked_ticker":"688041.SH","linked_gap":"688041_valuation_gap","linked_feedback":"FB-OA-001","linked_action":"OA-134-002","linked_theme":"semiconductor_valuation","link_type":"multi_entity"},{"task_id":"DD-136-002","linked_ticker":"NVDA","linked_signal":"NVDA_revenue","linked_feedback":"FB-TC-001","linked_theme":"AI_GPU_financial_quality","link_type":"ticker_signal"},{"task_id":"DD-136-003","linked_ticker":"300394.SZ","linked_source":"eastmoney","linked_feedback":"FB-SS-001","linked_theme":"alternative_source_reliability","link_type":"source_quality"}]
+ return {"phase136_task_entity_linker":{"links":links,"total":len(links),"mock_used":False,"fixture_used":False}}

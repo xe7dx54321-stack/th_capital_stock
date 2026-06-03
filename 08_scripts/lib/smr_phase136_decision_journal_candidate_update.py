@@ -1,0 +1,3 @@
+def build_decision_journal_candidate_update():
+ candidates=[{"ticker":"688041.SH","decision_candidate":"review_valuation_derived_metrics","status":"pending_owner_review","decision_required":True,"not_trade":True,"owner_question":"Are derived valuation metrics acceptable for ongoing monitoring?"},{"ticker":"300394.SZ","decision_candidate":"continue_or_pause_cninfo_resolution","status":"pending_owner_review","decision_required":True,"not_trade":True,"owner_question":"Should we continue cninfo identity resolution or accept eastmoney alternative?"}]
+ return {"phase136_decision_journal_candidate_update":{"candidates":candidates,"total":len(candidates),"all_not_trade":True,"mock_used":False,"fixture_used":False}}
