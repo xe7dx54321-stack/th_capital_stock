@@ -1,0 +1,2 @@
+﻿def build_decision_input_schema():
+    return {"phase157_decision_input_schema":{"valid_decisions":["approve_research_activation","defer_to_next_review","request_more_evidence","request_identity_confirmation","request_source_route_confirmation","reject_for_now"],"required_fields":["ticker","decision","rationale"],"forbidden_fields":["buy","sell","target_price","position_sizing","trade_action"],"mock_used":False,"fixture_used":False}}

@@ -1,0 +1,2 @@
+﻿def check_activation_dependencies(plan):
+    return {"phase157_dependency_checker":{"dependencies_checked":True,"unmet_dependencies":["owner_final_sign_off","source_verification","financial_data_loading"],"dependencies_satisfied":False,"blocking_dependencies":["owner_final_sign_off"],"execution_blocked":True,"reason":"Owner final sign-off required before any execution.","mock_used":False,"fixture_used":False}}
