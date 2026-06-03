@@ -1,0 +1,35 @@
+{
+  "phase": "phase143",
+  "strategy": "html_dashboard_cross_link_integration_and_navigation_polish",
+  "research_only": true,
+  "cross_link_enabled": true,
+  "site_map_enabled": true,
+  "link_integrity_check_enabled": true,
+  "static_html_only": true,
+  "external_js_allowed": false,
+  "external_cdn_allowed": false,
+  "local_server_enabled": false,
+  "target_tickers": [
+    "300308.SZ",
+    "688041.SH",
+    "300394.SZ",
+    "002230.SZ",
+    "09988.HK",
+    "00700.HK",
+    "NVDA",
+    "AVGO"
+  ],
+  "safety": {
+    "mock": false,
+    "fixture": false,
+    "raw": false,
+    "ocr": false,
+    "browser": false,
+    "trade_recommendation_allowed": false,
+    "target_price_output_allowed": false,
+    "position_sizing_allowed": false,
+    "paper_order_allowed": false,
+    "paper_trade_allowed": false,
+    "broker_api_allowed": false
+  }
+}
