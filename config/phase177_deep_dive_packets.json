@@ -1,0 +1,19 @@
+﻿{
+  "phase": "phase177",
+  "strategy": "research_task_outputs_to_formal_deep_dive_packets",
+  "research_only": true,
+  "activated_candidates": ["MRVL","AMAT","LRCX","KLAC","CDNS","CRM","TSM","ASML","AMD"],
+  "kept_candidates": ["INTC","MU"],
+  "deferred_candidates": ["SNPS"],
+  "rejected_candidates": ["SNOW"],
+  "expected_packet_count": 9,
+  "packet_artifact_path": "09_runbooks/generated/phase177_deep_dive_packets",
+  "all_paths_ignored": true,
+  "safety": {
+    "mock_allowed": false,"fixture_allowed": false,"raw_save_allowed": false,
+    "ocr_allowed": false,"browser_automation_allowed": false,
+    "watch_core_update_allowed": false,"broker_api_allowed": false,
+    "llm_api_allowed": false,"target_price_output_allowed": false,
+    "position_sizing_allowed": false
+  }
+}
