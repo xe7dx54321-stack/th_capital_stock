@@ -1,0 +1,18 @@
+﻿{
+  "phase": "phase180",
+  "strategy": "daily_weekly_brief_packet_integration_preview_and_owner_review_waiting_loop",
+  "research_only": true,
+  "auto_publish_daily_brief": false,
+  "auto_publish_weekly_review": false,
+  "notification_template_not_scheduler_registration": true,
+  "packet_count": 9,
+  "preview_output_path": "09_runbooks/generated/phase180_brief_previews",
+  "all_paths_ignored": true,
+  "safety": {
+    "mock_allowed": false,"fixture_allowed": false,"raw_save_allowed": false,
+    "ocr_allowed": false,"browser_automation_allowed": false,
+    "watch_core_update_allowed": false,"broker_api_allowed": false,
+    "llm_api_allowed": false,"target_price_output_allowed": false,
+    "position_sizing_allowed": false
+  }
+}
