@@ -1,0 +1,22 @@
+﻿{
+  "phase": "phase181",
+  "strategy": "owner_review_input_authoring_pack",
+  "research_only": true,
+  "real_owner_review_input_write_allowed": false,
+  "real_owner_review_input_overwrite_allowed": false,
+  "auto_signoff_allowed": false,
+  "auto_revision_allowed": false,
+  "auto_publish_allowed": false,
+  "draft_output_path": "09_runbooks/generated/phase181_owner_review_authoring_pack",
+  "all_paths_ignored": true,
+  "packet_count": 9,
+  "valid_examples_required": 5,
+  "invalid_examples_required": 7,
+  "safety": {
+    "mock_allowed": false,"fixture_allowed": false,"raw_save_allowed": false,
+    "ocr_allowed": false,"browser_automation_allowed": false,
+    "watch_core_update_allowed": false,"broker_api_allowed": false,
+    "llm_api_allowed": false,"target_price_output_allowed": false,
+    "position_sizing_allowed": false
+  }
+}
