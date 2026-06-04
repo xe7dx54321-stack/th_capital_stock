@@ -5,7 +5,7 @@ from smr_phase169_config import load_phase169_config
 from smr_phase169_domain_registry import build_phase169_domain_registry
 from smr_phase169_loaders import load_phase168_context, load_phase159_schema
 from smr_phase169_guide import build_fill_guide, build_example_pack
-from smr_phase169_preflight import build_preflight_validator, build_sandbox_simulation
+from smr_phase169_preflight import build_preflight_validator, build_expectation_matcher, build_sandbox_simulation, build_sandbox_all_examples
 from smr_phase169_console import build_authoring_console_integration
 from smr_phase169_guard import build_authoring_guide_guard, build_quality_gate, build_cannot_conclude_guard, build_backlog_update
 
@@ -17,26 +17,33 @@ def run(mode):
     guide = build_fill_guide()
     examples = build_example_pack()
     preflight = build_preflight_validator()
+    em = build_expectation_matcher(examples)
     sandbox = build_sandbox_simulation()
+    sa = build_sandbox_all_examples(examples)
     console = build_authoring_console_integration()
     g = build_authoring_guide_guard(preflight)
-    qg = build_quality_gate()
+    qg = build_quality_gate(examples, em, sa)
     cc = build_cannot_conclude_guard()
     bl = build_backlog_update()
     return {"phase169_authoring_guide_pipeline":{
-        "mode":mode,"phase":"phase169","strategy":"owner_decision_input_authoring_guide_and_example_pack",
+        "mode":mode,"phase":"phase169b","strategy":"owner_decision_input_authoring_guide_and_example_pack_hardened",
         "research_only":True,"fill_guide_ready":True,
         "valid_examples":examples["phase169_example_pack"]["valid_example_count"],
         "invalid_examples":examples["phase169_example_pack"]["invalid_example_count"],
-        "preflight_enabled":True,"sandbox_enabled":True,"console_integrated":True,
+        "expectations_all_match":em["phase169_expectation_matcher"]["expectations_all_match"],
+        "example_coverage_status":qg["phase169_quality_gate"]["example_coverage_status"],
+        "preflight_checked":em["phase169_expectation_matcher"]["examples_checked"],
+        "sandbox_all_checked":sa["phase169_sandbox_all_examples"]["all_examples_checked"],
+        "console_integrated":True,
         "guard":g["phase169_authoring_guide_guard"]["status"],
         "quality_gate":qg["phase169_quality_gate"]["status"],
-        "cannot_conclude_guard":cc["phase169_cannot_conclude_guard"]["status"],"violations":0,
+        "cannot_conclude_guard":cc["phase169_cannot_conclude_guard"]["status"],"violations":qg["phase169_quality_gate"]["violations"],
         "guide_not_auto_write":True,"preflight_not_real_submission":True,"sandbox_not_real_execution":True,
         "watch_core_updated":False,"candidate_auto_activated":False,"activation_execution_created":False,
+        "valid_example_not_approval":True,"invalid_example_not_investment_view":True,
         "target_price_created":0,"position_sizing_created":0,
         "mock_used":False,"fixture_used":False,"pending_created":0,"paper_order_created":0,"real_trade_created":0,
-        "next_phase_recommendation":"Phase 170: Owner authors and submits real owner_decision_input.json using this guide."
+        "next_phase_recommendation":"Phase 170: Owner authors and submits real owner_decision_input.json using this hardened guide."
     }}
 
 if __name__ == "__main__":
