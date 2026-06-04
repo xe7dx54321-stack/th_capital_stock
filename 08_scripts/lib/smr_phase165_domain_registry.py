@@ -1,0 +1,2 @@
+﻿def build_phase165_domain_registry():
+    return {"phase165_domain_registry":{"domains":[{"domain":"readiness_repair","description":"Candidate activation readiness diagnosis and repair","status":"active"},{"domain":"multi_agent_research_packet","description":"Multi-agent candidate research packet generation","status":"active"},{"domain":"activation_preview","description":"Activation preview conditions without execution","status":"active"}],"mock_used":False,"fixture_used":False}}
