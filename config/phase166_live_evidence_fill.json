@@ -1,0 +1,33 @@
+﻿{
+  "phase": "phase166",
+  "strategy": "live_evidence_fill_and_agent_research_pass_rerun",
+  "research_only": true,
+  "live_evidence_fill_enabled": true,
+  "agent_research_pass_rerun_enabled": true,
+  "evidence_provenance_tracking_enabled": true,
+  "agent_simulation_only": true,
+  "llm_api_enabled": false,
+  "live_llm_call_allowed": false,
+  "activation_execution_allowed": false,
+  "tier_update_execution_allowed": false,
+  "formal_watchlist_update_allowed": false,
+  "auto_add_to_watchlist_allowed": false,
+  "target_price_output_allowed": false,
+  "position_sizing_allowed": false,
+  "broker_integration_allowed": false,
+  "evidence_types": ["quote", "financial", "valuation", "news_event", "filing_availability", "transcript_guidance"],
+  "candidates": ["MRVL","AMAT","LRCX","KLAC","INTC","SNPS","CDNS","CRM","TSM","ASML","AMD","SNOW","MU"],
+  "network_mode_semantics": {
+    "dry_run_does_not_fetch": true,
+    "execute_fetches_real_data": true,
+    "skip_network_uses_cached_or_placeholder": true,
+    "planned_evidence_is_not_live_evidence": true
+  },
+  "safety": {
+    "mock_allowed": false,
+    "fixture_allowed": false,
+    "raw_save_allowed": false,
+    "ocr_allowed": false,
+    "browser_automation_allowed": false
+  }
+}
