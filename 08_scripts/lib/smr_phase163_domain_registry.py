@@ -1,0 +1,2 @@
+﻿def build_phase163_domain_registry():
+    return {"phase163_domain_registry":{"domains":[{"domain":"candidate_hydration_live_execute","description":"Real network lightweight structured snapshot execution","status":"active"},{"domain":"daily_monitoring_integration","description":"Integrate candidate hydration into daily monitoring","status":"active"},{"domain":"snapshot_normalization","description":"Normalize structured snapshots across sources","status":"active"}],"mock_used":False,"fixture_used":False}}
