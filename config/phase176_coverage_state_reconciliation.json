@@ -1,0 +1,28 @@
+﻿{
+  "phase": "phase176",
+  "strategy": "coverage_state_audit_and_reconciliation",
+  "research_only": true,
+  "audit_only": true,
+  "state_write_allowed": false,
+  "owner_decision_write_allowed": false,
+  "coverage_state_source": "phase172_formal_coverage_state",
+  "phase174_source": "phase174_coverage_cards_and_monitoring",
+  "phase175_source": "phase175_task_execution_artifacts",
+  "expected_coverage_state_count": 13,
+  "expected_activated": 9,
+  "expected_kept": 2,
+  "expected_deferred": 1,
+  "expected_rejected": 1,
+  "expected_task_count": 41,
+  "known_mismatch": "coverage_state_13_vs_task_candidate_12_rejected_has_no_tasks",
+  "reconciliation_output_path": "09_runbooks/generated/phase176_reconciliation",
+  "all_paths_ignored": true,
+  "safety": {
+    "mock_allowed": false,"fixture_allowed": false,"raw_save_allowed": false,
+    "ocr_allowed": false,"browser_automation_allowed": false,
+    "watch_core_update_allowed": false,"broker_api_allowed": false,
+    "llm_api_allowed": false,"target_price_output_allowed": false,
+    "position_sizing_allowed": false,"pending_allowed": false,
+    "paper_order_allowed": false,"real_trade_allowed": false
+  }
+}
