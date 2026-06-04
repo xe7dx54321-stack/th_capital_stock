@@ -1,0 +1,33 @@
+﻿{
+  "phase": "phase174",
+  "strategy": "post_apply_formal_research_coverage_console_and_monitoring_loop",
+  "research_only": true,
+  "coverage_state_source": "09_runbooks/generated/phase168_owner_decision_manual_submission/owner_decision_input.json",
+  "coverage_state_registry_path": "09_runbooks/generated/phase174_coverage_state/coverage_state_registry.json",
+  "coverage_state_history_path": "09_runbooks/generated/phase174_coverage_state/coverage_state_history.jsonl",
+  "state_path_ignored": true,
+  "candidates": ["MRVL","AMAT","LRCX","KLAC","INTC","SNPS","CDNS","CRM","TSM","ASML","AMD","SNOW","MU"],
+  "valid_decisions": ["activate_into_formal_research_coverage","keep_as_candidate_pending_more_evidence","defer_to_next_review_cycle","reject_from_current_coverage_pipeline"],
+  "coverage_tiers": ["formal_research_coverage","candidate_pending","deferred_review","rejected"],
+  "daily_monitoring_enabled": true,
+  "weekly_review_enabled": true,
+  "agent_task_queue_enabled": true,
+  "coverage_drift_check_enabled": true,
+  "manual_adjustment_workflow_enabled": true,
+  "trade_term_debt_recorded": true,
+  "safety": {
+    "mock_allowed": false,
+    "fixture_allowed": false,
+    "raw_save_allowed": false,
+    "ocr_allowed": false,
+    "browser_automation_allowed": false,
+    "watch_core_update_allowed": false,
+    "broker_api_allowed": false,
+    "llm_api_allowed": false,
+    "target_price_output_allowed": false,
+    "position_sizing_allowed": false,
+    "pending_allowed": false,
+    "paper_order_allowed": false,
+    "real_trade_allowed": false
+  }
+}
