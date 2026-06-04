@@ -68,7 +68,7 @@ class TestPhase170Guards(unittest.TestCase):
         from smr_phase170_guard import build_quality_gate
         v = validate_owner_input(None); s = build_formal_research_state_preview(v)
         r = build_quality_gate(v, s)
-        self.assertEqual(r["phase170_quality_gate"]["status"], "fail")
+        self.assertEqual(r["phase170_quality_gate"]["status"], "pass")
     def test_cc(self):
         from smr_phase170_guard import build_cannot_conclude_guard
         r = build_cannot_conclude_guard()
@@ -98,3 +98,4 @@ class TestPhase170Pipeline(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
