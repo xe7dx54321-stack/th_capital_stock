@@ -1,0 +1,21 @@
+﻿{
+  "phase": "phase179",
+  "strategy": "owner_review_input_processing_and_revision_task_generation",
+  "research_only": true,
+  "owner_review_input_read_enabled": true,
+  "owner_review_input_write_allowed": false,
+  "auto_signoff_allowed": false,
+  "auto_revision_execution_allowed": false,
+  "valid_review_statuses": ["owner_reviewed","revision_requested","evidence_gap_followup_required","approved_for_daily_brief_preview","approved_for_weekly_review_preview","deferred_for_later_review","archived_not_used"],
+  "packet_count": 9,
+  "owner_review_input_path": "09_runbooks/generated/phase178_owner_review/owner_review_input.json",
+  "revision_task_preview_path": "09_runbooks/generated/phase179_revision_tasks",
+  "all_paths_ignored": true,
+  "safety": {
+    "mock_allowed": false,"fixture_allowed": false,"raw_save_allowed": false,
+    "ocr_allowed": false,"browser_automation_allowed": false,
+    "watch_core_update_allowed": false,"broker_api_allowed": false,
+    "llm_api_allowed": false,"target_price_output_allowed": false,
+    "position_sizing_allowed": false
+  }
+}
