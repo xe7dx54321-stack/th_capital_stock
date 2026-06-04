@@ -1,0 +1,54 @@
+﻿{
+  "phase": "phase182",
+  "strategy": "intelligence_scout_prompt_pack",
+  "research_only": true,
+  "activated_candidates": ["MRVL","AMAT","LRCX","KLAC","CDNS","CRM","TSM","ASML","AMD"],
+  "prompt_types": [
+    "general_news_scout",
+    "management_commentary_scout",
+    "customer_demand_scout",
+    "supply_chain_crosscheck_scout",
+    "product_pricing_lead_time_scout",
+    "filing_official_source_scout",
+    "risk_negative_signal_scout",
+    "contradiction_scout"
+  ],
+  "source_categories": [
+    "official_filing",
+    "company_ir",
+    "earnings_call_transcript",
+    "industry_media",
+    "social_or_forum"
+  ],
+  "scheduling": {
+    "cron_enabled": false,
+    "mode": "manual_prompt_pack_design_only",
+    "auto_dispatch_disabled": true,
+    "scheduler_registration_disabled": true
+  },
+  "llm": {
+    "llm_api_called": false,
+    "web_search_called": false,
+    "network_fetch_called": false
+  },
+  "output": {
+    "dirty_inbox_interface_only": true,
+    "raw_save_allowed": false,
+    "clean_evidence_write_allowed": false,
+    "packet_update_allowed": false,
+    "daily_brief_update_allowed": false,
+    "weekly_review_update_allowed": false
+  },
+  "safety": {
+    "mock_allowed": false,
+    "fixture_allowed": false,
+    "raw_save_allowed": false,
+    "ocr_allowed": false,
+    "browser_automation_allowed": false,
+    "watch_core_update_allowed": false,
+    "broker_api_allowed": false,
+    "target_price_output_allowed": false,
+    "position_sizing_allowed": false,
+    "trade_recommendation_allowed": false
+  }
+}
