@@ -1,0 +1,40 @@
+﻿{
+  "phase": "phase175",
+  "strategy": "agent_task_queue_live_execution_gate_and_research_task_runner",
+  "research_only": true,
+  "execution_means_research_task_execution_only": true,
+  "task_source": "phase174_agent_task_queue",
+  "task_count_total": 41,
+  "candidate_count": 13,
+  "agent_types": ["quant_monitor","research_analyst","evidence_collector","drift_monitor","event_monitor","thesis_validator","source_auditor"],
+  "allowed_task_types": [
+    "formal_research_packet_prepare","evidence_gap_followup","thesis_seed_review",
+    "source_limitation_review","brief_card_prepare","judge_recheck",
+    "evidence_waitlist_followup","source_availability_check",
+    "next_review_marker","archive_decision_record",
+    "daily_signal_monitoring","weekly_thesis_review","evidence_refresh",
+    "coverage_drift_alert","evidence_gap_fill","milestone_check","binary_event_watch"
+  ],
+  "task_statuses": ["pending","eligible","running","completed","failed","deferred","skipped"],
+  "execution_policy": {
+    "mode": "local_research_artifact_generation",
+    "real_llm_calls_allowed": false,
+    "broker_calls_allowed": false,
+    "trade_execution_allowed": false,
+    "max_concurrent_tasks": 5,
+    "max_retries_per_task": 2,
+    "task_timeout_seconds": 120
+  },
+  "artifact_path": "09_runbooks/generated/phase175_task_artifacts",
+  "history_path": "09_runbooks/generated/phase175_task_artifacts/task_execution_history.jsonl",
+  "state_path": "09_runbooks/generated/phase175_task_artifacts/task_execution_state.json",
+  "all_paths_ignored": true,
+  "safety": {
+    "mock_allowed": false,"fixture_allowed": false,"raw_save_allowed": false,
+    "ocr_allowed": false,"browser_automation_allowed": false,
+    "watch_core_update_allowed": false,"broker_api_allowed": false,
+    "llm_api_allowed": false,"target_price_output_allowed": false,
+    "position_sizing_allowed": false,"pending_allowed": false,
+    "paper_order_allowed": false,"real_trade_allowed": false
+  }
+}
