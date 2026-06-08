@@ -1,0 +1,69 @@
+{
+  "phase": "phase189",
+  "strategy": "ifind_api_capability_probe_and_safe_connector_registry",
+  "ifind": {
+    "api_base": "https://quantapi.51ifind.com/api/v1",
+    "auth_method": "jwt_refresh_token",
+    "token_env_var": "IFIND_REFRESH_TOKEN",
+    "token_file": "config/ifind_refresh_token.txt",
+    "token_file_gitignored": true,
+    "token_ttl_days": 6,
+    "token_expiry_display": "masked_summary_only"
+  },
+  "probe": {
+    "cn_a_tickers": [
+      "300308.SZ",
+      "688041.SH",
+      "002230.SZ",
+      "300394.SZ"
+    ],
+    "hk_tickers": [
+      "09988.HK",
+      "00700.HK"
+    ],
+    "us_tickers": [
+      "NVDA",
+      "AVGO"
+    ],
+    "market_date": "20250606",
+    "report_date": "20251231",
+    "max_tickers_per_call": 4
+  },
+  "capability": {
+    "cn_a_market_available": true,
+    "cn_a_financial_available": true,
+    "hk_available": false,
+    "us_available": false,
+    "hk_us_unsupported_reason": "errcode_-4210_or_empty_table_current_subscription_scope"
+  },
+  "safety": {
+    "token_never_print": true,
+    "token_never_commit": true,
+    "ifind_cache_never_commit": true,
+    "raw_response_never_save": true,
+    "clean_evidence_write_disabled": true,
+    "packet_update_disabled": true,
+    "daily_brief_update_disabled": true,
+    "weekly_review_update_disabled": true,
+    "mock_allowed": false,
+    "fixture_allowed": false,
+    "raw_save_allowed": false,
+    "ocr_allowed": false,
+    "browser_automation_allowed": false,
+    "pending_allowed": false,
+    "paper_order_allowed": false,
+    "real_trade_allowed": false
+  },
+  "registry": {
+    "source_name": "ths_ifind_api",
+    "source_type": "professional_financial_data_api",
+    "source_tier": "tier1_professional",
+    "connection_status": "verified",
+    "coverage": {
+      "CN_A": 4,
+      "HK": 0,
+      "US": 0
+    },
+    "blocker_300394": "downgraded_to_cninfo_specific_source_limitation_ifind_can_recover"
+  }
+}

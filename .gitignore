@@ -83,3 +83,9 @@ financial_statement_reports/
 
 # Historical Codex handover exports can be very large and machine-specific
 00_control/codex_handover/
+
+config/ifind_refresh_token.txt
+
+# iFinD local cache - never commit
+.ifind/
+09_runbooks/generated/phase189_*
