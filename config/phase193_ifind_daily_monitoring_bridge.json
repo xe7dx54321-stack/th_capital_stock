@@ -1,0 +1,34 @@
+{
+  "phase": "phase193",
+  "strategy": "ifind_existing_daily_monitoring_bridge_connection",
+  "input": {
+    "phase192_monitoring_lane": "08_scripts/lib/smr_phase192_ifind_daily_monitoring.py",
+    "phase84_daily_monitoring": "08_scripts/lib/smr_phase84_scheduled_monitoring_config.py",
+    "phase191_whitelist": "08_scripts/lib/smr_phase191_ifind_metric_hardening.py"
+  },
+  "universe": {
+    "cn_a_bridge": [
+      "300308.SZ",
+      "688041.SH",
+      "002230.SZ",
+      "300394.SZ"
+    ]
+  },
+  "bridge": {
+    "state_write_allowed": false,
+    "apply_execution_allowed": false,
+    "overwrite_allowed": false,
+    "shadow_only": true,
+    "actual_daily_monitoring_state_updated": false,
+    "watch_core_updated": false
+  },
+  "safety": {
+    "mock_allowed": false,
+    "fixture_allowed": false,
+    "clean_evidence_write_disabled": true,
+    "packet_update_disabled": true,
+    "daily_brief_update_disabled": true,
+    "weekly_review_update_disabled": true,
+    "token_never_print": true
+  }
+}
