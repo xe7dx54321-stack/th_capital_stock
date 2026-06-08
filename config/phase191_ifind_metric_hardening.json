@@ -1,0 +1,61 @@
+{
+  "phase": "phase191",
+  "strategy": "ifind_metric_definition_and_unit_hardening",
+  "input": {
+    "phase190_structured_snapshot": "08_scripts/lib/smr_phase190_ifind_structured_snapshot.py",
+    "phase190_metric_report": "metric_definition_report",
+    "phase190_unit_sanity": "unit_sanity_report"
+  },
+  "target": {
+    "reduce_unknown_from_7": true,
+    "reduce_manual_review_from_4": true,
+    "establish_whitelist": true,
+    "establish_graylist": true,
+    "establish_blacklist": true
+  },
+  "hardening": {
+    "no_api_calls": true,
+    "no_network": true,
+    "semantic_categories": [
+      "market_price",
+      "valuation_multiple",
+      "income_statement",
+      "profitability",
+      "balance_sheet",
+      "cash_flow",
+      "growth_rate",
+      "consensus",
+      "profile",
+      "unknown"
+    ],
+    "period_types": [
+      "trading_day",
+      "report_period_annual",
+      "report_period_quarterly",
+      "ttm",
+      "latest_reported",
+      "forecast",
+      "unknown"
+    ],
+    "currency_default_cn_a": "CNY",
+    "output_path": "09_runbooks/generated/phase191_ifind_metric_hardening/manual_confirmation_template.json"
+  },
+  "safety": {
+    "mock_allowed": false,
+    "fixture_allowed": false,
+    "raw_save_allowed": false,
+    "ocr_allowed": false,
+    "browser_automation_allowed": false,
+    "pending_allowed": false,
+    "paper_order_allowed": false,
+    "real_trade_allowed": false,
+    "token_never_print": true,
+    "token_never_commit": true,
+    "clean_evidence_write_disabled": true,
+    "packet_update_disabled": true,
+    "daily_brief_update_disabled": true,
+    "weekly_review_update_disabled": true,
+    "daily_monitoring_update_disabled": true,
+    "watch_core_update_disabled": true
+  }
+}
