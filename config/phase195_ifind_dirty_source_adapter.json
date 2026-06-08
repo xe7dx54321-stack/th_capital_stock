@@ -1,0 +1,94 @@
+﻿{
+  "phase": "phase195",
+  "strategy": "ifind_news_announcement_event_dirty_source_adapter",
+  "input": {
+    "phase194_state": "09_runbooks/generated/phase194_ifind_daily_monitoring_apply",
+    "phase183_dirty_inbox": "08_scripts/lib/smr_phase183_dirty_intelligence_inbox.py",
+    "phase188_ingestion": "08_scripts/lib/smr_phase188_real_source_lead_ingestion.py",
+    "ifind_adapter": "08_scripts/lib/smr_ifind_adapter.py",
+    "ifind_client": "08_scripts/lib/ifind_client.py"
+  },
+  "universe": {
+    "cn_a": ["300308.SZ", "688041.SH", "002230.SZ", "300394.SZ"],
+    "hk_disabled_reason": "ifind_subscription_cn_a_scope",
+    "us_disabled_reason": "ifind_subscription_cn_a_scope",
+    "cn_a_ticker_count": 4
+  },
+  "dirty_source_lanes": {
+    "news_lane": {
+      "enabled": true,
+      "endpoint": "basic_data_service",
+      "query_type": "news_headlines",
+      "max_items_per_ticker": 5,
+      "max_attempts_total": 20,
+      "excerpt_max_words": 25
+    },
+    "announcement_lane": {
+      "enabled": true,
+      "endpoint": "basic_data_service",
+      "query_type": "announcement_metadata",
+      "max_items_per_ticker": 5,
+      "max_attempts_total": 20,
+      "excerpt_max_words": 25
+    },
+    "event_lane": {
+      "enabled": true,
+      "endpoint": "basic_data_service",
+      "query_type": "event_metadata",
+      "max_items_per_ticker": 5,
+      "max_attempts_total": 20,
+      "excerpt_max_words": 25
+    },
+    "wencai_lane": {
+      "enabled": true,
+      "endpoint": "basic_data_service",
+      "query_type": "wencai_query_result",
+      "max_items_per_ticker": 3,
+      "max_attempts_total": 12,
+      "excerpt_max_words": 25
+    }
+  },
+  "iFind_domains": {
+    "official_ifind_source": ["51ifind.com", "10jqka.com.cn", "ths.com.cn"],
+    "discovered_via_ifind": ["announcement_board", "regulatory_filing_aggregator", "financial_news_aggregator"],
+    "source_category_map": {
+      "announcement_board": "official_announcement",
+      "regulatory_filing_aggregator": "official_filing",
+      "financial_news_aggregator": "financial_news",
+      "research_report_aggregator": "research_report",
+      "wencai_query": "query_result"
+    }
+  },
+  "safety": {
+    "mock_allowed": false,
+    "fixture_allowed": false,
+    "raw_response_save_allowed": false,
+    "raw_full_text_save_allowed": false,
+    "announcement_full_text_save_allowed": false,
+    "research_report_full_text_save_allowed": false,
+    "clean_evidence_write_disabled": true,
+    "packet_update_disabled": true,
+    "daily_brief_update_disabled": true,
+    "weekly_review_update_disabled": true,
+    "daily_monitoring_state_update_disabled": true,
+    "watch_core_update_disabled": true,
+    "trade_recommendation_disabled": true,
+    "target_price_disabled": true,
+    "position_sizing_disabled": true,
+    "broker_api_disabled": true,
+    "llm_api_disabled": true,
+    "token_never_print": true,
+    "token_never_commit": true,
+    "copyright_policy": "excerpt_only_le_25_words",
+    "login_bypass_disallowed": true,
+    "paywall_bypass_disallowed": true
+  },
+  "output": {
+    "dirty_source_board_path": "09_runbooks/generated/phase195_dirty_source_board",
+    "ingestion_manifest_path": "09_runbooks/generated/phase195_ingestion_manifest",
+    "backlog_path": "09_runbooks/generated/phase195_backlog",
+    "all_paths_gitignored": true,
+    "no_clean_evidence_output": true,
+    "no_raw_output": true
+  }
+}
