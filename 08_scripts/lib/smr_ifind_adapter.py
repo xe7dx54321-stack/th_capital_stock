@@ -7,8 +7,8 @@ from ifind_client import IFindClient, mask_token
 
 CN_TICKERS = ["300308.SZ", "688041.SH", "002230.SZ", "300394.SZ"]
 HK_TICKERS = ["9988.HK", "0700.HK"]
-US_TICKERS = ["NVDA", "AVGO"]
-ALL_IFIND_TICKERS = CN_TICKERS + HK_TICKERS
+US_TICKERS = ["NVDA.O", "AVGO.O"]  # NASDAQ: use .O suffix per iFinD API spec
+ALL_IFIND_TICKERS = CN_TICKERS + HK_TICKERS + US_TICKERS
 
 WORKING_MARKET = {
     "close_price": {"indicator": "ths_close_price_stock", "params": ["DATE_PLACEHOLDER", "100", "DATE_PLACEHOLDER"]},

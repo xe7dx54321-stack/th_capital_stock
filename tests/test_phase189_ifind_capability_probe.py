@@ -69,7 +69,8 @@ class TestHKUSBoundary(unittest.TestCase):
         self.assertEqual(b["us_probe_count"], 2)
         self.assertEqual(b["hk_errcode"], 0)
         self.assertTrue(b["hk_market_data_available"])
-        self.assertIn("continue", b["hk_us_not_blocked"])
+        self.assertTrue(b["us_market_data_available"])
+        self.assertIn("NASDAQ", b.get("us_note", ""))
 
 class TestCNACapabilityMatrix(unittest.TestCase):
     def test_dry_run_no_network(self):

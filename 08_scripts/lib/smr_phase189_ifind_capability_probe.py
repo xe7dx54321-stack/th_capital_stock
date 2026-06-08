@@ -71,9 +71,9 @@ def build_hk_us_boundary():
         "hk_tickers": ["09988.HK", "00700.HK"], "hk_errcode": 0, "hk_market_data_available": True,
         "hk_note": "HK requires 4-digit code format (9988.HK not 09988.HK). Market data (close, turnover) available. Financial data requires further investigation.",
         "us_probe_attempted": True, "us_probe_count": 2,
-        "us_tickers": ["NVDA", "AVGO"], "us_errcode": 0, "us_empty_table": True,
-        "us_unsupported_reason": "api_responds_but_returns_empty_table_possibly_out_of_subscription_scope",
-        "hk_us_not_blocked": "continue_using_phase83_yfinance_or_other_adapters",
+        "us_tickers": ["NVDA", "AVGO"], "us_errcode": 0, "us_market_data_available": True,
+        "us_note": "US NASDAQ stocks use .O suffix (NVDA.O not NVDA). Market data (close, PE, turnover) available. Financial data requires further investigation.",
+        "hk_us_format_note": "HK uses 4-digit code. US uses .O (NASDAQ) or .N (NYSE) suffix.",
         "mock_used": False, "fixture_used": False
     }}
 
