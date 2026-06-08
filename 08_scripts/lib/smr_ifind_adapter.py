@@ -6,6 +6,9 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__)))
 from ifind_client import IFindClient, mask_token
 
 CN_TICKERS = ["300308.SZ", "688041.SH", "002230.SZ", "300394.SZ"]
+HK_TICKERS = ["9988.HK", "0700.HK"]
+US_TICKERS = ["NVDA", "AVGO"]
+ALL_IFIND_TICKERS = CN_TICKERS + HK_TICKERS
 
 WORKING_MARKET = {
     "close_price": {"indicator": "ths_close_price_stock", "params": ["DATE_PLACEHOLDER", "100", "DATE_PLACEHOLDER"]},
@@ -129,3 +132,5 @@ if __name__ == "__main__":
             print(json.dumps(r, ensure_ascii=False, indent=2))
     else:
         run_smoke()
+
+# HK tickers use 4-digit format (9988.HK not 09988.HK) per iFinD API spec

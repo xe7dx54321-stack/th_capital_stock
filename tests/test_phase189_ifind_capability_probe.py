@@ -67,7 +67,8 @@ class TestHKUSBoundary(unittest.TestCase):
         self.assertTrue(b["us_probe_attempted"])
         self.assertEqual(b["hk_probe_count"], 2)
         self.assertEqual(b["us_probe_count"], 2)
-        self.assertEqual(b["hk_errcode"], -4210)
+        self.assertEqual(b["hk_errcode"], 0)
+        self.assertTrue(b["hk_market_data_available"])
         self.assertIn("continue", b["hk_us_not_blocked"])
 
 class TestCNACapabilityMatrix(unittest.TestCase):

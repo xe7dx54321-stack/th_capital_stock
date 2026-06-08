@@ -68,8 +68,8 @@ def build_cn_a_ticker_mapper():
 def build_hk_us_boundary():
     return {"phase189_hk_us_boundary": {
         "hk_probe_attempted": True, "hk_probe_count": 2,
-        "hk_tickers": ["09988.HK", "00700.HK"], "hk_errcode": -4210,
-        "hk_unsupported_reason": "error_happen_with_input_parameters_possibly_out_of_subscription_scope",
+        "hk_tickers": ["09988.HK", "00700.HK"], "hk_errcode": 0, "hk_market_data_available": True,
+        "hk_note": "HK requires 4-digit code format (9988.HK not 09988.HK). Market data (close, turnover) available. Financial data requires further investigation.",
         "us_probe_attempted": True, "us_probe_count": 2,
         "us_tickers": ["NVDA", "AVGO"], "us_errcode": 0, "us_empty_table": True,
         "us_unsupported_reason": "api_responds_but_returns_empty_table_possibly_out_of_subscription_scope",
