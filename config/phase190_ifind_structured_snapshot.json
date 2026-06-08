@@ -1,0 +1,89 @@
+{
+  "phase": "phase190",
+  "strategy": "ifind_structured_cn_a_snapshot_adapter",
+  "ifind": {
+    "source": "ths_ifind_api",
+    "source_type": "professional_structured_data",
+    "connector": "08_scripts/lib/smr_ifind_adapter.py",
+    "capability_matrix": "phase189_cn_a_capability_matrix"
+  },
+  "universe": {
+    "cn_a_tickers": [
+      "300308.SZ",
+      "688041.SH",
+      "002230.SZ",
+      "300394.SZ"
+    ],
+    "hk_tickers_disabled": [
+      "09988.HK",
+      "00700.HK"
+    ],
+    "us_tickers_disabled": [
+      "NVDA",
+      "AVGO"
+    ],
+    "hk_us_disabled_reason": "ifind_subscription_scope_not_covering_hk_us"
+  },
+  "snapshot_schema": {
+    "sections": [
+      "quote",
+      "financial",
+      "valuation",
+      "company_profile"
+    ],
+    "required_fields": [
+      "ticker",
+      "company_name",
+      "market",
+      "source",
+      "snapshot_date",
+      "retrieved_at"
+    ],
+    "normalization_required": true,
+    "raw_and_normalized_both_retained": true,
+    "clean_evidence_disabled": true,
+    "packet_update_disabled": true
+  },
+  "metric_hardening": {
+    "target": "expand_phase189_8_defined_7_unknown",
+    "statuses": [
+      "defined",
+      "partially_defined",
+      "unknown_requires_manual_confirmation",
+      "not_mapped"
+    ],
+    "business_use_rule": "only_defined_metrics_allowed_for_business_use"
+  },
+  "unit_normalization": {
+    "supported_units": [
+      "CNY_yuan",
+      "CNY_100M",
+      "CNY_B",
+      "percent",
+      "multiple",
+      "ratio"
+    ],
+    "mixed_unit_detection": true,
+    "manual_review_on_mixed_unit": true,
+    "default_output": "CNY_100M_for_financials"
+  },
+  "safety": {
+    "mock_allowed": false,
+    "fixture_allowed": false,
+    "raw_save_allowed": false,
+    "ocr_allowed": false,
+    "browser_automation_allowed": false,
+    "pending_allowed": false,
+    "paper_order_allowed": false,
+    "real_trade_allowed": false,
+    "token_never_print": true,
+    "token_never_commit": true,
+    "ifind_cache_never_commit": true,
+    "clean_evidence_write_disabled": true,
+    "packet_update_disabled": true,
+    "daily_brief_update_disabled": true,
+    "weekly_review_update_disabled": true,
+    "daily_monitoring_update_disabled": true,
+    "watch_core_update_disabled": true
+  }
+}
