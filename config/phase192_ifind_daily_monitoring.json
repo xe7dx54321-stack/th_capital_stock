@@ -1,0 +1,65 @@
+{
+  "phase": "phase192",
+  "strategy": "ifind_daily_monitoring_integration",
+  "input": {
+    "phase191_whitelist": "08_scripts/lib/smr_phase191_ifind_metric_hardening.py",
+    "phase190_snapshot": "08_scripts/lib/smr_phase190_ifind_structured_snapshot.py",
+    "phase189_adapter": "08_scripts/lib/smr_ifind_adapter.py"
+  },
+  "universe": {
+    "cn_a": [
+      "300308.SZ",
+      "688041.SH",
+      "002230.SZ",
+      "300394.SZ"
+    ],
+    "hk_disabled": [
+      "09988.HK",
+      "00700.HK"
+    ],
+    "us_disabled": [
+      "NVDA",
+      "AVGO"
+    ]
+  },
+  "monitoring": {
+    "whitelist_metrics": [
+      "close_price",
+      "pe_ttm",
+      "pb_mrq",
+      "turnover_ratio"
+    ],
+    "graylist_metrics": [
+      "revenue",
+      "net_profit",
+      "roe",
+      "eps_basic"
+    ],
+    "blacklist_metrics": [
+      "gross_margin",
+      "net_margin",
+      "ocf",
+      "rd_expense",
+      "debt_ratio",
+      "total_assets",
+      "operating_revenue"
+    ],
+    "monitoring_lane": "ifind_cn_a_monitoring_lane",
+    "dry_run_no_api": true,
+    "skip_network_no_api": true,
+    "execute_api_allowed": true
+  },
+  "safety": {
+    "mock_allowed": false,
+    "fixture_allowed": false,
+    "raw_save_allowed": false,
+    "clean_evidence_write_disabled": true,
+    "packet_update_disabled": true,
+    "daily_brief_update_disabled": true,
+    "weekly_review_update_disabled": true,
+    "daily_monitoring_state_update_disabled": true,
+    "watch_core_update_disabled": true,
+    "token_never_print": true,
+    "token_never_commit": true
+  }
+}
