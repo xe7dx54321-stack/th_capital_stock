@@ -1,0 +1,35 @@
+{
+  "phase": "phase194",
+  "strategy": "ifind_daily_monitoring_apply_and_state_commit",
+  "input": {
+    "phase193_apply_package": "08_scripts/lib/smr_phase193_ifind_daily_monitoring_bridge.py",
+    "phase192_manifest": "08_scripts/lib/smr_phase192_ifind_daily_monitoring.py"
+  },
+  "apply": {
+    "requires_explicit_flag": true,
+    "flag_name": "--execute-apply",
+    "state_write_scope": "daily_monitoring_state_only",
+    "watch_core_write_disabled": true,
+    "clean_evidence_write_disabled": true,
+    "state_path": "09_runbooks/generated/phase194_ifind_daily_monitoring_apply/daily_monitoring_state_ifind_applied.json",
+    "state_path_gitignored": true
+  },
+  "coverage": {
+    "cn_a_tickers": [
+      "300308.SZ",
+      "688041.SH",
+      "002230.SZ",
+      "300394.SZ"
+    ],
+    "whitelist": 4,
+    "graylist": 4,
+    "blacklist": 7
+  },
+  "safety": {
+    "mock_allowed": false,
+    "fixture_allowed": false,
+    "token_never_print": true,
+    "broker_disabled": true,
+    "llm_disabled": true
+  }
+}
