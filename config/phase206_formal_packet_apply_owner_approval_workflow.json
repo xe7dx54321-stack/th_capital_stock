@@ -1,0 +1,14 @@
+{
+  "phase": "phase206",
+  "strategy": "formal_packet_apply_gate_owner_approval_workflow",
+  "owner_decision_required": true,
+  "formal_apply_disabled": true,
+  "partial_apply_allowed": true,
+  "safety": {
+    "mock_allowed": false,
+    "fixture_allowed": false,
+    "trade_allowed": false,
+    "broker_allowed": false,
+    "llm_allowed": false
+  }
+}
