@@ -1,0 +1,27 @@
+{
+  "phase": "phase204",
+  "strategy": "hk_us_real_verification_store_backfill",
+  "target_ticker_count": 4,
+  "hk_count": 2,
+  "us_count": 2,
+  "target_tickers": [
+    "09988.HK",
+    "00700.HK",
+    "NVDA",
+    "AVGO"
+  ],
+  "additive_source_policy": "ifind_adds_never_replaces",
+  "write_store_requires_gate": true,
+  "backfill_path": "09_runbooks/generated/phase204_hk_us_store_backfill/hk_us_evidence_backfill.json",
+  "backfill_path_gitignored": true,
+  "safety": {
+    "mock_allowed": false,
+    "fixture_allowed": false,
+    "trade_recommendation_allowed": false,
+    "target_price_allowed": false,
+    "position_sizing_allowed": false,
+    "broker_api_allowed": false,
+    "llm_api_allowed": false,
+    "raw_response_allowed": false
+  }
+}
