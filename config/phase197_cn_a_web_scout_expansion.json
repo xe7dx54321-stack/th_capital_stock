@@ -1,0 +1,41 @@
+﻿{
+  "phase": "phase197",
+  "strategy": "cn_a_web_scout_expansion_and_same_market_alignment",
+  "input": {
+    "phase196_bridge": "08_scripts/lib/smr_phase196_ifind_cross_check_bridge.py",
+    "phase195_ifind": "08_scripts/lib/smr_phase195_ifind_dirty_source_adapter.py"
+  },
+  "universe": {
+    "cn_a": ["300308.SZ", "688041.SH", "002230.SZ", "300394.SZ"],
+    "cn_a_ticker_count": 4,
+    "market": "CN_A"
+  },
+  "scout": {
+    "prompts": ["general_news_scout", "official_announcement_scout", "management_commentary_scout", "investor_interaction_scout", "risk_negative_signal_scout"],
+    "source_categories": ["official_disclosure", "exchange_announcement", "company_ir", "investor_interaction", "financial_news", "industry_media"],
+    "max_fetches": 30,
+    "max_leads_per_ticker": 8,
+    "max_excerpt_words": 25
+  },
+  "safety": {
+    "mock_allowed": false,
+    "fixture_allowed": false,
+    "raw_save_disabled": true,
+    "clean_evidence_write_disabled": true,
+    "classifier_execution_disabled": true,
+    "packet_update_disabled": true,
+    "daily_brief_update_disabled": true,
+    "weekly_review_update_disabled": true,
+    "watch_core_update_disabled": true,
+    "trade_recommendation_disabled": true,
+    "target_price_disabled": true,
+    "position_sizing_disabled": true,
+    "broker_api_disabled": true,
+    "llm_api_disabled": true
+  },
+  "output": {
+    "all_paths_gitignored": true,
+    "no_clean_evidence_output": true,
+    "no_raw_output": true
+  }
+}
