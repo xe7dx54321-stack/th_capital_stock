@@ -1,0 +1,26 @@
+{
+  "phase": "phase202",
+  "strategy": "evidence_to_packet_integration_preview",
+  "store_input_count": 84,
+  "direct_evidence_count": 42,
+  "context_evidence_count": 42,
+  "preview_only": true,
+  "formal_packet_disabled": true,
+  "evidence_packet_disabled": true,
+  "daily_brief_disabled": true,
+  "weekly_review_disabled": true,
+  "watch_core_disabled": true,
+  "daily_monitoring_state_disabled": true,
+  "thesis_state_disabled": true,
+  "safety": {
+    "mock_allowed": false,
+    "fixture_allowed": false,
+    "trade_recommendation_allowed": false,
+    "target_price_allowed": false,
+    "position_sizing_allowed": false,
+    "broker_api_allowed": false,
+    "llm_api_allowed": false,
+    "ifind_api_allowed": false,
+    "web_fetch_allowed": false
+  }
+}
