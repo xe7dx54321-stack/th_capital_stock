@@ -1,0 +1,43 @@
+﻿{
+  "phase": "phase196",
+  "strategy": "ifind_cross_check_bridge_for_web_scout_leads",
+  "input": {
+    "phase195_ifind_dirty_source": "08_scripts/lib/smr_phase195_ifind_dirty_source_adapter.py",
+    "phase187_web_scout": "08_scripts/lib/smr_phase187_real_web_scout_pilot.py",
+    "phase188_ingestion": "08_scripts/lib/smr_phase188_real_source_lead_ingestion.py",
+    "phase185_cross_check_tasks": "08_scripts/lib/smr_phase185_cross_check_gate.py",
+    "phase184_triage": "08_scripts/lib/smr_phase184_dirty_intelligence_triage.py"
+  },
+  "bridge": {
+    "ifind_market": "CN_A",
+    "web_scout_market": "US",
+    "cross_market": true,
+    "match_lanes": ["ticker_match", "topic_match", "source_category_match"],
+    "match_strengths": ["strong", "moderate", "weak", "not_matched", "not_applicable_market_scope"]
+  },
+  "safety": {
+    "mock_allowed": false,
+    "fixture_allowed": false,
+    "raw_save_disabled": true,
+    "clean_evidence_write_disabled": true,
+    "classifier_execution_disabled": true,
+    "packet_update_disabled": true,
+    "daily_brief_update_disabled": true,
+    "weekly_review_update_disabled": true,
+    "watch_core_update_disabled": true,
+    "daily_monitoring_state_update_disabled": true,
+    "trade_recommendation_disabled": true,
+    "target_price_disabled": true,
+    "position_sizing_disabled": true,
+    "broker_api_disabled": true,
+    "llm_api_disabled": true,
+    "real_verification_execution_disabled": true
+  },
+  "output": {
+    "bridge_board_path": "09_runbooks/generated/phase196_bridge_board",
+    "bridge_manifest_path": "09_runbooks/generated/phase196_bridge_manifest",
+    "all_paths_gitignored": true,
+    "no_clean_evidence_output": true,
+    "no_raw_output": true
+  }
+}
