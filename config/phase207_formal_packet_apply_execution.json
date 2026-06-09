@@ -1,0 +1,14 @@
+{
+  "phase": "phase207",
+  "strategy": "formal_packet_apply_execution",
+  "fail_closed": true,
+  "apply_mode": "partial_7_of_8",
+  "300394_always_excluded": true,
+  "safety": {
+    "mock_allowed": false,
+    "fixture_allowed": false,
+    "trade_allowed": false,
+    "broker_allowed": false,
+    "llm_allowed": false
+  }
+}
