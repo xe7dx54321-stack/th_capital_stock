@@ -8,6 +8,9 @@ ROOT = Path(__file__).resolve().parents[1]
 LIB_DIR = ROOT / "08_scripts" / "lib"
 if str(LIB_DIR) not in sys.path:
     sys.path.insert(0, str(LIB_DIR))
+VERIFICATION_DIR = ROOT / "08_scripts" / "verification"
+if str(VERIFICATION_DIR) not in sys.path:
+    sys.path.insert(0, str(VERIFICATION_DIR))
 
 from smr_decision import review_recommendation, upsert_decision_ledger
 from smr_paper_portfolio import apply_approved_recommendations, mark_open_positions_to_market
