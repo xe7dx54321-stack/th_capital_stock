@@ -1,20 +1,30 @@
-﻿import json, sys, os, argparse
-from pathlib import Path
-from datetime import datetime
-BASE_LIB = Path(__file__).resolve().parent.parent / "lib"
-BASE_REPORTING = Path(__file__).resolve().parent.parent / "reporting"
-sys.path.insert(0, str(BASE_LIB))
-sys.path.insert(0, str(BASE_REPORTING))
-from build_phase152_admission_scoring_dashboard import build
+"""
+Phase 152: Admission Scoring Pipeline
 
-def run(mode="dry-run"):
-    s = datetime.now().isoformat()
-    r = build()
+使用 smr_pipeline_runner 统一框架
+"""
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
+
+from smr_pipeline_runner import create_pipeline
+
+
+def extract_admission_result(r):
+    """
+    从 build 结果中提取入池评分的关键数据
+    
+    Args:
+        r: build_phase152_admission_scoring_dashboard 的返回值
+    
+    Returns:
+        包含入池评分关键指标的字典
+    """
     d = r["phase152_admission_scoring_dashboard"]
     board = d["board"]
     bsum = board["buckets"]
-    return {"phase152_admission_scoring_pipeline": {
-        "mode": mode, "started_at": s, "finished_at": datetime.now().isoformat(),
+    return {
         "scored_candidates": board["scored_candidates"],
         "admit_to_onboarding_review": bsum.get("admit_to_onboarding_review", 0),
         "watch_for_more_evidence": bsum.get("watch_for_more_evidence", 0),
@@ -31,23 +41,27 @@ def run(mode="dry-run"):
             "judge_agent": d["agent_routing"]["judge_agent"]["candidates_routed"],
         },
         "research_only": True,
-        "auto_add_to_watchlist_allowed": False, "auto_promote_to_core_allowed": False,
-        "admission_score_not_investment_rating": True, "admission_bucket_not_buy_sell": True,
-        "mock_used": False, "fixture_used": False,
-        "trade_recommendation_created": 0, "paper_order_created": 0, "paper_trade_created": 0,
-        "target_price_created": 0, "position_sizing_created": 0,
-        "broker_api_called": False, "llm_api_called": False,
-    }}
+        "auto_add_to_watchlist_allowed": False,
+        "auto_promote_to_core_allowed": False,
+        "admission_score_not_investment_rating": True,
+        "admission_bucket_not_buy_sell": True,
+        "trade_recommendation_created": 0,
+        "paper_order_created": 0,
+        "paper_trade_created": 0,
+        "target_price_created": 0,
+        "position_sizing_created": 0,
+        "broker_api_called": False,
+        "llm_api_called": False,
+    }
 
-def main():
-    p = argparse.ArgumentParser()
-    p.add_argument("--dry-run", action="store_true")
-    p.add_argument("--execute", action="store_true")
-    p.add_argument("--skip-network", action="store_true")
-    p.add_argument("--json", action="store_true")
-    a = p.parse_args()
-    m = "execute" if a.execute else ("skip-network" if a.skip_network else "dry-run")
-    print(json.dumps(run(m), indent=2, ensure_ascii=False, default=str))
+
+run_phase152_admission_scoring_pipeline = create_pipeline(
+    phase_num=152,
+    build_module="build_phase152_admission_scoring_dashboard",
+    result_extractor=extract_admission_result,
+    output_name="phase152_admission_scoring_pipeline"
+)
+
 
 if __name__ == "__main__":
-    main()
+    run_phase152_admission_scoring_pipeline()

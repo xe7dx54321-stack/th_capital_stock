@@ -1,61 +1,51 @@
-import json, sys, os, argparse
+"""
+Phase 143: Cross Link Pipeline
+
+使用 smr_pipeline_runner 统一框架
+"""
+import sys
 from pathlib import Path
-from datetime import datetime
 
-BASE_LIB = Path(__file__).resolve().parent.parent / "lib"
-BASE_REPORTING = Path(__file__).resolve().parent.parent / "reporting"
-sys.path.insert(0, str(BASE_LIB))
-sys.path.insert(0, str(BASE_REPORTING))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
 
-from build_phase143_cross_link_dashboard import build
+from smr_pipeline_runner import create_pipeline
 
 
-def run_pipeline(mode="dry-run"):
-    started_at = datetime.now().isoformat()
-    result = build()
-    dash = result["phase143_cross_link_dashboard"]
-    finished_at = datetime.now().isoformat()
-
+def extract_cross_link_result(r):
+    """
+    从 build 结果中提取交叉链接的关键数据
+    
+    Args:
+        r: build_phase143_cross_link_dashboard 的返回值
+    
+    Returns:
+        包含交叉链接关键指标的字典
+    """
+    dash = r["phase143_cross_link_dashboard"]
     return {
-        "phase143_cross_link_pipeline": {
-            "mode": mode,
-            "started_at": started_at,
-            "finished_at": finished_at,
-            "site_map_pages": dash["site_map"]["pages"],
-            "link_integrity": dash["link_integrity"]["overall_status"],
-            "files_checked": dash["link_integrity"]["files_checked"],
-            "files_pass": dash["link_integrity"]["files_pass"],
-            "quality_gate": dash["quality_gate"]["overall_status"],
-            "guard": dash["guard"]["overall_status"],
-            "violations": dash["guard"]["violations"],
-            "static_html_only": True,
-            "external_js_allowed": False,
-            "mock_used": False,
-            "fixture_used": False,
-            "trade_recommendation_created": 0,
-            "target_price_created": 0,
-            "position_sizing_created": 0,
-            "paper_order_created": 0,
-        }
+        "site_map_pages": dash["site_map"]["pages"],
+        "link_integrity": dash["link_integrity"]["overall_status"],
+        "files_checked": dash["link_integrity"]["files_checked"],
+        "files_pass": dash["link_integrity"]["files_pass"],
+        "quality_gate": dash["quality_gate"]["overall_status"],
+        "guard": dash["guard"]["overall_status"],
+        "violations": dash["guard"]["violations"],
+        "static_html_only": True,
+        "external_js_allowed": False,
+        "trade_recommendation_created": 0,
+        "target_price_created": 0,
+        "position_sizing_created": 0,
+        "paper_order_created": 0,
     }
 
 
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--dry-run", action="store_true")
-    parser.add_argument("--execute", action="store_true")
-    parser.add_argument("--skip-network", action="store_true")
-    parser.add_argument("--json", action="store_true")
-    args = parser.parse_args()
-    if args.execute:
-        mode = "execute"
-    elif args.skip_network:
-        mode = "skip-network"
-    else:
-        mode = "dry-run"
-    output = run_pipeline(mode)
-    print(json.dumps(output, indent=2, ensure_ascii=False, default=str))
+run_phase143_cross_link_pipeline = create_pipeline(
+    phase_num=143,
+    build_module="build_phase143_cross_link_dashboard",
+    result_extractor=extract_cross_link_result,
+    output_name="phase143_cross_link_pipeline"
+)
 
 
 if __name__ == "__main__":
-    main()
+    run_phase143_cross_link_pipeline()

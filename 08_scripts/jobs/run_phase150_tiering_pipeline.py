@@ -1,31 +1,54 @@
-import json, sys, os, argparse
-from pathlib import Path
-from datetime import datetime
-BASE_LIB = Path(__file__).resolve().parent.parent / "lib"
-BASE_REPORTING = Path(__file__).resolve().parent.parent / "reporting"
-sys.path.insert(0, str(BASE_LIB)); sys.path.insert(0, str(BASE_REPORTING))
-from build_phase150_tiering_dashboard import build
+"""
+Phase 150: Watchlist Tiering Pipeline
 
-def run(mode="dry-run"):
-    s = datetime.now().isoformat()
-    r = build(); d = r["phase150_tiering_dashboard"]
+使用 smr_pipeline_runner 统一框架
+原文件已备份为 .bak
+"""
+import sys
+from pathlib import Path
+
+# 设置路径
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
+
+from smr_pipeline_runner import create_pipeline
+
+
+def extract_tiering_result(r):
+    """
+    从 build 结果中提取关键数据
+    
+    Args:
+        r: build_phase150_tiering_dashboard 的返回值
+    
+    Returns:
+        包含分层关键指标的字典
+    """
+    d = r["phase150_tiering_dashboard"]
     tc = d["tier_assignments"]["tier_counts"]
-    return {"phase150_tiering_pipeline": {
-        "mode": mode, "started_at": s, "finished_at": datetime.now().isoformat(),
+    return {
         "tiers": {"core": tc["core"], "watch": tc["watch"], "candidate": tc["candidate"]},
         "total_tracked": d["tier_assignments"]["total"],
         "max_capacity": d["capacity_model"]["model"]["max_total"],
         "utilization_pct": d["capacity_model"]["model"]["utilization_pct"],
         "quality_gate": d["quality_gate"]["overall_status"],
-        "guard": d["guard"]["overall_status"], "violations": d["guard"]["violations"],
-        "research_only": True, "mock_used": False, "fixture_used": False,
-        "trade_recommendation_created": 0, "paper_order_created": 0,
-    }}
+        "guard": d["guard"]["overall_status"],
+        "violations": d["guard"]["violations"],
+        "research_only": True,
+        "auto_add_to_watchlist_allowed": False,
+        "auto_promote_to_core_allowed": False,
+        "trade_recommendation_created": 0,
+        "paper_order_created": 0,
+    }
 
-def main():
-    p = argparse.ArgumentParser(); p.add_argument("--dry-run", action="store_true"); p.add_argument("--execute", action="store_true"); p.add_argument("--skip-network", action="store_true"); p.add_argument("--json", action="store_true")
-    a = p.parse_args()
-    m = "execute" if a.execute else ("skip-network" if a.skip_network else "dry-run")
-    print(json.dumps(run(m), indent=2, ensure_ascii=False, default=str))
 
-if __name__ == "__main__": main()
+# 创建 pipeline
+run_phase150_tiering_pipeline = create_pipeline(
+    phase_num=150,
+    build_module="build_phase150_tiering_dashboard",
+    result_extractor=extract_tiering_result,
+    output_name="phase150_tiering_pipeline"
+)
+
+
+if __name__ == "__main__":
+    run_phase150_tiering_pipeline()
