@@ -22,6 +22,7 @@ if str(LIB_DIR) not in sys.path:
 from smr_dashboard import DB_PATH, build_dashboard_state, resolve_project_path
 from smr_decision import ensure_decision_tables, review_recommendation
 from today_overview_view_model import build_today_overview_view_model
+from signal_flow_view_model import build_signal_flow_view_model
 
 
 NAV_ITEMS = [
@@ -2080,6 +2081,334 @@ def render_shell(
     .tone-info {{ color: #3b82f6; }}
     .tone-muted {{ color: #64748b; }}
 
+    /* ============== Signal Flow ============== */
+    .signal-filter-bar {{
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 16px 20px;
+      margin-bottom: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      align-items: center;
+      box-shadow: 0 8px 24px rgba(31, 39, 46, 0.04);
+    }}
+    .filter-group {{
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }}
+    .filter-label {{
+      font-size: 13px;
+      color: var(--muted);
+      white-space: nowrap;
+    }}
+    .filter-select, .filter-input {{
+      padding: 7px 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      font-size: 13px;
+      background: #fff;
+      color: var(--ink);
+      min-width: 120px;
+    }}
+    .filter-input {{
+      min-width: 180px;
+    }}
+    .filter-reset {{
+      margin-left: auto;
+      padding: 7px 16px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      font-size: 13px;
+      background: #fff;
+      color: var(--muted);
+      cursor: pointer;
+      text-decoration: none;
+    }}
+    .filter-reset:hover {{
+      color: var(--brand);
+      border-color: var(--brand);
+    }}
+
+    .signal-layout {{
+      display: grid;
+      grid-template-columns: 1fr 360px;
+      gap: 20px;
+    }}
+
+    .timeline-section {{
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 22px;
+      box-shadow: 0 12px 32px rgba(31, 39, 46, 0.05);
+    }}
+    .section-title {{
+      font-size: 18px;
+      font-weight: 600;
+      margin: 0 0 18px 0;
+    }}
+
+    .timeline {{
+      position: relative;
+      padding-left: 28px;
+    }}
+    .timeline::before {{
+      content: "";
+      position: absolute;
+      left: 9px;
+      top: 6px;
+      bottom: 6px;
+      width: 2px;
+      background: rgba(59, 130, 246, 0.15);
+    }}
+    .timeline-item {{
+      position: relative;
+      padding-bottom: 22px;
+    }}
+    .timeline-item:last-child {{
+      padding-bottom: 0;
+    }}
+    .timeline-node {{
+      position: absolute;
+      left: -28px;
+      top: 4px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #fff;
+      border: 3px solid #3b82f6;
+      z-index: 1;
+    }}
+    .timeline-time {{
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }}
+
+    .signal-card {{
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 14px 16px;
+    }}
+    .signal-title {{
+      font-size: 15px;
+      font-weight: 600;
+      margin: 0 0 6px 0;
+      color: var(--ink);
+    }}
+    .signal-summary {{
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.6;
+      margin: 0 0 10px 0;
+    }}
+    .signal-badges {{
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 10px;
+    }}
+    .signal-badge {{
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 500;
+      line-height: 1.7;
+    }}
+    .signal-badge.source {{ background: rgba(59, 130, 246, 0.08); color: #2563eb; }}
+    .signal-badge.entity {{ background: rgba(99, 102, 241, 0.08); color: #4f46e5; }}
+    .signal-badge.topic {{ background: rgba(139, 92, 246, 0.08); color: #7c3aed; }}
+    .signal-badge.strength-high {{ background: rgba(239, 68, 68, 0.08); color: #dc2626; }}
+    .signal-badge.strength-medium {{ background: rgba(245, 158, 11, 0.08); color: #d97706; }}
+    .signal-badge.strength-low {{ background: rgba(16, 185, 129, 0.08); color: #059669; }}
+    .signal-badge.strength-unknown {{ background: rgba(148, 163, 184, 0.12); color: #64748b; }}
+    .signal-badge.review {{ background: rgba(251, 146, 60, 0.1); color: #ea580c; }}
+
+    .signal-actions {{
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }}
+    .signal-btn {{
+      padding: 5px 12px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      font-size: 12px;
+      background: #fff;
+      color: var(--muted);
+      text-decoration: none;
+      cursor: pointer;
+    }}
+    .signal-btn:hover {{
+      color: var(--brand);
+      border-color: var(--brand);
+    }}
+    .signal-btn.disabled {{
+      opacity: 0.5;
+      cursor: not-allowed;
+    }}
+
+    .signal-side {{
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }}
+    .side-panel {{
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 18px;
+      box-shadow: 0 8px 24px rgba(31, 39, 46, 0.04);
+    }}
+    .side-title {{
+      font-size: 15px;
+      font-weight: 600;
+      margin: 0 0 14px 0;
+    }}
+
+    .signal-summary-grid {{
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }}
+    .summary-stat {{
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }}
+    .summary-icon {{
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }}
+    .summary-icon.blue {{ background: rgba(59, 130, 246, 0.1); color: #2563eb; }}
+    .summary-icon.purple {{ background: rgba(139, 92, 246, 0.1); color: #7c3aed; }}
+    .summary-icon.red {{ background: rgba(239, 68, 68, 0.1); color: #dc2626; }}
+    .summary-icon.amber {{ background: rgba(245, 158, 11, 0.1); color: #d97706; }}
+    .summary-number {{
+      font-size: 22px;
+      font-weight: 700;
+      line-height: 1.1;
+    }}
+    .summary-label {{
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 2px;
+    }}
+
+    .hot-chips {{
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }}
+    .hot-chip {{
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      background: rgba(59, 130, 246, 0.06);
+      color: #2563eb;
+      border: 1px solid rgba(59, 130, 246, 0.15);
+    }}
+    .hot-chip.theme {{
+      background: rgba(139, 92, 246, 0.06);
+      color: #7c3aed;
+      border-color: rgba(139, 92, 246, 0.15);
+    }}
+
+    .source-bar-list {{
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }}
+    .source-bar-item {{
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }}
+    .source-bar-label {{
+      font-size: 12px;
+      color: var(--muted);
+      width: 72px;
+      flex-shrink: 0;
+    }}
+    .source-bar-track {{
+      flex: 1;
+      height: 6px;
+      background: rgba(31, 39, 46, 0.06);
+      border-radius: 999px;
+      overflow: hidden;
+    }}
+    .source-bar-fill {{
+      height: 100%;
+      background: #3b82f6;
+      border-radius: 999px;
+    }}
+    .source-bar-count {{
+      font-size: 12px;
+      color: var(--muted);
+      width: 24px;
+      text-align: right;
+      flex-shrink: 0;
+    }}
+    .source-bar-unit {{
+      text-align: right;
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 8px;
+    }}
+
+    .signal-empty {{
+      text-align: center;
+      padding: 48px 20px;
+      color: var(--muted);
+    }}
+    .signal-empty-title {{
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--ink);
+      margin-bottom: 6px;
+    }}
+    .signal-empty-desc {{
+      font-size: 13px;
+    }}
+
+    .signal-disclaimer {{
+      margin-top: 18px;
+      padding: 12px 16px;
+      background: rgba(59, 130, 246, 0.04);
+      border: 1px solid rgba(59, 130, 246, 0.1);
+      border-radius: 10px;
+      font-size: 13px;
+      color: var(--muted);
+    }}
+
+    .load-more {{
+      text-align: center;
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--line);
+    }}
+    .load-more-btn {{
+      font-size: 13px;
+      color: var(--brand);
+      cursor: pointer;
+    }}
+
     @media (max-width: 1080px) {{
       .today-metrics {{
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2088,6 +2417,9 @@ def render_shell(
         grid-template-columns: 1fr;
       }}
       .health-grid {{
+        grid-template-columns: 1fr;
+      }}
+      .signal-layout {{
         grid-template-columns: 1fr;
       }}
     }}
@@ -5456,6 +5788,269 @@ def render_placeholder_health(state: dict, refresh_seconds: int) -> str:
     )
 
 
+def _render_filter_bar(filters: dict) -> str:
+    time_options = [("24h", "近 24 小时"), ("7d", "近 7 天"), ("30d", "近 30 天"), ("all", "全部")]
+    source_options = [
+        ("all", "全部"),
+        ("official_disclosure", "官方披露"),
+        ("company_ir", "公司 IR"),
+        ("public_research", "公开研究"),
+        ("media_excerpt", "媒体摘录"),
+        ("earnings_call", "电话会纪要"),
+        ("foundation", "Foundation"),
+        ("risk_monitor", "风险监控"),
+    ]
+    entity_options = [("all", "全部"), ("company", "公司"), ("industry", "行业"), ("theme", "主题")]
+    strength_options = [("all", "全部"), ("高", "高"), ("中", "中"), ("低", "低"), ("待确认", "待确认")]
+
+    def _options(opts, current):
+        return "".join(
+            f'<option value="{escape(v)}"{" selected" if v == current else ""}>{escape(l)}</option>'
+            for v, l in opts
+        )
+
+    return f"""
+<div class="signal-filter-bar">
+  <div class="filter-group">
+    <span class="filter-label">时间范围</span>
+    <select class="filter-select" name="time_range" onchange="this.form.submit()">
+      {_options(time_options, filters.get('time_range', 'all'))}
+    </select>
+  </div>
+  <div class="filter-group">
+    <span class="filter-label">来源类型</span>
+    <select class="filter-select" name="source_type" onchange="this.form.submit()">
+      {_options(source_options, filters.get('source_type', 'all'))}
+    </select>
+  </div>
+  <div class="filter-group">
+    <span class="filter-label">关联对象</span>
+    <select class="filter-select" name="entity" onchange="this.form.submit()">
+      {_options(entity_options, filters.get('entity', 'all'))}
+    </select>
+  </div>
+  <div class="filter-group">
+    <span class="filter-label">证据强度</span>
+    <select class="filter-select" name="strength" onchange="this.form.submit()">
+      {_options(strength_options, filters.get('strength', 'all'))}
+    </select>
+  </div>
+  <div class="filter-group">
+    <span class="filter-label">关键词搜索</span>
+    <input class="filter-input" type="text" name="q" placeholder="输入关键词" value="{escape(filters.get('q', ''))}">
+  </div>
+  <a class="filter-reset" href="/signals">重置筛选</a>
+</div>
+"""
+
+
+def _strength_badge_class(strength: str) -> str:
+    if strength == "高":
+        return "strength-high"
+    if strength == "中":
+        return "strength-medium"
+    if strength == "低":
+        return "strength-low"
+    return "strength-unknown"
+
+
+def _render_signal_card(signal: dict) -> str:
+    title = escape(signal.get("title") or "")
+    summary = escape(signal.get("summary") or "")
+    time_label = escape(signal.get("time_label") or "")
+    source_label = escape(signal.get("source_label") or "")
+    strength = signal.get("evidence_strength") or "待确认"
+    review = signal.get("review_status") or ""
+
+    entity_badges = "".join(
+        f'<span class="signal-badge entity">{escape(e)}</span>'
+        for e in (signal.get("related_entities") or [])
+    )
+    topic_badges = "".join(
+        f'<span class="signal-badge topic">{escape(t)}</span>'
+        for t in (signal.get("related_topics") or [])
+    )
+
+    source_url = signal.get("source_url")
+    evidence_url = signal.get("evidence_url")
+    source_btn = (
+        f'<a class="signal-btn" href="{escape(source_url)}" target="_blank">查看原文</a>'
+        if source_url
+        else '<span class="signal-btn disabled">暂无原文</span>'
+    )
+    evidence_btn = (
+        f'<a class="signal-btn" href="{escape(evidence_url)}" target="_blank">查看证据包</a>'
+        if evidence_url
+        else '<span class="signal-btn disabled">暂无证据包</span>'
+    )
+
+    review_badge = f'<span class="signal-badge review">{escape(review)}</span>' if review else ""
+
+    return f"""
+<div class="timeline-item">
+  <div class="timeline-node"></div>
+  <div class="timeline-time">{time_label}</div>
+  <div class="signal-card">
+    <h3 class="signal-title">{title}</h3>
+    <p class="signal-summary">{summary}</p>
+    <div class="signal-badges">
+      <span class="signal-badge source">{source_label}</span>
+      {entity_badges}
+      {topic_badges}
+      <span class="signal-badge {_strength_badge_class(strength)}">{escape(strength)}</span>
+      {review_badge}
+    </div>
+    <div class="signal-actions">
+      {source_btn}
+      {evidence_btn}
+    </div>
+  </div>
+</div>
+"""
+
+
+def _render_timeline(signals: list[dict], empty: bool) -> str:
+    if empty or not signals:
+        return """
+<div class="signal-empty">
+  <div class="signal-empty-title">暂无信号</div>
+  <div class="signal-empty-desc">当前筛选条件下没有可展示的证据或事件。请调整筛选条件，或查看数据健康。</div>
+</div>
+"""
+    items = "".join(_render_signal_card(s) for s in signals)
+    load_more = (
+        """
+<div class="load-more">
+  <span class="load-more-btn">加载更多 ▾</span>
+</div>
+"""
+        if len(signals) >= 8
+        else ""
+    )
+    return f'<div class="timeline">{items}</div>{load_more}'
+
+
+def _render_summary_stats(summary: dict) -> str:
+    cards = [
+        ("total_signals", "今日新增信号数", "📄", "blue"),
+        ("focus_company_count", "重点公司数", "🏢", "purple"),
+        ("high_strength_count", "高强度证据数", "🛡", "red"),
+        ("needs_review_count", "需复核数", "📋", "amber"),
+    ]
+    html = ""
+    for key, label, icon, tone in cards:
+        count = summary.get(key, 0)
+        html += f"""
+<div class="summary-stat">
+  <div class="summary-icon {tone}">{icon}</div>
+  <div>
+    <div class="summary-number">{count}</div>
+    <div class="summary-label">{label}</div>
+  </div>
+</div>
+"""
+    return f'<div class="signal-summary-grid">{html}</div>'
+
+
+def _render_hot_entities(entities: list[dict]) -> str:
+    if not entities:
+        return """
+<div class="signal-empty" style="padding: 24px 12px;">
+  <div class="signal-empty-title" style="font-size: 13px;">暂无热门关联对象</div>
+</div>
+"""
+    chips = ""
+    for e in entities:
+        name = escape(e.get("name") or "")
+        etype = e.get("type") or "company"
+        cls = "hot-chip theme" if etype == "theme" else "hot-chip"
+        chips += f'<span class="{cls}">{name}</span>'
+    return f'<div class="hot-chips">{chips}</div>'
+
+
+def _render_source_distribution(distribution: list[dict]) -> str:
+    if not distribution or all(d.get("count", 0) == 0 for d in distribution):
+        return """
+<div class="signal-empty" style="padding: 24px 12px;">
+  <div class="signal-empty-title" style="font-size: 13px;">暂无来源分布数据</div>
+</div>
+"""
+    bars = ""
+    for d in distribution:
+        label = escape(d.get("label") or "")
+        count = d.get("count", 0)
+        pct = d.get("pct", 0)
+        bars += f"""
+<div class="source-bar-item">
+  <span class="source-bar-label">{label}</span>
+  <div class="source-bar-track">
+    <div class="source-bar-fill" style="width: {pct}%;"></div>
+  </div>
+  <span class="source-bar-count">{count}</span>
+</div>
+"""
+    return f"""
+<div class="source-bar-list">
+  {bars}
+</div>
+<div class="source-bar-unit">单位：条</div>
+"""
+
+
+def render_signal_flow(state: dict, refresh_seconds: int, filters: dict | None = None) -> str:
+    view = build_signal_flow_view_model(state, filters=filters)
+    clean_filters = view["filters"]
+    summary = view["summary"]
+    signals = view["signals"]
+    hot_entities = view["hot_entities"]
+    source_dist = view["source_distribution"]
+    empty = view["empty_state"]
+
+    filter_bar = _render_filter_bar(clean_filters)
+    timeline = _render_timeline(signals, empty)
+    stats = _render_summary_stats(summary)
+    hot = _render_hot_entities(hot_entities)
+    source_bars = _render_source_distribution(source_dist)
+
+    body = f"""
+{filter_bar}
+<div class="signal-layout">
+  <article class="timeline-section">
+    <h2 class="section-title">信号时间线</h2>
+    {timeline}
+  </article>
+  <aside class="signal-side">
+    <div class="side-panel">
+      <h3 class="side-title">今日信号摘要</h3>
+      {stats}
+    </div>
+    <div class="side-panel">
+      <h3 class="side-title">热门关联对象</h3>
+      {hot}
+    </div>
+    <div class="side-panel">
+      <h3 class="side-title">信号来源分布</h3>
+      {source_bars}
+    </div>
+  </aside>
+</div>
+<div class="signal-disclaimer">
+  系统仅展示证据与信号，不直接给出投资建议。
+</div>
+"""
+
+    return render_shell(
+        page_title="信号流 · 同行资本投研系统",
+        current_path="/signals",
+        hero_title="信号流",
+        hero_subtitle="最新证据时间线与来源追溯",
+        body=body,
+        refresh_seconds=refresh_seconds,
+        show_status_strip=False,
+        **shell_state_kwargs(state),
+    )
+
+
 def render_operations_page(state: dict, refresh_seconds: int) -> str:
     overview = state.get("overview") or {}
     reporting = state.get("reporting") or {}
@@ -7516,7 +8111,7 @@ def render_recommendation_review_page(
 PAGE_RENDERERS = {
     "/": render_today_overview,
     "/coverage": render_placeholder_coverage,
-    "/signals": render_placeholder_signals,
+    "/signals": render_signal_flow,
     "/research": render_placeholder_research,
     "/health": render_placeholder_health,
 }
@@ -7576,7 +8171,19 @@ def build_handler(refresh_seconds: int):
             renderer = PAGE_RENDERERS.get(parsed.path)
             if renderer:
                 state = build_dashboard_state()
-                self._send(200, renderer(state, refresh_seconds))
+                if parsed.path == "/signals":
+                    from urllib.parse import parse_qs
+                    qs = parse_qs(parsed.query)
+                    filters = {
+                        "time_range": (qs.get("time_range") or ["all"])[0],
+                        "source_type": (qs.get("source_type") or ["all"])[0],
+                        "entity": (qs.get("entity") or ["all"])[0],
+                        "strength": (qs.get("strength") or ["all"])[0],
+                        "q": (qs.get("q") or [""])[0],
+                    }
+                    self._send(200, renderer(state, refresh_seconds, filters=filters))
+                else:
+                    self._send(200, renderer(state, refresh_seconds))
                 return
             self._send(404, "<h1>Not Found</h1>")
 
