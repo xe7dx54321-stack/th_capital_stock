@@ -1,5 +1,10 @@
 # SMR-D0 Dashboard 产品蓝图
 
+> **更新记录（D1 补充）**
+> - 2026-05 / SMR-D1：Page 1「今日总览」已完成首轮施工，见 [smr_d1_dashboard_today_overview_report.md](./smr_d1_dashboard_today_overview_report.md)。
+> - 其余 4 页（覆盖池 / 信号流 / 研究队列 / 数据健康）当前为占位页，待后续阶段施工。
+> - 本文档为 D0 原始蓝图，不做改写；D1 施工状态仅作为补充信息。
+
 ## 1. 新 Dashboard 设计原则
 
 ### 核心原则

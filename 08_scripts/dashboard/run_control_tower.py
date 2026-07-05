@@ -21,11 +21,15 @@ if str(LIB_DIR) not in sys.path:
 
 from smr_dashboard import DB_PATH, build_dashboard_state, resolve_project_path
 from smr_decision import ensure_decision_tables, review_recommendation
+from today_overview_view_model import build_today_overview_view_model
 
 
 NAV_ITEMS = [
-    ("/", "看板"),
-    ("/review-queue", "审核"),
+    ("/", "今日总览"),
+    ("/coverage", "覆盖池"),
+    ("/signals", "信号流"),
+    ("/research", "研究队列"),
+    ("/health", "数据健康"),
 ]
 
 OPERATIONS_BLUEPRINT = [
@@ -1751,12 +1755,349 @@ def render_shell(
         padding-left: 40px;
       }}
     }}
+
+    /* ============== Today Overview ============== */
+    .today-metrics {{
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 20px;
+      margin-bottom: 20px;
+    }}
+    .metric-card {{
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 22px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      box-shadow: 0 12px 32px rgba(31, 39, 46, 0.05);
+    }}
+    .metric-icon {{
+      width: 56px;
+      height: 56px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }}
+    .metric-body {{
+      flex: 1;
+      min-width: 0;
+    }}
+    .metric-label {{
+      font-size: 14px;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }}
+    .metric-value {{
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+      margin-bottom: 4px;
+    }}
+    .metric-subtitle {{
+      font-size: 12px;
+    }}
+
+    .today-grid {{
+      display: grid;
+      grid-template-columns: 1.6fr 1fr;
+      gap: 20px;
+    }}
+    .today-main {{
+      margin-bottom: 0;
+    }}
+    .today-side .panel {{
+      margin-bottom: 20px;
+    }}
+    .today-side .panel:last-child {{
+      margin-bottom: 0;
+    }}
+
+    .today-section-title {{
+      font-size: 18px;
+      margin-bottom: 16px;
+      letter-spacing: -0.01em;
+    }}
+
+    .change-card {{
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      padding: 18px;
+      border-radius: 12px;
+      border: 1px solid rgba(31, 39, 46, 0.08);
+      margin-bottom: 12px;
+      background: rgba(255, 255, 255, 0.6);
+    }}
+    .change-card:last-child {{
+      margin-bottom: 0;
+    }}
+    .change-rank {{
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: var(--brand-soft);
+      color: var(--brand);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 16px;
+      flex-shrink: 0;
+    }}
+    .change-body {{
+      flex: 1;
+      min-width: 0;
+    }}
+    .change-title {{
+      font-weight: 600;
+      font-size: 15px;
+      margin-bottom: 6px;
+      color: var(--ink);
+    }}
+    .change-entities {{
+      font-size: 13px;
+      color: var(--brand);
+      margin-bottom: 6px;
+    }}
+    .change-summary {{
+      font-size: 13px;
+      line-height: 1.5;
+    }}
+    .change-side {{
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      flex-shrink: 0;
+      align-items: flex-end;
+    }}
+
+    .pending-row {{
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(31, 39, 46, 0.06);
+    }}
+    .pending-row:last-child {{
+      border-bottom: none;
+      padding-bottom: 0;
+    }}
+    .pending-rank {{
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      background: var(--brand-soft);
+      color: var(--brand);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 600;
+      flex-shrink: 0;
+    }}
+    .pending-question {{
+      flex: 1;
+      font-size: 13px;
+      color: var(--ink);
+    }}
+
+    .coverage-table-wrap {{
+      overflow-x: auto;
+    }}
+    .coverage-table {{
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }}
+    .coverage-table th {{
+      text-align: left;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--muted);
+      padding: 8px 10px;
+      border-bottom: 1px solid rgba(31, 39, 46, 0.08);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }}
+    .coverage-table td {{
+      padding: 10px;
+      border-bottom: 1px solid rgba(31, 39, 46, 0.04);
+      vertical-align: middle;
+    }}
+    .coverage-table tr:last-child td {{
+      border-bottom: none;
+    }}
+    .cov-company {{
+      font-weight: 500;
+    }}
+    .status-dot {{
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-right: 6px;
+      vertical-align: middle;
+    }}
+    .status-dot.tone-good {{ background: #10b981; }}
+    .status-dot.tone-warning {{ background: #f59e0b; }}
+    .status-dot.tone-danger {{ background: #ef4444; }}
+    .status-dot.tone-info {{ background: #3b82f6; }}
+    .status-dot.tone-muted {{ background: #94a3b8; }}
+
+    .evidence-bar {{
+      display: inline-block;
+      width: 60px;
+      height: 6px;
+      border-radius: 3px;
+      background: rgba(31, 39, 46, 0.08);
+      vertical-align: middle;
+      margin-right: 8px;
+    }}
+    .evidence-bar-fill {{
+      height: 100%;
+      border-radius: 3px;
+      background: var(--brand);
+    }}
+    .evidence-pct {{
+      font-size: 12px;
+      vertical-align: middle;
+    }}
+
+    .health-grid {{
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }}
+    .health-card {{
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.5);
+      border: 1px solid rgba(31, 39, 46, 0.06);
+    }}
+    .health-icon {{
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: 700;
+      flex-shrink: 0;
+      background: rgba(148, 163, 184, 0.12);
+      color: #64748b;
+    }}
+    .health-icon.tone-good {{ background: rgba(16, 185, 129, 0.12); color: #10b981; }}
+    .health-icon.tone-warning {{ background: rgba(245, 158, 11, 0.12); color: #f59e0b; }}
+    .health-icon.tone-danger {{ background: rgba(239, 68, 68, 0.12); color: #ef4444; }}
+    .health-icon.tone-info {{ background: rgba(59, 130, 246, 0.12); color: #3b82f6; }}
+    .health-body {{ flex: 1; min-width: 0; }}
+    .health-label {{
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 2px;
+    }}
+    .health-status {{
+      font-size: 14px;
+      font-weight: 600;
+    }}
+    .health-status.tone-good {{ color: #10b981; }}
+    .health-status.tone-warning {{ color: #f59e0b; }}
+    .health-status.tone-danger {{ color: #ef4444; }}
+    .health-status.tone-info {{ color: #3b82f6; }}
+    .health-status.tone-muted {{ color: #64748b; }}
+
+    .today-footer {{
+      text-align: center;
+      padding: 16px 0;
+      margin-top: 4px;
+    }}
+
+    .empty-state {{
+      padding: 32px 20px;
+      text-align: center;
+    }}
+    .empty-state.small {{
+      padding: 20px 16px;
+    }}
+    .empty-state-title {{
+      font-weight: 600;
+      font-size: 15px;
+      color: var(--ink);
+      margin-bottom: 6px;
+    }}
+    .empty-state-desc {{
+      font-size: 13px;
+      color: var(--muted);
+    }}
+
+    .placeholder-page {{
+      text-align: center;
+      padding: 80px 20px;
+    }}
+    .placeholder-icon {{
+      font-size: 48px;
+      margin-bottom: 20px;
+    }}
+    .placeholder-title {{
+      font-size: 24px;
+      margin-bottom: 12px;
+    }}
+    .placeholder-desc {{
+      font-size: 15px;
+      color: var(--muted);
+      margin-bottom: 16px;
+    }}
+    .placeholder-note {{
+      font-size: 13px;
+    }}
+
+    .badge {{
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 500;
+      line-height: 1.6;
+    }}
+    .badge-good {{ background: rgba(16, 185, 129, 0.1); color: #059669; }}
+    .badge-warning {{ background: rgba(245, 158, 11, 0.1); color: #d97706; }}
+    .badge-danger {{ background: rgba(239, 68, 68, 0.1); color: #dc2626; }}
+    .badge-info {{ background: rgba(59, 130, 246, 0.1); color: #2563eb; }}
+    .badge-muted {{ background: rgba(148, 163, 184, 0.12); color: #64748b; }}
+
+    .tone-good {{ color: #10b981; }}
+    .tone-warning {{ color: #f59e0b; }}
+    .tone-danger {{ color: #ef4444; }}
+    .tone-info {{ color: #3b82f6; }}
+    .tone-muted {{ color: #64748b; }}
+
+    @media (max-width: 1080px) {{
+      .today-metrics {{
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }}
+      .today-grid {{
+        grid-template-columns: 1fr;
+      }}
+      .health-grid {{
+        grid-template-columns: 1fr;
+      }}
+    }}
+
   </style>
 </head>
 <body>
   <div class="page">
     <header class="topbar">
-      <div class="brand">SMR 指挥台</div>
+      <div class="brand">同行资本投研系统</div>
       <nav class="nav">{render_nav(current_path)}</nav>
     </header>
     {status_strip_html}
@@ -4799,6 +5140,322 @@ def render_home(state: dict, refresh_seconds: int) -> str:
     )
 
 
+DASHBOARD_BRAND = "同行资本投研系统"
+
+
+def _tone_class(tone: str | None) -> str:
+    tone_map = {
+        "good": "tone-good",
+        "success": "tone-good",
+        "warning": "tone-warning",
+        "warn": "tone-warning",
+        "danger": "tone-danger",
+        "error": "tone-danger",
+        "info": "tone-info",
+        "muted": "tone-muted",
+    }
+    return tone_map.get((tone or "").lower(), "tone-muted")
+
+
+def render_today_overview(state: dict, refresh_seconds: int) -> str:
+    view = build_today_overview_view_model(state)
+    metrics = view["metrics"]
+    top_changes = view["top_changes"]
+    pending = view["pending_decisions"]
+    coverage = view["coverage_moves"]
+    health = view["health_summary"]
+    updated_at = view["updated_at"]
+    empty = view["empty_state"]
+
+    metric_cards_html = render_today_metric_cards(metrics)
+    top_changes_html = render_top_changes(top_changes, empty)
+    pending_html = render_pending_decisions(pending, empty)
+    coverage_html = render_coverage_moves(coverage, empty)
+    health_html = render_health_summary(health, empty)
+
+    body = f"""
+<section class="today-metrics">
+  {metric_cards_html}
+</section>
+<section class="today-grid">
+  <article class="panel today-main">
+    <h2 class="today-section-title">今日最重要的 3 件事</h2>
+    {top_changes_html}
+  </article>
+  <div class="today-side">
+    <article class="panel">
+      <h2 class="today-section-title">今日待判断</h2>
+      {pending_html}
+    </article>
+    <article class="panel">
+      <h2 class="today-section-title">覆盖池异动</h2>
+      {coverage_html}
+    </article>
+    <article class="panel">
+      <h2 class="today-section-title">数据健康提醒</h2>
+      {health_html}
+    </article>
+  </div>
+</section>
+<div class="today-footer">
+  <span class="muted">最近更新：{escape(updated_at)}</span>
+</div>
+"""
+    return render_shell(
+        page_title="今日总览 · 同行资本投研系统",
+        current_path="/",
+        hero_title="今日总览",
+        hero_subtitle="今天最值得关注的变化与待判断事项",
+        body=body,
+        refresh_seconds=refresh_seconds,
+        show_status_strip=False,
+        **shell_state_kwargs(state),
+    )
+
+
+def render_today_metric_cards(metrics: dict) -> str:
+    cards = []
+    configs = [
+        ("important_changes", "今日重点变化", "#3b82f6", "chart-line"),
+        ("pending_decisions", "待判断事项", "#f59e0b", "question-circle"),
+        ("high_priority_companies", "高优先级公司", "#10b981", "building"),
+        ("risk_alerts", "风险提示", "#ef4444", "shield"),
+    ]
+    for key, label, color, icon in configs:
+        m = metrics.get(key) or {}
+        count = m.get("count", 0)
+        subtitle = m.get("subtitle", "")
+        cards.append(
+            f"""
+<div class="metric-card">
+  <div class="metric-icon" style="background: {color}15; color: {color};">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      {_metric_icon(icon)}
+    </svg>
+  </div>
+  <div class="metric-body">
+    <div class="metric-label">{escape(label)}</div>
+    <div class="metric-value" style="color: {color};">{escape(str(count))} 条</div>
+    <div class="metric-subtitle muted">{escape(subtitle)}</div>
+  </div>
+</div>
+"""
+        )
+    return "\n".join(cards)
+
+
+def _metric_icon(name: str) -> str:
+    icons = {
+        "chart-line": '<path d="M3 3v18h18"/><path d="M19 9l-5 5-4-4-3 3"/>',
+        "question-circle": '<circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3"/><path d="M12 17h.01"/>',
+        "building": '<rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M12 6h.01"/><path d="M12 10h.01"/><path d="M12 14h.01"/><path d="M16 10h.01"/><path d="M16 14h.01"/><path d="M8 10h.01"/><path d="M8 14h.01"/>',
+        "shield": '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
+    }
+    return icons.get(name, "")
+
+
+def render_top_changes(items: list[dict], empty: bool) -> str:
+    if not items or empty:
+        return """
+<div class="empty-state">
+  <div class="empty-state-title">暂无今日重点变化</div>
+  <div class="empty-state-desc">系统尚未生成足够证据，建议查看信号流或数据健康。</div>
+</div>
+"""
+    cards = []
+    for item in items:
+        rank = item.get("rank", 0)
+        title = item.get("title", "")
+        entities = item.get("affected_entities") or []
+        summary = item.get("summary", "")
+        strength = item.get("evidence_strength", "")
+        source_type = item.get("source_type", "")
+        strength_tone = "good" if strength == "高" else "warning" if strength == "中" else "muted"
+        entities_text = "、".join(entities) if entities else ""
+        cards.append(
+            f"""
+<div class="change-card">
+  <div class="change-rank">{escape(str(rank))}</div>
+  <div class="change-body">
+    <div class="change-title">{escape(title)}</div>
+    <div class="change-entities">{escape(entities_text)}</div>
+    <div class="change-summary muted">{escape(summary)}</div>
+  </div>
+  <div class="change-side">
+    <span class="badge badge-{strength_tone}">{escape(strength)}</span>
+    <span class="badge badge-info">{escape(source_type)}</span>
+  </div>
+</div>
+"""
+        )
+    return "\n".join(cards)
+
+
+def render_pending_decisions(items: list[dict], empty: bool) -> str:
+    if not items or empty:
+        return """
+<div class="empty-state small">
+  <div class="empty-state-title">暂无待判断事项</div>
+  <div class="empty-state-desc">当前没有需要人工确认的关键事项。</div>
+</div>
+"""
+    rows = []
+    for item in items:
+        rank = item.get("rank", 0)
+        question = item.get("question", "")
+        badge = item.get("status_badge", "")
+        tone = item.get("badge_tone", "muted")
+        rows.append(
+            f"""
+<div class="pending-row">
+  <span class="pending-rank">{escape(str(rank))}</span>
+  <span class="pending-question">{escape(question)}</span>
+  <span class="badge badge-{tone}">{escape(badge)}</span>
+</div>
+"""
+        )
+    return "\n".join(rows)
+
+
+def render_coverage_moves(items: list[dict], empty: bool) -> str:
+    if not items or empty:
+        return """
+<div class="empty-state small">
+  <div class="empty-state-title">暂无覆盖池异动</div>
+  <div class="empty-state-desc">覆盖池中暂无显著变化。</div>
+</div>
+"""
+    rows = []
+    for item in items:
+        company = item.get("company", "")
+        status_label = item.get("status_label", "")
+        status_tone = item.get("status_tone", "muted")
+        evidence_pct = item.get("evidence_pct", 0)
+        priority = item.get("priority", "")
+        priority_tone = "danger" if priority == "高" else "warning" if priority == "中" else "muted"
+        rows.append(
+            f"""
+<tr>
+  <td class="cov-company">{escape(company)}</td>
+  <td><span class="status-dot {_tone_class(status_tone)}"></span>{escape(status_label)}</td>
+  <td>
+    <div class="evidence-bar">
+      <div class="evidence-bar-fill" style="width: {evidence_pct}%;"></div>
+    </div>
+    <span class="evidence-pct muted">{evidence_pct}%</span>
+  </td>
+  <td><span class="badge badge-{priority_tone}">{escape(priority)}</span></td>
+</tr>
+"""
+        )
+    return f"""
+<div class="coverage-table-wrap">
+  <table class="coverage-table">
+    <thead>
+      <tr>
+        <th>公司</th>
+        <th>最新状态</th>
+        <th>证据完整度</th>
+        <th>优先级</th>
+      </tr>
+    </thead>
+    <tbody>
+      {''.join(rows)}
+    </tbody>
+  </table>
+</div>
+"""
+
+
+def render_health_summary(items: list[dict], empty: bool) -> str:
+    if not items:
+        items = [
+            {"label": "行情新鲜度", "status": "暂无数据", "tone": "muted"},
+            {"label": "信息源状态", "status": "暂无数据", "tone": "muted"},
+            {"label": "Pipeline 状态", "status": "暂无数据", "tone": "muted"},
+        ]
+    cards = []
+    for item in items:
+        label = item.get("label", "")
+        status = item.get("status", "")
+        tone = item.get("tone", "muted")
+        tone_cls = _tone_class(tone)
+        icon = "✓" if tone in ("good", "success") else "!" if tone in ("danger", "error") else "○"
+        cards.append(
+            f"""
+<div class="health-card">
+  <div class="health-icon {tone_cls}">{icon}</div>
+  <div class="health-body">
+    <div class="health-label">{escape(label)}</div>
+    <div class="health-status {tone_cls}">{escape(status)}</div>
+  </div>
+</div>
+"""
+        )
+    return f'<div class="health-grid">{"".join(cards)}</div>'
+
+
+def render_placeholder_page(title: str, desc: str, current_path: str, state: dict, refresh_seconds: int) -> str:
+    body = f"""
+<div class="placeholder-page">
+  <div class="placeholder-icon">📋</div>
+  <h2 class="placeholder-title">{escape(title)}</h2>
+  <p class="placeholder-desc">{escape(desc)}</p>
+  <div class="placeholder-note muted">页面设计已完成，施工将在后续阶段进行。</div>
+</div>
+"""
+    return render_shell(
+        page_title=f"{title} · 同行资本投研系统",
+        current_path=current_path,
+        hero_title=title,
+        hero_subtitle=desc,
+        body=body,
+        refresh_seconds=refresh_seconds,
+        show_status_strip=False,
+        **shell_state_kwargs(state),
+    )
+
+
+def render_placeholder_coverage(state: dict, refresh_seconds: int) -> str:
+    return render_placeholder_page(
+        "覆盖池",
+        "查看当前系统正在覆盖的公司、行业和主题",
+        "/coverage",
+        state,
+        refresh_seconds,
+    )
+
+
+def render_placeholder_signals(state: dict, refresh_seconds: int) -> str:
+    return render_placeholder_page(
+        "信号流",
+        "最新证据时间线与来源追溯",
+        "/signals",
+        state,
+        refresh_seconds,
+    )
+
+
+def render_placeholder_research(state: dict, refresh_seconds: int) -> str:
+    return render_placeholder_page(
+        "研究队列",
+        "管理系统建议继续深挖的研究主题",
+        "/research",
+        state,
+        refresh_seconds,
+    )
+
+
+def render_placeholder_health(state: dict, refresh_seconds: int) -> str:
+    return render_placeholder_page(
+        "数据健康",
+        "影响投研可靠性的关键健康状态",
+        "/health",
+        state,
+        refresh_seconds,
+    )
+
+
 def render_operations_page(state: dict, refresh_seconds: int) -> str:
     overview = state.get("overview") or {}
     reporting = state.get("reporting") or {}
@@ -6857,17 +7514,11 @@ def render_recommendation_review_page(
 
 
 PAGE_RENDERERS = {
-    "/": render_home,
-    "/reports": render_home,
-    "/opportunities": render_home,
-    "/analysis": render_home,
-    "/operations": render_home,
-    "/research": render_home,
-    "/portfolio": render_home,
-    "/risk": render_home,
-    "/capital-flow": render_home,
-    "/events": render_home,
-    "/review-queue": render_review_queue,
+    "/": render_today_overview,
+    "/coverage": render_placeholder_coverage,
+    "/signals": render_placeholder_signals,
+    "/research": render_placeholder_research,
+    "/health": render_placeholder_health,
 }
 
 

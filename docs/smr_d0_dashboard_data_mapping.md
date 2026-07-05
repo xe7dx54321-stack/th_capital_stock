@@ -1,5 +1,11 @@
 # SMR-D0 Dashboard 数据映射表
 
+> **更新记录（D1 补充）**
+> - 2026-05 / SMR-D1：Page 1「今日总览」已基于现有数据源完成首轮施工。
+> - 实际映射见 [smr_d1_dashboard_today_overview_report.md §7 数据来源映射](./smr_d1_dashboard_today_overview_report.md#7-数据来源映射)。
+> - 本文档为 D0 原始映射表，不做改写；D1 实际落地情况仅作为补充信息。
+> - 其余 4 页（覆盖池 / 信号流 / 研究队列 / 数据健康）尚未施工，数据映射仍以本文档为准。
+
 ## 说明
 
 本文档映射新 Dashboard 5 个页面的数据需求与现有数据源的对应关系，识别差距，并标注未来 opc-foundation 的接入点。
