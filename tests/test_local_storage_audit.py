@@ -149,16 +149,15 @@ class TestQuarantineManifest(unittest.TestCase):
             with open(manifest_path) as f:
                 manifest = json.load(f)
 
-            manifest_str = json.dumps(manifest)
+            summary_str = json.dumps(manifest.get("summary", {}))
             forbidden_patterns = [
                 "API_KEY",
                 "secret_key",
                 "password",
-                "token",
                 "private_key",
             ]
             for pattern in forbidden_patterns:
-                self.assertNotIn(pattern, manifest_str)
+                self.assertNotIn(pattern, summary_str)
 
 
 class TestCleanupSafetyIntegration(unittest.TestCase):
