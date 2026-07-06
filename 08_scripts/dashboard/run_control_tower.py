@@ -21,11 +21,19 @@ if str(LIB_DIR) not in sys.path:
 
 from smr_dashboard import DB_PATH, build_dashboard_state, resolve_project_path
 from smr_decision import ensure_decision_tables, review_recommendation
+from today_overview_view_model import build_today_overview_view_model
+from signal_flow_view_model import build_signal_flow_view_model
+from research_queue_view_model import build_research_queue_view_model
+from coverage_pool_view_model import build_coverage_pool_view_model
+from data_health_view_model import build_data_health_view_model
 
 
 NAV_ITEMS = [
-    ("/", "看板"),
-    ("/review-queue", "审核"),
+    ("/", "今日总览"),
+    ("/coverage", "覆盖池"),
+    ("/signals", "信号流"),
+    ("/research", "研究队列"),
+    ("/health", "数据健康"),
 ]
 
 OPERATIONS_BLUEPRINT = [
@@ -1751,12 +1759,1822 @@ def render_shell(
         padding-left: 40px;
       }}
     }}
+
+    /* ============== Today Overview ============== */
+    .today-metrics {{
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 20px;
+      margin-bottom: 20px;
+    }}
+    .metric-card {{
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 22px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      box-shadow: 0 12px 32px rgba(31, 39, 46, 0.05);
+    }}
+    .metric-icon {{
+      width: 56px;
+      height: 56px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }}
+    .metric-body {{
+      flex: 1;
+      min-width: 0;
+    }}
+    .metric-label {{
+      font-size: 14px;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }}
+    .metric-value {{
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+      margin-bottom: 4px;
+    }}
+    .metric-subtitle {{
+      font-size: 12px;
+    }}
+
+    .today-grid {{
+      display: grid;
+      grid-template-columns: 1.6fr 1fr;
+      gap: 20px;
+    }}
+    .today-main {{
+      margin-bottom: 0;
+    }}
+    .today-side .panel {{
+      margin-bottom: 20px;
+    }}
+    .today-side .panel:last-child {{
+      margin-bottom: 0;
+    }}
+
+    .today-section-title {{
+      font-size: 18px;
+      margin-bottom: 16px;
+      letter-spacing: -0.01em;
+    }}
+
+    .change-card {{
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      padding: 18px;
+      border-radius: 12px;
+      border: 1px solid rgba(31, 39, 46, 0.08);
+      margin-bottom: 12px;
+      background: rgba(255, 255, 255, 0.6);
+    }}
+    .change-card:last-child {{
+      margin-bottom: 0;
+    }}
+    .change-rank {{
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: var(--brand-soft);
+      color: var(--brand);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 16px;
+      flex-shrink: 0;
+    }}
+    .change-body {{
+      flex: 1;
+      min-width: 0;
+    }}
+    .change-title {{
+      font-weight: 600;
+      font-size: 15px;
+      margin-bottom: 6px;
+      color: var(--ink);
+    }}
+    .change-entities {{
+      font-size: 13px;
+      color: var(--brand);
+      margin-bottom: 6px;
+    }}
+    .change-summary {{
+      font-size: 13px;
+      line-height: 1.5;
+    }}
+    .change-side {{
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      flex-shrink: 0;
+      align-items: flex-end;
+    }}
+
+    .pending-row {{
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(31, 39, 46, 0.06);
+    }}
+    .pending-row:last-child {{
+      border-bottom: none;
+      padding-bottom: 0;
+    }}
+    .pending-rank {{
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      background: var(--brand-soft);
+      color: var(--brand);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 600;
+      flex-shrink: 0;
+    }}
+    .pending-question {{
+      flex: 1;
+      font-size: 13px;
+      color: var(--ink);
+    }}
+
+    .coverage-table-wrap {{
+      overflow-x: auto;
+    }}
+    .coverage-table {{
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }}
+    .coverage-table th {{
+      text-align: left;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--muted);
+      padding: 8px 10px;
+      border-bottom: 1px solid rgba(31, 39, 46, 0.08);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }}
+    .coverage-table td {{
+      padding: 10px;
+      border-bottom: 1px solid rgba(31, 39, 46, 0.04);
+      vertical-align: middle;
+    }}
+    .coverage-table tr:last-child td {{
+      border-bottom: none;
+    }}
+    .cov-company {{
+      font-weight: 500;
+    }}
+    .status-dot {{
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-right: 6px;
+      vertical-align: middle;
+    }}
+    .status-dot.tone-good {{ background: #10b981; }}
+    .status-dot.tone-warning {{ background: #f59e0b; }}
+    .status-dot.tone-danger {{ background: #ef4444; }}
+    .status-dot.tone-info {{ background: #3b82f6; }}
+    .status-dot.tone-muted {{ background: #94a3b8; }}
+
+    .evidence-bar {{
+      display: inline-block;
+      width: 60px;
+      height: 6px;
+      border-radius: 3px;
+      background: rgba(31, 39, 46, 0.08);
+      vertical-align: middle;
+      margin-right: 8px;
+    }}
+    .evidence-bar-fill {{
+      height: 100%;
+      border-radius: 3px;
+      background: var(--brand);
+    }}
+    .evidence-pct {{
+      font-size: 12px;
+      vertical-align: middle;
+    }}
+
+    .health-grid {{
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }}
+    .health-card {{
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.5);
+      border: 1px solid rgba(31, 39, 46, 0.06);
+    }}
+    .health-icon {{
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: 700;
+      flex-shrink: 0;
+      background: rgba(148, 163, 184, 0.12);
+      color: #64748b;
+    }}
+    .health-icon.tone-good {{ background: rgba(16, 185, 129, 0.12); color: #10b981; }}
+    .health-icon.tone-warning {{ background: rgba(245, 158, 11, 0.12); color: #f59e0b; }}
+    .health-icon.tone-danger {{ background: rgba(239, 68, 68, 0.12); color: #ef4444; }}
+    .health-icon.tone-info {{ background: rgba(59, 130, 246, 0.12); color: #3b82f6; }}
+    .health-body {{ flex: 1; min-width: 0; }}
+    .health-label {{
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 2px;
+    }}
+    .health-status {{
+      font-size: 14px;
+      font-weight: 600;
+    }}
+    .health-status.tone-good {{ color: #10b981; }}
+    .health-status.tone-warning {{ color: #f59e0b; }}
+    .health-status.tone-danger {{ color: #ef4444; }}
+    .health-status.tone-info {{ color: #3b82f6; }}
+    .health-status.tone-muted {{ color: #64748b; }}
+
+    .today-footer {{
+      text-align: center;
+      padding: 16px 0;
+      margin-top: 4px;
+    }}
+
+    .today-disclaimer {{
+      text-align: center;
+      padding: 18px;
+      font-size: 12px;
+      color: var(--muted);
+      border-top: 1px solid var(--line);
+      margin-top: 8px;
+    }}
+
+    .empty-state {{
+      padding: 32px 20px;
+      text-align: center;
+    }}
+    .empty-state.small {{
+      padding: 20px 16px;
+    }}
+    .empty-state-title {{
+      font-weight: 600;
+      font-size: 15px;
+      color: var(--ink);
+      margin-bottom: 6px;
+    }}
+    .empty-state-desc {{
+      font-size: 13px;
+      color: var(--muted);
+    }}
+
+    .placeholder-page {{
+      text-align: center;
+      padding: 80px 20px;
+    }}
+    .placeholder-icon {{
+      font-size: 48px;
+      margin-bottom: 20px;
+    }}
+    .placeholder-title {{
+      font-size: 24px;
+      margin-bottom: 12px;
+    }}
+    .placeholder-desc {{
+      font-size: 15px;
+      color: var(--muted);
+      margin-bottom: 16px;
+    }}
+    .placeholder-note {{
+      font-size: 13px;
+    }}
+
+    .badge {{
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 500;
+      line-height: 1.6;
+    }}
+    .badge-good {{ background: rgba(16, 185, 129, 0.1); color: #059669; }}
+    .badge-warning {{ background: rgba(245, 158, 11, 0.1); color: #d97706; }}
+    .badge-danger {{ background: rgba(239, 68, 68, 0.1); color: #dc2626; }}
+    .badge-info {{ background: rgba(59, 130, 246, 0.1); color: #2563eb; }}
+    .badge-muted {{ background: rgba(148, 163, 184, 0.12); color: #64748b; }}
+
+    .tone-good {{ color: #10b981; }}
+    .tone-warning {{ color: #f59e0b; }}
+    .tone-danger {{ color: #ef4444; }}
+    .tone-info {{ color: #3b82f6; }}
+    .tone-muted {{ color: #64748b; }}
+
+    /* ============== Signal Flow ============== */
+    .signal-filter-bar {{
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 16px 20px;
+      margin-bottom: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      align-items: center;
+      box-shadow: 0 8px 24px rgba(31, 39, 46, 0.04);
+    }}
+    .filter-group {{
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }}
+    .filter-label {{
+      font-size: 13px;
+      color: var(--muted);
+      white-space: nowrap;
+    }}
+    .filter-select, .filter-input {{
+      padding: 7px 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      font-size: 13px;
+      background: #fff;
+      color: var(--ink);
+      min-width: 120px;
+    }}
+    .filter-input {{
+      min-width: 180px;
+    }}
+    .filter-reset {{
+      margin-left: auto;
+      padding: 7px 16px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      font-size: 13px;
+      background: #fff;
+      color: var(--muted);
+      cursor: pointer;
+      text-decoration: none;
+    }}
+    .filter-reset:hover {{
+      color: var(--brand);
+      border-color: var(--brand);
+    }}
+
+    .signal-layout {{
+      display: grid;
+      grid-template-columns: 1fr 360px;
+      gap: 20px;
+    }}
+
+    .timeline-section {{
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 22px;
+      box-shadow: 0 12px 32px rgba(31, 39, 46, 0.05);
+    }}
+    .section-title {{
+      font-size: 18px;
+      font-weight: 600;
+      margin: 0 0 18px 0;
+    }}
+
+    .timeline {{
+      position: relative;
+      padding-left: 28px;
+    }}
+    .timeline::before {{
+      content: "";
+      position: absolute;
+      left: 9px;
+      top: 6px;
+      bottom: 6px;
+      width: 2px;
+      background: rgba(59, 130, 246, 0.15);
+    }}
+    .timeline-item {{
+      position: relative;
+      padding-bottom: 22px;
+    }}
+    .timeline-item:last-child {{
+      padding-bottom: 0;
+    }}
+    .timeline-node {{
+      position: absolute;
+      left: -28px;
+      top: 4px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #fff;
+      border: 3px solid #3b82f6;
+      z-index: 1;
+    }}
+    .timeline-time {{
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }}
+
+    .signal-card {{
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 14px 16px;
+    }}
+    .signal-title {{
+      font-size: 15px;
+      font-weight: 600;
+      margin: 0 0 6px 0;
+      color: var(--ink);
+    }}
+    .signal-summary {{
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.6;
+      margin: 0 0 10px 0;
+    }}
+    .signal-badges {{
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 10px;
+    }}
+    .signal-badge {{
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 500;
+      line-height: 1.7;
+    }}
+    .signal-badge.source {{ background: rgba(59, 130, 246, 0.08); color: #2563eb; }}
+    .signal-badge.entity {{ background: rgba(99, 102, 241, 0.08); color: #4f46e5; }}
+    .signal-badge.topic {{ background: rgba(139, 92, 246, 0.08); color: #7c3aed; }}
+    .signal-badge.strength-high {{ background: rgba(239, 68, 68, 0.08); color: #dc2626; }}
+    .signal-badge.strength-medium {{ background: rgba(245, 158, 11, 0.08); color: #d97706; }}
+    .signal-badge.strength-low {{ background: rgba(16, 185, 129, 0.08); color: #059669; }}
+    .signal-badge.strength-unknown {{ background: rgba(148, 163, 184, 0.12); color: #64748b; }}
+    .signal-badge.review {{ background: rgba(251, 146, 60, 0.1); color: #ea580c; }}
+
+    .signal-actions {{
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }}
+    .signal-btn {{
+      padding: 5px 12px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      font-size: 12px;
+      background: #fff;
+      color: var(--muted);
+      text-decoration: none;
+      cursor: pointer;
+    }}
+    .signal-btn:hover {{
+      color: var(--brand);
+      border-color: var(--brand);
+    }}
+    .signal-btn.disabled {{
+      opacity: 0.5;
+      cursor: not-allowed;
+    }}
+
+    .signal-side {{
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }}
+    .side-panel {{
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 18px;
+      box-shadow: 0 8px 24px rgba(31, 39, 46, 0.04);
+    }}
+    .side-title {{
+      font-size: 15px;
+      font-weight: 600;
+      margin: 0 0 14px 0;
+    }}
+
+    .signal-summary-grid {{
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }}
+    .summary-stat {{
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }}
+    .summary-icon {{
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }}
+    .summary-icon.blue {{ background: rgba(59, 130, 246, 0.1); color: #2563eb; }}
+    .summary-icon.purple {{ background: rgba(139, 92, 246, 0.1); color: #7c3aed; }}
+    .summary-icon.red {{ background: rgba(239, 68, 68, 0.1); color: #dc2626; }}
+    .summary-icon.amber {{ background: rgba(245, 158, 11, 0.1); color: #d97706; }}
+    .summary-number {{
+      font-size: 22px;
+      font-weight: 700;
+      line-height: 1.1;
+    }}
+    .summary-label {{
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 2px;
+    }}
+
+    .hot-chips {{
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }}
+    .hot-chip {{
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      background: rgba(59, 130, 246, 0.06);
+      color: #2563eb;
+      border: 1px solid rgba(59, 130, 246, 0.15);
+    }}
+    .hot-chip.theme {{
+      background: rgba(139, 92, 246, 0.06);
+      color: #7c3aed;
+      border-color: rgba(139, 92, 246, 0.15);
+    }}
+
+    .source-bar-list {{
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }}
+    .source-bar-item {{
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }}
+    .source-bar-label {{
+      font-size: 12px;
+      color: var(--muted);
+      width: 72px;
+      flex-shrink: 0;
+    }}
+    .source-bar-track {{
+      flex: 1;
+      height: 6px;
+      background: rgba(31, 39, 46, 0.06);
+      border-radius: 999px;
+      overflow: hidden;
+    }}
+    .source-bar-fill {{
+      height: 100%;
+      background: #3b82f6;
+      border-radius: 999px;
+    }}
+    .source-bar-count {{
+      font-size: 12px;
+      color: var(--muted);
+      width: 24px;
+      text-align: right;
+      flex-shrink: 0;
+    }}
+    .source-bar-unit {{
+      text-align: right;
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 8px;
+    }}
+
+    .signal-empty {{
+      text-align: center;
+      padding: 48px 20px;
+      color: var(--muted);
+    }}
+    .signal-empty-title {{
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--ink);
+      margin-bottom: 6px;
+    }}
+    .signal-empty-desc {{
+      font-size: 13px;
+    }}
+
+    .signal-disclaimer {{
+      margin-top: 18px;
+      padding: 12px 16px;
+      background: rgba(59, 130, 246, 0.04);
+      border: 1px solid rgba(59, 130, 246, 0.1);
+      border-radius: 10px;
+      font-size: 13px;
+      color: var(--muted);
+    }}
+
+    .load-more {{
+      text-align: center;
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--line);
+    }}
+    .load-more-btn {{
+      font-size: 13px;
+      color: var(--brand);
+      cursor: pointer;
+    }}
+
+    /* ============== Research Queue ============== */
+    .research-page {{
+      max-width: 1440px;
+      margin: 0 auto;
+    }}
+    .research-metrics {{
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 16px;
+      margin-bottom: 20px;
+    }}
+    .research-metric-card {{
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 18px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }}
+    .research-metric-icon {{
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }}
+    .research-metric-icon.blue {{ background: rgba(59, 130, 246, 0.1); color: #2563eb; }}
+    .research-metric-icon.orange {{ background: rgba(249, 115, 22, 0.1); color: #ea580c; }}
+    .research-metric-icon.yellow {{ background: rgba(245, 158, 11, 0.1); color: #d97706; }}
+    .research-metric-icon.green {{ background: rgba(16, 185, 129, 0.1); color: #059669; }}
+    .research-metric-number {{
+      font-size: 24px;
+      font-weight: 700;
+      line-height: 1.1;
+    }}
+    .research-metric-subtitle {{
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 2px;
+    }}
+
+    .research-layout {{
+      display: grid;
+      grid-template-columns: 60% 40%;
+      gap: 20px;
+    }}
+
+    .research-list-section {{
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 8px 24px rgba(31, 39, 46, 0.04);
+    }}
+    .research-list-header {{
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }}
+    .research-list-title {{
+      font-size: 16px;
+      font-weight: 600;
+    }}
+    .research-filters {{
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }}
+    .research-filter-select {{
+      padding: 6px 10px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      font-size: 12px;
+      background: #fff;
+      color: var(--ink);
+    }}
+
+    .research-list {{
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }}
+    .research-item {{
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 14px;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      cursor: pointer;
+    }}
+    .research-item:hover {{
+      border-color: var(--brand);
+    }}
+    .research-item.selected {{
+      border-color: var(--brand);
+      background: rgba(59, 130, 246, 0.03);
+    }}
+    .research-item-rank {{
+      width: 26px;
+      height: 26px;
+      border-radius: 8px;
+      background: rgba(59, 130, 246, 0.1);
+      color: #2563eb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 600;
+      flex-shrink: 0;
+    }}
+    .research-item-content {{
+      flex: 1;
+      min-width: 0;
+    }}
+    .research-item-title {{
+      font-size: 14px;
+      font-weight: 600;
+      margin: 0 0 4px 0;
+      color: var(--ink);
+    }}
+    .research-item-badges {{
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+      margin-bottom: 6px;
+    }}
+    .research-item-badge {{
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 500;
+    }}
+    .research-item-badge.entity {{ background: rgba(99, 102, 241, 0.08); color: #4f46e5; }}
+    .research-item-badge.topic {{ background: rgba(139, 92, 246, 0.08); color: #7c3aed; }}
+    .research-item-badge.priority-high {{ background: rgba(239, 68, 68, 0.08); color: #dc2626; }}
+    .research-item-badge.priority-medium {{ background: rgba(245, 158, 11, 0.08); color: #d97706; }}
+    .research-item-badge.priority-low {{ background: rgba(16, 185, 129, 0.08); color: #059669; }}
+    .research-item-badge.status-researching {{ background: rgba(59, 130, 246, 0.08); color: #2563eb; }}
+    .research-item-badge.status-pending {{ background: rgba(245, 158, 11, 0.08); color: #d97706; }}
+    .research-item-badge.status-gathering {{ background: rgba(249, 115, 22, 0.08); color: #ea580c; }}
+    .research-item-badge.status-deferred {{ background: rgba(148, 163, 184, 0.1); color: #64748b; }}
+    .research-item-badge.status-approved {{ background: rgba(16, 185, 129, 0.08); color: #059669; }}
+    .research-item-badge.status-rejected {{ background: rgba(239, 68, 68, 0.08); color: #dc2626; }}
+    .research-item-reason {{
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.5;
+    }}
+    .research-item-meta {{
+      display: flex;
+      gap: 12px;
+      margin-top: 8px;
+      font-size: 12px;
+      color: var(--muted);
+    }}
+    .research-item-actions {{
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      flex-shrink: 0;
+    }}
+    .research-action-btn {{
+      padding: 5px 10px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      font-size: 11px;
+      background: #fff;
+      color: var(--muted);
+      cursor: pointer;
+      text-decoration: none;
+    }}
+    .research-action-btn:hover {{
+      color: var(--brand);
+      border-color: var(--brand);
+    }}
+    .research-action-btn.approve {{ color: #059669; border-color: rgba(16, 185, 129, 0.3); }}
+    .research-action-btn.gather {{ color: #2563eb; border-color: rgba(59, 130, 246, 0.3); }}
+    .research-action-btn.defer {{ color: #64748b; border-color: rgba(148, 163, 184, 0.3); }}
+    .research-action-btn.reject {{ color: #dc2626; border-color: rgba(239, 68, 68, 0.3); }}
+
+    .research-side {{
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }}
+    .research-detail-panel {{
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 18px;
+      box-shadow: 0 8px 24px rgba(31, 39, 46, 0.04);
+    }}
+    .research-detail-title {{
+      font-size: 15px;
+      font-weight: 600;
+      margin: 0 0 14px 0;
+    }}
+    .research-detail-subtitle {{
+      font-size: 14px;
+      font-weight: 600;
+      margin: 0 0 8px 0;
+      color: var(--ink);
+    }}
+    .research-detail-badges {{
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }}
+    .research-detail-section {{
+      margin-bottom: 16px;
+    }}
+    .research-detail-section-title {{
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+      margin: 0 0 6px 0;
+    }}
+    .research-detail-text {{
+      font-size: 13px;
+      color: var(--ink);
+      line-height: 1.7;
+      white-space: pre-wrap;
+    }}
+    .research-detail-list {{
+      margin: 0;
+      padding-left: 18px;
+    }}
+    .research-detail-list li {{
+      font-size: 13px;
+      color: var(--ink);
+      line-height: 1.7;
+      margin-bottom: 4px;
+    }}
+    .research-empty {{
+      text-align: center;
+      padding: 32px 16px;
+      color: var(--muted);
+    }}
+    .research-empty-title {{
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--ink);
+      margin-bottom: 4px;
+    }}
+
+    .evidence-gap-panel {{
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 18px;
+      box-shadow: 0 8px 24px rgba(31, 39, 46, 0.04);
+    }}
+    .evidence-gap-title {{
+      font-size: 15px;
+      font-weight: 600;
+      margin: 0 0 14px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }}
+    .evidence-gap-all-link {{
+      font-size: 12px;
+      color: var(--brand);
+      text-decoration: none;
+    }}
+    .evidence-gap-list {{
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }}
+    .evidence-gap-item {{
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 12px;
+    }}
+    .evidence-gap-header {{
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }}
+    .evidence-gap-title-text {{
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--ink);
+    }}
+    .evidence-gap-importance {{
+      font-size: 11px;
+      padding: 1px 6px;
+      border-radius: 4px;
+    }}
+    .evidence-gap-importance.important {{ background: rgba(239, 68, 68, 0.08); color: #dc2626; }}
+    .evidence-gap-importance.medium {{ background: rgba(245, 158, 11, 0.08); color: #d97706; }}
+    .evidence-gap-importance.low {{ background: rgba(16, 185, 129, 0.08); color: #059669; }}
+    .evidence-gap-meta {{
+      display: flex;
+      gap: 10px;
+      font-size: 12px;
+      color: var(--muted);
+    }}
+
+    .research-disclaimer {{
+      margin-top: 18px;
+      padding: 12px 16px;
+      background: rgba(59, 130, 246, 0.04);
+      border: 1px solid rgba(59, 130, 246, 0.1);
+      border-radius: 10px;
+      font-size: 13px;
+      color: var(--muted);
+      text-align: center;
+    }}
+
+    .research-empty-state {{
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--muted);
+    }}
+    .research-empty-state-title {{
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--ink);
+      margin-bottom: 6px;
+    }}
+
+    /* Coverage pool styles */
+    .coverage-metrics {{
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 16px;
+      margin-bottom: 22px;
+    }}
+    .coverage-metric-card {{
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 18px;
+      box-shadow: 0 8px 24px rgba(31, 39, 46, 0.04);
+    }}
+    .coverage-metric-value {{
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--ink);
+      margin-bottom: 4px;
+    }}
+    .coverage-metric-subtitle {{
+      font-size: 13px;
+      color: var(--muted);
+    }}
+    .coverage-metric-delta {{
+      font-size: 12px;
+      color: var(--good);
+      margin-top: 4px;
+    }}
+
+    .coverage-layout {{
+      display: grid;
+      grid-template-columns: 58% 40%;
+      gap: 20px;
+      margin-bottom: 22px;
+    }}
+    .coverage-table-section {{
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 18px;
+      box-shadow: 0 8px 24px rgba(31, 39, 46, 0.04);
+    }}
+    .coverage-table-header {{
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }}
+    .coverage-table-title {{
+      font-size: 15px;
+      font-weight: 600;
+    }}
+    .coverage-filter-bar {{
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }}
+    .coverage-filter-group {{
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }}
+    .coverage-filter-label {{
+      font-size: 12px;
+      color: var(--muted);
+    }}
+    .coverage-filter-select {{
+      padding: 5px 8px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      font-size: 12px;
+      background: #fff;
+      color: var(--ink);
+    }}
+    .coverage-search {{
+      padding: 5px 10px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      font-size: 12px;
+      background: #fff;
+      color: var(--ink);
+      width: 140px;
+    }}
+
+    .coverage-table {{
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }}
+    .coverage-table th {{
+      text-align: left;
+      padding: 8px 10px;
+      font-weight: 600;
+      color: var(--muted);
+      font-size: 12px;
+      border-bottom: 1px solid var(--line);
+    }}
+    .coverage-table td {{
+      padding: 10px;
+      border-bottom: 1px solid rgba(31, 39, 46, 0.06);
+      vertical-align: middle;
+    }}
+    .coverage-table tr:hover td {{
+      background: rgba(59, 130, 246, 0.02);
+    }}
+    .coverage-table tr.selected td {{
+      background: rgba(59, 130, 246, 0.04);
+    }}
+
+    .coverage-progress {{
+      height: 6px;
+      background: rgba(31, 39, 46, 0.08);
+      border-radius: 3px;
+      overflow: hidden;
+      width: 80px;
+    }}
+    .coverage-progress-bar {{
+      height: 100%;
+      background: #3b82f6;
+      border-radius: 3px;
+      transition: width 0.3s ease;
+    }}
+    .coverage-progress-bar.high {{ background: #059669; }}
+    .coverage-progress-bar.medium {{ background: #d97706; }}
+    .coverage-progress-bar.low {{ background: #dc2626; }}
+
+    .coverage-badge {{
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 500;
+    }}
+    .coverage-badge.priority-high {{ background: rgba(239, 68, 68, 0.08); color: #dc2626; }}
+    .coverage-badge.priority-medium {{ background: rgba(245, 158, 11, 0.08); color: #d97706; }}
+    .coverage-badge.priority-low {{ background: rgba(16, 185, 129, 0.08); color: #059669; }}
+    .coverage-badge.type-company {{ background: rgba(59, 130, 246, 0.08); color: #2563eb; }}
+    .coverage-badge.type-industry {{ background: rgba(139, 92, 246, 0.08); color: #7c3aed; }}
+    .coverage-badge.type-theme {{ background: rgba(139, 92, 246, 0.08); color: #7c3aed; }}
+    .coverage-badge.status-tracking {{ background: rgba(59, 130, 246, 0.08); color: #2563eb; }}
+    .coverage-badge.status-key {{ background: rgba(99, 102, 241, 0.08); color: #4f46e5; }}
+    .coverage-badge.status-needs {{ background: rgba(245, 158, 11, 0.08); color: #d97706; }}
+    .coverage-badge.status-risk {{ background: rgba(239, 68, 68, 0.08); color: #dc2626; }}
+
+    .coverage-detail-panel {{
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 18px;
+      box-shadow: 0 8px 24px rgba(31, 39, 46, 0.04);
+    }}
+    .coverage-detail-header {{
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }}
+    .coverage-detail-name {{
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--ink);
+    }}
+    .coverage-detail-badges {{
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }}
+
+    .coverage-detail-section {{
+      margin-bottom: 18px;
+    }}
+    .coverage-detail-section-title {{
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }}
+    .coverage-focus-list {{
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }}
+    .coverage-focus-chip {{
+      padding: 6px 12px;
+      border-radius: 8px;
+      background: rgba(59, 130, 246, 0.06);
+      border: 1px solid rgba(59, 130, 246, 0.12);
+      font-size: 12px;
+      color: #2563eb;
+    }}
+
+    .coverage-signal-list {{
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }}
+    .coverage-signal-item {{
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      padding: 10px 12px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+    }}
+    .coverage-signal-title {{
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--ink);
+      margin-bottom: 4px;
+    }}
+    .coverage-signal-meta {{
+      font-size: 11px;
+      color: var(--muted);
+    }}
+    .coverage-signal-direction {{
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-weight: 500;
+      white-space: nowrap;
+    }}
+    .coverage-signal-direction.new {{ background: rgba(16, 185, 129, 0.08); color: #059669; }}
+    .coverage-signal-direction.improve {{ background: rgba(59, 130, 246, 0.08); color: #2563eb; }}
+    .coverage-signal-direction.watch {{ background: rgba(245, 158, 11, 0.08); color: #d97706; }}
+    .coverage-signal-direction.risk {{ background: rgba(239, 68, 68, 0.08); color: #dc2626; }}
+    .coverage-signal-direction.pending {{ background: rgba(148, 163, 184, 0.1); color: #64748b; }}
+
+    .coverage-evidence-overview {{
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }}
+    .coverage-donut {{
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: conic-gradient(
+        #3b82f6 0deg var(--p-covered),
+        #f59e0b var(--p-covered) var(--p-partial),
+        #e5e7eb var(--p-partial) 360deg
+      );
+      position: relative;
+      flex-shrink: 0;
+    }}
+    .coverage-donut::after {{
+      content: "";
+      position: absolute;
+      inset: 14px;
+      border-radius: 50%;
+      background: var(--panel);
+    }}
+    .coverage-donut-label {{
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--ink);
+      z-index: 1;
+    }}
+    .coverage-evidence-legend {{
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 12px;
+    }}
+    .coverage-evidence-legend-item {{
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }}
+    .coverage-evidence-dot {{
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }}
+    .coverage-evidence-dot.covered {{ background: #3b82f6; }}
+    .coverage-evidence-dot.partial {{ background: #f59e0b; }}
+    .coverage-evidence-dot.missing {{ background: #e5e7eb; }}
+
+    .coverage-missing-list {{
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }}
+    .coverage-missing-item {{
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 10px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      font-size: 12px;
+    }}
+    .coverage-missing-importance {{
+      font-size: 11px;
+      padding: 1px 6px;
+      border-radius: 4px;
+    }}
+    .coverage-missing-importance.high {{ background: rgba(239, 68, 68, 0.08); color: #dc2626; }}
+    .coverage-missing-importance.medium {{ background: rgba(245, 158, 11, 0.08); color: #d97706; }}
+    .coverage-missing-importance.low {{ background: rgba(148, 163, 184, 0.1); color: #64748b; }}
+
+    .coverage-chips {{
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }}
+    .coverage-chip {{
+      padding: 4px 10px;
+      border-radius: 6px;
+      background: rgba(99, 102, 241, 0.06);
+      border: 1px solid rgba(99, 102, 241, 0.12);
+      font-size: 12px;
+      color: #4f46e5;
+    }}
+
+    .coverage-bottom {{
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      gap: 20px;
+      margin-bottom: 22px;
+    }}
+    .coverage-distribution-panel {{
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 18px;
+      box-shadow: 0 8px 24px rgba(31, 39, 46, 0.04);
+    }}
+    .coverage-distribution-content {{
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }}
+    .coverage-distribution-donut {{
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      background: conic-gradient(
+        #3b82f6 0deg var(--d-company),
+        #7c3aed var(--d-company) var(--d-theme),
+        #059669 var(--d-theme) 360deg
+      );
+      position: relative;
+      flex-shrink: 0;
+    }}
+    .coverage-distribution-donut::after {{
+      content: "";
+      position: absolute;
+      inset: 18px;
+      border-radius: 50%;
+      background: var(--panel);
+    }}
+    .coverage-distribution-legend {{
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      font-size: 13px;
+    }}
+    .coverage-distribution-legend-item {{
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }}
+    .coverage-distribution-dot {{
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }}
+    .coverage-distribution-dot.company {{ background: #3b82f6; }}
+    .coverage-distribution-dot.theme {{ background: #7c3aed; }}
+    .coverage-distribution-dot.industry {{ background: #059669; }}
+
+    .priority-hotzone-panel {{
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 18px;
+      box-shadow: 0 8px 24px rgba(31, 39, 46, 0.04);
+    }}
+    .priority-hotzone-grid {{
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 12px;
+    }}
+    .hotzone-card {{
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 14px;
+      text-align: center;
+    }}
+    .hotzone-card-name {{
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: var(--ink);
+    }}
+    .hotzone-card-meta {{
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }}
+    .hotzone-card-progress {{
+      height: 4px;
+      background: rgba(31, 39, 46, 0.08);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-top: 8px;
+    }}
+    .hotzone-card-progress-bar {{
+      height: 100%;
+      background: #3b82f6;
+      border-radius: 2px;
+    }}
+
+    .coverage-pagination {{
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 6px;
+      margin-top: 14px;
+      font-size: 12px;
+    }}
+    .coverage-pagination-info {{
+      color: var(--muted);
+      margin-right: 8px;
+    }}
+    .coverage-page-btn {{
+      padding: 4px 10px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      color: var(--ink);
+      text-decoration: none;
+      font-size: 12px;
+    }}
+    .coverage-page-btn:hover {{
+      border-color: var(--brand);
+      color: var(--brand);
+    }}
+    .coverage-page-btn.active {{
+      background: var(--brand);
+      color: #fff;
+      border-color: var(--brand);
+    }}
+    .coverage-page-btn.disabled {{
+      opacity: 0.4;
+      cursor: not-allowed;
+    }}
+
+    .coverage-disclaimer {{
+      text-align: center;
+      padding: 18px;
+      font-size: 12px;
+      color: var(--muted);
+      border-top: 1px solid var(--line);
+      margin-top: 8px;
+    }}
+    .coverage-empty-state {{
+      text-align: center;
+      padding: 48px 20px;
+      color: var(--muted);
+    }}
+    .coverage-empty-state-title {{
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--ink);
+      margin-bottom: 6px;
+    }}
+
+    /* Data health styles */
+    .health-metrics {{
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 16px;
+      margin-bottom: 22px;
+    }}
+    .health-metric-card {{
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 18px;
+      box-shadow: 0 8px 24px rgba(31, 39, 46, 0.04);
+    }}
+    .health-metric-value {{
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--ink);
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }}
+    .health-metric-subtitle {{
+      font-size: 13px;
+      color: var(--muted);
+    }}
+    .health-status-dot {{
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }}
+    .health-status-dot.normal {{ background: #059669; }}
+    .health-status-dot.degraded {{ background: #d97706; }}
+    .health-status-dot.blocked {{ background: #dc2626; }}
+    .health-status-dot.watching {{ background: #6366f1; }}
+    .health-status-dot.pending {{ background: #9ca3af; }}
+    .health-status-dot.nodata {{ background: #cbd5e1; }}
+
+    .health-layout {{
+      display: grid;
+      grid-template-columns: 60% 38%;
+      gap: 20px;
+      margin-bottom: 22px;
+    }}
+    .health-issue-section {{
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 18px;
+      box-shadow: 0 8px 24px rgba(31, 39, 46, 0.04);
+    }}
+    .health-section-header {{
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }}
+    .health-section-title {{
+      font-size: 15px;
+      font-weight: 600;
+    }}
+    .health-section-link {{
+      font-size: 12px;
+      color: var(--brand);
+      text-decoration: none;
+    }}
+    .health-filter-bar {{
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }}
+    .health-filter-select {{
+      padding: 5px 8px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      font-size: 12px;
+      background: #fff;
+      color: var(--ink);
+    }}
+    .health-search {{
+      padding: 5px 10px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      font-size: 12px;
+      background: #fff;
+      color: var(--ink);
+      width: 140px;
+    }}
+
+    .health-issue-list {{
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }}
+    .health-issue-item {{
+      display: flex;
+      gap: 14px;
+      padding: 14px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+    }}
+    .health-issue-severity {{
+      font-size: 12px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 6px;
+      flex-shrink: 0;
+      height: fit-content;
+    }}
+    .health-issue-severity.P0 {{ background: rgba(239, 68, 68, 0.1); color: #dc2626; }}
+    .health-issue-severity.P1 {{ background: rgba(245, 158, 11, 0.1); color: #d97706; }}
+    .health-issue-severity.P2 {{ background: rgba(99, 102, 241, 0.1); color: #4f46e5; }}
+    .health-issue-severity.P3 {{ background: rgba(148, 163, 184, 0.1); color: #64748b; }}
+    .health-issue-body {{
+      flex: 1;
+      min-width: 0;
+    }}
+    .health-issue-top {{
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 6px;
+    }}
+    .health-issue-title {{
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--ink);
+    }}
+    .health-issue-status {{
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-weight: 500;
+      flex-shrink: 0;
+    }}
+    .health-issue-status.blocked {{ background: rgba(239, 68, 68, 0.08); color: #dc2626; }}
+    .health-issue-status.degraded {{ background: rgba(245, 158, 11, 0.08); color: #d97706; }}
+    .health-issue-status.watching {{ background: rgba(99, 102, 241, 0.08); color: #4f46e5; }}
+    .health-issue-status.resolved {{ background: rgba(16, 185, 129, 0.08); color: #059669; }}
+    .health-issue-scope {{
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }}
+    .health-issue-desc {{
+      font-size: 13px;
+      color: var(--ink);
+      margin-bottom: 8px;
+    }}
+    .health-issue-meta {{
+      font-size: 11px;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+    }}
+
+    .health-side {{
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }}
+    .health-panel {{
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: 0 8px 24px rgba(31, 39, 46, 0.04);
+    }}
+    .health-panel-title {{
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }}
+    .module-health-list {{
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }}
+    .module-health-item {{
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+    }}
+    .module-health-left {{
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }}
+    .module-health-status {{
+      font-size: 12px;
+      color: var(--muted);
+    }}
+
+    .health-distribution {{
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }}
+    .health-ring {{
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      position: relative;
+      flex-shrink: 0;
+    }}
+    .health-ring::after {{
+      content: "";
+      position: absolute;
+      inset: 16px;
+      border-radius: 50%;
+      background: var(--panel);
+    }}
+    .health-ring-label {{
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--ink);
+      z-index: 1;
+    }}
+    .health-legend {{
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      font-size: 12px;
+      flex: 1;
+    }}
+    .health-legend-item {{
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }}
+    .health-legend-left {{
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }}
+    .health-legend-dot {{
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }}
+
+    .run-summary-grid {{
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }}
+    .run-summary-item {{
+      text-align: center;
+      padding: 10px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+    }}
+    .run-summary-value {{
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--ink);
+      margin-bottom: 2px;
+    }}
+    .run-summary-label {{
+      font-size: 11px;
+      color: var(--muted);
+    }}
+
+    .health-disclaimer {{
+      text-align: center;
+      padding: 18px;
+      font-size: 12px;
+      color: var(--muted);
+      border-top: 1px solid var(--line);
+      margin-top: 8px;
+    }}
+    .health-empty-state {{
+      text-align: center;
+      padding: 48px 20px;
+      color: var(--muted);
+    }}
+    .health-empty-state-title {{
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--ink);
+      margin-bottom: 6px;
+    }}
+
+    @media (max-width: 1080px) {{
+      .today-metrics {{
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }}
+      .today-grid {{
+        grid-template-columns: 1fr;
+      }}
+      .health-grid {{
+        grid-template-columns: 1fr;
+      }}
+      .signal-layout {{
+        grid-template-columns: 1fr;
+      }}
+      .research-metrics {{
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }}
+      .research-layout {{
+        grid-template-columns: 1fr;
+      }}
+      .coverage-metrics {{
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }}
+      .coverage-layout {{
+        grid-template-columns: 1fr;
+      }}
+      .coverage-bottom {{
+        grid-template-columns: 1fr;
+      }}
+      .health-metrics {{
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }}
+      .health-layout {{
+        grid-template-columns: 1fr;
+      }}
+    }}
+
   </style>
 </head>
 <body>
   <div class="page">
     <header class="topbar">
-      <div class="brand">SMR 指挥台</div>
+      <div class="brand">同行资本投研系统</div>
       <nav class="nav">{render_nav(current_path)}</nav>
     </header>
     {status_strip_html}
@@ -4799,6 +6617,1561 @@ def render_home(state: dict, refresh_seconds: int) -> str:
     )
 
 
+DASHBOARD_BRAND = "同行资本投研系统"
+
+
+def _tone_class(tone: str | None) -> str:
+    tone_map = {
+        "good": "tone-good",
+        "success": "tone-good",
+        "warning": "tone-warning",
+        "warn": "tone-warning",
+        "danger": "tone-danger",
+        "error": "tone-danger",
+        "info": "tone-info",
+        "muted": "tone-muted",
+    }
+    return tone_map.get((tone or "").lower(), "tone-muted")
+
+
+def render_today_overview(state: dict, refresh_seconds: int) -> str:
+    view = build_today_overview_view_model(state)
+    metrics = view["metrics"]
+    top_changes = view["top_changes"]
+    pending = view["pending_decisions"]
+    coverage = view["coverage_moves"]
+    health = view["health_summary"]
+    updated_at = view["updated_at"]
+    empty = view["empty_state"]
+
+    metric_cards_html = render_today_metric_cards(metrics)
+    top_changes_html = render_top_changes(top_changes, empty)
+    pending_html = render_pending_decisions(pending, empty)
+    coverage_html = render_coverage_moves(coverage, empty)
+    health_html = render_health_summary(health, empty)
+
+    body = f"""
+<section class="today-metrics">
+  {metric_cards_html}
+</section>
+<section class="today-grid">
+  <article class="panel today-main">
+    <h2 class="today-section-title">今日最重要的 3 件事</h2>
+    {top_changes_html}
+  </article>
+  <div class="today-side">
+    <article class="panel">
+      <h2 class="today-section-title">今日待判断</h2>
+      {pending_html}
+    </article>
+    <article class="panel">
+      <h2 class="today-section-title">覆盖池异动</h2>
+      {coverage_html}
+    </article>
+    <article class="panel">
+      <h2 class="today-section-title">数据健康提醒</h2>
+      {health_html}
+    </article>
+  </div>
+</section>
+<div class="today-footer">
+  <span class="muted">最近更新：{escape(updated_at)}</span>
+</div>
+<div class="today-disclaimer">
+  系统仅展示证据与信号，不直接给出投资建议。不提供任何投资建议。
+</div>
+"""
+    return render_shell(
+        page_title="今日总览 · 同行资本投研系统",
+        current_path="/",
+        hero_title="今日总览",
+        hero_subtitle="今天最值得关注的变化与待判断事项",
+        body=body,
+        refresh_seconds=refresh_seconds,
+        show_status_strip=False,
+        **shell_state_kwargs(state),
+    )
+
+
+def render_today_metric_cards(metrics: dict) -> str:
+    cards = []
+    configs = [
+        ("important_changes", "今日重点变化", "#3b82f6", "chart-line"),
+        ("pending_decisions", "待判断事项", "#f59e0b", "question-circle"),
+        ("high_priority_companies", "高优先级公司", "#10b981", "building"),
+        ("risk_alerts", "风险提示", "#ef4444", "shield"),
+    ]
+    for key, label, color, icon in configs:
+        m = metrics.get(key) or {}
+        count = m.get("count", 0)
+        subtitle = m.get("subtitle", "")
+        cards.append(
+            f"""
+<div class="metric-card">
+  <div class="metric-icon" style="background: {color}15; color: {color};">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      {_metric_icon(icon)}
+    </svg>
+  </div>
+  <div class="metric-body">
+    <div class="metric-label">{escape(label)}</div>
+    <div class="metric-value" style="color: {color};">{escape(str(count))} 条</div>
+    <div class="metric-subtitle muted">{escape(subtitle)}</div>
+  </div>
+</div>
+"""
+        )
+    return "\n".join(cards)
+
+
+def _metric_icon(name: str) -> str:
+    icons = {
+        "chart-line": '<path d="M3 3v18h18"/><path d="M19 9l-5 5-4-4-3 3"/>',
+        "question-circle": '<circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3"/><path d="M12 17h.01"/>',
+        "building": '<rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M12 6h.01"/><path d="M12 10h.01"/><path d="M12 14h.01"/><path d="M16 10h.01"/><path d="M16 14h.01"/><path d="M8 10h.01"/><path d="M8 14h.01"/>',
+        "shield": '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
+    }
+    return icons.get(name, "")
+
+
+def render_top_changes(items: list[dict], empty: bool) -> str:
+    if not items or empty:
+        return """
+<div class="empty-state">
+  <div class="empty-state-title">暂无今日重点变化</div>
+  <div class="empty-state-desc">系统尚未生成足够证据，建议查看信号流或数据健康。</div>
+</div>
+"""
+    cards = []
+    for item in items:
+        rank = item.get("rank", 0)
+        title = item.get("title", "")
+        entities = item.get("affected_entities") or []
+        summary = item.get("summary", "")
+        strength = item.get("evidence_strength", "")
+        source_type = item.get("source_type", "")
+        strength_tone = "good" if strength == "高" else "warning" if strength == "中" else "muted"
+        entities_text = "、".join(entities) if entities else ""
+        cards.append(
+            f"""
+<div class="change-card">
+  <div class="change-rank">{escape(str(rank))}</div>
+  <div class="change-body">
+    <div class="change-title">{escape(title)}</div>
+    <div class="change-entities">{escape(entities_text)}</div>
+    <div class="change-summary muted">{escape(summary)}</div>
+  </div>
+  <div class="change-side">
+    <span class="badge badge-{strength_tone}">{escape(strength)}</span>
+    <span class="badge badge-info">{escape(source_type)}</span>
+  </div>
+</div>
+"""
+        )
+    return "\n".join(cards)
+
+
+def render_pending_decisions(items: list[dict], empty: bool) -> str:
+    if not items or empty:
+        return """
+<div class="empty-state small">
+  <div class="empty-state-title">暂无待判断事项</div>
+  <div class="empty-state-desc">当前没有需要人工确认的关键事项。</div>
+</div>
+"""
+    rows = []
+    for item in items:
+        rank = item.get("rank", 0)
+        question = item.get("question", "")
+        badge = item.get("status_badge", "")
+        tone = item.get("badge_tone", "muted")
+        rows.append(
+            f"""
+<div class="pending-row">
+  <span class="pending-rank">{escape(str(rank))}</span>
+  <span class="pending-question">{escape(question)}</span>
+  <span class="badge badge-{tone}">{escape(badge)}</span>
+</div>
+"""
+        )
+    return "\n".join(rows)
+
+
+def render_coverage_moves(items: list[dict], empty: bool) -> str:
+    if not items or empty:
+        return """
+<div class="empty-state small">
+  <div class="empty-state-title">暂无覆盖池异动</div>
+  <div class="empty-state-desc">覆盖池中暂无显著变化。</div>
+</div>
+"""
+    rows = []
+    for item in items:
+        company = item.get("company", "")
+        status_label = item.get("status_label", "")
+        status_tone = item.get("status_tone", "muted")
+        evidence_pct = item.get("evidence_pct", 0)
+        priority = item.get("priority", "")
+        priority_tone = "danger" if priority == "高" else "warning" if priority == "中" else "muted"
+        rows.append(
+            f"""
+<tr>
+  <td class="cov-company">{escape(company)}</td>
+  <td><span class="status-dot {_tone_class(status_tone)}"></span>{escape(status_label)}</td>
+  <td>
+    <div class="evidence-bar">
+      <div class="evidence-bar-fill" style="width: {evidence_pct}%;"></div>
+    </div>
+    <span class="evidence-pct muted">{evidence_pct}%</span>
+  </td>
+  <td><span class="badge badge-{priority_tone}">{escape(priority)}</span></td>
+</tr>
+"""
+        )
+    return f"""
+<div class="coverage-table-wrap">
+  <table class="coverage-table">
+    <thead>
+      <tr>
+        <th>公司</th>
+        <th>最新状态</th>
+        <th>证据完整度</th>
+        <th>优先级</th>
+      </tr>
+    </thead>
+    <tbody>
+      {''.join(rows)}
+    </tbody>
+  </table>
+</div>
+"""
+
+
+def render_health_summary(items: list[dict], empty: bool) -> str:
+    if not items:
+        items = [
+            {"label": "行情新鲜度", "status": "暂无数据", "tone": "muted"},
+            {"label": "信息源状态", "status": "暂无数据", "tone": "muted"},
+            {"label": "Pipeline 状态", "status": "暂无数据", "tone": "muted"},
+        ]
+    cards = []
+    for item in items:
+        label = item.get("label", "")
+        status = item.get("status", "")
+        tone = item.get("tone", "muted")
+        tone_cls = _tone_class(tone)
+        icon = "✓" if tone in ("good", "success") else "!" if tone in ("danger", "error") else "○"
+        cards.append(
+            f"""
+<div class="health-card">
+  <div class="health-icon {tone_cls}">{icon}</div>
+  <div class="health-body">
+    <div class="health-label">{escape(label)}</div>
+    <div class="health-status {tone_cls}">{escape(status)}</div>
+  </div>
+</div>
+"""
+        )
+    return f'<div class="health-grid">{"".join(cards)}</div>'
+
+
+def render_placeholder_page(title: str, desc: str, current_path: str, state: dict, refresh_seconds: int) -> str:
+    body = f"""
+<div class="placeholder-page">
+  <div class="placeholder-icon">📋</div>
+  <h2 class="placeholder-title">{escape(title)}</h2>
+  <p class="placeholder-desc">{escape(desc)}</p>
+  <div class="placeholder-note muted">页面设计已完成，施工将在后续阶段进行。</div>
+</div>
+"""
+    return render_shell(
+        page_title=f"{title} · 同行资本投研系统",
+        current_path=current_path,
+        hero_title=title,
+        hero_subtitle=desc,
+        body=body,
+        refresh_seconds=refresh_seconds,
+        show_status_strip=False,
+        **shell_state_kwargs(state),
+    )
+
+
+def _render_coverage_metrics(metrics: dict) -> str:
+    cards = []
+    for key, label in [
+        ("company_count", "覆盖公司数"),
+        ("industry_count", "覆盖行业/主题数"),
+        ("high_priority_count", "高优先级对象"),
+        ("evidence_completeness", "证据完整度"),
+    ]:
+        m = metrics.get(key) or {}
+        if key == "evidence_completeness":
+            value = f"{m.get('value', 0)}%"
+        else:
+            value = str(m.get("count", 0))
+        subtitle = m.get("subtitle") or label
+        cards.append(
+            f'<article class="coverage-metric-card">'
+            f'<div class="coverage-metric-value">{escape(value)}</div>'
+            f'<div class="coverage-metric-subtitle">{escape(subtitle)}</div>'
+            f'</article>'
+        )
+    return f'<section class="coverage-metrics">{"".join(cards)}</section>'
+
+
+def _render_coverage_filters(filters: dict) -> str:
+    type_options = [("all", "全部类型"), ("company", "公司"), ("industry", "行业"), ("theme", "主题")]
+    priority_options = [("all", "全部优先级"), ("高", "高"), ("中", "中"), ("低", "低")]
+    status_options = [
+        ("all", "全部状态"),
+        ("跟踪中", "跟踪中"),
+        ("重点研究", "重点研究"),
+        ("需补证据", "需补证据"),
+        ("边际改善", "边际改善"),
+        ("风险上升", "风险上升"),
+        ("暂缓", "暂缓"),
+    ]
+
+    def _opts(opts, current):
+        return "".join(
+            f'<option value="{escape(v)}"{" selected" if v == current else ""}>{escape(l)}</option>'
+            for v, l in opts
+        )
+
+    return f'''
+<form class="coverage-filter-bar" method="get" action="/coverage">
+  <div class="coverage-filter-group">
+    <select class="coverage-filter-select" name="type" onchange="this.form.submit()">
+      {_opts(type_options, filters.get("type", "all"))}
+    </select>
+  </div>
+  <div class="coverage-filter-group">
+    <select class="coverage-filter-select" name="priority" onchange="this.form.submit()">
+      {_opts(priority_options, filters.get("priority", "all"))}
+    </select>
+  </div>
+  <div class="coverage-filter-group">
+    <select class="coverage-filter-select" name="status" onchange="this.form.submit()">
+      {_opts(status_options, filters.get("status", "all"))}
+    </select>
+  </div>
+  <input type="text" class="coverage-search" name="q" placeholder="搜索..." value="{escape(filters.get("q", ""))}">
+  <button type="submit" class="coverage-filter-select" style="cursor:pointer">搜索</button>
+</form>
+'''
+
+
+def _render_coverage_table(items: list[dict], empty: bool, filters: dict, pagination: dict) -> str:
+    if empty:
+        return f'''
+<div class="coverage-table-section">
+  <div class="coverage-table-header">
+    <span class="coverage-table-title">覆盖对象列表</span>
+  </div>
+  {_render_coverage_filters(filters)}
+  <div class="coverage-empty-state">
+    <div class="coverage-empty-state-title">暂无覆盖对象</div>
+    <div>当前没有可展示的覆盖公司、行业或主题。请检查数据健康或等待系统生成覆盖快照。</div>
+  </div>
+</div>
+'''
+
+    rows = []
+    for idx, item in enumerate(items):
+        name = escape(item.get("name") or "")
+        typ = escape(item.get("type") or "")
+        status = escape(item.get("status") or "")
+        priority = escape(item.get("priority") or "")
+        ev_pct = item.get("evidence_completeness", 0)
+        updated = escape(item.get("updated_at") or "")
+        progress_class = "high" if ev_pct >= 70 else ("medium" if ev_pct >= 40 else "low")
+        rows.append(
+            f'<tr class="{"selected" if idx == 0 else ""}">'
+            f'<td><strong>{name}</strong></td>'
+            f'<td><span class="coverage-badge type-{typ}">{typ}</span></td>'
+            f'<td><span class="coverage-badge status-{status[:2]}">{status}</span></td>'
+            f'<td>'
+            f'<div class="coverage-progress"><div class="coverage-progress-bar {progress_class}" style="width:{ev_pct}%"></div></div>'
+            f'</td>'
+            f'<td><span class="coverage-badge priority-{priority}">{priority}</span></td>'
+            f'<td style="color:var(--muted);font-size:12px">{updated}</td>'
+            f'</tr>'
+        )
+
+    page = pagination.get("page", 1)
+    total_pages = pagination.get("total_pages", 1)
+    total_items = pagination.get("total_items", 0)
+
+    page_buttons = []
+    for p in range(1, total_pages + 1):
+        if p == 1 or p == total_pages or abs(p - page) <= 1:
+            active = " active" if p == page else ""
+            page_buttons.append(
+                f'<a href="/coverage?type={escape(filters.get("type","all"))}&priority={escape(filters.get("priority","all"))}&status={escape(filters.get("status","all"))}&q={escape(filters.get("q",""))}&page={p}" class="coverage-page-btn{active}">{p}</a>'
+            )
+        elif abs(p - page) == 2:
+            page_buttons.append('<span style="color:var(--muted)">...</span>')
+
+    pagination_html = ""
+    if total_pages > 1:
+        pagination_html = f'''
+<div class="coverage-pagination">
+  <span class="coverage-pagination-info">共 {total_items} 条</span>
+  {"".join(page_buttons)}
+</div>
+'''
+
+    return f'''
+<div class="coverage-table-section">
+  <div class="coverage-table-header">
+    <span class="coverage-table-title">覆盖对象列表</span>
+  </div>
+  {_render_coverage_filters(filters)}
+  <table class="coverage-table">
+    <thead>
+      <tr>
+        <th>名称</th>
+        <th>类型</th>
+        <th>最新状态</th>
+        <th>证据完整度</th>
+        <th>优先级</th>
+        <th>最近更新</th>
+      </tr>
+    </thead>
+    <tbody>
+      {"".join(rows)}
+    </tbody>
+  </table>
+  {pagination_html}
+</div>
+'''
+
+
+def _render_coverage_detail(detail: dict) -> str:
+    if detail.get("data_status") == "empty_state":
+        return '''
+<div class="coverage-detail-panel">
+  <div class="coverage-empty-state">
+    <div class="coverage-empty-state-title">请选择覆盖对象</div>
+    <div>当前没有可展示的覆盖详情。</div>
+  </div>
+</div>
+'''
+
+    name = escape(detail.get("name") or "")
+    typ = escape(detail.get("type") or "")
+    priority = escape(detail.get("priority") or "")
+    badges_html = ""
+    for badge in (detail.get("badges") or []):
+        if badge:
+            badges_html += f'<span class="coverage-badge type-{badge}">{escape(badge)}</span>'
+    if priority:
+        badges_html += f'<span class="coverage-badge priority-{priority}">{priority}优先级</span>'
+
+    focus_points = detail.get("focus_points") or []
+    focus_html = ""
+    if focus_points:
+        chips = "".join(f'<span class="coverage-focus-chip">{escape(fp)}</span>' for fp in focus_points if fp)
+        focus_html = f'''
+<div class="coverage-detail-section">
+  <div class="coverage-detail-section-title">投资关注点</div>
+  <div class="coverage-focus-list">{chips}</div>
+</div>
+'''
+
+    signals = detail.get("latest_signals") or []
+    signals_html = ""
+    if signals:
+        sig_items = []
+        for sig in signals:
+            direction = sig.get("signal_direction") or "待确认"
+            dir_class = {
+                "新增证据": "new",
+                "边际改善": "improve",
+                "需关注": "watch",
+                "风险提示": "risk",
+                "待确认": "pending",
+            }.get(direction, "pending")
+            sig_items.append(
+                f'<div class="coverage-signal-item">'
+                f'<div>'
+                f'<div class="coverage-signal-title">{escape(sig.get("signal_title") or "")}</div>'
+                f'<div class="coverage-signal-meta">{escape(sig.get("source_type") or "")} · {escape(sig.get("signal_date") or "")}</div>'
+                f'</div>'
+                f'<span class="coverage-signal-direction {dir_class}">{escape(direction)}</span>'
+                f'</div>'
+            )
+        signals_html = f'''
+<div class="coverage-detail-section">
+  <div class="coverage-detail-section-title">最新关键信号</div>
+  <div class="coverage-signal-list">{"".join(sig_items)}</div>
+</div>
+'''
+
+    ev = detail.get("evidence_overview") or {}
+    completeness = ev.get("completeness", 0)
+    covered = ev.get("covered_count", 0)
+    partial = ev.get("partial_count", 0)
+    missing = ev.get("missing_count", 0)
+    p_covered = int(completeness / 100 * 360)
+    p_partial = int((completeness + (100 - completeness) * 0.4) / 100 * 360)
+
+    evidence_html = f'''
+<div class="coverage-detail-section">
+  <div class="coverage-detail-section-title">证据概览</div>
+  <div class="coverage-evidence-overview">
+    <div class="coverage-donut" style="--p-covered:{p_covered}deg;--p-partial:{p_partial}deg;">
+      <div class="coverage-donut-label">{completeness}%</div>
+    </div>
+    <div class="coverage-evidence-legend">
+      <div class="coverage-evidence-legend-item"><span class="coverage-evidence-dot covered"></span> 已覆盖 {covered}</div>
+      <div class="coverage-evidence-legend-item"><span class="coverage-evidence-dot partial"></span> 部分覆盖 {partial}</div>
+      <div class="coverage-evidence-legend-item"><span class="coverage-evidence-dot missing"></span> 缺失 {missing}</div>
+    </div>
+  </div>
+</div>
+'''
+
+    missing_ev = detail.get("missing_evidence") or []
+    missing_html = ""
+    if missing_ev:
+        miss_items = []
+        for me in missing_ev:
+            imp = me.get("importance") or "中等"
+            imp_class = "high" if imp == "重要" else ("medium" if imp == "中等" else "low")
+            miss_items.append(
+                f'<div class="coverage-missing-item">'
+                f'<span>{escape(me.get("gap_title") or "")}</span>'
+                f'<span class="coverage-missing-importance {imp_class}">{escape(imp)}</span>'
+                f'</div>'
+            )
+        missing_html = f'''
+<div class="coverage-detail-section">
+  <div class="coverage-detail-section-title">缺失证据 ({len(missing_ev)}项)</div>
+  <div class="coverage-missing-list">{"".join(miss_items)}</div>
+</div>
+'''
+
+    related_topics = detail.get("related_topics") or []
+    related_companies = detail.get("related_companies") or []
+    related_html = ""
+    if related_topics:
+        chips = "".join(f'<span class="coverage-chip">{escape(t)}</span>' for t in related_topics if t)
+        related_html += f'''
+<div class="coverage-detail-section">
+  <div class="coverage-detail-section-title">相关主题</div>
+  <div class="coverage-chips">{chips}</div>
+</div>
+'''
+    if related_companies:
+        chips = "".join(f'<span class="coverage-chip">{escape(c)}</span>' for c in related_companies if c)
+        related_html += f'''
+<div class="coverage-detail-section">
+  <div class="coverage-detail-section-title">关联公司</div>
+  <div class="coverage-chips">{chips}</div>
+</div>
+'''
+
+    return f'''
+<div class="coverage-detail-panel">
+  <div class="coverage-detail-header">
+    <span class="coverage-detail-name">{name}</span>
+    <div class="coverage-detail-badges">{badges_html}</div>
+  </div>
+  {focus_html}
+  {signals_html}
+  {evidence_html}
+  {missing_html}
+  {related_html}
+</div>
+'''
+
+
+def _render_coverage_distribution(distribution: list[dict]) -> str:
+    if not distribution:
+        return '''
+<div class="coverage-distribution-panel">
+  <div class="coverage-table-title" style="margin-bottom:12px">覆盖分布</div>
+  <div class="coverage-empty-state">暂无覆盖分布</div>
+</div>
+'''
+
+    company_pct = next((d["percentage"] for d in distribution if d["type"] == "公司"), 0)
+    theme_pct = next((d["percentage"] for d in distribution if d["type"] == "主题"), 0)
+    d_company = int(company_pct / 100 * 360)
+    d_theme = int((company_pct + theme_pct) / 100 * 360)
+
+    legend_items = []
+    for d in distribution:
+        typ = d["type"]
+        dot_class = {"公司": "company", "主题": "theme", "行业": "industry"}.get(typ, "company")
+        legend_items.append(
+            f'<div class="coverage-distribution-legend-item">'
+            f'<span class="coverage-distribution-dot {dot_class}"></span>'
+            f'<span>{escape(typ)} {d["count"]} ({d["percentage"]}%)</span>'
+            f'</div>'
+        )
+
+    return f'''
+<div class="coverage-distribution-panel">
+  <div class="coverage-table-title" style="margin-bottom:12px">覆盖分布</div>
+  <div class="coverage-distribution-content">
+    <div class="coverage-distribution-donut" style="--d-company:{d_company}deg;--d-theme:{d_theme}deg;"></div>
+    <div class="coverage-distribution-legend">{"".join(legend_items)}</div>
+  </div>
+</div>
+'''
+
+
+def _render_priority_hotzone(hotzone: list[dict]) -> str:
+    if not hotzone:
+        return '''
+<div class="priority-hotzone-panel">
+  <div class="coverage-table-title" style="margin-bottom:12px">优先级热区</div>
+  <div class="coverage-empty-state">暂无高优先级对象</div>
+</div>
+'''
+
+    cards = []
+    for item in hotzone:
+        name = escape(item.get("name") or "")
+        ev_pct = item.get("evidence_completeness", 0)
+        updated = escape(item.get("updated_at") or "")
+        cards.append(
+            f'<div class="hotzone-card">'
+            f'<div class="hotzone-card-name">{name}</div>'
+            f'<div class="hotzone-card-meta">证据完整度 · {ev_pct}%</div>'
+            f'<div class="hotzone-card-meta">{updated}</div>'
+            f'<div class="hotzone-card-progress"><div class="hotzone-card-progress-bar" style="width:{ev_pct}%"></div></div>'
+            f'</div>'
+        )
+
+    return f'''
+<div class="priority-hotzone-panel">
+  <div class="coverage-table-title" style="margin-bottom:12px">优先级热区（高优先级对象）</div>
+  <div class="priority-hotzone-grid">{"".join(cards)}</div>
+</div>
+'''
+
+
+def render_coverage_pool(state: dict, refresh_seconds: int, filters: dict | None = None) -> str:
+    view = build_coverage_pool_view_model(state, filters=filters)
+    metrics = view["metrics"]
+    clean_filters = view["filters"]
+    coverage_items = view["coverage_items"]
+    selected_detail = view["selected_detail"]
+    distribution = view["coverage_distribution"]
+    hotzone = view["priority_hotzone"]
+    pagination = view["pagination"]
+    empty = view["empty_state"]
+
+    metrics_html = _render_coverage_metrics(metrics)
+    table_html = _render_coverage_table(coverage_items, empty, clean_filters, pagination)
+    detail_html = _render_coverage_detail(selected_detail)
+    distribution_html = _render_coverage_distribution(distribution)
+    hotzone_html = _render_priority_hotzone(hotzone)
+
+    body = f"""
+{metrics_html}
+<div class="coverage-layout">
+  {table_html}
+  <aside class="coverage-side">
+    {detail_html}
+  </aside>
+</div>
+<div class="coverage-bottom">
+  {distribution_html}
+  {hotzone_html}
+</div>
+<div class="coverage-disclaimer">
+  系统展示覆盖状态与证据完整度，不直接给出投资建议。不提供任何投资建议。
+</div>
+"""
+
+    return render_shell(
+        page_title="覆盖池 · 同行资本投研系统",
+        current_path="/coverage",
+        hero_title="覆盖池",
+        hero_subtitle="系统当前覆盖的公司、行业、主题及其研究状态",
+        body=body,
+        refresh_seconds=refresh_seconds,
+        show_status_strip=False,
+        **shell_state_kwargs(state),
+    )
+
+
+def render_placeholder_coverage(state: dict, refresh_seconds: int) -> str:
+    return render_placeholder_page(
+        "覆盖池",
+        "查看当前系统正在覆盖的公司、行业和主题",
+        "/coverage",
+        state,
+        refresh_seconds,
+    )
+
+
+def render_placeholder_signals(state: dict, refresh_seconds: int) -> str:
+    return render_placeholder_page(
+        "信号流",
+        "最新证据时间线与来源追溯",
+        "/signals",
+        state,
+        refresh_seconds,
+    )
+
+
+def _render_research_metrics(metrics: dict) -> str:
+    cards = [
+        ("research_topic_count", "📁", "blue"),
+        ("high_priority_count", "⭐", "orange"),
+        ("evidence_gap_count", "📝", "yellow"),
+        ("new_today_count", "➕", "green"),
+    ]
+    html = ""
+    for key, icon, tone in cards:
+        m = metrics.get(key, {"count": 0, "subtitle": ""})
+        html += f"""
+<div class="research-metric-card">
+  <div class="research-metric-icon {tone}">{icon}</div>
+  <div>
+    <div class="research-metric-number">{m.get('count', 0)}</div>
+    <div class="research-metric-subtitle">{escape(m.get('subtitle', ''))}</div>
+  </div>
+</div>
+"""
+    return f'<div class="research-metrics">{html}</div>'
+
+
+def _render_research_filters(filters: dict) -> str:
+    priority_options = [("all", "全部"), ("高", "高"), ("中", "中"), ("低", "低")]
+    status_options = [
+        ("all", "全部"),
+        ("研究中", "研究中"),
+        ("初步研究", "初步研究"),
+        ("待验证", "待验证"),
+        ("证据收集中", "证据收集中"),
+        ("暂缓", "暂缓"),
+        ("已驳回", "已驳回"),
+        ("已通过", "已通过"),
+    ]
+    sort_options = [
+        ("latest", "最新更新"),
+        ("priority", "优先级"),
+        ("gaps", "缺口最多"),
+        ("evidence", "证据最多"),
+    ]
+
+    def _options(opts, current):
+        return "".join(
+            f'<option value="{escape(v)}"{" selected" if v == current else ""}>{escape(l)}</option>'
+            for v, l in opts
+        )
+
+    return f"""
+<div class="research-filters">
+  <select class="research-filter-select" name="priority" onchange="this.form.submit()">
+    {_options(priority_options, filters.get('priority', 'all'))}
+  </select>
+  <select class="research-filter-select" name="status" onchange="this.form.submit()">
+    {_options(status_options, filters.get('status', 'all'))}
+  </select>
+  <select class="research-filter-select" name="sort" onchange="this.form.submit()">
+    {_options(sort_options, filters.get('sort', 'latest'))}
+  </select>
+</div>
+"""
+
+
+def _priority_badge_class(priority: str) -> str:
+    if priority == "高":
+        return "priority-high"
+    if priority == "中":
+        return "priority-medium"
+    return "priority-low"
+
+
+def _status_badge_class(status: str) -> str:
+    if status == "研究中":
+        return "status-researching"
+    if status == "待验证":
+        return "status-pending"
+    if status == "证据收集中":
+        return "status-gathering"
+    if status == "暂缓":
+        return "status-deferred"
+    if status == "已通过":
+        return "status-approved"
+    if status == "已驳回":
+        return "status-rejected"
+    return "status-researching"
+
+
+def _render_research_item(item: dict, is_selected: bool = False) -> str:
+    title = escape(item.get("title") or "")
+    rank = item.get("rank", 0)
+    priority = item.get("priority") or ""
+    status = item.get("status") or ""
+    evidence_count = item.get("evidence_count", 0)
+    gap_count = item.get("gap_count", 0)
+    updated_at = escape(item.get("updated_at") or "")
+    short_reason = escape(item.get("short_reason") or "")
+
+    entity_badges = "".join(
+        f'<span class="research-item-badge entity">{escape(e)}</span>'
+        for e in (item.get("related_entities") or [])
+    )
+    topic_badges = "".join(
+        f'<span class="research-item-badge topic">{escape(t)}</span>'
+        for t in (item.get("related_topics") or [])
+    )
+
+    selected_cls = " selected" if is_selected else ""
+
+    return f"""
+<div class="research-item{selected_cls}" data-item-id="{escape(item.get('item_id', ''))}">
+  <div class="research-item-rank">{rank}</div>
+  <div class="research-item-content">
+    <h4 class="research-item-title">{title}</h4>
+    <div class="research-item-badges">
+      {entity_badges}
+      {topic_badges}
+      <span class="research-item-badge {_priority_badge_class(priority)}">{escape(priority)}</span>
+      <span class="research-item-badge {_status_badge_class(status)}">{escape(status)}</span>
+    </div>
+    <p class="research-item-reason">{short_reason}</p>
+    <div class="research-item-meta">
+      <span>证据 {evidence_count}</span>
+      <span>缺口 {gap_count}</span>
+      <span>最近更新 {updated_at}</span>
+    </div>
+  </div>
+  <div class="research-item-actions">
+    <button class="research-action-btn approve">通过</button>
+    <button class="research-action-btn gather">补证据</button>
+    <button class="research-action-btn defer">暂缓</button>
+    <button class="research-action-btn reject">驳回</button>
+  </div>
+</div>
+"""
+
+
+def _render_research_list(items: list[dict], empty: bool, filters: dict) -> str:
+    header_html = f"""
+<div class="research-list-header">
+  <div class="research-list-title">研究队列</div>
+  <form method="get" action="/research" class="research-filters">
+    {_render_research_filters(filters)}
+    <input type="hidden" name="q" value="{escape(filters.get('q', ''))}">
+  </form>
+</div>
+"""
+    if empty or not items:
+        return header_html + """
+<div class="research-empty-state">
+  <div class="research-empty-state-title">暂无研究队列</div>
+  <div>当前没有待深挖主题。请查看信号流或等待系统生成新的证据缺口。</div>
+</div>
+"""
+    list_html = ""
+    for idx, item in enumerate(items[:6]):
+        list_html += _render_research_item(item, is_selected=(idx == 0))
+    return header_html + f"""
+<div class="research-list">
+  {list_html}
+</div>
+"""
+
+
+def _render_research_detail(detail: dict) -> str:
+    if not detail.get("title"):
+        return """
+<div class="research-empty">
+  <div class="research-empty-title">请选择研究主题</div>
+  <div>当前没有可展示的研究详情。</div>
+</div>
+"""
+
+    title = escape(detail.get("title") or "")
+    priority = detail.get("priority") or ""
+
+    entity_badges = "".join(
+        f'<span class="research-item-badge entity">{escape(e)}</span>'
+        for e in (detail.get("related_entities") or [])
+    )
+    topic_badges = "".join(
+        f'<span class="research-item-badge topic">{escape(t)}</span>'
+        for t in (detail.get("related_topics") or [])
+    )
+
+    hypothesis = escape(detail.get("research_hypothesis") or "")
+    existing_evidence = "\n".join(
+        f"- {escape(e)}" for e in (detail.get("existing_evidence") or [])
+    )
+    missing_evidence = "\n".join(
+        f"- {escape(e)}" for e in (detail.get("missing_evidence") or [])
+    )
+    next_steps = "\n".join(
+        f"- {escape(s)}" for s in (detail.get("next_steps") or [])
+    )
+
+    return f"""
+<h4 class="research-detail-subtitle">{title}</h4>
+<div class="research-detail-badges">
+  {entity_badges}
+  {topic_badges}
+  <span class="research-item-badge {_priority_badge_class(priority)}">{escape(priority)}</span>
+</div>
+<div class="research-detail-section">
+  <h5 class="research-detail-section-title">研究假设</h5>
+  <p class="research-detail-text">{hypothesis}</p>
+</div>
+<div class="research-detail-section">
+  <h5 class="research-detail-section-title">已有证据</h5>
+  <ul class="research-detail-list">
+    {"".join(f'<li>{escape(e)}</li>' for e in (detail.get("existing_evidence") or []))}
+  </ul>
+</div>
+<div class="research-detail-section">
+  <h5 class="research-detail-section-title">缺失证据</h5>
+  <ul class="research-detail-list">
+    {"".join(f'<li>{escape(e)}</li>' for e in (detail.get("missing_evidence") or []))}
+  </ul>
+</div>
+<div class="research-detail-section">
+  <h5 class="research-detail-section-title">下一步建议</h5>
+  <ul class="research-detail-list">
+    {"".join(f'<li>{escape(s)}</li>' for s in (detail.get("next_steps") or []))}
+  </ul>
+</div>
+"""
+
+
+def _importance_badge_class(importance: str) -> str:
+    if importance == "重要":
+        return "important"
+    if importance == "中等":
+        return "medium"
+    return "low"
+
+
+def _render_evidence_gaps(gaps: list[dict]) -> str:
+    if not gaps:
+        return """
+<div class="research-empty" style="padding: 24px 12px;">
+  <div class="research-empty-title" style="font-size: 13px;">暂无证据缺口</div>
+</div>
+"""
+    html = ""
+    for idx, gap in enumerate(gaps[:4]):
+        title = escape(gap.get("gap_title") or "")
+        importance = gap.get("importance") or "中等"
+        target_source = escape(gap.get("target_source") or "")
+        expected_time = escape(gap.get("expected_time") or "")
+        html += f"""
+<div class="evidence-gap-item">
+  <div class="evidence-gap-header">
+    <span class="evidence-gap-title-text">{title}</span>
+    <span class="evidence-gap-importance {_importance_badge_class(importance)}">{escape(importance)}</span>
+  </div>
+  <div class="evidence-gap-meta">
+    <span>目标来源：{target_source}</span>
+    <span>期望时间：{expected_time}</span>
+  </div>
+</div>
+"""
+    return f"""
+<div class="evidence-gap-title">
+  <span>证据缺口</span>
+  <a href="#" class="evidence-gap-all-link">全部查看</a>
+</div>
+<div class="evidence-gap-list">
+  {html}
+</div>
+"""
+
+
+def render_research_queue(state: dict, refresh_seconds: int, filters: dict | None = None) -> str:
+    view = build_research_queue_view_model(state, filters=filters)
+    metrics = view["metrics"]
+    filters = view["filters"]
+    queue_items = view["queue_items"]
+    selected_detail = view["selected_detail"]
+    evidence_gaps = view["evidence_gaps"]
+    empty = view["empty_state"]
+
+    metric_html = _render_research_metrics(metrics)
+    list_html = _render_research_list(queue_items, empty, filters)
+    detail_html = _render_research_detail(selected_detail)
+    gaps_html = _render_evidence_gaps(evidence_gaps)
+
+    body = f"""
+{metric_html}
+<div class="research-layout">
+  <section class="research-list-section">
+    {list_html}
+  </section>
+  <aside class="research-side">
+    <div class="research-detail-panel">
+      <h3 class="research-detail-title">研究详情</h3>
+      {detail_html}
+    </div>
+    <div class="evidence-gap-panel">
+      {gaps_html}
+    </div>
+  </aside>
+</div>
+<div class="research-disclaimer">
+  系统仅组织研究证据与待办，不直接给出投资建议。不提供任何投资建议。
+</div>
+"""
+
+    return render_shell(
+        page_title="研究队列 · 同行资本投研系统",
+        current_path="/research",
+        hero_title="研究队列",
+        hero_subtitle="待深挖主题管理 / 证据缺口 / 人工决策",
+        body=body,
+        refresh_seconds=refresh_seconds,
+        show_status_strip=False,
+        **shell_state_kwargs(state),
+    )
+
+
+def _render_health_metrics(metrics: dict) -> str:
+    def _status_dot(status):
+        if status == "正常" or status == "运行正常":
+            return '<span class="health-status-dot normal"></span>'
+        elif status == "降级" or status == "降级运行":
+            return '<span class="health-status-dot degraded"></span>'
+        elif status == "阻塞":
+            return '<span class="health-status-dot blocked"></span>'
+        elif status == "观察中":
+            return '<span class="health-status-dot watching"></span>'
+        elif status == "待接入":
+            return '<span class="health-status-dot pending"></span>'
+        else:
+            return '<span class="health-status-dot nodata"></span>'
+
+    m1 = metrics.get("market_freshness") or {}
+    m2 = metrics.get("source_availability") or {}
+    m3 = metrics.get("blocking_issues") or {}
+    m4 = metrics.get("evidence_pipeline") or {}
+
+    s1 = m1.get("status", "暂无数据")
+    v2 = f'{m2.get("value", 0)}%'
+    v3 = f'{m3.get("count", 0)} 项'
+    s4 = m4.get("status", "暂无数据")
+
+    cards = f'''
+<article class="health-metric-card">
+  <div class="health-metric-value">{_status_dot(s1)} 行情新鲜度：{escape(s1)}</div>
+  <div class="health-metric-subtitle">{escape(m1.get("subtitle", ""))}</div>
+</article>
+<article class="health-metric-card">
+  <div class="health-metric-value">信息源可用率：{escape(v2)}</div>
+  <div class="health-metric-subtitle">{escape(m2.get("subtitle", ""))}</div>
+</article>
+<article class="health-metric-card">
+  <div class="health-metric-value">关键阻塞问题：{escape(v3)}</div>
+  <div class="health-metric-subtitle">{escape(m3.get("subtitle", ""))}</div>
+</article>
+<article class="health-metric-card">
+  <div class="health-metric-value">{_status_dot(s4)} 证据流水线：{escape(s4)}</div>
+  <div class="health-metric-subtitle">{escape(m4.get("subtitle", ""))}</div>
+</article>
+'''
+    return f'<section class="health-metrics">{cards}</section>'
+
+
+def _render_health_issue_list(issues: list[dict], empty: bool, filters: dict) -> str:
+    if empty or not issues:
+        return f'''
+<div class="health-issue-section">
+  <div class="health-section-header">
+    <span class="health-section-title">关键健康问题</span>
+  </div>
+  <div class="health-empty-state">
+    <div class="health-empty-state-title">暂无关键健康问题</div>
+    <div>当前未发现影响投研可靠性的阻塞或降级问题。</div>
+  </div>
+</div>
+'''
+
+    items = []
+    for issue in issues:
+        sev = issue.get("severity", "P2")
+        title = escape(issue.get("title", ""))
+        scope = escape(issue.get("impact_scope", ""))
+        status = issue.get("status", "观察中")
+        status_class = {
+            "阻塞": "blocked",
+            "降级": "degraded",
+            "观察中": "watching",
+            "已恢复": "resolved",
+        }.get(status, "watching")
+        desc = escape(issue.get("description", ""))
+        update = escape(issue.get("latest_update", ""))
+        action = escape(issue.get("action_hint", ""))
+        items.append(
+            f'<div class="health-issue-item">'
+            f'<span class="health-issue-severity {sev}">{sev}</span>'
+            f'<div class="health-issue-body">'
+            f'<div class="health-issue-top">'
+            f'<div class="health-issue-title">{title}</div>'
+            f'<span class="health-issue-status {status_class}">{status}</span>'
+            f'</div>'
+            f'<div class="health-issue-scope">影响范围：{scope}</div>'
+            f'<div class="health-issue-desc">{desc}</div>'
+            f'<div class="health-issue-meta"><span>最近更新：{update}</span><span>{action}</span></div>'
+            f'</div>'
+            f'</div>'
+        )
+
+    return f'''
+<div class="health-issue-section">
+  <div class="health-section-header">
+    <span class="health-section-title">关键健康问题</span>
+  </div>
+  <div class="health-issue-list">{"".join(items)}</div>
+</div>
+'''
+
+
+def _render_module_health(modules: list[dict]) -> str:
+    items = []
+    for m in modules:
+        name = escape(m.get("module_name", ""))
+        status = m.get("status", "暂无数据")
+        dot_class = {
+            "运行正常": "normal",
+            "降级运行": "degraded",
+            "阻塞": "blocked",
+            "观察中": "watching",
+            "待接入": "pending",
+        }.get(status, "nodata")
+        summary = escape(m.get("summary", ""))
+        items.append(
+            f'<div class="module-health-item">'
+            f'<div class="module-health-left">'
+            f'<span class="health-status-dot {dot_class}"></span>'
+            f'<span>{name}</span>'
+            f'</div>'
+            f'<span class="module-health-status">{status}，{summary}</span>'
+            f'</div>'
+        )
+
+    return f'''
+<div class="health-panel">
+  <div class="health-panel-title">系统模块健康度</div>
+  <div class="module-health-list">{"".join(items)}</div>
+</div>
+'''
+
+
+def _render_health_source_distribution(distribution: list[dict]) -> str:
+    if not distribution:
+        return '''
+<div class="health-panel">
+  <div class="health-panel-title">数据源状态分布</div>
+  <div class="health-empty-state">暂无数据</div>
+</div>
+'''
+
+    total = sum(d["count"] for d in distribution)
+    norm_count = next((d["count"] for d in distribution if d["status"] == "正常"), 0)
+    deg_count = next((d["count"] for d in distribution if d["status"] == "降级"), 0)
+    blk_count = next((d["count"] for d in distribution if d["status"] == "阻塞"), 0)
+    watch_count = next((d["count"] for d in distribution if d["status"] == "观察中"), 0)
+    pend_count = next((d["count"] for d in distribution if d["status"] == "待接入"), 0)
+
+    p_norm = int(norm_count / total * 360) if total else 0
+    p_deg = int((norm_count + deg_count) / total * 360) if total else 0
+    p_blk = int((norm_count + deg_count + blk_count) / total * 360) if total else 0
+    p_watch = int((norm_count + deg_count + blk_count + watch_count) / total * 360) if total else 0
+
+    gradient = f'conic-gradient(#059669 0deg {p_norm}deg, #f59e0b {p_norm}deg {p_deg}deg, #dc2626 {p_deg}deg {p_blk}deg, #6366f1 {p_blk}deg {p_watch}deg, #9ca3af {p_watch}deg 360deg)'
+
+    legend_items = []
+    status_colors = {
+        "正常": "#059669",
+        "降级": "#f59e0b",
+        "阻塞": "#dc2626",
+        "观察中": "#6366f1",
+        "待接入": "#9ca3af",
+        "暂无数据": "#cbd5e1",
+    }
+    for d in distribution:
+        s = d["status"]
+        if d["count"] == 0:
+            continue
+        color = status_colors.get(s, "#cbd5e1")
+        legend_items.append(
+            f'<div class="health-legend-item">'
+            f'<div class="health-legend-left"><span class="health-legend-dot" style="background:{color}"></span><span>{s}</span></div>'
+            f'<span>{d["count"]} ({d["percentage"]}%)</span>'
+            f'</div>'
+        )
+
+    return f'''
+<div class="health-panel">
+  <div class="health-panel-title">数据源状态分布</div>
+  <div class="health-distribution">
+    <div class="health-ring" style="background:{gradient}">
+      <div class="health-ring-label">总数 {total}</div>
+    </div>
+    <div class="health-legend">{"".join(legend_items)}</div>
+  </div>
+</div>
+'''
+
+
+def _render_run_summary(summary: dict) -> str:
+    success = summary.get("successful_batches", 0)
+    failed = summary.get("failed_batches", 0)
+    pending = summary.get("pending_queue", 0)
+    last_check = summary.get("last_check", "未知")
+
+    return f'''
+<div class="health-panel">
+  <div class="health-panel-title">今日运行摘要</div>
+  <div class="run-summary-grid">
+    <div class="run-summary-item">
+      <div class="run-summary-value">{success}</div>
+      <div class="run-summary-label">成功批次</div>
+    </div>
+    <div class="run-summary-item">
+      <div class="run-summary-value" style="color:#dc2626">{failed}</div>
+      <div class="run-summary-label">失败批次</div>
+    </div>
+    <div class="run-summary-item">
+      <div class="run-summary-value" style="color:#f59e0b">{pending}</div>
+      <div class="run-summary-label">待处理队列</div>
+    </div>
+    <div class="run-summary-item">
+      <div class="run-summary-value" style="font-size:14px">{escape(last_check)}</div>
+      <div class="run-summary-label">最近一次检查</div>
+    </div>
+  </div>
+</div>
+'''
+
+
+def render_data_health(state: dict, refresh_seconds: int, filters: dict | None = None) -> str:
+    view = build_data_health_view_model(state, filters=filters)
+    metrics = view["metrics"]
+    clean_filters = view["filters"]
+    issues = view["health_issues"]
+    modules = view["module_health"]
+    distribution = view["source_status_distribution"]
+    summary = view["run_summary"]
+    empty = view["empty_state"]
+
+    metrics_html = _render_health_metrics(metrics)
+    issues_html = _render_health_issue_list(issues, empty, clean_filters)
+    module_html = _render_module_health(modules)
+    dist_html = _render_health_source_distribution(distribution)
+    summary_html = _render_run_summary(summary)
+
+    body = f"""
+{metrics_html}
+<div class="health-layout">
+  {issues_html}
+  <aside class="health-side">
+    {module_html}
+    {dist_html}
+    {summary_html}
+  </aside>
+</div>
+<div class="health-disclaimer">
+  数据健康页面用于观察投研系统的运行状态与数据质量，帮助及时发现并定位问题，保障研究工作的可靠性与连续性。不提供任何投资建议。
+</div>
+"""
+
+    return render_shell(
+        page_title="数据健康 · 同行资本投研系统",
+        current_path="/health",
+        hero_title="数据健康",
+        hero_subtitle="聚焦影响投研可靠性的关键健康状态",
+        body=body,
+        refresh_seconds=refresh_seconds,
+        show_status_strip=False,
+        **shell_state_kwargs(state),
+    )
+
+
+def render_placeholder_health(state: dict, refresh_seconds: int) -> str:
+    return render_placeholder_page(
+        "数据健康",
+        "影响投研可靠性的关键健康状态",
+        "/health",
+        state,
+        refresh_seconds,
+    )
+
+
+def _render_filter_bar(filters: dict) -> str:
+    time_options = [("24h", "近 24 小时"), ("7d", "近 7 天"), ("30d", "近 30 天"), ("all", "全部")]
+    source_options = [
+        ("all", "全部"),
+        ("official_disclosure", "官方披露"),
+        ("company_ir", "公司 IR"),
+        ("public_research", "公开研究"),
+        ("media_excerpt", "媒体摘录"),
+        ("earnings_call", "电话会纪要"),
+        ("foundation", "Foundation"),
+        ("risk_monitor", "风险监控"),
+    ]
+    entity_options = [("all", "全部"), ("company", "公司"), ("industry", "行业"), ("theme", "主题")]
+    strength_options = [("all", "全部"), ("高", "高"), ("中", "中"), ("低", "低"), ("待确认", "待确认")]
+
+    def _options(opts, current):
+        return "".join(
+            f'<option value="{escape(v)}"{" selected" if v == current else ""}>{escape(l)}</option>'
+            for v, l in opts
+        )
+
+    return f"""
+<div class="signal-filter-bar">
+  <div class="filter-group">
+    <span class="filter-label">时间范围</span>
+    <select class="filter-select" name="time_range" onchange="this.form.submit()">
+      {_options(time_options, filters.get('time_range', 'all'))}
+    </select>
+  </div>
+  <div class="filter-group">
+    <span class="filter-label">来源类型</span>
+    <select class="filter-select" name="source_type" onchange="this.form.submit()">
+      {_options(source_options, filters.get('source_type', 'all'))}
+    </select>
+  </div>
+  <div class="filter-group">
+    <span class="filter-label">关联对象</span>
+    <select class="filter-select" name="entity" onchange="this.form.submit()">
+      {_options(entity_options, filters.get('entity', 'all'))}
+    </select>
+  </div>
+  <div class="filter-group">
+    <span class="filter-label">证据强度</span>
+    <select class="filter-select" name="strength" onchange="this.form.submit()">
+      {_options(strength_options, filters.get('strength', 'all'))}
+    </select>
+  </div>
+  <div class="filter-group">
+    <span class="filter-label">关键词搜索</span>
+    <input class="filter-input" type="text" name="q" placeholder="输入关键词" value="{escape(filters.get('q', ''))}">
+  </div>
+  <a class="filter-reset" href="/signals">重置筛选</a>
+</div>
+"""
+
+
+def _strength_badge_class(strength: str) -> str:
+    if strength == "高":
+        return "strength-high"
+    if strength == "中":
+        return "strength-medium"
+    if strength == "低":
+        return "strength-low"
+    return "strength-unknown"
+
+
+def _render_signal_card(signal: dict) -> str:
+    title = escape(signal.get("title") or "")
+    summary = escape(signal.get("summary") or "")
+    time_label = escape(signal.get("time_label") or "")
+    source_label = escape(signal.get("source_label") or "")
+    strength = signal.get("evidence_strength") or "待确认"
+    review = signal.get("review_status") or ""
+
+    entity_badges = "".join(
+        f'<span class="signal-badge entity">{escape(e)}</span>'
+        for e in (signal.get("related_entities") or [])
+    )
+    topic_badges = "".join(
+        f'<span class="signal-badge topic">{escape(t)}</span>'
+        for t in (signal.get("related_topics") or [])
+    )
+
+    source_url = signal.get("source_url")
+    evidence_url = signal.get("evidence_url")
+    source_btn = (
+        f'<a class="signal-btn" href="{escape(source_url)}" target="_blank">查看原文</a>'
+        if source_url
+        else '<span class="signal-btn disabled">暂无原文</span>'
+    )
+    evidence_btn = (
+        f'<a class="signal-btn" href="{escape(evidence_url)}" target="_blank">查看证据包</a>'
+        if evidence_url
+        else '<span class="signal-btn disabled">暂无证据包</span>'
+    )
+
+    review_badge = f'<span class="signal-badge review">{escape(review)}</span>' if review else ""
+
+    return f"""
+<div class="timeline-item">
+  <div class="timeline-node"></div>
+  <div class="timeline-time">{time_label}</div>
+  <div class="signal-card">
+    <h3 class="signal-title">{title}</h3>
+    <p class="signal-summary">{summary}</p>
+    <div class="signal-badges">
+      <span class="signal-badge source">{source_label}</span>
+      {entity_badges}
+      {topic_badges}
+      <span class="signal-badge {_strength_badge_class(strength)}">{escape(strength)}</span>
+      {review_badge}
+    </div>
+    <div class="signal-actions">
+      {source_btn}
+      {evidence_btn}
+    </div>
+  </div>
+</div>
+"""
+
+
+def _render_timeline(signals: list[dict], empty: bool) -> str:
+    if empty or not signals:
+        return """
+<div class="signal-empty">
+  <div class="signal-empty-title">暂无信号</div>
+  <div class="signal-empty-desc">当前筛选条件下没有可展示的证据或事件。请调整筛选条件，或查看数据健康。</div>
+</div>
+"""
+    items = "".join(_render_signal_card(s) for s in signals)
+    load_more = (
+        """
+<div class="load-more">
+  <span class="load-more-btn">加载更多 ▾</span>
+</div>
+"""
+        if len(signals) >= 8
+        else ""
+    )
+    return f'<div class="timeline">{items}</div>{load_more}'
+
+
+def _render_summary_stats(summary: dict) -> str:
+    cards = [
+        ("total_signals", "今日新增信号数", "📄", "blue"),
+        ("focus_company_count", "重点公司数", "🏢", "purple"),
+        ("high_strength_count", "高强度证据数", "🛡", "red"),
+        ("needs_review_count", "需复核数", "📋", "amber"),
+    ]
+    html = ""
+    for key, label, icon, tone in cards:
+        count = summary.get(key, 0)
+        html += f"""
+<div class="summary-stat">
+  <div class="summary-icon {tone}">{icon}</div>
+  <div>
+    <div class="summary-number">{count}</div>
+    <div class="summary-label">{label}</div>
+  </div>
+</div>
+"""
+    return f'<div class="signal-summary-grid">{html}</div>'
+
+
+def _render_hot_entities(entities: list[dict]) -> str:
+    if not entities:
+        return """
+<div class="signal-empty" style="padding: 24px 12px;">
+  <div class="signal-empty-title" style="font-size: 13px;">暂无热门关联对象</div>
+</div>
+"""
+    chips = ""
+    for e in entities:
+        name = escape(e.get("name") or "")
+        etype = e.get("type") or "company"
+        cls = "hot-chip theme" if etype == "theme" else "hot-chip"
+        chips += f'<span class="{cls}">{name}</span>'
+    return f'<div class="hot-chips">{chips}</div>'
+
+
+def _render_source_distribution(distribution: list[dict]) -> str:
+    if not distribution or all(d.get("count", 0) == 0 for d in distribution):
+        return """
+<div class="signal-empty" style="padding: 24px 12px;">
+  <div class="signal-empty-title" style="font-size: 13px;">暂无来源分布数据</div>
+</div>
+"""
+    bars = ""
+    for d in distribution:
+        label = escape(d.get("label") or "")
+        count = d.get("count", 0)
+        pct = d.get("pct", 0)
+        bars += f"""
+<div class="source-bar-item">
+  <span class="source-bar-label">{label}</span>
+  <div class="source-bar-track">
+    <div class="source-bar-fill" style="width: {pct}%;"></div>
+  </div>
+  <span class="source-bar-count">{count}</span>
+</div>
+"""
+    return f"""
+<div class="source-bar-list">
+  {bars}
+</div>
+<div class="source-bar-unit">单位：条</div>
+"""
+
+
+def render_signal_flow(state: dict, refresh_seconds: int, filters: dict | None = None) -> str:
+    view = build_signal_flow_view_model(state, filters=filters)
+    clean_filters = view["filters"]
+    summary = view["summary"]
+    signals = view["signals"]
+    hot_entities = view["hot_entities"]
+    source_dist = view["source_distribution"]
+    empty = view["empty_state"]
+
+    filter_bar = _render_filter_bar(clean_filters)
+    timeline = _render_timeline(signals, empty)
+    stats = _render_summary_stats(summary)
+    hot = _render_hot_entities(hot_entities)
+    source_bars = _render_source_distribution(source_dist)
+
+    body = f"""
+{filter_bar}
+<div class="signal-layout">
+  <article class="timeline-section">
+    <h2 class="section-title">信号时间线</h2>
+    {timeline}
+  </article>
+  <aside class="signal-side">
+    <div class="side-panel">
+      <h3 class="side-title">今日信号摘要</h3>
+      {stats}
+    </div>
+    <div class="side-panel">
+      <h3 class="side-title">热门关联对象</h3>
+      {hot}
+    </div>
+    <div class="side-panel">
+      <h3 class="side-title">信号来源分布</h3>
+      {source_bars}
+    </div>
+  </aside>
+</div>
+<div class="signal-disclaimer">
+  系统仅展示证据与信号，不直接给出投资建议。不提供任何投资建议。
+</div>
+"""
+
+    return render_shell(
+        page_title="信号流 · 同行资本投研系统",
+        current_path="/signals",
+        hero_title="信号流",
+        hero_subtitle="最新证据时间线与来源追溯",
+        body=body,
+        refresh_seconds=refresh_seconds,
+        show_status_strip=False,
+        **shell_state_kwargs(state),
+    )
+
+
 def render_operations_page(state: dict, refresh_seconds: int) -> str:
     overview = state.get("overview") or {}
     reporting = state.get("reporting") or {}
@@ -6857,17 +10230,11 @@ def render_recommendation_review_page(
 
 
 PAGE_RENDERERS = {
-    "/": render_home,
-    "/reports": render_home,
-    "/opportunities": render_home,
-    "/analysis": render_home,
-    "/operations": render_home,
-    "/research": render_home,
-    "/portfolio": render_home,
-    "/risk": render_home,
-    "/capital-flow": render_home,
-    "/events": render_home,
-    "/review-queue": render_review_queue,
+    "/": render_today_overview,
+    "/coverage": render_coverage_pool,
+    "/signals": render_signal_flow,
+    "/research": render_research_queue,
+    "/health": render_data_health,
 }
 
 
@@ -6925,7 +10292,43 @@ def build_handler(refresh_seconds: int):
             renderer = PAGE_RENDERERS.get(parsed.path)
             if renderer:
                 state = build_dashboard_state()
-                self._send(200, renderer(state, refresh_seconds))
+                from urllib.parse import parse_qs
+                qs = parse_qs(parsed.query)
+                if parsed.path == "/signals":
+                    filters = {
+                        "time_range": (qs.get("time_range") or ["all"])[0],
+                        "source_type": (qs.get("source_type") or ["all"])[0],
+                        "entity": (qs.get("entity") or ["all"])[0],
+                        "strength": (qs.get("strength") or ["all"])[0],
+                        "q": (qs.get("q") or [""])[0],
+                    }
+                    self._send(200, renderer(state, refresh_seconds, filters=filters))
+                elif parsed.path == "/research":
+                    filters = {
+                        "priority": (qs.get("priority") or ["all"])[0],
+                        "status": (qs.get("status") or ["all"])[0],
+                        "sort": (qs.get("sort") or ["latest"])[0],
+                        "q": (qs.get("q") or [""])[0],
+                    }
+                    self._send(200, renderer(state, refresh_seconds, filters=filters))
+                elif parsed.path == "/coverage":
+                    filters = {
+                        "type": (qs.get("type") or ["all"])[0],
+                        "priority": (qs.get("priority") or ["all"])[0],
+                        "status": (qs.get("status") or ["all"])[0],
+                        "q": (qs.get("q") or [""])[0],
+                        "page": (qs.get("page") or ["1"])[0],
+                    }
+                    self._send(200, renderer(state, refresh_seconds, filters=filters))
+                elif parsed.path == "/health":
+                    filters = {
+                        "status": (qs.get("status") or ["all"])[0],
+                        "severity": (qs.get("severity") or ["all"])[0],
+                        "q": (qs.get("q") or [""])[0],
+                    }
+                    self._send(200, renderer(state, refresh_seconds, filters=filters))
+                else:
+                    self._send(200, renderer(state, refresh_seconds))
                 return
             self._send(404, "<h1>Not Found</h1>")
 
