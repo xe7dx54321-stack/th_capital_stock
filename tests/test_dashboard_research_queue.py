@@ -236,8 +236,9 @@ class TestOtherPagesStillWork(unittest.TestCase):
     def test_coverage_placeholder(self):
         import run_control_tower as rt
 
-        html = rt.render_placeholder_coverage({}, 0)
+        html = rt.render_coverage_pool({}, 0)
         self.assertIn("覆盖池", html)
+        self.assertIn("覆盖对象列表", html)
 
     def test_health_placeholder(self):
         import run_control_tower as rt

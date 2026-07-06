@@ -166,9 +166,9 @@ class TestPlaceholderPages(unittest.TestCase):
         return renderer({}, 0)
 
     def test_coverage_page_placeholder(self):
-        html = self._render_page("render_placeholder_coverage", "/coverage")
+        html = self._render_page("render_coverage_pool", "/coverage")
         self.assertIn("覆盖池", html)
-        self.assertIn("页面设计已完成", html)
+        self.assertIn("覆盖对象列表", html)
 
     def test_signals_page_placeholder(self):
         html = self._render_page("render_placeholder_signals", "/signals")
