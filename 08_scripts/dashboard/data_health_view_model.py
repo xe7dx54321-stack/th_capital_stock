@@ -340,6 +340,7 @@ def build_data_health_view_model(
     state: dict | None = None,
     filters: dict | None = None,
     now: datetime | None = None,
+    backend_state: dict | None = None,
 ) -> dict:
     """Build the data health page view model from raw dashboard state.
 
@@ -349,9 +350,36 @@ def build_data_health_view_model(
     state snapshots, not from a real backend integration. Real backend
     integration is planned for SMR-D6.
     """
-    state = state or {}
     now = now or datetime.now()
     clean_filters = _sanitize_filters(filters)
+
+    effective_state = state or {}
+    page_data_status = "lightweight_mapping"
+    used_real_sources: list[str] = []
+    used_lightweight_sources: list[str] = ["dashboard_state_snapshot"]
+    missing_sources: list[str] = []
+
+    if backend_state:
+        raw_state = backend_state.get("raw_state") or {}
+        health_data = backend_state.get("health") or {}
+        if raw_state:
+            effective_state = raw_state
+        elif health_data:
+            effective_state = health_data
+
+        page_statuses = backend_state.get("page_statuses") or {}
+        if page_statuses.get("data_health"):
+            page_data_status = page_statuses["data_health"]
+        elif health_data or raw_state:
+            page_data_status = "real_backend"
+
+        if page_data_status == "real_backend":
+            used_real_sources = ["backend_api"]
+            used_lightweight_sources = []
+        else:
+            missing_sources = ["backend_api"]
+
+    state = effective_state or {}
 
     metrics = _build_metrics(state, now)
     all_issues = _build_health_issues(state, now)
@@ -372,8 +400,16 @@ def build_data_health_view_model(
         m.get("status") == "暂无数据" for m in module_health
     )
 
+    backend_connection_summary = {
+        "used_real_sources": used_real_sources,
+        "used_lightweight_sources": used_lightweight_sources,
+        "missing_sources": missing_sources,
+        "pending_integrations": ["foundation_input_stream"],
+    }
+
     return {
-        "data_status": "lightweight_mapping",
+        "page_data_status": page_data_status,
+        "data_status": page_data_status,
         "updated_at": updated_at,
         "metrics": metrics,
         "filters": clean_filters,
@@ -382,4 +418,5 @@ def build_data_health_view_model(
         "source_status_distribution": source_status_distribution,
         "run_summary": run_summary,
         "empty_state": empty_state,
+        "backend_connection_summary": backend_connection_summary,
     }

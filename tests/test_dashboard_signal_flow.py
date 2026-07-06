@@ -106,7 +106,7 @@ class TestSignalFlowViewModel(unittest.TestCase):
                 }
             }
         }
-        view = build_signal_flow_view_model(fake_state)
+        view = build_signal_flow_view_model(fake_state, enable_quality_gate=False)
         entities = {e["name"]: e["count"] for e in view["hot_entities"]}
         self.assertIn("英伟达", entities)
         self.assertGreaterEqual(entities["英伟达"], 2)
@@ -121,7 +121,7 @@ class TestSignalFlowViewModel(unittest.TestCase):
                 }
             }
         }
-        view = build_signal_flow_view_model(fake_state)
+        view = build_signal_flow_view_model(fake_state, enable_quality_gate=False)
         dist = {d["source_type"]: d["count"] for d in view["source_distribution"]}
         self.assertIn("risk_monitor", dist)
         self.assertGreaterEqual(dist["risk_monitor"], 1)
@@ -192,7 +192,7 @@ class TestSignalFlowViewModel(unittest.TestCase):
                 }
             }
         }
-        view = build_signal_flow_view_model(fake_state)
+        view = build_signal_flow_view_model(fake_state, enable_quality_gate=False)
         self.assertGreater(len(view["signals"]), 0)
         s = view["signals"][0]
         for field in [

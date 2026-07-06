@@ -9,6 +9,8 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from html import escape
 
+from data_truth_classifier import classify_data_truth, should_enter_main_signal_flow
+
 FORBIDDEN_WORDS = [
     "target price",
     "目标价",
@@ -96,8 +98,10 @@ def _sanitize_filters(filters: dict | None) -> dict:
     }
 
 
-def _extract_signals_from_state(state: dict, now: datetime) -> list[dict]:
-    signals: list[dict] = []
+def _extract_signals_from_state(state: dict, now: datetime, enable_quality_gate: bool = True) -> dict:
+    all_signals: list[dict] = []
+    filtered_signals: list[dict] = []
+    low_confidence_candidates: list[dict] = []
 
     risk_decision = _safe_get(state, "risk", "decision", default={}) or {}
     sell_candidates = risk_decision.get("sell_candidates") or []
@@ -105,7 +109,7 @@ def _extract_signals_from_state(state: dict, now: datetime) -> list[dict]:
         name = item.get("name") or item.get("ts_code") or "未知标的"
         reason = _strip_forbidden(item.get("reason") or item.get("summary") or "")
         ts = now - timedelta(hours=idx + 1)
-        signals.append({
+        signal = {
             "timestamp": ts,
             "time_label": _format_time_label(ts, now),
             "title": f"{name} 风险提示",
@@ -120,7 +124,15 @@ def _extract_signals_from_state(state: dict, now: datetime) -> list[dict]:
             "source_url": None,
             "evidence_url": None,
             "risk_flags": ["risk"],
-        })
+        }
+        signal.update(classify_data_truth(item))
+        all_signals.append(signal)
+        if enable_quality_gate and should_enter_main_signal_flow(item):
+            filtered_signals.append(signal)
+        elif not enable_quality_gate:
+            filtered_signals.append(signal)
+        else:
+            low_confidence_candidates.append(signal)
 
     evidence_gaps = _safe_get(state, "current_state", "evidence_gaps", default=[]) or []
     for idx, gap in enumerate(evidence_gaps):
@@ -128,7 +140,7 @@ def _extract_signals_from_state(state: dict, now: datetime) -> list[dict]:
         gap_type = gap.get("gap_type") or gap.get("type") or "证据缺口"
         desc = _strip_forbidden(gap.get("description") or "")
         ts = now - timedelta(hours=idx + 2)
-        signals.append({
+        signal = {
             "timestamp": ts,
             "time_label": _format_time_label(ts, now),
             "title": f"{entity} {gap_type}",
@@ -143,7 +155,15 @@ def _extract_signals_from_state(state: dict, now: datetime) -> list[dict]:
             "source_url": None,
             "evidence_url": None,
             "risk_flags": [],
-        })
+        }
+        signal.update(classify_data_truth(gap))
+        all_signals.append(signal)
+        if enable_quality_gate and should_enter_main_signal_flow(gap):
+            filtered_signals.append(signal)
+        elif not enable_quality_gate:
+            filtered_signals.append(signal)
+        else:
+            low_confidence_candidates.append(signal)
 
     strategy_watch = _safe_get(state, "strategy_watch", default={}) or {}
     top_focus = strategy_watch.get("top_focus_items") or []
@@ -151,7 +171,7 @@ def _extract_signals_from_state(state: dict, now: datetime) -> list[dict]:
         name = item.get("name") or item.get("ts_code") or "关注标的"
         reason = _strip_forbidden(item.get("reason") or item.get("thesis") or "")
         ts = now - timedelta(hours=idx + 3)
-        signals.append({
+        signal = {
             "timestamp": ts,
             "time_label": _format_time_label(ts, now),
             "title": f"{name} 进入重点关注",
@@ -166,7 +186,15 @@ def _extract_signals_from_state(state: dict, now: datetime) -> list[dict]:
             "source_url": None,
             "evidence_url": None,
             "risk_flags": [],
-        })
+        }
+        signal.update(classify_data_truth(item))
+        all_signals.append(signal)
+        if enable_quality_gate and should_enter_main_signal_flow(item):
+            filtered_signals.append(signal)
+        elif not enable_quality_gate:
+            filtered_signals.append(signal)
+        else:
+            low_confidence_candidates.append(signal)
 
     opportunity = _safe_get(state, "opportunity", default={}) or {}
     markets = opportunity.get("markets") or {}
@@ -177,7 +205,7 @@ def _extract_signals_from_state(state: dict, now: datetime) -> list[dict]:
             name = item.get("name") or item.get("ts_code") or "机会标的"
             summary = _strip_forbidden(item.get("summary") or item.get("reason") or "")
             ts = now - timedelta(hours=idx + 4)
-            signals.append({
+            signal = {
                 "timestamp": ts,
                 "time_label": _format_time_label(ts, now),
                 "title": f"{name} 机会雷达更新",
@@ -192,7 +220,15 @@ def _extract_signals_from_state(state: dict, now: datetime) -> list[dict]:
                 "source_url": None,
                 "evidence_url": None,
                 "risk_flags": [],
-            })
+            }
+            signal.update(classify_data_truth(item))
+            all_signals.append(signal)
+            if enable_quality_gate and should_enter_main_signal_flow(item):
+                filtered_signals.append(signal)
+            elif not enable_quality_gate:
+                filtered_signals.append(signal)
+            else:
+                low_confidence_candidates.append(signal)
 
     risk_monitor = _safe_get(state, "risk", "monitor", default={}) or {}
     risk_items = risk_monitor.get("alerts") or risk_monitor.get("items") or []
@@ -200,7 +236,7 @@ def _extract_signals_from_state(state: dict, now: datetime) -> list[dict]:
         title = _strip_forbidden(item.get("title") or item.get("name") or "风险事件")
         desc = _strip_forbidden(item.get("description") or item.get("detail") or "")
         ts = now - timedelta(hours=idx + 5)
-        signals.append({
+        signal = {
             "timestamp": ts,
             "time_label": _format_time_label(ts, now),
             "title": title,
@@ -215,7 +251,15 @@ def _extract_signals_from_state(state: dict, now: datetime) -> list[dict]:
             "source_url": None,
             "evidence_url": None,
             "risk_flags": ["risk"],
-        })
+        }
+        signal.update(classify_data_truth(item))
+        all_signals.append(signal)
+        if enable_quality_gate and should_enter_main_signal_flow(item):
+            filtered_signals.append(signal)
+        elif not enable_quality_gate:
+            filtered_signals.append(signal)
+        else:
+            low_confidence_candidates.append(signal)
 
     daily_report = _safe_get(state, "daily_report", default={}) or {}
     summary_items = daily_report.get("highlights") or daily_report.get("summary_items") or []
@@ -223,7 +267,7 @@ def _extract_signals_from_state(state: dict, now: datetime) -> list[dict]:
         title = _strip_forbidden(item.get("title") or item.get("headline") or "今日摘要")
         desc = _strip_forbidden(item.get("content") or item.get("summary") or "")
         ts = now - timedelta(hours=idx + 6)
-        signals.append({
+        signal = {
             "timestamp": ts,
             "time_label": _format_time_label(ts, now),
             "title": title,
@@ -238,10 +282,22 @@ def _extract_signals_from_state(state: dict, now: datetime) -> list[dict]:
             "source_url": None,
             "evidence_url": None,
             "risk_flags": [],
-        })
+        }
+        signal.update(classify_data_truth(item))
+        all_signals.append(signal)
+        if enable_quality_gate and should_enter_main_signal_flow(item):
+            filtered_signals.append(signal)
+        elif not enable_quality_gate:
+            filtered_signals.append(signal)
+        else:
+            low_confidence_candidates.append(signal)
 
-    signals.sort(key=lambda s: s["timestamp"], reverse=True)
-    return signals
+    filtered_signals.sort(key=lambda s: s["timestamp"], reverse=True)
+    return {
+        "signals": filtered_signals,
+        "filtered_signal_count": len(all_signals) - len(filtered_signals),
+        "low_confidence_candidate_count": len(low_confidence_candidates),
+    }
 
 
 def _filter_signals(signals: list[dict], filters: dict, now: datetime) -> list[dict]:
@@ -335,16 +391,49 @@ def build_signal_flow_view_model(
     filters: dict | None = None,
     now: datetime | None = None,
     limit: int = 20,
+    backend_state: dict | None = None,
+    enable_quality_gate: bool = True,
 ) -> dict:
     """Build the signal flow page view model from raw dashboard state.
 
     Always returns a valid dict, never raises.
     """
-    state = state or {}
     now = now or datetime.now()
     clean_filters = _sanitize_filters(filters)
 
-    raw_signals = _extract_signals_from_state(state, now)
+    effective_state = state or {}
+    page_data_status = "lightweight_mapping"
+    used_real_sources: list[str] = []
+    used_lightweight_sources: list[str] = ["dashboard_state_snapshot"]
+    missing_sources: list[str] = []
+
+    if backend_state:
+        raw_state = backend_state.get("raw_state") or {}
+        signals_data = backend_state.get("signals") or {}
+        if raw_state:
+            effective_state = raw_state
+        elif signals_data:
+            effective_state = signals_data
+
+        page_statuses = backend_state.get("page_statuses") or {}
+        if page_statuses.get("signal_flow"):
+            page_data_status = page_statuses["signal_flow"]
+        elif signals_data or raw_state:
+            page_data_status = "real_backend"
+
+        if page_data_status == "real_backend":
+            used_real_sources = ["backend_api"]
+            used_lightweight_sources = []
+        else:
+            missing_sources = ["backend_api"]
+
+    state = effective_state or {}
+
+    extraction_result = _extract_signals_from_state(state, now, enable_quality_gate=enable_quality_gate)
+    raw_signals = extraction_result["signals"]
+    filtered_signal_count = extraction_result.get("filtered_signal_count", 0)
+    low_confidence_candidate_count = extraction_result.get("low_confidence_candidate_count", 0)
+
     filtered = _filter_signals(raw_signals, clean_filters, now)
     signals = filtered[:limit]
 
@@ -369,14 +458,24 @@ def build_signal_flow_view_model(
 
     empty_state = total == 0
 
+    backend_connection_summary = {
+        "used_real_sources": used_real_sources,
+        "used_lightweight_sources": used_lightweight_sources,
+        "missing_sources": missing_sources,
+        "pending_integrations": ["foundation_input_stream"],
+    }
+
     return {
-        "data_status": "lightweight_mapping",
+        "page_data_status": page_data_status,
+        "data_status": page_data_status,
         "filters": clean_filters,
         "summary": {
             "total_signals": total,
             "focus_company_count": focus_company_count,
             "high_strength_count": high_strength_count,
             "needs_review_count": needs_review_count,
+            "filtered_signal_count": filtered_signal_count,
+            "low_confidence_candidate_count": low_confidence_candidate_count,
         },
         "signals": signals,
         "hot_entities": hot_entities,
@@ -385,4 +484,5 @@ def build_signal_flow_view_model(
         "updated_at": updated_at,
         "strength_tones": STRENGTH_TONES,
         "source_type_labels": SOURCE_TYPE_LABELS,
+        "backend_connection_summary": backend_connection_summary,
     }

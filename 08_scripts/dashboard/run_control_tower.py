@@ -26,6 +26,7 @@ from signal_flow_view_model import build_signal_flow_view_model
 from research_queue_view_model import build_research_queue_view_model
 from coverage_pool_view_model import build_coverage_pool_view_model
 from data_health_view_model import build_data_health_view_model
+from backend_data_provider import load_dashboard_backend_state
 
 
 NAV_ITEMS = [
@@ -6634,8 +6635,8 @@ def _tone_class(tone: str | None) -> str:
     return tone_map.get((tone or "").lower(), "tone-muted")
 
 
-def render_today_overview(state: dict, refresh_seconds: int) -> str:
-    view = build_today_overview_view_model(state)
+def render_today_overview(state: dict, refresh_seconds: int, backend_state: dict | None = None) -> str:
+    view = build_today_overview_view_model(state, backend_state=backend_state)
     metrics = view["metrics"]
     top_changes = view["top_changes"]
     pending = view["pending_decisions"]
@@ -7254,8 +7255,8 @@ def _render_priority_hotzone(hotzone: list[dict]) -> str:
 '''
 
 
-def render_coverage_pool(state: dict, refresh_seconds: int, filters: dict | None = None) -> str:
-    view = build_coverage_pool_view_model(state, filters=filters)
+def render_coverage_pool(state: dict, refresh_seconds: int, filters: dict | None = None, backend_state: dict | None = None) -> str:
+    view = build_coverage_pool_view_model(state, filters=filters, backend_state=backend_state)
     metrics = view["metrics"]
     clean_filters = view["filters"]
     coverage_items = view["coverage_items"]
@@ -7590,8 +7591,8 @@ def _render_evidence_gaps(gaps: list[dict]) -> str:
 """
 
 
-def render_research_queue(state: dict, refresh_seconds: int, filters: dict | None = None) -> str:
-    view = build_research_queue_view_model(state, filters=filters)
+def render_research_queue(state: dict, refresh_seconds: int, filters: dict | None = None, backend_state: dict | None = None) -> str:
+    view = build_research_queue_view_model(state, filters=filters, backend_state=backend_state)
     metrics = view["metrics"]
     filters = view["filters"]
     queue_items = view["queue_items"]
@@ -7856,8 +7857,8 @@ def _render_run_summary(summary: dict) -> str:
 '''
 
 
-def render_data_health(state: dict, refresh_seconds: int, filters: dict | None = None) -> str:
-    view = build_data_health_view_model(state, filters=filters)
+def render_data_health(state: dict, refresh_seconds: int, filters: dict | None = None, backend_state: dict | None = None) -> str:
+    view = build_data_health_view_model(state, filters=filters, backend_state=backend_state)
     metrics = view["metrics"]
     clean_filters = view["filters"]
     issues = view["health_issues"]
@@ -8118,8 +8119,8 @@ def _render_source_distribution(distribution: list[dict]) -> str:
 """
 
 
-def render_signal_flow(state: dict, refresh_seconds: int, filters: dict | None = None) -> str:
-    view = build_signal_flow_view_model(state, filters=filters)
+def render_signal_flow(state: dict, refresh_seconds: int, filters: dict | None = None, backend_state: dict | None = None) -> str:
+    view = build_signal_flow_view_model(state, filters=filters, backend_state=backend_state)
     clean_filters = view["filters"]
     summary = view["summary"]
     signals = view["signals"]
@@ -10292,6 +10293,10 @@ def build_handler(refresh_seconds: int):
             renderer = PAGE_RENDERERS.get(parsed.path)
             if renderer:
                 state = build_dashboard_state()
+                try:
+                    backend_state = load_dashboard_backend_state()
+                except Exception:
+                    backend_state = None
                 from urllib.parse import parse_qs
                 qs = parse_qs(parsed.query)
                 if parsed.path == "/signals":
@@ -10302,7 +10307,7 @@ def build_handler(refresh_seconds: int):
                         "strength": (qs.get("strength") or ["all"])[0],
                         "q": (qs.get("q") or [""])[0],
                     }
-                    self._send(200, renderer(state, refresh_seconds, filters=filters))
+                    self._send(200, renderer(state, refresh_seconds, filters=filters, backend_state=backend_state))
                 elif parsed.path == "/research":
                     filters = {
                         "priority": (qs.get("priority") or ["all"])[0],
@@ -10310,7 +10315,7 @@ def build_handler(refresh_seconds: int):
                         "sort": (qs.get("sort") or ["latest"])[0],
                         "q": (qs.get("q") or [""])[0],
                     }
-                    self._send(200, renderer(state, refresh_seconds, filters=filters))
+                    self._send(200, renderer(state, refresh_seconds, filters=filters, backend_state=backend_state))
                 elif parsed.path == "/coverage":
                     filters = {
                         "type": (qs.get("type") or ["all"])[0],
@@ -10319,16 +10324,16 @@ def build_handler(refresh_seconds: int):
                         "q": (qs.get("q") or [""])[0],
                         "page": (qs.get("page") or ["1"])[0],
                     }
-                    self._send(200, renderer(state, refresh_seconds, filters=filters))
+                    self._send(200, renderer(state, refresh_seconds, filters=filters, backend_state=backend_state))
                 elif parsed.path == "/health":
                     filters = {
                         "status": (qs.get("status") or ["all"])[0],
                         "severity": (qs.get("severity") or ["all"])[0],
                         "q": (qs.get("q") or [""])[0],
                     }
-                    self._send(200, renderer(state, refresh_seconds, filters=filters))
+                    self._send(200, renderer(state, refresh_seconds, filters=filters, backend_state=backend_state))
                 else:
-                    self._send(200, renderer(state, refresh_seconds))
+                    self._send(200, renderer(state, refresh_seconds, backend_state=backend_state))
                 return
             self._send(404, "<h1>Not Found</h1>")
 
