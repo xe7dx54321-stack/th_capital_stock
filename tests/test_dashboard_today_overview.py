@@ -179,8 +179,9 @@ class TestPlaceholderPages(unittest.TestCase):
         self.assertIn("研究队列", html)
 
     def test_health_page_placeholder(self):
-        html = self._render_page("render_placeholder_health", "/health")
+        html = self._render_page("render_data_health", "/health")
         self.assertIn("数据健康", html)
+        self.assertIn("关键健康问题", html)
 
     def test_nav_active_on_each_page(self):
         import run_control_tower as rt

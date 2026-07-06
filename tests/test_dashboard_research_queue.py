@@ -243,8 +243,9 @@ class TestOtherPagesStillWork(unittest.TestCase):
     def test_health_placeholder(self):
         import run_control_tower as rt
 
-        html = rt.render_placeholder_health({}, 0)
+        html = rt.render_data_health({}, 0)
         self.assertIn("数据健康", html)
+        self.assertIn("关键健康问题", html)
 
 
 class TestPageRenderers(unittest.TestCase):

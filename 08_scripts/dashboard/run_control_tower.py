@@ -25,6 +25,7 @@ from today_overview_view_model import build_today_overview_view_model
 from signal_flow_view_model import build_signal_flow_view_model
 from research_queue_view_model import build_research_queue_view_model
 from coverage_pool_view_model import build_coverage_pool_view_model
+from data_health_view_model import build_data_health_view_model
 
 
 NAV_ITEMS = [
@@ -3225,6 +3226,304 @@ def render_shell(
       margin-bottom: 6px;
     }}
 
+    /* Data health styles */
+    .health-metrics {{
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 16px;
+      margin-bottom: 22px;
+    }}
+    .health-metric-card {{
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 18px;
+      box-shadow: 0 8px 24px rgba(31, 39, 46, 0.04);
+    }}
+    .health-metric-value {{
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--ink);
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }}
+    .health-metric-subtitle {{
+      font-size: 13px;
+      color: var(--muted);
+    }}
+    .health-status-dot {{
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }}
+    .health-status-dot.normal {{ background: #059669; }}
+    .health-status-dot.degraded {{ background: #d97706; }}
+    .health-status-dot.blocked {{ background: #dc2626; }}
+    .health-status-dot.watching {{ background: #6366f1; }}
+    .health-status-dot.pending {{ background: #9ca3af; }}
+    .health-status-dot.nodata {{ background: #cbd5e1; }}
+
+    .health-layout {{
+      display: grid;
+      grid-template-columns: 60% 38%;
+      gap: 20px;
+      margin-bottom: 22px;
+    }}
+    .health-issue-section {{
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 18px;
+      box-shadow: 0 8px 24px rgba(31, 39, 46, 0.04);
+    }}
+    .health-section-header {{
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }}
+    .health-section-title {{
+      font-size: 15px;
+      font-weight: 600;
+    }}
+    .health-section-link {{
+      font-size: 12px;
+      color: var(--brand);
+      text-decoration: none;
+    }}
+    .health-filter-bar {{
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }}
+    .health-filter-select {{
+      padding: 5px 8px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      font-size: 12px;
+      background: #fff;
+      color: var(--ink);
+    }}
+    .health-search {{
+      padding: 5px 10px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      font-size: 12px;
+      background: #fff;
+      color: var(--ink);
+      width: 140px;
+    }}
+
+    .health-issue-list {{
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }}
+    .health-issue-item {{
+      display: flex;
+      gap: 14px;
+      padding: 14px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+    }}
+    .health-issue-severity {{
+      font-size: 12px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 6px;
+      flex-shrink: 0;
+      height: fit-content;
+    }}
+    .health-issue-severity.P0 {{ background: rgba(239, 68, 68, 0.1); color: #dc2626; }}
+    .health-issue-severity.P1 {{ background: rgba(245, 158, 11, 0.1); color: #d97706; }}
+    .health-issue-severity.P2 {{ background: rgba(99, 102, 241, 0.1); color: #4f46e5; }}
+    .health-issue-severity.P3 {{ background: rgba(148, 163, 184, 0.1); color: #64748b; }}
+    .health-issue-body {{
+      flex: 1;
+      min-width: 0;
+    }}
+    .health-issue-top {{
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 6px;
+    }}
+    .health-issue-title {{
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--ink);
+    }}
+    .health-issue-status {{
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-weight: 500;
+      flex-shrink: 0;
+    }}
+    .health-issue-status.blocked {{ background: rgba(239, 68, 68, 0.08); color: #dc2626; }}
+    .health-issue-status.degraded {{ background: rgba(245, 158, 11, 0.08); color: #d97706; }}
+    .health-issue-status.watching {{ background: rgba(99, 102, 241, 0.08); color: #4f46e5; }}
+    .health-issue-status.resolved {{ background: rgba(16, 185, 129, 0.08); color: #059669; }}
+    .health-issue-scope {{
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }}
+    .health-issue-desc {{
+      font-size: 13px;
+      color: var(--ink);
+      margin-bottom: 8px;
+    }}
+    .health-issue-meta {{
+      font-size: 11px;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+    }}
+
+    .health-side {{
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }}
+    .health-panel {{
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: 0 8px 24px rgba(31, 39, 46, 0.04);
+    }}
+    .health-panel-title {{
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }}
+    .module-health-list {{
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }}
+    .module-health-item {{
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+    }}
+    .module-health-left {{
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }}
+    .module-health-status {{
+      font-size: 12px;
+      color: var(--muted);
+    }}
+
+    .health-distribution {{
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }}
+    .health-ring {{
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      position: relative;
+      flex-shrink: 0;
+    }}
+    .health-ring::after {{
+      content: "";
+      position: absolute;
+      inset: 16px;
+      border-radius: 50%;
+      background: var(--panel);
+    }}
+    .health-ring-label {{
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--ink);
+      z-index: 1;
+    }}
+    .health-legend {{
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      font-size: 12px;
+      flex: 1;
+    }}
+    .health-legend-item {{
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }}
+    .health-legend-left {{
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }}
+    .health-legend-dot {{
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }}
+
+    .run-summary-grid {{
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }}
+    .run-summary-item {{
+      text-align: center;
+      padding: 10px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+    }}
+    .run-summary-value {{
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--ink);
+      margin-bottom: 2px;
+    }}
+    .run-summary-label {{
+      font-size: 11px;
+      color: var(--muted);
+    }}
+
+    .health-disclaimer {{
+      text-align: center;
+      padding: 18px;
+      font-size: 12px;
+      color: var(--muted);
+      border-top: 1px solid var(--line);
+      margin-top: 8px;
+    }}
+    .health-empty-state {{
+      text-align: center;
+      padding: 48px 20px;
+      color: var(--muted);
+    }}
+    .health-empty-state-title {{
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--ink);
+      margin-bottom: 6px;
+    }}
+
     @media (max-width: 1080px) {{
       .today-metrics {{
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -3251,6 +3550,12 @@ def render_shell(
         grid-template-columns: 1fr;
       }}
       .coverage-bottom {{
+        grid-template-columns: 1fr;
+      }}
+      .health-metrics {{
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }}
+      .health-layout {{
         grid-template-columns: 1fr;
       }}
     }}
@@ -7320,6 +7625,268 @@ def render_research_queue(state: dict, refresh_seconds: int, filters: dict | Non
     )
 
 
+def _render_health_metrics(metrics: dict) -> str:
+    def _status_dot(status):
+        if status == "正常" or status == "运行正常":
+            return '<span class="health-status-dot normal"></span>'
+        elif status == "降级" or status == "降级运行":
+            return '<span class="health-status-dot degraded"></span>'
+        elif status == "阻塞":
+            return '<span class="health-status-dot blocked"></span>'
+        elif status == "观察中":
+            return '<span class="health-status-dot watching"></span>'
+        elif status == "待接入":
+            return '<span class="health-status-dot pending"></span>'
+        else:
+            return '<span class="health-status-dot nodata"></span>'
+
+    m1 = metrics.get("market_freshness") or {}
+    m2 = metrics.get("source_availability") or {}
+    m3 = metrics.get("blocking_issues") or {}
+    m4 = metrics.get("evidence_pipeline") or {}
+
+    s1 = m1.get("status", "暂无数据")
+    v2 = f'{m2.get("value", 0)}%'
+    v3 = f'{m3.get("count", 0)} 项'
+    s4 = m4.get("status", "暂无数据")
+
+    cards = f'''
+<article class="health-metric-card">
+  <div class="health-metric-value">{_status_dot(s1)} 行情新鲜度：{escape(s1)}</div>
+  <div class="health-metric-subtitle">{escape(m1.get("subtitle", ""))}</div>
+</article>
+<article class="health-metric-card">
+  <div class="health-metric-value">信息源可用率：{escape(v2)}</div>
+  <div class="health-metric-subtitle">{escape(m2.get("subtitle", ""))}</div>
+</article>
+<article class="health-metric-card">
+  <div class="health-metric-value">关键阻塞问题：{escape(v3)}</div>
+  <div class="health-metric-subtitle">{escape(m3.get("subtitle", ""))}</div>
+</article>
+<article class="health-metric-card">
+  <div class="health-metric-value">{_status_dot(s4)} 证据流水线：{escape(s4)}</div>
+  <div class="health-metric-subtitle">{escape(m4.get("subtitle", ""))}</div>
+</article>
+'''
+    return f'<section class="health-metrics">{cards}</section>'
+
+
+def _render_health_issue_list(issues: list[dict], empty: bool, filters: dict) -> str:
+    if empty or not issues:
+        return f'''
+<div class="health-issue-section">
+  <div class="health-section-header">
+    <span class="health-section-title">关键健康问题</span>
+  </div>
+  <div class="health-empty-state">
+    <div class="health-empty-state-title">暂无关键健康问题</div>
+    <div>当前未发现影响投研可靠性的阻塞或降级问题。</div>
+  </div>
+</div>
+'''
+
+    items = []
+    for issue in issues:
+        sev = issue.get("severity", "P2")
+        title = escape(issue.get("title", ""))
+        scope = escape(issue.get("impact_scope", ""))
+        status = issue.get("status", "观察中")
+        status_class = {
+            "阻塞": "blocked",
+            "降级": "degraded",
+            "观察中": "watching",
+            "已恢复": "resolved",
+        }.get(status, "watching")
+        desc = escape(issue.get("description", ""))
+        update = escape(issue.get("latest_update", ""))
+        action = escape(issue.get("action_hint", ""))
+        items.append(
+            f'<div class="health-issue-item">'
+            f'<span class="health-issue-severity {sev}">{sev}</span>'
+            f'<div class="health-issue-body">'
+            f'<div class="health-issue-top">'
+            f'<div class="health-issue-title">{title}</div>'
+            f'<span class="health-issue-status {status_class}">{status}</span>'
+            f'</div>'
+            f'<div class="health-issue-scope">影响范围：{scope}</div>'
+            f'<div class="health-issue-desc">{desc}</div>'
+            f'<div class="health-issue-meta"><span>最近更新：{update}</span><span>{action}</span></div>'
+            f'</div>'
+            f'</div>'
+        )
+
+    return f'''
+<div class="health-issue-section">
+  <div class="health-section-header">
+    <span class="health-section-title">关键健康问题</span>
+  </div>
+  <div class="health-issue-list">{"".join(items)}</div>
+</div>
+'''
+
+
+def _render_module_health(modules: list[dict]) -> str:
+    items = []
+    for m in modules:
+        name = escape(m.get("module_name", ""))
+        status = m.get("status", "暂无数据")
+        dot_class = {
+            "运行正常": "normal",
+            "降级运行": "degraded",
+            "阻塞": "blocked",
+            "观察中": "watching",
+            "待接入": "pending",
+        }.get(status, "nodata")
+        summary = escape(m.get("summary", ""))
+        items.append(
+            f'<div class="module-health-item">'
+            f'<div class="module-health-left">'
+            f'<span class="health-status-dot {dot_class}"></span>'
+            f'<span>{name}</span>'
+            f'</div>'
+            f'<span class="module-health-status">{status}，{summary}</span>'
+            f'</div>'
+        )
+
+    return f'''
+<div class="health-panel">
+  <div class="health-panel-title">系统模块健康度</div>
+  <div class="module-health-list">{"".join(items)}</div>
+</div>
+'''
+
+
+def _render_health_source_distribution(distribution: list[dict]) -> str:
+    if not distribution:
+        return '''
+<div class="health-panel">
+  <div class="health-panel-title">数据源状态分布</div>
+  <div class="health-empty-state">暂无数据</div>
+</div>
+'''
+
+    total = sum(d["count"] for d in distribution)
+    norm_count = next((d["count"] for d in distribution if d["status"] == "正常"), 0)
+    deg_count = next((d["count"] for d in distribution if d["status"] == "降级"), 0)
+    blk_count = next((d["count"] for d in distribution if d["status"] == "阻塞"), 0)
+    watch_count = next((d["count"] for d in distribution if d["status"] == "观察中"), 0)
+    pend_count = next((d["count"] for d in distribution if d["status"] == "待接入"), 0)
+
+    p_norm = int(norm_count / total * 360) if total else 0
+    p_deg = int((norm_count + deg_count) / total * 360) if total else 0
+    p_blk = int((norm_count + deg_count + blk_count) / total * 360) if total else 0
+    p_watch = int((norm_count + deg_count + blk_count + watch_count) / total * 360) if total else 0
+
+    gradient = f'conic-gradient(#059669 0deg {p_norm}deg, #f59e0b {p_norm}deg {p_deg}deg, #dc2626 {p_deg}deg {p_blk}deg, #6366f1 {p_blk}deg {p_watch}deg, #9ca3af {p_watch}deg 360deg)'
+
+    legend_items = []
+    status_colors = {
+        "正常": "#059669",
+        "降级": "#f59e0b",
+        "阻塞": "#dc2626",
+        "观察中": "#6366f1",
+        "待接入": "#9ca3af",
+        "暂无数据": "#cbd5e1",
+    }
+    for d in distribution:
+        s = d["status"]
+        if d["count"] == 0:
+            continue
+        color = status_colors.get(s, "#cbd5e1")
+        legend_items.append(
+            f'<div class="health-legend-item">'
+            f'<div class="health-legend-left"><span class="health-legend-dot" style="background:{color}"></span><span>{s}</span></div>'
+            f'<span>{d["count"]} ({d["percentage"]}%)</span>'
+            f'</div>'
+        )
+
+    return f'''
+<div class="health-panel">
+  <div class="health-panel-title">数据源状态分布</div>
+  <div class="health-distribution">
+    <div class="health-ring" style="background:{gradient}">
+      <div class="health-ring-label">总数 {total}</div>
+    </div>
+    <div class="health-legend">{"".join(legend_items)}</div>
+  </div>
+</div>
+'''
+
+
+def _render_run_summary(summary: dict) -> str:
+    success = summary.get("successful_batches", 0)
+    failed = summary.get("failed_batches", 0)
+    pending = summary.get("pending_queue", 0)
+    last_check = summary.get("last_check", "未知")
+
+    return f'''
+<div class="health-panel">
+  <div class="health-panel-title">今日运行摘要</div>
+  <div class="run-summary-grid">
+    <div class="run-summary-item">
+      <div class="run-summary-value">{success}</div>
+      <div class="run-summary-label">成功批次</div>
+    </div>
+    <div class="run-summary-item">
+      <div class="run-summary-value" style="color:#dc2626">{failed}</div>
+      <div class="run-summary-label">失败批次</div>
+    </div>
+    <div class="run-summary-item">
+      <div class="run-summary-value" style="color:#f59e0b">{pending}</div>
+      <div class="run-summary-label">待处理队列</div>
+    </div>
+    <div class="run-summary-item">
+      <div class="run-summary-value" style="font-size:14px">{escape(last_check)}</div>
+      <div class="run-summary-label">最近一次检查</div>
+    </div>
+  </div>
+</div>
+'''
+
+
+def render_data_health(state: dict, refresh_seconds: int, filters: dict | None = None) -> str:
+    view = build_data_health_view_model(state, filters=filters)
+    metrics = view["metrics"]
+    clean_filters = view["filters"]
+    issues = view["health_issues"]
+    modules = view["module_health"]
+    distribution = view["source_status_distribution"]
+    summary = view["run_summary"]
+    empty = view["empty_state"]
+
+    metrics_html = _render_health_metrics(metrics)
+    issues_html = _render_health_issue_list(issues, empty, clean_filters)
+    module_html = _render_module_health(modules)
+    dist_html = _render_health_source_distribution(distribution)
+    summary_html = _render_run_summary(summary)
+
+    body = f"""
+{metrics_html}
+<div class="health-layout">
+  {issues_html}
+  <aside class="health-side">
+    {module_html}
+    {dist_html}
+    {summary_html}
+  </aside>
+</div>
+<div class="health-disclaimer">
+  数据健康页面用于观察投研系统的运行状态与数据质量，帮助及时发现并定位问题，保障研究工作的可靠性与连续性。不提供任何投资建议。
+</div>
+"""
+
+    return render_shell(
+        page_title="数据健康 · 同行资本投研系统",
+        current_path="/health",
+        hero_title="数据健康",
+        hero_subtitle="聚焦影响投研可靠性的关键健康状态",
+        body=body,
+        refresh_seconds=refresh_seconds,
+        show_status_strip=False,
+        **shell_state_kwargs(state),
+    )
+
+
 def render_placeholder_health(state: dict, refresh_seconds: int) -> str:
     return render_placeholder_page(
         "数据健康",
@@ -9655,7 +10222,7 @@ PAGE_RENDERERS = {
     "/coverage": render_coverage_pool,
     "/signals": render_signal_flow,
     "/research": render_research_queue,
-    "/health": render_placeholder_health,
+    "/health": render_data_health,
 }
 
 
@@ -9739,6 +10306,13 @@ def build_handler(refresh_seconds: int):
                         "status": (qs.get("status") or ["all"])[0],
                         "q": (qs.get("q") or [""])[0],
                         "page": (qs.get("page") or ["1"])[0],
+                    }
+                    self._send(200, renderer(state, refresh_seconds, filters=filters))
+                elif parsed.path == "/health":
+                    filters = {
+                        "status": (qs.get("status") or ["all"])[0],
+                        "severity": (qs.get("severity") or ["all"])[0],
+                        "q": (qs.get("q") or [""])[0],
                     }
                     self._send(200, renderer(state, refresh_seconds, filters=filters))
                 else:

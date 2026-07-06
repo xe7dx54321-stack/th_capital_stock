@@ -8,7 +8,7 @@
 | 覆盖池 | SMR-D4 | ✅ 已完成 | ❌ 未接入 | lightweight_mapping |
 | 信号流 | SMR-D2 | ✅ 已完成 | ❌ 未接入 | lightweight_mapping |
 | 研究队列 | SMR-D3 | ✅ 已完成 | ❌ 未接入 | lightweight_mapping |
-| 数据健康 | SMR-D5 | ⏳ 待实现 | ❌ 未接入 | - |
+| 数据健康 | SMR-D5 | ✅ 已完成 | ❌ 未接入 | lightweight_mapping |
 
 ## 2. 今日总览（SMR-D1）
 
@@ -117,7 +117,42 @@
 | 覆盖分布 | 真实的覆盖实体映射 | 中 |
 | 优先级热区 | 真实的优先级排序 | 中 |
 
-## 6. 真实后台挂钩缺口
+## 6. 数据健康（SMR-D5）
+
+### 当前状态
+
+- **前台形态**：已完成，包含 4 张 KPI 卡片、关键健康问题列表、系统模块健康度、数据源状态分布、今日运行摘要
+- **后台接入**：未接入，数据来自现有 dashboard state 的轻量映射
+- **Foundation 输入流**：待接入，data_status = pending_backend_integration
+
+### 轻量映射模块
+
+| UI 模块 | 当前数据来源 |
+|---|---|
+| 行情新鲜度 | overview.lag_days / market_lag_days |
+| 信息源可用率 | source_registry.sources 健康比例 |
+| 关键阻塞问题 | risk_monitor.alerts P0/P1 计数 |
+| 证据流水线状态 | pipeline.overall_status |
+| 关键健康问题列表 | risk_monitor.issues / alerts |
+| 系统模块健康度 | source_registry + 默认配置 |
+| 数据源状态分布 | 模块健康度聚合 |
+| 今日运行摘要 | pipeline summary / overview |
+
+### 需要真实后台数据
+
+| 模块 | 需要的后台数据 | 优先级 |
+|---|---|---|
+| 行情新鲜度 | 实时市场行情 freshness 检查 | 高 |
+| 信息源可用率 | 真实的 source health 生命周期管理 | 高 |
+| 关键阻塞问题 | 真实的 blocking issue 生命周期 | 高 |
+| 证据流水线状态 | 真实的 evidence pipeline health 监控 | 高 |
+| 关键健康问题列表 | 真实的 health issue store | 高 |
+| 系统模块健康度 | 真实的 module health monitor | 中 |
+| 数据源状态分布 | 真实的 source health aggregation | 中 |
+| 今日运行摘要 | 真实的 daily run summary | 中 |
+| Foundation 输入流 | Foundation SourceHealth inflow | 高（SMR-D7） |
+
+## 7. 真实后台挂钩缺口
 
 ### 缺口总览
 
@@ -140,7 +175,7 @@
 | 实时数据更新 | 中 | 3-5 天 |
 | 用户权限 | 低 | 2-3 天 |
 
-## 6. Foundation 数据流入缺口
+## 8. Foundation 数据流入缺口
 
 ### 当前状态
 
@@ -174,16 +209,9 @@ Dashboard View Models
 Dashboard Pages
 ```
 
-## 7. 后续建议阶段
+## 9. 后续建议阶段
 
-### SMR-D4：覆盖池页面
-
-- 实现覆盖池页面
-- 展示覆盖公司列表
-- 支持筛选和搜索
-- 显示公司基本信息和研究状态
-
-### SMR-D5：数据健康页面
+### SMR-D5：数据健康页面 ✅ 已完成
 
 - 实现数据健康页面
 - 展示数据质量指标
@@ -196,6 +224,7 @@ Dashboard Pages
 - 实现研究任务管理后端
 - 实现证据管理后端
 - 接入用户权限系统
+- 实现数据健康真实监控闭环
 
 ### SMR-D7：Foundation Evidence Inflow
 
@@ -203,8 +232,9 @@ Dashboard Pages
 - 实现 Foundation 证据流入 Dashboard
 - 建立证据包与研究队列的关联
 - 实现信号强度评估展示
+- 接入 Foundation SourceHealth inflow
 
-## 8. 技术债管理策略
+## 10. 技术债管理策略
 
 ### 短期（当前阶段）
 
@@ -224,7 +254,7 @@ Dashboard Pages
 - 实现完整的研究闭环
 - 建立实时数据更新机制
 
-## 9. 注意事项
+## 11. 注意事项
 
 1. **不得夸大**：当前页面不得展示"已完成真实接入""已形成自动研究闭环"等误导性说法
 2. **data_status**：所有 view model 输出必须包含 data_status 字段，明确数据来源状态

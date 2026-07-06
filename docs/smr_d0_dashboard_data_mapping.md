@@ -1,12 +1,18 @@
 # SMR-D0 Dashboard 数据映射表
 
-> **更新记录（D1 + D2 补充）**
+> **更新记录（D1 + D2 + D3 + D4 + D5 补充）**
 > - 2026-05 / SMR-D1：Page 1「今日总览」已基于现有数据源完成首轮施工。
 > - 2026-07 / SMR-D2：Page 3「信号流」已基于现有数据源完成首轮施工。
+> - 2026-07 / SMR-D3：Page 4「研究队列」已基于现有数据源完成首轮施工。
+> - 2026-07 / SMR-D4：Page 2「覆盖池」已基于现有数据源完成首轮施工。
+> - 2026-07 / SMR-D5：Page 5「数据健康」已基于现有数据源完成首轮施工。
 > - 今日总览实际映射见 [smr_d1 报告 §7](./smr_d1_dashboard_today_overview_report.md#7-数据来源映射)。
 > - 信号流实际映射见 [smr_d2 报告 §10](./smr_d2_dashboard_signal_flow_report.md#10-数据来源映射)。
-> - 本文档为 D0 原始映射表，不做改写；D1/D2 实际落地情况仅作为补充信息。
-> - 其余 3 页（覆盖池 / 研究队列 / 数据健康）尚未施工，数据映射仍以本文档为准。
+> - 研究队列实际映射见 [smr_d3 报告 §11](./smr_d3_dashboard_research_queue_report.md#11-数据来源映射)。
+> - 覆盖池实际映射见 [smr_d4 报告 §12](./smr_d4_dashboard_coverage_pool_report.md#12-数据来源映射)。
+> - 数据健康实际映射见 [smr_d5 报告 §12](./smr_d5_dashboard_data_health_report.md#12-数据来源映射)。
+> - 本文档为 D0 原始映射表，不做改写；D1/D2/D3/D4/D5 实际落地情况仅作为补充信息。
+> - 全部 5 页均已完成前台形态施工，数据状态为 lightweight_mapping，未接入真实后台。
 
 ## 说明
 
