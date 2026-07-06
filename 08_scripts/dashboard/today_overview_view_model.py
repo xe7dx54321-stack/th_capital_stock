@@ -307,14 +307,45 @@ def _compute_metrics(state: dict, top_changes: list, pending: list, coverage_mov
     }
 
 
-def build_today_overview_view_model(state: dict | None = None, now: datetime | None = None) -> dict:
+def build_today_overview_view_model(
+    state: dict | None = None,
+    now: datetime | None = None,
+    backend_state: dict | None = None,
+) -> dict:
     """Adapt raw dashboard state into a Today Overview view model.
 
     The function is fail-soft: missing state or missing sub-dicts will
     produce an empty-state view model rather than raising.
     """
-    state = state or {}
     now = now or datetime.now()
+
+    effective_state = state or {}
+    page_data_status = "lightweight_mapping"
+    used_real_sources: list[str] = []
+    used_lightweight_sources: list[str] = ["dashboard_state_snapshot"]
+    missing_sources: list[str] = []
+
+    if backend_state:
+        raw_state = backend_state.get("raw_state") or {}
+        overview_data = backend_state.get("overview") or {}
+        if raw_state:
+            effective_state = raw_state
+        elif overview_data:
+            effective_state = overview_data
+
+        page_statuses = backend_state.get("page_statuses") or {}
+        if page_statuses.get("today_overview"):
+            page_data_status = page_statuses["today_overview"]
+        elif overview_data or raw_state:
+            page_data_status = "real_backend"
+
+        if page_data_status == "real_backend":
+            used_real_sources = ["backend_api"]
+            used_lightweight_sources = []
+        else:
+            missing_sources = ["backend_api"]
+
+    state = effective_state or {}
 
     top_changes = _pick_top_changes(state, limit=3)
     pending_decisions = _pick_pending_decisions(state, limit=3)
@@ -342,8 +373,16 @@ def build_today_overview_view_model(state: dict | None = None, now: datetime | N
     if not updated_at:
         updated_at = now.strftime("%Y-%m-%d %H:%M")
 
+    backend_connection_summary = {
+        "used_real_sources": used_real_sources,
+        "used_lightweight_sources": used_lightweight_sources,
+        "missing_sources": missing_sources,
+        "pending_integrations": ["foundation_input_stream"],
+    }
+
     return {
-        "data_status": "lightweight_mapping",
+        "page_data_status": page_data_status,
+        "data_status": page_data_status,
         "metrics": metrics,
         "top_changes": top_changes,
         "pending_decisions": pending_decisions,
@@ -351,4 +390,5 @@ def build_today_overview_view_model(state: dict | None = None, now: datetime | N
         "health_summary": health_summary,
         "updated_at": updated_at,
         "empty_state": not has_data,
+        "backend_connection_summary": backend_connection_summary,
     }

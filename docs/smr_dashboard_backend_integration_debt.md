@@ -4,11 +4,11 @@
 
 | 页面 | 阶段 | 前台形态 | 后台接入 | data_status |
 |---|---|---|---|---|
-| 今日总览 | SMR-D1 | ✅ 已完成 | ❌ 未接入 | lightweight_mapping |
-| 覆盖池 | SMR-D4 | ✅ 已完成 | ❌ 未接入 | lightweight_mapping |
-| 信号流 | SMR-D2 | ✅ 已完成 | ❌ 未接入 | lightweight_mapping |
-| 研究队列 | SMR-D3 | ✅ 已完成 | ❌ 未接入 | lightweight_mapping |
-| 数据健康 | SMR-D5 | ✅ 已完成 | ❌ 未接入 | lightweight_mapping |
+| 今日总览 | SMR-D1 + D6 | ✅ 已完成 | ✅ 部分接入（只读） | partial_snapshot |
+| 覆盖池 | SMR-D4 + D6 | ✅ 已完成 | ✅ 部分接入（只读） | partial_snapshot |
+| 信号流 | SMR-D2 + D6 | ✅ 已完成 | ✅ 部分接入（只读） | partial_snapshot |
+| 研究队列 | SMR-D3 + D6 | ✅ 已完成 | ✅ 部分接入（只读） | partial_snapshot |
+| 数据健康 | SMR-D5 + D6 | ✅ 已完成 | ✅ 部分接入（只读） | partial_snapshot |
 
 **验收状态**：SMR-D5.5 前台验收通过（2026-07-06），见 [smr_d55_dashboard_frontend_acceptance_report.md](./smr_d55_dashboard_frontend_acceptance_report.md)
 
@@ -16,10 +16,15 @@
 
 **Main 合并状态**：SMR-D5.7 已合并到 main（2026-07-06，commit d517890），见 [smr_d57_dashboard_frontend_main_merge_report.md](./smr_d57_dashboard_frontend_main_merge_report.md)
 
+**D6 后台接入状态**：SMR-D6 已完成只读后台接入（2026-07-06），见 [smr_d6_dashboard_backend_integration_report.md](./smr_d6_dashboard_backend_integration_report.md)
+
 **重要说明**：
-- 5 页前台形态已全部完成，均为 lightweight_mapping
-- 未完成真实后台闭环，未接入 opc-foundation
-- Foundation 输入流标记为"待接入"（pending_backend_integration）
+- 5 页前台形态已全部完成
+- D6 已完成只读后台接入，优先读取真实 DB 快照数据
+- data_status 从 lightweight_mapping 提升为 partial_snapshot（有真实数据时）
+- 未完成真实后台闭环（无写入），未接入 opc-foundation
+- Foundation 输入流仍标记为"待接入"（pending_backend_integration）
+- 新增统一 Backend Data Provider：`backend_data_provider.py`
 
 ## 2. 今日总览（SMR-D1）
 

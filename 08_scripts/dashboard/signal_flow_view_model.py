@@ -335,14 +335,42 @@ def build_signal_flow_view_model(
     filters: dict | None = None,
     now: datetime | None = None,
     limit: int = 20,
+    backend_state: dict | None = None,
 ) -> dict:
     """Build the signal flow page view model from raw dashboard state.
 
     Always returns a valid dict, never raises.
     """
-    state = state or {}
     now = now or datetime.now()
     clean_filters = _sanitize_filters(filters)
+
+    effective_state = state or {}
+    page_data_status = "lightweight_mapping"
+    used_real_sources: list[str] = []
+    used_lightweight_sources: list[str] = ["dashboard_state_snapshot"]
+    missing_sources: list[str] = []
+
+    if backend_state:
+        raw_state = backend_state.get("raw_state") or {}
+        signals_data = backend_state.get("signals") or {}
+        if raw_state:
+            effective_state = raw_state
+        elif signals_data:
+            effective_state = signals_data
+
+        page_statuses = backend_state.get("page_statuses") or {}
+        if page_statuses.get("signal_flow"):
+            page_data_status = page_statuses["signal_flow"]
+        elif signals_data or raw_state:
+            page_data_status = "real_backend"
+
+        if page_data_status == "real_backend":
+            used_real_sources = ["backend_api"]
+            used_lightweight_sources = []
+        else:
+            missing_sources = ["backend_api"]
+
+    state = effective_state or {}
 
     raw_signals = _extract_signals_from_state(state, now)
     filtered = _filter_signals(raw_signals, clean_filters, now)
@@ -369,8 +397,16 @@ def build_signal_flow_view_model(
 
     empty_state = total == 0
 
+    backend_connection_summary = {
+        "used_real_sources": used_real_sources,
+        "used_lightweight_sources": used_lightweight_sources,
+        "missing_sources": missing_sources,
+        "pending_integrations": ["foundation_input_stream"],
+    }
+
     return {
-        "data_status": "lightweight_mapping",
+        "page_data_status": page_data_status,
+        "data_status": page_data_status,
         "filters": clean_filters,
         "summary": {
             "total_signals": total,
@@ -385,4 +421,5 @@ def build_signal_flow_view_model(
         "updated_at": updated_at,
         "strength_tones": STRENGTH_TONES,
         "source_type_labels": SOURCE_TYPE_LABELS,
+        "backend_connection_summary": backend_connection_summary,
     }
