@@ -12,6 +12,10 @@
 
 **验收状态**：SMR-D5.5 前台验收通过（2026-07-06），见 [smr_d55_dashboard_frontend_acceptance_report.md](./smr_d55_dashboard_frontend_acceptance_report.md)
 
+**Staging 状态**：SMR-D5.6 已创建 main staging 分支（feature/smr-d56-dashboard-frontend-main-staging）
+
+**Main 合并状态**：SMR-D5.7 已合并到 main（2026-07-06，commit d517890），见 [smr_d57_dashboard_frontend_main_merge_report.md](./smr_d57_dashboard_frontend_main_merge_report.md)
+
 **重要说明**：
 - 5 页前台形态已全部完成，均为 lightweight_mapping
 - 未完成真实后台闭环，未接入 opc-foundation

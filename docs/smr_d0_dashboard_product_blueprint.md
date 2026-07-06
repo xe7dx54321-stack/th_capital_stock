@@ -1,13 +1,16 @@
 # SMR-D0 Dashboard 产品蓝图
 
-> **更新记录（D1 + D2 + D3 + D4 + D5 补充）**
+> **更新记录（D1 + D2 + D3 + D4 + D5 + D5.5 + D5.6 + D5.7 补充）**
 > - 2026-05 / SMR-D1：Page 1「今日总览」已完成首轮施工，见 [smr_d1_dashboard_today_overview_report.md](./smr_d1_dashboard_today_overview_report.md)。
 > - 2026-07 / SMR-D2：Page 3「信号流」已完成首轮施工，见 [smr_d2_dashboard_signal_flow_report.md](./smr_d2_dashboard_signal_flow_report.md)。
 > - 2026-07 / SMR-D3：Page 4「研究队列」已完成首轮施工，见 [smr_d3_dashboard_research_queue_report.md](./smr_d3_dashboard_research_queue_report.md)。
 > - 2026-07 / SMR-D4：Page 2「覆盖池」已完成首轮施工，见 [smr_d4_dashboard_coverage_pool_report.md](./smr_d4_dashboard_coverage_pool_report.md)。
 > - 2026-07 / SMR-D5：Page 5「数据健康」已完成首轮施工，见 [smr_d5_dashboard_data_health_report.md](./smr_d5_dashboard_data_health_report.md)。
-> - 全部 5 页前台形态已完成，均为轻量映射，未接入真实后台。
-> - 本文档为 D0 原始蓝图，不做改写；D1/D2/D3/D4/D5 施工状态仅作为补充信息。
+> - 2026-07 / SMR-D5.5：前台验收通过，见 [smr_d55_dashboard_frontend_acceptance_report.md](./smr_d55_dashboard_frontend_acceptance_report.md)。
+> - 2026-07 / SMR-D5.6：创建 main staging 分支，见 [smr_d56_dashboard_frontend_merge_staging_report.md](./smr_d56_dashboard_frontend_merge_staging_report.md)。
+> - 2026-07 / SMR-D5.7：已合并到 main（commit d517890），见 [smr_d57_dashboard_frontend_main_merge_report.md](./smr_d57_dashboard_frontend_main_merge_report.md)。
+> - 全部 5 页前台形态已合并 main，均为轻量映射，未接入真实后台。
+> - 本文档为 D0 原始蓝图，不做改写；施工状态仅作为补充信息。
 
 ## 1. 新 Dashboard 设计原则
 
