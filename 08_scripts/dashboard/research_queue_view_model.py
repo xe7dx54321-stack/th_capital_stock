@@ -360,6 +360,7 @@ def build_research_queue_view_model(
     filters: dict | None = None,
     now: datetime | None = None,
     limit: int = 20,
+    backend_state: dict | None = None,
 ) -> dict:
     """Build the research queue page view model from raw dashboard state.
 
@@ -369,9 +370,36 @@ def build_research_queue_view_model(
     state snapshots, not from a real backend integration. Real backend
     integration is planned for SMR-D6.
     """
-    state = state or {}
     now = now or datetime.now()
     clean_filters = _sanitize_filters(filters)
+
+    effective_state = state or {}
+    page_data_status = "lightweight_mapping"
+    used_real_sources: list[str] = []
+    used_lightweight_sources: list[str] = ["dashboard_state_snapshot"]
+    missing_sources: list[str] = []
+
+    if backend_state:
+        raw_state = backend_state.get("raw_state") or {}
+        research_queue_data = backend_state.get("research_queue") or {}
+        if raw_state:
+            effective_state = raw_state
+        elif research_queue_data:
+            effective_state = research_queue_data
+
+        page_statuses = backend_state.get("page_statuses") or {}
+        if page_statuses.get("research_queue"):
+            page_data_status = page_statuses["research_queue"]
+        elif research_queue_data or raw_state:
+            page_data_status = "real_backend"
+
+        if page_data_status == "real_backend":
+            used_real_sources = ["backend_api"]
+            used_lightweight_sources = []
+        else:
+            missing_sources = ["backend_api"]
+
+    state = effective_state or {}
 
     raw_items = _extract_queue_items(state, now)
     filtered_items = _filter_items(raw_items, clean_filters)
@@ -399,8 +427,16 @@ def build_research_queue_view_model(
 
     empty_state = total_count == 0
 
+    backend_connection_summary = {
+        "used_real_sources": used_real_sources,
+        "used_lightweight_sources": used_lightweight_sources,
+        "missing_sources": missing_sources,
+        "pending_integrations": ["foundation_input_stream"],
+    }
+
     return {
-        "data_status": "lightweight_mapping",
+        "page_data_status": page_data_status,
+        "data_status": page_data_status,
         "metrics": {
             "research_topic_count": {"count": total_count, "subtitle": "待深挖研究主题"},
             "high_priority_count": {"count": high_priority_count, "subtitle": "高优先级事项"},
@@ -416,4 +452,5 @@ def build_research_queue_view_model(
         "priority_labels": PRIORITY_LABELS,
         "status_labels": STATUS_LABELS,
         "importance_labels": IMPORTANCE_LABELS,
+        "backend_connection_summary": backend_connection_summary,
     }

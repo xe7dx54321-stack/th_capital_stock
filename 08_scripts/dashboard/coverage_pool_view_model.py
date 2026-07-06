@@ -446,6 +446,7 @@ def build_coverage_pool_view_model(
     filters: dict | None = None,
     now: datetime | None = None,
     limit: int = 12,
+    backend_state: dict | None = None,
 ) -> dict:
     """Build the coverage pool page view model from raw dashboard state.
 
@@ -455,9 +456,36 @@ def build_coverage_pool_view_model(
     state snapshots, not from a real backend integration. Real backend
     integration is planned for SMR-D6.
     """
-    state = state or {}
     now = now or datetime.now()
     clean_filters = _sanitize_filters(filters)
+
+    effective_state = state or {}
+    page_data_status = "lightweight_mapping"
+    used_real_sources: list[str] = []
+    used_lightweight_sources: list[str] = ["dashboard_state_snapshot"]
+    missing_sources: list[str] = []
+
+    if backend_state:
+        raw_state = backend_state.get("raw_state") or {}
+        coverage_data = backend_state.get("coverage") or {}
+        if raw_state:
+            effective_state = raw_state
+        elif coverage_data:
+            effective_state = coverage_data
+
+        page_statuses = backend_state.get("page_statuses") or {}
+        if page_statuses.get("coverage_pool"):
+            page_data_status = page_statuses["coverage_pool"]
+        elif coverage_data or raw_state:
+            page_data_status = "real_backend"
+
+        if page_data_status == "real_backend":
+            used_real_sources = ["backend_api"]
+            used_lightweight_sources = []
+        else:
+            missing_sources = ["backend_api"]
+
+    state = effective_state or {}
 
     raw_items = _extract_coverage_items(state, now)
     _enrich_missing_evidence(raw_items, state)
@@ -496,8 +524,16 @@ def build_coverage_pool_view_model(
 
     empty_state = total_items == 0
 
+    backend_connection_summary = {
+        "used_real_sources": used_real_sources,
+        "used_lightweight_sources": used_lightweight_sources,
+        "missing_sources": missing_sources,
+        "pending_integrations": ["foundation_input_stream"],
+    }
+
     return {
-        "data_status": "lightweight_mapping",
+        "page_data_status": page_data_status,
+        "data_status": page_data_status,
         "filters": clean_filters,
         "metrics": {
             "company_count": {"count": company_count, "subtitle": "覆盖公司数", "delta": None},
@@ -520,4 +556,5 @@ def build_coverage_pool_view_model(
         "priority_labels": PRIORITY_LABELS,
         "status_labels": STATUS_LABELS,
         "type_labels": TYPE_LABELS,
+        "backend_connection_summary": backend_connection_summary,
     }
