@@ -273,7 +273,7 @@ class TestPlaceholderPagesStillWork(unittest.TestCase):
     def test_research_placeholder(self):
         import run_control_tower as rt
 
-        html = rt.render_placeholder_research({}, 0)
+        html = rt.render_research_queue({}, 0)
         self.assertIn("研究队列", html)
 
     def test_health_placeholder(self):

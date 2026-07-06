@@ -175,7 +175,7 @@ class TestPlaceholderPages(unittest.TestCase):
         self.assertIn("信号流", html)
 
     def test_research_page_placeholder(self):
-        html = self._render_page("render_placeholder_research", "/research")
+        html = self._render_page("render_research_queue", "/research")
         self.assertIn("研究队列", html)
 
     def test_health_page_placeholder(self):

@@ -23,6 +23,7 @@ from smr_dashboard import DB_PATH, build_dashboard_state, resolve_project_path
 from smr_decision import ensure_decision_tables, review_recommendation
 from today_overview_view_model import build_today_overview_view_model
 from signal_flow_view_model import build_signal_flow_view_model
+from research_queue_view_model import build_research_queue_view_model
 
 
 NAV_ITEMS = [
@@ -2409,6 +2410,339 @@ def render_shell(
       cursor: pointer;
     }}
 
+    /* ============== Research Queue ============== */
+    .research-page {{
+      max-width: 1440px;
+      margin: 0 auto;
+    }}
+    .research-metrics {{
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 16px;
+      margin-bottom: 20px;
+    }}
+    .research-metric-card {{
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 18px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }}
+    .research-metric-icon {{
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }}
+    .research-metric-icon.blue {{ background: rgba(59, 130, 246, 0.1); color: #2563eb; }}
+    .research-metric-icon.orange {{ background: rgba(249, 115, 22, 0.1); color: #ea580c; }}
+    .research-metric-icon.yellow {{ background: rgba(245, 158, 11, 0.1); color: #d97706; }}
+    .research-metric-icon.green {{ background: rgba(16, 185, 129, 0.1); color: #059669; }}
+    .research-metric-number {{
+      font-size: 24px;
+      font-weight: 700;
+      line-height: 1.1;
+    }}
+    .research-metric-subtitle {{
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 2px;
+    }}
+
+    .research-layout {{
+      display: grid;
+      grid-template-columns: 60% 40%;
+      gap: 20px;
+    }}
+
+    .research-list-section {{
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 8px 24px rgba(31, 39, 46, 0.04);
+    }}
+    .research-list-header {{
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }}
+    .research-list-title {{
+      font-size: 16px;
+      font-weight: 600;
+    }}
+    .research-filters {{
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }}
+    .research-filter-select {{
+      padding: 6px 10px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      font-size: 12px;
+      background: #fff;
+      color: var(--ink);
+    }}
+
+    .research-list {{
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }}
+    .research-item {{
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 14px;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      cursor: pointer;
+    }}
+    .research-item:hover {{
+      border-color: var(--brand);
+    }}
+    .research-item.selected {{
+      border-color: var(--brand);
+      background: rgba(59, 130, 246, 0.03);
+    }}
+    .research-item-rank {{
+      width: 26px;
+      height: 26px;
+      border-radius: 8px;
+      background: rgba(59, 130, 246, 0.1);
+      color: #2563eb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 600;
+      flex-shrink: 0;
+    }}
+    .research-item-content {{
+      flex: 1;
+      min-width: 0;
+    }}
+    .research-item-title {{
+      font-size: 14px;
+      font-weight: 600;
+      margin: 0 0 4px 0;
+      color: var(--ink);
+    }}
+    .research-item-badges {{
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+      margin-bottom: 6px;
+    }}
+    .research-item-badge {{
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 500;
+    }}
+    .research-item-badge.entity {{ background: rgba(99, 102, 241, 0.08); color: #4f46e5; }}
+    .research-item-badge.topic {{ background: rgba(139, 92, 246, 0.08); color: #7c3aed; }}
+    .research-item-badge.priority-high {{ background: rgba(239, 68, 68, 0.08); color: #dc2626; }}
+    .research-item-badge.priority-medium {{ background: rgba(245, 158, 11, 0.08); color: #d97706; }}
+    .research-item-badge.priority-low {{ background: rgba(16, 185, 129, 0.08); color: #059669; }}
+    .research-item-badge.status-researching {{ background: rgba(59, 130, 246, 0.08); color: #2563eb; }}
+    .research-item-badge.status-pending {{ background: rgba(245, 158, 11, 0.08); color: #d97706; }}
+    .research-item-badge.status-gathering {{ background: rgba(249, 115, 22, 0.08); color: #ea580c; }}
+    .research-item-badge.status-deferred {{ background: rgba(148, 163, 184, 0.1); color: #64748b; }}
+    .research-item-badge.status-approved {{ background: rgba(16, 185, 129, 0.08); color: #059669; }}
+    .research-item-badge.status-rejected {{ background: rgba(239, 68, 68, 0.08); color: #dc2626; }}
+    .research-item-reason {{
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.5;
+    }}
+    .research-item-meta {{
+      display: flex;
+      gap: 12px;
+      margin-top: 8px;
+      font-size: 12px;
+      color: var(--muted);
+    }}
+    .research-item-actions {{
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      flex-shrink: 0;
+    }}
+    .research-action-btn {{
+      padding: 5px 10px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      font-size: 11px;
+      background: #fff;
+      color: var(--muted);
+      cursor: pointer;
+      text-decoration: none;
+    }}
+    .research-action-btn:hover {{
+      color: var(--brand);
+      border-color: var(--brand);
+    }}
+    .research-action-btn.approve {{ color: #059669; border-color: rgba(16, 185, 129, 0.3); }}
+    .research-action-btn.gather {{ color: #2563eb; border-color: rgba(59, 130, 246, 0.3); }}
+    .research-action-btn.defer {{ color: #64748b; border-color: rgba(148, 163, 184, 0.3); }}
+    .research-action-btn.reject {{ color: #dc2626; border-color: rgba(239, 68, 68, 0.3); }}
+
+    .research-side {{
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }}
+    .research-detail-panel {{
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 18px;
+      box-shadow: 0 8px 24px rgba(31, 39, 46, 0.04);
+    }}
+    .research-detail-title {{
+      font-size: 15px;
+      font-weight: 600;
+      margin: 0 0 14px 0;
+    }}
+    .research-detail-subtitle {{
+      font-size: 14px;
+      font-weight: 600;
+      margin: 0 0 8px 0;
+      color: var(--ink);
+    }}
+    .research-detail-badges {{
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }}
+    .research-detail-section {{
+      margin-bottom: 16px;
+    }}
+    .research-detail-section-title {{
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+      margin: 0 0 6px 0;
+    }}
+    .research-detail-text {{
+      font-size: 13px;
+      color: var(--ink);
+      line-height: 1.7;
+      white-space: pre-wrap;
+    }}
+    .research-detail-list {{
+      margin: 0;
+      padding-left: 18px;
+    }}
+    .research-detail-list li {{
+      font-size: 13px;
+      color: var(--ink);
+      line-height: 1.7;
+      margin-bottom: 4px;
+    }}
+    .research-empty {{
+      text-align: center;
+      padding: 32px 16px;
+      color: var(--muted);
+    }}
+    .research-empty-title {{
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--ink);
+      margin-bottom: 4px;
+    }}
+
+    .evidence-gap-panel {{
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 18px;
+      box-shadow: 0 8px 24px rgba(31, 39, 46, 0.04);
+    }}
+    .evidence-gap-title {{
+      font-size: 15px;
+      font-weight: 600;
+      margin: 0 0 14px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }}
+    .evidence-gap-all-link {{
+      font-size: 12px;
+      color: var(--brand);
+      text-decoration: none;
+    }}
+    .evidence-gap-list {{
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }}
+    .evidence-gap-item {{
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 12px;
+    }}
+    .evidence-gap-header {{
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }}
+    .evidence-gap-title-text {{
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--ink);
+    }}
+    .evidence-gap-importance {{
+      font-size: 11px;
+      padding: 1px 6px;
+      border-radius: 4px;
+    }}
+    .evidence-gap-importance.important {{ background: rgba(239, 68, 68, 0.08); color: #dc2626; }}
+    .evidence-gap-importance.medium {{ background: rgba(245, 158, 11, 0.08); color: #d97706; }}
+    .evidence-gap-importance.low {{ background: rgba(16, 185, 129, 0.08); color: #059669; }}
+    .evidence-gap-meta {{
+      display: flex;
+      gap: 10px;
+      font-size: 12px;
+      color: var(--muted);
+    }}
+
+    .research-disclaimer {{
+      margin-top: 18px;
+      padding: 12px 16px;
+      background: rgba(59, 130, 246, 0.04);
+      border: 1px solid rgba(59, 130, 246, 0.1);
+      border-radius: 10px;
+      font-size: 13px;
+      color: var(--muted);
+      text-align: center;
+    }}
+
+    .research-empty-state {{
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--muted);
+    }}
+    .research-empty-state-title {{
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--ink);
+      margin-bottom: 6px;
+    }}
+
     @media (max-width: 1080px) {{
       .today-metrics {{
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2420,6 +2754,12 @@ def render_shell(
         grid-template-columns: 1fr;
       }}
       .signal-layout {{
+        grid-template-columns: 1fr;
+      }}
+      .research-metrics {{
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }}
+      .research-layout {{
         grid-template-columns: 1fr;
       }}
     }}
@@ -5768,13 +6108,320 @@ def render_placeholder_signals(state: dict, refresh_seconds: int) -> str:
     )
 
 
-def render_placeholder_research(state: dict, refresh_seconds: int) -> str:
-    return render_placeholder_page(
-        "研究队列",
-        "管理系统建议继续深挖的研究主题",
-        "/research",
-        state,
-        refresh_seconds,
+def _render_research_metrics(metrics: dict) -> str:
+    cards = [
+        ("research_topic_count", "📁", "blue"),
+        ("high_priority_count", "⭐", "orange"),
+        ("evidence_gap_count", "📝", "yellow"),
+        ("new_today_count", "➕", "green"),
+    ]
+    html = ""
+    for key, icon, tone in cards:
+        m = metrics.get(key, {"count": 0, "subtitle": ""})
+        html += f"""
+<div class="research-metric-card">
+  <div class="research-metric-icon {tone}">{icon}</div>
+  <div>
+    <div class="research-metric-number">{m.get('count', 0)}</div>
+    <div class="research-metric-subtitle">{escape(m.get('subtitle', ''))}</div>
+  </div>
+</div>
+"""
+    return f'<div class="research-metrics">{html}</div>'
+
+
+def _render_research_filters(filters: dict) -> str:
+    priority_options = [("all", "全部"), ("高", "高"), ("中", "中"), ("低", "低")]
+    status_options = [
+        ("all", "全部"),
+        ("研究中", "研究中"),
+        ("初步研究", "初步研究"),
+        ("待验证", "待验证"),
+        ("证据收集中", "证据收集中"),
+        ("暂缓", "暂缓"),
+        ("已驳回", "已驳回"),
+        ("已通过", "已通过"),
+    ]
+    sort_options = [
+        ("latest", "最新更新"),
+        ("priority", "优先级"),
+        ("gaps", "缺口最多"),
+        ("evidence", "证据最多"),
+    ]
+
+    def _options(opts, current):
+        return "".join(
+            f'<option value="{escape(v)}"{" selected" if v == current else ""}>{escape(l)}</option>'
+            for v, l in opts
+        )
+
+    return f"""
+<div class="research-filters">
+  <select class="research-filter-select" name="priority" onchange="this.form.submit()">
+    {_options(priority_options, filters.get('priority', 'all'))}
+  </select>
+  <select class="research-filter-select" name="status" onchange="this.form.submit()">
+    {_options(status_options, filters.get('status', 'all'))}
+  </select>
+  <select class="research-filter-select" name="sort" onchange="this.form.submit()">
+    {_options(sort_options, filters.get('sort', 'latest'))}
+  </select>
+</div>
+"""
+
+
+def _priority_badge_class(priority: str) -> str:
+    if priority == "高":
+        return "priority-high"
+    if priority == "中":
+        return "priority-medium"
+    return "priority-low"
+
+
+def _status_badge_class(status: str) -> str:
+    if status == "研究中":
+        return "status-researching"
+    if status == "待验证":
+        return "status-pending"
+    if status == "证据收集中":
+        return "status-gathering"
+    if status == "暂缓":
+        return "status-deferred"
+    if status == "已通过":
+        return "status-approved"
+    if status == "已驳回":
+        return "status-rejected"
+    return "status-researching"
+
+
+def _render_research_item(item: dict, is_selected: bool = False) -> str:
+    title = escape(item.get("title") or "")
+    rank = item.get("rank", 0)
+    priority = item.get("priority") or ""
+    status = item.get("status") or ""
+    evidence_count = item.get("evidence_count", 0)
+    gap_count = item.get("gap_count", 0)
+    updated_at = escape(item.get("updated_at") or "")
+    short_reason = escape(item.get("short_reason") or "")
+
+    entity_badges = "".join(
+        f'<span class="research-item-badge entity">{escape(e)}</span>'
+        for e in (item.get("related_entities") or [])
+    )
+    topic_badges = "".join(
+        f'<span class="research-item-badge topic">{escape(t)}</span>'
+        for t in (item.get("related_topics") or [])
+    )
+
+    selected_cls = " selected" if is_selected else ""
+
+    return f"""
+<div class="research-item{selected_cls}" data-item-id="{escape(item.get('item_id', ''))}">
+  <div class="research-item-rank">{rank}</div>
+  <div class="research-item-content">
+    <h4 class="research-item-title">{title}</h4>
+    <div class="research-item-badges">
+      {entity_badges}
+      {topic_badges}
+      <span class="research-item-badge {_priority_badge_class(priority)}">{escape(priority)}</span>
+      <span class="research-item-badge {_status_badge_class(status)}">{escape(status)}</span>
+    </div>
+    <p class="research-item-reason">{short_reason}</p>
+    <div class="research-item-meta">
+      <span>证据 {evidence_count}</span>
+      <span>缺口 {gap_count}</span>
+      <span>最近更新 {updated_at}</span>
+    </div>
+  </div>
+  <div class="research-item-actions">
+    <button class="research-action-btn approve">通过</button>
+    <button class="research-action-btn gather">补证据</button>
+    <button class="research-action-btn defer">暂缓</button>
+    <button class="research-action-btn reject">驳回</button>
+  </div>
+</div>
+"""
+
+
+def _render_research_list(items: list[dict], empty: bool, filters: dict) -> str:
+    header_html = f"""
+<div class="research-list-header">
+  <div class="research-list-title">研究队列</div>
+  <form method="get" action="/research" class="research-filters">
+    {_render_research_filters(filters)}
+    <input type="hidden" name="q" value="{escape(filters.get('q', ''))}">
+  </form>
+</div>
+"""
+    if empty or not items:
+        return header_html + """
+<div class="research-empty-state">
+  <div class="research-empty-state-title">暂无研究队列</div>
+  <div>当前没有待深挖主题。请查看信号流或等待系统生成新的证据缺口。</div>
+</div>
+"""
+    list_html = ""
+    for idx, item in enumerate(items[:6]):
+        list_html += _render_research_item(item, is_selected=(idx == 0))
+    return header_html + f"""
+<div class="research-list">
+  {list_html}
+</div>
+"""
+
+
+def _render_research_detail(detail: dict) -> str:
+    if not detail.get("title"):
+        return """
+<div class="research-empty">
+  <div class="research-empty-title">请选择研究主题</div>
+  <div>当前没有可展示的研究详情。</div>
+</div>
+"""
+
+    title = escape(detail.get("title") or "")
+    priority = detail.get("priority") or ""
+
+    entity_badges = "".join(
+        f'<span class="research-item-badge entity">{escape(e)}</span>'
+        for e in (detail.get("related_entities") or [])
+    )
+    topic_badges = "".join(
+        f'<span class="research-item-badge topic">{escape(t)}</span>'
+        for t in (detail.get("related_topics") or [])
+    )
+
+    hypothesis = escape(detail.get("research_hypothesis") or "")
+    existing_evidence = "\n".join(
+        f"- {escape(e)}" for e in (detail.get("existing_evidence") or [])
+    )
+    missing_evidence = "\n".join(
+        f"- {escape(e)}" for e in (detail.get("missing_evidence") or [])
+    )
+    next_steps = "\n".join(
+        f"- {escape(s)}" for s in (detail.get("next_steps") or [])
+    )
+
+    return f"""
+<h4 class="research-detail-subtitle">{title}</h4>
+<div class="research-detail-badges">
+  {entity_badges}
+  {topic_badges}
+  <span class="research-item-badge {_priority_badge_class(priority)}">{escape(priority)}</span>
+</div>
+<div class="research-detail-section">
+  <h5 class="research-detail-section-title">研究假设</h5>
+  <p class="research-detail-text">{hypothesis}</p>
+</div>
+<div class="research-detail-section">
+  <h5 class="research-detail-section-title">已有证据</h5>
+  <ul class="research-detail-list">
+    {"".join(f'<li>{escape(e)}</li>' for e in (detail.get("existing_evidence") or []))}
+  </ul>
+</div>
+<div class="research-detail-section">
+  <h5 class="research-detail-section-title">缺失证据</h5>
+  <ul class="research-detail-list">
+    {"".join(f'<li>{escape(e)}</li>' for e in (detail.get("missing_evidence") or []))}
+  </ul>
+</div>
+<div class="research-detail-section">
+  <h5 class="research-detail-section-title">下一步建议</h5>
+  <ul class="research-detail-list">
+    {"".join(f'<li>{escape(s)}</li>' for s in (detail.get("next_steps") or []))}
+  </ul>
+</div>
+"""
+
+
+def _importance_badge_class(importance: str) -> str:
+    if importance == "重要":
+        return "important"
+    if importance == "中等":
+        return "medium"
+    return "low"
+
+
+def _render_evidence_gaps(gaps: list[dict]) -> str:
+    if not gaps:
+        return """
+<div class="research-empty" style="padding: 24px 12px;">
+  <div class="research-empty-title" style="font-size: 13px;">暂无证据缺口</div>
+</div>
+"""
+    html = ""
+    for idx, gap in enumerate(gaps[:4]):
+        title = escape(gap.get("gap_title") or "")
+        importance = gap.get("importance") or "中等"
+        target_source = escape(gap.get("target_source") or "")
+        expected_time = escape(gap.get("expected_time") or "")
+        html += f"""
+<div class="evidence-gap-item">
+  <div class="evidence-gap-header">
+    <span class="evidence-gap-title-text">{title}</span>
+    <span class="evidence-gap-importance {_importance_badge_class(importance)}">{escape(importance)}</span>
+  </div>
+  <div class="evidence-gap-meta">
+    <span>目标来源：{target_source}</span>
+    <span>期望时间：{expected_time}</span>
+  </div>
+</div>
+"""
+    return f"""
+<div class="evidence-gap-title">
+  <span>证据缺口</span>
+  <a href="#" class="evidence-gap-all-link">全部查看</a>
+</div>
+<div class="evidence-gap-list">
+  {html}
+</div>
+"""
+
+
+def render_research_queue(state: dict, refresh_seconds: int, filters: dict | None = None) -> str:
+    view = build_research_queue_view_model(state, filters=filters)
+    metrics = view["metrics"]
+    filters = view["filters"]
+    queue_items = view["queue_items"]
+    selected_detail = view["selected_detail"]
+    evidence_gaps = view["evidence_gaps"]
+    empty = view["empty_state"]
+
+    metric_html = _render_research_metrics(metrics)
+    list_html = _render_research_list(queue_items, empty, filters)
+    detail_html = _render_research_detail(selected_detail)
+    gaps_html = _render_evidence_gaps(evidence_gaps)
+
+    body = f"""
+{metric_html}
+<div class="research-layout">
+  <section class="research-list-section">
+    {list_html}
+  </section>
+  <aside class="research-side">
+    <div class="research-detail-panel">
+      <h3 class="research-detail-title">研究详情</h3>
+      {detail_html}
+    </div>
+    <div class="evidence-gap-panel">
+      {gaps_html}
+    </div>
+  </aside>
+</div>
+<div class="research-disclaimer">
+  系统仅组织研究证据与待办，不直接给出投资建议。
+</div>
+"""
+
+    return render_shell(
+        page_title="研究队列 · 同行资本投研系统",
+        current_path="/research",
+        hero_title="研究队列",
+        hero_subtitle="待深挖主题管理 / 证据缺口 / 人工决策",
+        body=body,
+        refresh_seconds=refresh_seconds,
+        show_status_strip=False,
+        **shell_state_kwargs(state),
     )
 
 
@@ -8112,7 +8759,7 @@ PAGE_RENDERERS = {
     "/": render_today_overview,
     "/coverage": render_placeholder_coverage,
     "/signals": render_signal_flow,
-    "/research": render_placeholder_research,
+    "/research": render_research_queue,
     "/health": render_placeholder_health,
 }
 
@@ -8171,14 +8818,22 @@ def build_handler(refresh_seconds: int):
             renderer = PAGE_RENDERERS.get(parsed.path)
             if renderer:
                 state = build_dashboard_state()
+                from urllib.parse import parse_qs
+                qs = parse_qs(parsed.query)
                 if parsed.path == "/signals":
-                    from urllib.parse import parse_qs
-                    qs = parse_qs(parsed.query)
                     filters = {
                         "time_range": (qs.get("time_range") or ["all"])[0],
                         "source_type": (qs.get("source_type") or ["all"])[0],
                         "entity": (qs.get("entity") or ["all"])[0],
                         "strength": (qs.get("strength") or ["all"])[0],
+                        "q": (qs.get("q") or [""])[0],
+                    }
+                    self._send(200, renderer(state, refresh_seconds, filters=filters))
+                elif parsed.path == "/research":
+                    filters = {
+                        "priority": (qs.get("priority") or ["all"])[0],
+                        "status": (qs.get("status") or ["all"])[0],
+                        "sort": (qs.get("sort") or ["latest"])[0],
                         "q": (qs.get("q") or [""])[0],
                     }
                     self._send(200, renderer(state, refresh_seconds, filters=filters))
