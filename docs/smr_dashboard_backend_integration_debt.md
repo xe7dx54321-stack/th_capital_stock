@@ -10,6 +10,13 @@
 | 研究队列 | SMR-D3 | ✅ 已完成 | ❌ 未接入 | lightweight_mapping |
 | 数据健康 | SMR-D5 | ✅ 已完成 | ❌ 未接入 | lightweight_mapping |
 
+**验收状态**：SMR-D5.5 前台验收通过（2026-07-06），见 [smr_d55_dashboard_frontend_acceptance_report.md](./smr_d55_dashboard_frontend_acceptance_report.md)
+
+**重要说明**：
+- 5 页前台形态已全部完成，均为 lightweight_mapping
+- 未完成真实后台闭环，未接入 opc-foundation
+- Foundation 输入流标记为"待接入"（pending_backend_integration）
+
 ## 2. 今日总览（SMR-D1）
 
 ### 当前状态

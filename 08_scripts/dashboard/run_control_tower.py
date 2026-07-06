@@ -2025,6 +2025,15 @@ def render_shell(
       margin-top: 4px;
     }}
 
+    .today-disclaimer {{
+      text-align: center;
+      padding: 18px;
+      font-size: 12px;
+      color: var(--muted);
+      border-top: 1px solid var(--line);
+      margin-top: 8px;
+    }}
+
     .empty-state {{
       padding: 32px 20px;
       text-align: center;
@@ -6668,6 +6677,9 @@ def render_today_overview(state: dict, refresh_seconds: int) -> str:
 <div class="today-footer">
   <span class="muted">最近更新：{escape(updated_at)}</span>
 </div>
+<div class="today-disclaimer">
+  系统仅展示证据与信号，不直接给出投资建议。不提供任何投资建议。
+</div>
 """
     return render_shell(
         page_title="今日总览 · 同行资本投研系统",
@@ -7272,7 +7284,7 @@ def render_coverage_pool(state: dict, refresh_seconds: int, filters: dict | None
   {hotzone_html}
 </div>
 <div class="coverage-disclaimer">
-  系统展示覆盖状态与证据完整度，不直接给出投资建议。
+  系统展示覆盖状态与证据完整度，不直接给出投资建议。不提供任何投资建议。
 </div>
 """
 
@@ -7609,7 +7621,7 @@ def render_research_queue(state: dict, refresh_seconds: int, filters: dict | Non
   </aside>
 </div>
 <div class="research-disclaimer">
-  系统仅组织研究证据与待办，不直接给出投资建议。
+  系统仅组织研究证据与待办，不直接给出投资建议。不提供任何投资建议。
 </div>
 """
 
@@ -8144,7 +8156,7 @@ def render_signal_flow(state: dict, refresh_seconds: int, filters: dict | None =
   </aside>
 </div>
 <div class="signal-disclaimer">
-  系统仅展示证据与信号，不直接给出投资建议。
+  系统仅展示证据与信号，不直接给出投资建议。不提供任何投资建议。
 </div>
 """
 

@@ -343,6 +343,7 @@ def build_today_overview_view_model(state: dict | None = None, now: datetime | N
         updated_at = now.strftime("%Y-%m-%d %H:%M")
 
     return {
+        "data_status": "lightweight_mapping",
         "metrics": metrics,
         "top_changes": top_changes,
         "pending_decisions": pending_decisions,

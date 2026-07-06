@@ -370,6 +370,7 @@ def build_signal_flow_view_model(
     empty_state = total == 0
 
     return {
+        "data_status": "lightweight_mapping",
         "filters": clean_filters,
         "summary": {
             "total_signals": total,
