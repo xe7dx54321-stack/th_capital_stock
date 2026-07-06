@@ -22,6 +22,8 @@
 
 **D6.1e 合并状态**：SMR-D6.1e 已创建 main staging 分支，准备合并（2026-07-06），见 [smr_d61e_data_truth_main_merge_report.md](./smr_d61e_data_truth_main_merge_report.md)
 
+**D6.1f 合并状态**：SMR-D6.1f 已通过 PR #2 合并到 main（2026-07-07，commit 38bfe0c），见 [smr_d61f_data_truth_main_merge_report.md](./smr_d61f_data_truth_main_merge_report.md)
+
 **D6.1 系列完成要点**：
 - data_truth_classifier 已实现：8 类数据可信度分类
 - signal_quality_gate 已实现：基于可信度过滤信号
