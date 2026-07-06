@@ -103,8 +103,9 @@ def _build_metrics(state: dict, now: datetime) -> dict:
         freshness_status = "阻塞"
         freshness_subtitle = f"行情数据严重延迟 {lag_days} 天"
 
-    source_avail_pct = 84
-    source_avail_subtitle = "信息源整体可用率"
+    source_avail_pct = None
+    source_avail_subtitle = "暂无真实 source health 统计"
+    source_has_real_data = False
     source_registry = state.get("source_registry") or {}
     sources = source_registry.get("sources") or []
     if sources:
@@ -113,6 +114,7 @@ def _build_metrics(state: dict, now: datetime) -> dict:
         if total > 0:
             source_avail_pct = int(healthy / total * 100)
             source_avail_subtitle = f"{healthy}/{total} 个信息源可用"
+            source_has_real_data = True
 
     blocking_count = 0
     blocking_subtitle = "暂无关键阻塞问题"
@@ -143,6 +145,7 @@ def _build_metrics(state: dict, now: datetime) -> dict:
         "source_availability": {
             "value": source_avail_pct,
             "subtitle": source_avail_subtitle,
+            "has_real_data": source_has_real_data,
         },
         "blocking_issues": {
             "count": blocking_count,
