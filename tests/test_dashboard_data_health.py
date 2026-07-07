@@ -79,7 +79,7 @@ class TestDataHealthViewModel(unittest.TestCase):
 
     def test_empty_dict_no_crash(self):
         view = build_data_health_view_model({})
-        self.assertFalse(view["empty_state"])
+        self.assertTrue(view["empty_state"])
 
     def test_data_status_present(self):
         view = build_data_health_view_model({})
