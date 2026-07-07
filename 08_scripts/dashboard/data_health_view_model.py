@@ -12,6 +12,8 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 
+from data_truth_classifier import classify_data_truth
+
 FORBIDDEN_INVEST_WORDS = [
     "target price",
     "目标价",
@@ -184,30 +186,52 @@ def _build_health_issues(state: dict, now: datetime) -> list[dict]:
             "description": _strip_forbidden(alert.get("description") or "需要关注"),
             "latest_update": ts.strftime("%Y-%m-%d %H:%M"),
             "action_hint": "需要关注",
-            "data_status": "lightweight_mapping",
+            "data_status": "real_snapshot" if alerts else "lightweight_mapping",
         })
 
-    if not issues:
-        default_issues = [
-            ("P0", "某海外数据源（站点A）失效", "海外公司公告抓取、IR 页面更新", "阻塞", "站点返回异常，导致数据抓取中断", "需要关注"),
-            ("P1", "PDF 抽取失败率升高", "公告、研报、招股书等文档抽取", "降级", "失败率达 18%（阈值 10%），OCR 服务响应慢", "需排查"),
-            ("P1", "部分海外站点反爬加强", "海外公司 IR 页面、新闻源抓取", "降级", "请求成功率下降，部分站点需要切换代理", "需要关注"),
-            ("P2", "行情更新延迟（港股）", "港股行情、衍生指标计算", "观察中", "延迟约 3-5 分钟，处于可接受范围内", "持续观察"),
-            ("P2", "部分新闻源抓取速率受限", "新闻舆情、事件追踪", "观察中", "触发频率限制，抓取速率下降", "持续观察"),
-            ("P2", "Foundation 证据流尚未接入", "新增证据类型入库与关联", "观察中", "API 联调中，预计后续阶段完成接入", "等待接入"),
-        ]
-        for idx, (sev, title, scope, status, desc, action) in enumerate(default_issues):
-            ts = now - timedelta(minutes=(idx + 1) * 20)
-            issues.append({
-                "severity": sev,
-                "title": title,
-                "impact_scope": scope,
-                "status": status,
-                "description": desc,
-                "latest_update": ts.strftime("%Y-%m-%d %H:%M"),
-                "action_hint": action,
-                "data_status": "lightweight_mapping",
-            })
+    events = state.get("events") or {}
+    recent_events = events.get("recent_market_events") or []
+    for idx, event in enumerate(recent_events[:3]):
+        entity = event.get("entity_id") or event.get("entity") or event.get("name") or "市场事件"
+        event_type = event.get("event_type") or "事件"
+        summary = _strip_forbidden(event.get("title") or event.get("summary") or event.get("description") or "")
+        ts = now - timedelta(minutes=(idx + 6) * 15)
+        issue = {
+            "severity": "P1",
+            "title": f"{entity} {event_type}",
+            "impact_scope": entity,
+            "status": "观察中",
+            "description": summary[:80] if summary else f"{entity}发生{event_type}，建议关注",
+            "latest_update": ts.strftime("%Y-%m-%d %H:%M"),
+            "action_hint": "需要关注",
+            "source_type": "市场事件",
+            "source_label": "market_event",
+            "data_status": "real_snapshot",
+        }
+        issue.update(classify_data_truth(event))
+        issues.append(issue)
+
+    operations = state.get("operations") or {}
+    registry_timeline = operations.get("registry_timeline") or []
+    for idx, entry in enumerate(registry_timeline[:3]):
+        entity = entry.get("entity_id") or entry.get("entity") or entry.get("name") or "数据项"
+        action = entry.get("status") or entry.get("action") or entry.get("operation") or "操作"
+        summary = _strip_forbidden(entry.get("description") or "")
+        ts = now - timedelta(minutes=(idx + 10) * 15)
+        issue = {
+            "severity": "P2",
+            "title": f"{entity} {action}",
+            "impact_scope": "数据注册表",
+            "status": "观察中",
+            "description": summary[:80] if summary else f"{entity}{action}操作完成",
+            "latest_update": ts.strftime("%Y-%m-%d %H:%M"),
+            "action_hint": "已完成",
+            "source_type": "注册表操作",
+            "source_label": "registry_operation",
+            "data_status": "real_snapshot",
+        }
+        issue.update(classify_data_truth(entry))
+        issues.append(issue)
 
     issues.sort(key=lambda i: {"P0": 0, "P1": 1, "P2": 2, "P3": 3}.get(i["severity"], 3))
     return issues
@@ -399,9 +423,7 @@ def build_data_health_view_model(
         or now.strftime("%Y-%m-%d %H:%M")
     )
 
-    empty_state = len(all_issues) == 0 and all(
-        m.get("status") == "暂无数据" for m in module_health
-    )
+    empty_state = len(all_issues) == 0
 
     backend_connection_summary = {
         "used_real_sources": used_real_sources,

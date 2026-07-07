@@ -12,6 +12,8 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 
+from data_truth_classifier import classify_data_truth
+
 FORBIDDEN_WORDS = [
     "target price",
     "目标价",
@@ -110,7 +112,7 @@ def _extract_coverage_items(state: dict, now: datetime) -> list[dict]:
         evidence_pct = _calc_evidence_completeness(item)
         status = "重点研究" if priority == "高" else "跟踪中"
         ts = now - timedelta(hours=idx)
-        items.append({
+        cov_item = {
             "item_id": f"company-{idx}",
             "name": name,
             "type": "公司",
@@ -123,8 +125,12 @@ def _extract_coverage_items(state: dict, now: datetime) -> list[dict]:
             "focus_points": [reason[:40]] if reason else ["策略关注对象"],
             "latest_signals": [],
             "missing_evidence": [],
-            "data_status": "lightweight_mapping",
-        })
+            "source_type": "策略关注",
+            "source_label": "strategy_watch",
+        }
+        cov_item.update(classify_data_truth(item))
+        cov_item["data_status"] = "real_snapshot"
+        items.append(cov_item)
 
     opportunity = _safe_get(state, "opportunity_engine", "radar", default={}) or {}
     markets = opportunity.get("markets") or {}
@@ -142,7 +148,7 @@ def _extract_coverage_items(state: dict, now: datetime) -> list[dict]:
             priority = "高" if evidence_pct >= 70 else ("中" if evidence_pct >= 40 else "低")
             status = "边际改善" if item.get("trend") in ("up", "rising", "上行") else "跟踪中"
             ts = now - timedelta(hours=idx + 24)
-            items.append({
+            cov_item = {
                 "item_id": f"opp-{market_name}-{idx}",
                 "name": name,
                 "type": "公司",
@@ -155,8 +161,12 @@ def _extract_coverage_items(state: dict, now: datetime) -> list[dict]:
                 "focus_points": [summary[:40]] if summary else ["机会雷达识别"],
                 "latest_signals": [],
                 "missing_evidence": [],
-                "data_status": "lightweight_mapping",
-            })
+                "source_type": "机会雷达",
+                "source_label": "opportunity_radar",
+            }
+            cov_item.update(classify_data_truth(item))
+            cov_item["data_status"] = "real_snapshot"
+            items.append(cov_item)
 
     daily_report = _safe_get(state, "daily_report", default={}) or {}
     themes = daily_report.get("themes") or daily_report.get("highlight_themes") or []
@@ -182,6 +192,8 @@ def _extract_coverage_items(state: dict, now: datetime) -> list[dict]:
             "focus_points": [desc[:40]] if desc else ["日报关注主题"],
             "latest_signals": [],
             "missing_evidence": [],
+            "source_type": "日报主题",
+            "source_label": "daily_report",
             "data_status": "lightweight_mapping",
         })
 
@@ -195,7 +207,7 @@ def _extract_coverage_items(state: dict, now: datetime) -> list[dict]:
         reason = _strip_forbidden(item.get("reason") or "")
         evidence_pct = 40
         ts = now - timedelta(hours=idx + 72)
-        items.append({
+        cov_item = {
             "item_id": f"risk-{idx}",
             "name": name,
             "type": "公司",
@@ -208,8 +220,12 @@ def _extract_coverage_items(state: dict, now: datetime) -> list[dict]:
             "focus_points": [reason[:40]] if reason else ["风险复核对象"],
             "latest_signals": [],
             "missing_evidence": [],
-            "data_status": "lightweight_mapping",
-        })
+            "source_type": "风险监控",
+            "source_label": "risk_monitor",
+        }
+        cov_item.update(classify_data_truth(item))
+        cov_item["data_status"] = "real_snapshot"
+        items.append(cov_item)
 
     evidence_gaps = _safe_get(state, "current_state", "evidence_gaps", default=[]) or []
     for idx, gap in enumerate(evidence_gaps[:4]):
@@ -220,7 +236,7 @@ def _extract_coverage_items(state: dict, now: datetime) -> list[dict]:
         gap_type = gap.get("gap_type") or gap.get("type") or "证据缺口"
         desc = _strip_forbidden(gap.get("description") or "")
         ts = now - timedelta(hours=idx + 96)
-        items.append({
+        cov_item = {
             "item_id": f"gap-{idx}",
             "name": entity,
             "type": "公司",
@@ -233,39 +249,72 @@ def _extract_coverage_items(state: dict, now: datetime) -> list[dict]:
             "focus_points": [desc[:40]] if desc else [f"存在{gap_type}"],
             "latest_signals": [],
             "missing_evidence": [{"gap_title": f"{entity} {gap_type}", "importance": "重要", "target_source": "公司 IR"}],
-            "data_status": "lightweight_mapping",
-        })
+            "source_type": "证据缺口",
+            "source_label": "evidence_gap",
+        }
+        cov_item.update(classify_data_truth(gap))
+        cov_item["data_status"] = "real_snapshot"
+        items.append(cov_item)
 
-    if not items:
-        default_types = [
-            ("英伟达", "公司", "跟踪中", 85, "高"),
-            ("台积电", "公司", "跟踪中", 88, "高"),
-            ("光模块", "主题", "重点研究", 70, "高"),
-            ("算力基础设施", "主题", "重点研究", 60, "高"),
-            ("AI服务器", "主题", "跟踪中", 72, "中"),
-            ("博通", "公司", "需补证据", 68, "中"),
-            ("腾讯", "公司", "跟踪中", 75, "中"),
-            ("阿里巴巴", "公司", "需补证据", 65, "中"),
-            ("硅光", "主题", "需补证据", 55, "中"),
-            ("OCS", "主题", "需补证据", 50, "低"),
-        ]
-        for idx, (name, typ, status, ev_pct, priority) in enumerate(default_types):
-            ts = now - timedelta(days=idx)
-            items.append({
-                "item_id": f"default-{idx}",
-                "name": name,
-                "type": typ,
-                "status": status,
-                "evidence_completeness": ev_pct,
-                "priority": priority,
-                "updated_at": ts.strftime("%Y-%m-%d"),
-                "related_entities": [name] if typ == "公司" else [],
-                "related_topics": [name] if typ == "主题" else [],
-                "focus_points": ["策略关注对象"],
-                "latest_signals": [],
-                "missing_evidence": [],
-                "data_status": "lightweight_mapping",
-            })
+    events = _safe_get(state, "events", default={}) or {}
+    recent_events = events.get("recent_market_events") or []
+    for idx, event in enumerate(recent_events[:5]):
+        entity = event.get("entity_id") or event.get("entity") or event.get("name") or event.get("ts_code") or "未命名"
+        if entity in seen_names:
+            continue
+        seen_names.add(entity)
+        event_type = event.get("event_type") or "事件"
+        summary = _strip_forbidden(event.get("title") or event.get("summary") or event.get("description") or "")
+        ts = now - timedelta(hours=idx + 120)
+        item = {
+            "item_id": f"event-{idx}",
+            "name": entity,
+            "type": "公司",
+            "status": "重点研究",
+            "evidence_completeness": 75,
+            "priority": "高",
+            "updated_at": ts.strftime("%Y-%m-%d"),
+            "related_entities": [entity],
+            "related_topics": [event_type],
+            "focus_points": [summary[:40]] if summary else [f"{event_type}事件"],
+            "latest_signals": [],
+            "missing_evidence": [],
+            "source_type": "市场事件",
+            "source_label": "market_event",
+            "data_status": "real_snapshot",
+        }
+        item.update(classify_data_truth(event))
+        items.append(item)
+
+    operations = _safe_get(state, "operations", default={}) or {}
+    registry_timeline = operations.get("registry_timeline") or []
+    for idx, entry in enumerate(registry_timeline[:5]):
+        entity = entry.get("entity_id") or entry.get("entity") or entry.get("name") or "未命名"
+        if entity in seen_names:
+            continue
+        seen_names.add(entity)
+        action = entry.get("status") or entry.get("action") or entry.get("operation") or "操作"
+        summary = _strip_forbidden(entry.get("description") or "")
+        ts = now - timedelta(hours=idx + 144)
+        item = {
+            "item_id": f"registry-{idx}",
+            "name": entity,
+            "type": "公司",
+            "status": "跟踪中",
+            "evidence_completeness": 65,
+            "priority": "中",
+            "updated_at": ts.strftime("%Y-%m-%d"),
+            "related_entities": [entity],
+            "related_topics": [],
+            "focus_points": [summary[:40]] if summary else [f"{action}操作"],
+            "latest_signals": [],
+            "missing_evidence": [],
+            "source_type": "注册表操作",
+            "source_label": "registry_operation",
+            "data_status": "real_snapshot",
+        }
+        item.update(classify_data_truth(entry))
+        items.append(item)
 
     items.sort(key=lambda i: (
         0 if i["priority"] == "高" else 1 if i["priority"] == "中" else 2,
