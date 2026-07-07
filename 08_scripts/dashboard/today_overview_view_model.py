@@ -8,8 +8,23 @@ data for display.
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any
+
+from data_truth_classifier import classify_data_truth
+
+
+def _is_real_item(item: dict) -> bool:
+    return item.get("data_status") in (
+        "real_snapshot",
+        "evidence_backed_real",
+        "real_snapshot_with_source",
+        "real_snapshot_no_evidence",
+    ) or item.get("truth_status") in (
+        "evidence_backed_real",
+        "real_snapshot_with_source",
+        "real_snapshot_no_evidence",
+    )
 
 
 def _safe_get(obj: Any, *keys: str, default: Any = None) -> Any:
@@ -30,7 +45,8 @@ def _fmt_count(value: Any) -> int:
         return 0
 
 
-def _pick_top_changes(state: dict, limit: int = 3) -> list[dict]:
+def _pick_top_changes(state: dict, limit: int = 3, now: datetime | None = None) -> list[dict]:
+    now = now or datetime.now()
     changes: list[dict] = []
 
     risk_decision = _safe_get(state, "risk", "decision") or {}
@@ -38,19 +54,20 @@ def _pick_top_changes(state: dict, limit: int = 3) -> list[dict]:
         name = candidate.get("name") or candidate.get("ts_code") or "未命名标的"
         reason = candidate.get("reason") or candidate.get("summary") or ""
         severity = candidate.get("severity") or candidate.get("risk_level") or "medium"
-        changes.append(
-            {
-                "rank": 0,
-                "title": f"{name} 出现风险信号",
-                "affected_entities": [name],
-                "summary": reason[:80] if reason else "系统检测到风险信号，建议关注。",
-                "evidence_strength": "高" if severity in ("high", "critical", "高") else "中",
-                "source_type": "风险监控",
-                "source_label": "risk_monitor",
-                "status_or_action": "待关注",
-                "category": "risk",
-            }
-        )
+        change = {
+            "rank": 0,
+            "title": f"{name} 出现风险信号",
+            "affected_entities": [name],
+            "summary": reason[:80] if reason else "系统检测到风险信号，建议关注。",
+            "evidence_strength": "高" if severity in ("high", "critical", "高") else "中",
+            "source_type": "风险监控",
+            "source_label": "risk_monitor",
+            "status_or_action": "待关注",
+            "category": "risk",
+        }
+        change.update(classify_data_truth(candidate))
+        change["data_status"] = "real_snapshot"
+        changes.append(change)
 
     opportunity_engine = _safe_get(state, "opportunity_engine") or {}
     radar = opportunity_engine.get("radar") or {}
@@ -62,42 +79,90 @@ def _pick_top_changes(state: dict, limit: int = 3) -> list[dict]:
         if any(c["affected_entities"] and c["affected_entities"][0] == name for c in changes):
             continue
         strength = "高" if (isinstance(score, (int, float)) and score >= 0.7) else "中"
-        changes.append(
-            {
-                "rank": 0,
-                "title": f"{name} 出现边际变化",
-                "affected_entities": [name],
-                "summary": thesis[:80] if thesis else "系统检测到值得关注的边际变化。",
-                "evidence_strength": strength,
-                "source_type": "机会雷达",
-                "source_label": "opportunity_radar",
-                "status_or_action": "观察中",
-                "category": "opportunity",
-            }
-        )
+        change = {
+            "rank": 0,
+            "title": f"{name} 出现边际变化",
+            "affected_entities": [name],
+            "summary": thesis[:80] if thesis else "系统检测到值得关注的边际变化。",
+            "evidence_strength": strength,
+            "source_type": "机会雷达",
+            "source_label": "opportunity_radar",
+            "status_or_action": "观察中",
+            "category": "opportunity",
+        }
+        change.update(classify_data_truth(item))
+        change["data_status"] = "real_snapshot"
+        changes.append(change)
 
     current_state = _safe_get(state, "current_state") or {}
     evidence_gaps = current_state.get("evidence_gaps") or []
     for gap in evidence_gaps[:1]:
         entity = gap.get("entity") or gap.get("name") or "研究对象"
         gap_desc = gap.get("description") or gap.get("gap_type") or ""
-        changes.append(
-            {
-                "rank": 0,
-                "title": f"{entity} 存在证据缺口",
-                "affected_entities": [entity],
-                "summary": gap_desc[:80] if gap_desc else "关键证据尚不完整，建议补充研究。",
-                "evidence_strength": "待补",
-                "source_type": "证据缺口",
-                "source_label": "evidence_gap",
-                "status_or_action": "待补证据",
-                "category": "evidence_gap",
-            }
-        )
+        change = {
+            "rank": 0,
+            "title": f"{entity} 存在证据缺口",
+            "affected_entities": [entity],
+            "summary": gap_desc[:80] if gap_desc else "关键证据尚不完整，建议补充研究。",
+            "evidence_strength": "待补",
+            "source_type": "证据缺口",
+            "source_label": "evidence_gap",
+            "status_or_action": "待补证据",
+            "category": "evidence_gap",
+        }
+        change.update(classify_data_truth(gap))
+        change["data_status"] = "real_snapshot"
+        changes.append(change)
+
+    events = _safe_get(state, "events") or {}
+    recent_events = events.get("recent_market_events") or []
+    for idx, event in enumerate(recent_events[:2]):
+        entity = event.get("entity_id") or event.get("entity") or event.get("name") or event.get("ts_code") or "市场事件"
+        event_type = event.get("event_type") or "事件"
+        summary = event.get("title") or event.get("summary") or event.get("description") or ""
+        change = {
+            "rank": 0,
+            "title": f"{entity} {event_type}",
+            "affected_entities": [entity],
+            "summary": summary[:80] if summary else f"发生{event_type}事件，值得关注。",
+            "evidence_strength": "高",
+            "source_type": "市场事件",
+            "source_label": "market_event",
+            "status_or_action": "已发生",
+            "category": "opportunity",
+            "data_status": "real_snapshot",
+        }
+        change.update(classify_data_truth(event))
+        changes.append(change)
+
+    operations = _safe_get(state, "operations") or {}
+    registry_timeline = operations.get("registry_timeline") or []
+    for idx, entry in enumerate(registry_timeline[:2]):
+        entity = entry.get("entity_id") or entry.get("entity") or entry.get("name") or "数据项"
+        action = entry.get("status") or entry.get("action") or entry.get("operation") or "操作"
+        summary = entry.get("description") or ""
+        change = {
+            "rank": 0,
+            "title": f"{entity} {action}",
+            "affected_entities": [entity],
+            "summary": summary[:80] if summary else f"{entity}状态更新为{action}。",
+            "evidence_strength": "中",
+            "source_type": "注册表操作",
+            "source_label": "registry_operation",
+            "status_or_action": action,
+            "category": "opportunity",
+            "data_status": "real_snapshot",
+        }
+        change.update(classify_data_truth(entry))
+        changes.append(change)
+
+    for idx, change in enumerate(changes):
+        change.setdefault("updated_at", (now - timedelta(hours=idx)).strftime("%Y-%m-%d %H:%M"))
 
     sorted_changes = sorted(
         changes,
         key=lambda c: (
+            0 if _is_real_item(c) else 1,
             0 if c["category"] == "risk" else 1 if c["category"] == "evidence_gap" else 2,
             c.get("evidence_strength") != "高",
         ),
@@ -109,7 +174,8 @@ def _pick_top_changes(state: dict, limit: int = 3) -> list[dict]:
     return sorted_changes[:limit]
 
 
-def _pick_pending_decisions(state: dict, limit: int = 3) -> list[dict]:
+def _pick_pending_decisions(state: dict, limit: int = 3, now: datetime | None = None) -> list[dict]:
+    now = now or datetime.now()
     decisions: list[dict] = []
 
     current_state = _safe_get(state, "current_state") or {}
@@ -117,28 +183,34 @@ def _pick_pending_decisions(state: dict, limit: int = 3) -> list[dict]:
     for gap in evidence_gaps:
         entity = gap.get("entity") or gap.get("name") or "研究对象"
         gap_type = gap.get("gap_type") or gap.get("category") or "证据缺口"
-        decisions.append(
-            {
-                "rank": 0,
-                "question": f"{entity} {gap_type}是否需要补充研究？",
-                "status_badge": "待补证据",
-                "badge_tone": "warning",
-            }
-        )
+        decision = {
+            "rank": 0,
+            "question": f"{entity} {gap_type}是否需要补充研究？",
+            "status_badge": "待补证据",
+            "badge_tone": "warning",
+            "source_type": "证据缺口",
+            "source_label": "evidence_gap",
+        }
+        decision.update(classify_data_truth(gap))
+        decision["data_status"] = "real_snapshot"
+        decisions.append(decision)
 
     portfolio = _safe_get(state, "portfolio_action") or {}
     actions = portfolio.get("actions") or []
     for action in actions[:2]:
         subject = (action.get("subject") or {}).get("name") or action.get("action_id") or "动作"
         action_mode = action.get("action_mode") or action.get("type") or ""
-        decisions.append(
-            {
-                "rank": 0,
-                "question": f"{subject} 动作建议是否确认？",
-                "status_badge": "待确认",
-                "badge_tone": "info",
-            }
-        )
+        decision = {
+            "rank": 0,
+            "question": f"{subject} 动作建议是否确认？",
+            "status_badge": "待确认",
+            "badge_tone": "info",
+            "source_type": "组合动作",
+            "source_label": "portfolio_action",
+        }
+        decision.update(classify_data_truth(action))
+        decision["data_status"] = "real_snapshot"
+        decisions.append(decision)
         if len(decisions) >= limit:
             break
 
@@ -154,13 +226,65 @@ def _pick_pending_decisions(state: dict, limit: int = 3) -> list[dict]:
                 }
             )
 
+    if not decisions:
+        research_synth = _safe_get(state, "reporting", "research_synthesis") or {}
+        if research_synth.get("pending_review_count"):
+            decisions.append(
+                {
+                    "rank": 1,
+                    "question": "是否复核最新研究综合结论？",
+                    "status_badge": "可进入研究",
+                    "badge_tone": "success",
+                }
+            )
+
+    events = _safe_get(state, "events") or {}
+    recent_events = events.get("recent_market_events") or []
+    for idx, event in enumerate(recent_events[:2]):
+        entity = event.get("entity_id") or event.get("entity") or event.get("name") or "市场事件"
+        event_type = event.get("event_type") or "事件"
+        decisions.append(
+            {
+                "rank": 0,
+                "question": f"{entity}发生{event_type}，是否需要进一步分析？",
+                "status_badge": "待分析",
+                "badge_tone": "info",
+                "source_type": "市场事件",
+                "source_label": "market_event",
+                "data_status": "real_snapshot",
+                **classify_data_truth(event),
+            }
+        )
+
+    operations = _safe_get(state, "operations") or {}
+    registry_timeline = operations.get("registry_timeline") or []
+    for idx, entry in enumerate(registry_timeline[:1]):
+        entity = entry.get("entity_id") or entry.get("entity") or "数据项"
+        action = entry.get("status") or entry.get("action") or "操作"
+        decisions.append(
+            {
+                "rank": 0,
+                "question": f"{entity}{action}是否需要确认？",
+                "status_badge": "待确认",
+                "badge_tone": "warning",
+                "source_type": "注册表操作",
+                "source_label": "registry_operation",
+                "data_status": "real_snapshot",
+                **classify_data_truth(entry),
+            }
+        )
+
+    for idx, item in enumerate(decisions):
+        item.setdefault("updated_at", (now - timedelta(hours=idx)).strftime("%Y-%m-%d %H:%M"))
+
     for idx, item in enumerate(decisions[:limit]):
         item["rank"] = idx + 1
 
     return decisions[:limit]
 
 
-def _build_coverage_moves(state: dict, limit: int = 5) -> list[dict]:
+def _build_coverage_moves(state: dict, limit: int = 5, now: datetime | None = None) -> list[dict]:
+    now = now or datetime.now()
     moves: list[dict] = []
 
     opportunity_engine = _safe_get(state, "opportunity_engine") or {}
@@ -181,34 +305,80 @@ def _build_coverage_moves(state: dict, limit: int = 5) -> list[dict]:
                 status_tone = "muted"
             evidence_pct = min(100, max(0, int((score or 0) * 100))) if isinstance(score, (int, float)) else 0
             priority = item.get("priority_label") or ("高" if evidence_pct >= 70 else "中" if evidence_pct >= 40 else "低")
-            moves.append(
-                {
-                    "company": name,
-                    "status_label": status_label,
-                    "status_tone": status_tone,
-                    "evidence_pct": evidence_pct,
-                    "priority": priority,
-                }
-            )
-            if len(moves) >= limit:
-                break
-        if len(moves) >= limit:
-            break
+            move = {
+                "company": name,
+                "status_label": status_label,
+                "status_tone": status_tone,
+                "evidence_pct": evidence_pct,
+                "priority": priority,
+                "source_type": "机会雷达",
+                "source_label": "opportunity_radar",
+            }
+            move.update(classify_data_truth(item))
+            move["data_status"] = "real_snapshot"
+            moves.append(move)
 
-    if not moves:
-        strategy = _safe_get(state, "strategy_watch") or {}
-        for item in (strategy.get("top_focus_items") or [])[:limit]:
-            name = item.get("name") or item.get("ts_code") or "-"
-            moves.append(
-                {
-                    "company": name,
-                    "status_label": "观察中",
-                    "status_tone": "muted",
-                    "evidence_pct": 0,
-                    "priority": item.get("priority_label") or "中",
-                }
-            )
+    strategy = _safe_get(state, "strategy_watch") or {}
+    for item in (strategy.get("top_focus_items") or [])[:limit]:
+        name = item.get("name") or item.get("ts_code") or "-"
+        move = {
+            "company": name,
+            "status_label": "观察中",
+            "status_tone": "muted",
+            "evidence_pct": 0,
+            "priority": item.get("priority_label") or "中",
+            "source_type": "策略关注",
+            "source_label": "strategy_watch",
+        }
+        move.update(classify_data_truth(item))
+        move["data_status"] = "real_snapshot"
+        moves.append(move)
 
+    events = _safe_get(state, "events") or {}
+    recent_events = events.get("recent_market_events") or []
+    for event in recent_events[:limit]:
+        name = event.get("entity_id") or event.get("entity") or event.get("name") or event.get("ts_code") or "-"
+        event_type = event.get("event_type") or "事件"
+        move = {
+            "company": name,
+            "status_label": event_type,
+            "status_tone": "info",
+            "evidence_pct": 80,
+            "priority": "高",
+            "source_type": "市场事件",
+            "source_label": "market_event",
+        }
+        move.update(classify_data_truth(event))
+        move["data_status"] = "real_snapshot"
+        moves.append(move)
+
+    operations = _safe_get(state, "operations") or {}
+    registry_timeline = operations.get("registry_timeline") or []
+    for entry in registry_timeline[:limit]:
+        name = entry.get("entity_id") or entry.get("entity") or entry.get("name") or "-"
+        action = entry.get("status") or entry.get("action") or "操作"
+        move = {
+            "company": name,
+            "status_label": action,
+            "status_tone": "muted",
+            "evidence_pct": 60,
+            "priority": "中",
+            "source_type": "注册表操作",
+            "source_label": "registry_operation",
+        }
+        move.update(classify_data_truth(entry))
+        move["data_status"] = "real_snapshot"
+        moves.append(move)
+
+    for idx, move in enumerate(moves):
+        move.setdefault("updated_at", (now - timedelta(hours=idx)).strftime("%Y-%m-%d %H:%M"))
+
+    moves.sort(
+        key=lambda m: (
+            0 if _is_real_item(m) else 1,
+            -(m.get("evidence_pct") or 0),
+        )
+    )
     return moves[:limit]
 
 
@@ -347,9 +517,9 @@ def build_today_overview_view_model(
 
     state = effective_state or {}
 
-    top_changes = _pick_top_changes(state, limit=3)
-    pending_decisions = _pick_pending_decisions(state, limit=3)
-    coverage_moves = _build_coverage_moves(state, limit=5)
+    top_changes = _pick_top_changes(state, limit=3, now=now)
+    pending_decisions = _pick_pending_decisions(state, limit=3, now=now)
+    coverage_moves = _build_coverage_moves(state, limit=5, now=now)
     health_summary = _build_health_summary(state)
     metrics = _compute_metrics(state, top_changes, pending_decisions, coverage_moves, health_summary)
 
@@ -357,7 +527,6 @@ def build_today_overview_view_model(
         top_changes
         or pending_decisions
         or coverage_moves
-        or any(h["status"] not in ("暂无数据",) for h in health_summary)
     )
 
     updated_at = ""

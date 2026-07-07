@@ -12,6 +12,8 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 
+from data_truth_classifier import classify_data_truth
+
 FORBIDDEN_WORDS = [
     "target price",
     "目标价",
@@ -185,6 +187,58 @@ def _extract_queue_items(state: dict, now: datetime) -> list[dict]:
             "short_reason": desc[:60] if desc else "日报新增研究项",
             "data_status": "lightweight_mapping",
         })
+
+    events = _safe_get(state, "events", default={}) or {}
+    recent_events = events.get("recent_market_events") or []
+    for idx, event in enumerate(recent_events[:5]):
+        entity = event.get("entity_id") or event.get("entity") or event.get("name") or event.get("ts_code") or "市场事件"
+        event_type = event.get("event_type") or "事件"
+        summary = _strip_forbidden(event.get("title") or event.get("summary") or event.get("description") or "")
+        ts = now - timedelta(hours=idx + 120)
+        item = {
+            "item_id": f"event-{idx}",
+            "rank": idx + 1,
+            "title": f"{entity} {event_type}研究",
+            "related_entities": [entity],
+            "related_topics": [],
+            "priority": "高",
+            "status": "初步研究",
+            "evidence_count": 1 + idx,
+            "gap_count": 2 + idx,
+            "updated_at": ts.strftime("%Y-%m-%d %H:%M"),
+            "short_reason": summary[:60] if summary else f"{entity}发生{event_type}，需深入研究",
+            "source_type": "市场事件",
+            "source_label": "market_event",
+            "data_status": "real_snapshot",
+        }
+        item.update(classify_data_truth(event))
+        items.append(item)
+
+    operations = _safe_get(state, "operations", default={}) or {}
+    registry_timeline = operations.get("registry_timeline") or []
+    for idx, entry in enumerate(registry_timeline[:5]):
+        entity = entry.get("entity_id") or entry.get("entity") or entry.get("name") or "数据项"
+        action = entry.get("status") or entry.get("action") or entry.get("operation") or "操作"
+        summary = _strip_forbidden(entry.get("description") or "")
+        ts = now - timedelta(hours=idx + 144)
+        item = {
+            "item_id": f"registry-{idx}",
+            "rank": idx + 1,
+            "title": f"{entity} {action}复核",
+            "related_entities": [entity],
+            "related_topics": [],
+            "priority": "中",
+            "status": "待验证",
+            "evidence_count": 3 + idx,
+            "gap_count": 1 + idx,
+            "updated_at": ts.strftime("%Y-%m-%d %H:%M"),
+            "short_reason": summary[:60] if summary else f"{entity}{action}，需验证影响",
+            "source_type": "注册表操作",
+            "source_label": "registry_operation",
+            "data_status": "real_snapshot",
+        }
+        item.update(classify_data_truth(entry))
+        items.append(item)
 
     items.sort(key=lambda i: i["updated_at"], reverse=True)
     return items

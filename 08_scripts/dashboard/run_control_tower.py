@@ -7659,7 +7659,11 @@ def _render_health_metrics(metrics: dict) -> str:
     m4 = metrics.get("evidence_pipeline") or {}
 
     s1 = m1.get("status", "暂无数据")
-    v2 = f'{m2.get("value", 0)}%'
+    v2_raw = m2.get("value")
+    if v2_raw is None:
+        v2 = "待接入"
+    else:
+        v2 = f'{v2_raw}%'
     v3 = f'{m3.get("count", 0)} 项'
     s4 = m4.get("status", "暂无数据")
 

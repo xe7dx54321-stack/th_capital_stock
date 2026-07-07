@@ -23,6 +23,9 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from real_data_registry import summarize_real_data_coverage
+from evidence_provenance_resolver import summarize_provenance
+
 LIB_DIR = Path(__file__).resolve().parents[1] / "lib"
 if str(LIB_DIR) not in sys.path:
     sys.path.insert(0, str(LIB_DIR))
@@ -209,6 +212,42 @@ def load_dashboard_backend_state(
     used_lightweight_sources: list[str] = []
     pending_integrations: list[str] = ["foundation_input_stream"]
 
+    real_data_coverage = summarize_real_data_coverage()
+
+    all_signal_items: list[dict[str, Any]] = []
+    if raw_state:
+        if isinstance(raw_state.get("daily_report"), dict):
+            highlights = raw_state["daily_report"].get("highlights", [])
+            if isinstance(highlights, list):
+                all_signal_items.extend(highlights)
+        if isinstance(raw_state.get("evidence_gaps"), dict):
+            gaps = raw_state["evidence_gaps"].get("gaps", [])
+            if isinstance(gaps, list):
+                all_signal_items.extend(gaps)
+        if isinstance(raw_state.get("source_registry"), dict):
+            sources = raw_state["source_registry"].get("sources", [])
+            if isinstance(sources, list):
+                all_signal_items.extend(sources)
+        if isinstance(raw_state.get("market_events"), dict):
+            events = raw_state["market_events"].get("events", [])
+            if isinstance(events, list):
+                all_signal_items.extend(events)
+
+    provenance_summary = summarize_provenance(all_signal_items) if all_signal_items else {
+        "total_count": 0,
+        "high_confidence_count": 0,
+        "medium_confidence_count": 0,
+        "low_confidence_count": 0,
+        "none_confidence_count": 0,
+        "evidence_backed_count": 0,
+        "source_backed_count": 0,
+        "generated_summary_count": 0,
+        "default_fallback_count": 0,
+        "placeholder_count": 0,
+        "main_flow_eligible_count": 0,
+        "filtered_out_count": 0,
+    }
+
     if overview_status in ("real_snapshot", "partial_snapshot"):
         used_real_sources.append("overview/daily/risk/strategy")
     else:
@@ -266,6 +305,8 @@ def load_dashboard_backend_state(
             "missing_sources": missing_sources,
             "pending_integrations": pending_integrations,
         },
+        "real_data_inventory": real_data_coverage,
+        "evidence_provenance_summary": provenance_summary,
         "missing_sources": missing_sources,
         "warnings": warnings,
     }

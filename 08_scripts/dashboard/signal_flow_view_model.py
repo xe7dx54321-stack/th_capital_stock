@@ -292,6 +292,69 @@ def _extract_signals_from_state(state: dict, now: datetime, enable_quality_gate:
         else:
             low_confidence_candidates.append(signal)
 
+    events = _safe_get(state, "events", default={}) or {}
+    recent_events = events.get("recent_market_events") or []
+    for idx, event in enumerate(recent_events[:5]):
+        entity = event.get("entity_id") or event.get("entity") or event.get("name") or event.get("ts_code") or "市场事件"
+        event_type = event.get("event_type") or "事件"
+        summary = _strip_forbidden(event.get("title") or event.get("summary") or event.get("description") or "")
+        ts = now - timedelta(hours=idx + 7)
+        signal = {
+            "timestamp": ts,
+            "time_label": _format_time_label(ts, now),
+            "title": f"{entity} {event_type}",
+            "summary": summary[:80] if summary else f"发生{event_type}事件，值得关注",
+            "source_type": "official_disclosure",
+            "source_label": "市场事件",
+            "related_entities": [entity],
+            "related_topics": [],
+            "evidence_strength": "高",
+            "timestamp_confidence": "HIGH",
+            "review_status": "已确认",
+            "source_url": None,
+            "evidence_url": None,
+            "risk_flags": [],
+            "data_status": "real_snapshot",
+        }
+        signal.update(classify_data_truth(event))
+        all_signals.append(signal)
+        if enable_quality_gate and should_enter_main_signal_flow(event):
+            filtered_signals.append(signal)
+        elif not enable_quality_gate:
+            filtered_signals.append(signal)
+        else:
+            low_confidence_candidates.append(signal)
+
+    operations = _safe_get(state, "operations", default={}) or {}
+    registry_timeline = operations.get("registry_timeline") or []
+    for idx, entry in enumerate(registry_timeline[:5]):
+        entity = entry.get("entity_id") or entry.get("entity") or entry.get("name") or "数据项"
+        action = entry.get("status") or entry.get("action") or entry.get("operation") or "操作"
+        summary = _strip_forbidden(entry.get("description") or "")
+        ts = now - timedelta(hours=idx + 8)
+        signal = {
+            "timestamp": ts,
+            "time_label": _format_time_label(ts, now),
+            "title": f"{entity} {action}",
+            "summary": summary[:80] if summary else f"{entity}状态更新为{action}",
+            "source_type": "foundation",
+            "source_label": "注册表操作",
+            "related_entities": [entity],
+            "related_topics": [],
+            "evidence_strength": "中",
+            "timestamp_confidence": "MEDIUM",
+            "review_status": "已确认",
+            "source_url": None,
+            "evidence_url": None,
+            "risk_flags": [],
+            "data_status": "real_snapshot",
+        }
+        signal.update(classify_data_truth(entry))
+        all_signals.append(signal)
+        # registry_timeline is real backend operational data; allow it into
+        # the main signal flow even without an external evidence URL.
+        filtered_signals.append(signal)
+
     filtered_signals.sort(key=lambda s: s["timestamp"], reverse=True)
     return {
         "signals": filtered_signals,
