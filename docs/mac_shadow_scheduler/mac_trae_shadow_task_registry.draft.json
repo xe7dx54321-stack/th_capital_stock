@@ -1,0 +1,406 @@
+{
+  "_meta": {
+    "purpose": "Mac TRAE shadow-run task registry draft - FOR REVIEW ONLY",
+    "status": "draft",
+    "enabled_overall": false,
+    "creation_date": "2026-07-07",
+    "source": "SMR-MAC-2 shadow scheduler preparation",
+    "warning": "This is a draft registry. Do NOT load or enable any task without explicit user approval."
+  },
+  "shadow_run_tasks": [
+    {
+      "task_id": "deep_market_scan_morning",
+      "label": "深度市场扫描早",
+      "enabled": false,
+      "mode": "shadow_run",
+      "observation_only": true,
+      "dry_run": true,
+      "review_only": true,
+      "backend_write_allowed": false,
+      "commit_allowed": false,
+      "push_allowed": false,
+      "production_enabled": false,
+      "launchd_load_allowed": false,
+      "windows_parallel_write_risk": "must_verify_before_enable",
+      "mac_project_path": "/Users/apple/Documents/同行资本二级市场",
+      "schedule": {
+        "weekdays": ["MO", "TU", "WE", "TH", "FR"],
+        "hour": 5,
+        "minute": 0
+      },
+      "lead_profile_id": "hermes_research_curator",
+      "operator_profile_ids": ["openclaw_report_exec", "hermes_research_curator"],
+      "timeout_seconds": 1800,
+      "continue_on_error": true,
+      "job_id": "deep_market_scan",
+      "expected_outputs": "review/shadow only",
+      "log_policy": "write to local ignored logs only",
+      "risk_level": "low",
+      "classification": "first_batch_shadow_run",
+      "preconditions": [
+        "Windows side scheduler confirmed disabled or paused",
+        "Database write conflict verified not applicable",
+        "3-5 day observation period passed",
+        "User explicit approval required"
+      ]
+    },
+    {
+      "task_id": "morning_us",
+      "label": "晨间美股链",
+      "enabled": false,
+      "mode": "shadow_run",
+      "observation_only": true,
+      "dry_run": true,
+      "review_only": true,
+      "backend_write_allowed": false,
+      "commit_allowed": false,
+      "push_allowed": false,
+      "production_enabled": false,
+      "launchd_load_allowed": false,
+      "windows_parallel_write_risk": "must_verify_before_enable",
+      "mac_project_path": "/Users/apple/Documents/同行资本二级市场",
+      "schedule": {
+        "weekdays": ["MO", "TU", "WE", "TH", "FR"],
+        "hour": 6,
+        "minute": 0
+      },
+      "lead_profile_id": "openclaw_data_exec",
+      "operator_profile_ids": ["openclaw_data_exec", "openclaw_factor_exec", "openclaw_pool_exec", "hermes_research_curator", "hermes_reporting_editor"],
+      "timeout_seconds": 1800,
+      "continue_on_error": true,
+      "job_id": "morning_us",
+      "expected_outputs": "review/shadow only",
+      "log_policy": "write to local ignored logs only",
+      "risk_level": "low",
+      "classification": "first_batch_shadow_run",
+      "preconditions": [
+        "deep_market_scan_morning shadow-run verified stable",
+        "Windows side scheduler confirmed disabled or paused",
+        "3-5 day observation period passed",
+        "User explicit approval required"
+      ]
+    },
+    {
+      "task_id": "preopen_report",
+      "label": "盘前简报链",
+      "enabled": false,
+      "mode": "shadow_run",
+      "observation_only": true,
+      "dry_run": true,
+      "review_only": true,
+      "backend_write_allowed": false,
+      "commit_allowed": false,
+      "push_allowed": false,
+      "production_enabled": false,
+      "launchd_load_allowed": false,
+      "windows_parallel_write_risk": "must_verify_before_enable",
+      "mac_project_path": "/Users/apple/Documents/同行资本二级市场",
+      "schedule": {
+        "weekdays": ["MO", "TU", "WE", "TH", "FR"],
+        "hour": 9,
+        "minute": 0
+      },
+      "lead_profile_id": "hermes_reporting_editor",
+      "operator_profile_ids": ["openclaw_report_exec", "hermes_reporting_editor"],
+      "timeout_seconds": 1800,
+      "continue_on_error": true,
+      "job_id": "preopen_report",
+      "expected_outputs": "review/shadow only",
+      "log_policy": "write to local ignored logs only",
+      "risk_level": "low",
+      "classification": "first_batch_shadow_run",
+      "preconditions": [
+        "morning_us shadow-run verified stable",
+        "Windows side scheduler confirmed disabled or paused",
+        "3-5 day observation period passed",
+        "User explicit approval required"
+      ]
+    },
+    {
+      "task_id": "afternoon_close",
+      "label": "午后收盘链",
+      "enabled": false,
+      "mode": "shadow_run",
+      "observation_only": true,
+      "dry_run": true,
+      "review_only": true,
+      "backend_write_allowed": false,
+      "commit_allowed": false,
+      "push_allowed": false,
+      "production_enabled": false,
+      "launchd_load_allowed": false,
+      "windows_parallel_write_risk": "must_verify_before_enable",
+      "mac_project_path": "/Users/apple/Documents/同行资本二级市场",
+      "schedule": {
+        "weekdays": ["MO", "TU", "WE", "TH", "FR"],
+        "hour": 15,
+        "minute": 30
+      },
+      "lead_profile_id": "openclaw_data_exec",
+      "operator_profile_ids": ["openclaw_data_exec", "openclaw_factor_exec", "openclaw_pool_exec", "hermes_research_curator", "hermes_reporting_editor"],
+      "timeout_seconds": 1800,
+      "continue_on_error": true,
+      "job_id": "afternoon_close",
+      "expected_outputs": "review/shadow only",
+      "log_policy": "write to local ignored logs only",
+      "risk_level": "low",
+      "classification": "first_batch_shadow_run",
+      "preconditions": [
+        "preopen_report shadow-run verified stable",
+        "Windows side scheduler confirmed disabled or paused",
+        "3-5 day observation period passed",
+        "User explicit approval required"
+      ]
+    },
+    {
+      "task_id": "afternoon_refresh",
+      "label": "午后二次刷新",
+      "enabled": false,
+      "mode": "shadow_run",
+      "observation_only": true,
+      "dry_run": true,
+      "review_only": true,
+      "backend_write_allowed": false,
+      "commit_allowed": false,
+      "push_allowed": false,
+      "production_enabled": false,
+      "launchd_load_allowed": false,
+      "windows_parallel_write_risk": "must_verify_before_enable",
+      "mac_project_path": "/Users/apple/Documents/同行资本二级市场",
+      "schedule": {
+        "weekdays": ["MO", "TU", "WE", "TH", "FR"],
+        "hour": 16,
+        "minute": 30
+      },
+      "lead_profile_id": "openclaw_factor_exec",
+      "operator_profile_ids": ["openclaw_factor_exec", "openclaw_pool_exec", "hermes_research_curator", "hermes_reporting_editor"],
+      "timeout_seconds": 1800,
+      "continue_on_error": true,
+      "job_id": "afternoon_refresh",
+      "expected_outputs": "review/shadow only",
+      "log_policy": "write to local ignored logs only",
+      "risk_level": "low",
+      "classification": "first_batch_shadow_run",
+      "preconditions": [
+        "afternoon_close shadow-run verified stable",
+        "Windows side scheduler confirmed disabled or paused",
+        "3-5 day observation period passed",
+        "User explicit approval required"
+      ]
+    },
+    {
+      "task_id": "deep_market_scan_afternoon",
+      "label": "深度市场扫描午后",
+      "enabled": false,
+      "mode": "shadow_run",
+      "observation_only": true,
+      "dry_run": true,
+      "review_only": true,
+      "backend_write_allowed": false,
+      "commit_allowed": false,
+      "push_allowed": false,
+      "production_enabled": false,
+      "launchd_load_allowed": false,
+      "windows_parallel_write_risk": "must_verify_before_enable",
+      "mac_project_path": "/Users/apple/Documents/同行资本二级市场",
+      "schedule": {
+        "weekdays": ["MO", "TU", "WE", "TH", "FR"],
+        "hour": 16,
+        "minute": 55
+      },
+      "lead_profile_id": "hermes_research_curator",
+      "operator_profile_ids": ["openclaw_report_exec", "hermes_research_curator"],
+      "timeout_seconds": 1800,
+      "continue_on_error": true,
+      "job_id": "deep_market_scan",
+      "expected_outputs": "review/shadow only",
+      "log_policy": "write to local ignored logs only",
+      "risk_level": "low",
+      "classification": "first_batch_shadow_run",
+      "preconditions": [
+        "afternoon_close shadow-run verified stable",
+        "Windows side scheduler confirmed disabled or paused",
+        "3-5 day observation period passed",
+        "User explicit approval required"
+      ]
+    },
+    {
+      "task_id": "daily_report",
+      "label": "晚间日报链",
+      "enabled": false,
+      "mode": "shadow_run",
+      "observation_only": true,
+      "dry_run": true,
+      "review_only": true,
+      "backend_write_allowed": false,
+      "commit_allowed": false,
+      "push_allowed": false,
+      "production_enabled": false,
+      "launchd_load_allowed": false,
+      "windows_parallel_write_risk": "must_verify_before_enable",
+      "mac_project_path": "/Users/apple/Documents/同行资本二级市场",
+      "schedule": {
+        "weekdays": ["MO", "TU", "WE", "TH", "FR"],
+        "hour": 20,
+        "minute": 30
+      },
+      "lead_profile_id": "hermes_reporting_editor",
+      "operator_profile_ids": ["openclaw_report_exec", "hermes_reporting_editor"],
+      "timeout_seconds": 1800,
+      "continue_on_error": true,
+      "job_id": "daily_report",
+      "expected_outputs": "review/shadow only",
+      "log_policy": "write to local ignored logs only",
+      "risk_level": "low",
+      "classification": "first_batch_shadow_run",
+      "preconditions": [
+        "afternoon_refresh shadow-run verified stable",
+        "Windows side scheduler confirmed disabled or paused",
+        "3-5 day observation period passed",
+        "User explicit approval required"
+      ]
+    },
+    {
+      "task_id": "next_day_plan",
+      "label": "次日计划链",
+      "enabled": false,
+      "mode": "shadow_run",
+      "observation_only": true,
+      "dry_run": true,
+      "review_only": true,
+      "backend_write_allowed": false,
+      "commit_allowed": false,
+      "push_allowed": false,
+      "production_enabled": false,
+      "launchd_load_allowed": false,
+      "windows_parallel_write_risk": "must_verify_before_enable",
+      "mac_project_path": "/Users/apple/Documents/同行资本二级市场",
+      "schedule": {
+        "weekdays": ["MO", "TU", "WE", "TH", "FR"],
+        "hour": 22,
+        "minute": 0
+      },
+      "lead_profile_id": "hermes_reporting_editor",
+      "operator_profile_ids": ["openclaw_report_exec", "hermes_reporting_editor"],
+      "timeout_seconds": 1800,
+      "continue_on_error": true,
+      "job_id": "next_day_plan",
+      "expected_outputs": "review/shadow only",
+      "log_policy": "write to local ignored logs only",
+      "risk_level": "low",
+      "classification": "first_batch_shadow_run",
+      "preconditions": [
+        "daily_report shadow-run verified stable",
+        "Windows side scheduler confirmed disabled or paused",
+        "3-5 day observation period passed",
+        "User explicit approval required"
+      ]
+    },
+    {
+      "task_id": "system_maintenance",
+      "label": "系统维护链",
+      "enabled": false,
+      "mode": "shadow_run",
+      "observation_only": true,
+      "dry_run": true,
+      "review_only": true,
+      "backend_write_allowed": false,
+      "commit_allowed": false,
+      "push_allowed": false,
+      "production_enabled": false,
+      "launchd_load_allowed": false,
+      "windows_parallel_write_risk": "must_verify_before_enable",
+      "mac_project_path": "/Users/apple/Documents/同行资本二级市场",
+      "schedule": {
+        "weekdays": ["SU"],
+        "hour": 3,
+        "minute": 0
+      },
+      "lead_profile_id": "openclaw_system_exec",
+      "operator_profile_ids": ["openclaw_system_exec"],
+      "timeout_seconds": 3600,
+      "continue_on_error": true,
+      "job_id": "system_maintenance",
+      "expected_outputs": "review/shadow only",
+      "log_policy": "write to local ignored logs only",
+      "risk_level": "low",
+      "classification": "first_batch_shadow_run",
+      "special_restrictions": [
+        "git status only - no commits",
+        "disk usage check only",
+        "db file size check only - no VACUUM",
+        "quarantine size check only - no deletion",
+        "recent log presence check only",
+        "scheduler config validation only",
+        "NO file deletion of any kind",
+        "NO database modification",
+        "NO .git directory modification",
+        "NO quarantine deletion",
+        "NO auto-fix actions"
+      ],
+      "preconditions": [
+        "All other first batch tasks verified stable",
+        "Windows side scheduler confirmed disabled or paused",
+        "User explicit approval required",
+        "Special restrictions acknowledged"
+      ]
+    }
+  ],
+  "manual_review_tasks": [
+    {
+      "task_id": "opportunity_radar_close",
+      "label": "主动机会雷达收盘",
+      "enabled": false,
+      "mode": "manual_review_only",
+      "risk_level": "medium",
+      "classification": "manual_review_only",
+      "reason": "Contains attack-defense推演 and paper trading replay, output may approach investment advice",
+      "review_required": true,
+      "review_status": "pending"
+    }
+  ],
+  "deferred_tasks": [
+    {
+      "task_id": "portfolio_review",
+      "label": "持仓复盘",
+      "classification": "defer_until_d7",
+      "risk_level": "medium_high",
+      "reason": "Contains P&L calculation + thesis status judgment + position adjustment suggestions"
+    },
+    {
+      "task_id": "risk_review",
+      "label": "晚间风控链",
+      "classification": "defer_until_d7",
+      "risk_level": "medium_high",
+      "reason": "Contains risk checks + risk warnings + handling suggestions"
+    },
+    {
+      "task_id": "investment_analysis",
+      "label": "深度投研分析链",
+      "classification": "defer_until_d7",
+      "risk_level": "high",
+      "reason": "Contains investment research synthesis report"
+    },
+    {
+      "task_id": "report_writing",
+      "label": "投资报告撰写链",
+      "classification": "defer_until_d7",
+      "risk_level": "high",
+      "reason": "Weekly report includes portfolio performance analysis + thesis review"
+    },
+    {
+      "task_id": "risk_governance",
+      "label": "风险治理链",
+      "classification": "defer_until_d7",
+      "risk_level": "medium",
+      "reason": "Risk case library + playbook updates"
+    },
+    {
+      "task_id": "report_exec",
+      "label": "报告执行链",
+      "classification": "defer_until_d7",
+      "risk_level": "medium",
+      "reason": "Report distribution - need to verify recipients"
+    }
+  ]
+}
