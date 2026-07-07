@@ -219,6 +219,14 @@ JOB_SPECS: dict[str, JobSpec] = {
             py("08_scripts/agents/build_dispatch_board_patch_candidate.py"),
         ),
     ),
+    "system_maintenance": JobSpec(
+        job_id="system_maintenance",
+        label="系统维护链",
+        description="执行系统健康检查（只读模式），包括 git status、磁盘使用、数据库大小、quarantine 大小、日志存在性和调度配置验证。",
+        commands=(
+            py("08_scripts/scheduler/check_system_health.py"),
+        ),
+    ),
 }
 
 

@@ -201,6 +201,46 @@
       "continue_on_error": true,
       "timeout_seconds": 1800,
       "purpose": "由日报与调度知识岗牵头，抽取未来催化日历并生成次日 dispatch 候选。"
+    },
+    {
+      "schedule_id": "system_maintenance",
+      "label": "系统维护链",
+      "job_id": "system_maintenance",
+      "lead_profile_id": "openclaw_system_exec",
+      "operator_profile_ids": [
+        "openclaw_system_exec"
+      ],
+      "weekdays": ["MO", "TU", "WE", "TH", "FR", "SA", "SU"],
+      "hour": 2,
+      "minute": 30,
+      "continue_on_error": true,
+      "timeout_seconds": 3600,
+      "purpose": "由系统执行岗牵头，执行系统状态检查和维护（只读模式）。",
+      "enabled": true,
+      "mode": "scheduled",
+      "category": "maintenance",
+      "backend_write_allowed": false,
+      "production_enabled": true,
+      "commit_allowed": false,
+      "push_allowed": false,
+      "publication_allowed": false,
+      "trading_or_position_write_allowed": false,
+      "allowed_actions": [
+        "git_status",
+        "disk_usage_check",
+        "db_size_check",
+        "quarantine_size_check",
+        "log_presence_check",
+        "scheduler_config_validation"
+      ],
+      "forbidden_actions": [
+        "delete_files",
+        "vacuum_database",
+        "cleanup_main_database",
+        "cleanup_git",
+        "permanently_delete_quarantine",
+        "auto_fix"
+      ]
     }
   ]
 }
