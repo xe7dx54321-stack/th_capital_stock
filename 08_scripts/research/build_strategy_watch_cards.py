@@ -67,8 +67,8 @@ DISPLAY_LABELS = {
     "rich_valuation": "高估值压力",
     "short_term_hot": "短线过热",
     "research_stale": "研究偏旧",
-    "target_gap_positive": "目标空间尚可",
-    "target_gap_thin": "目标空间偏薄",
+    "external_view_positive": "外部观点积极",
+    "external_view_muted": "外部预期有限",
     "research_structured": "结构化研报",
     "research_table_structured": "结构化研报表",
     "research_pdf_text": "研报PDF文本",
@@ -289,7 +289,7 @@ def build_next_check_items(
         results.append("翻一遍最近电话会原话，确认管理层对订单、指引和节奏的表述是否继续强化。")
     analyst_label = (public_analyst_signal or {}).get("stance_label")
     if analyst_label in {"stretched", "cautious"}:
-        results.append("把公开卖方目标价空间一起对照，确认是不是市场已经先把预期打满。")
+        results.append("结合外部卖方观点和估值水平，确认市场预期是否已充分反映。")
     elif analyst_label == "missing" and public_signal_supported:
         results.append("补一份公开卖方一致预期口径，至少知道市场大致怎么定价。")
     if "earnings_pressure" in tags:

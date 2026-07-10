@@ -316,11 +316,11 @@ def objective_view_and_watchpoints(daily, factors, research):
     if target_price is not None and close not in (None, 0):
         target_gap_pct = (target_price - close) / close * 100
         if target_gap_pct >= 15:
-            tags.append("target_gap_positive")
-            watchpoints.append("公开研报目标价相对现价仍有空间，但要先确认研报是否过期。")
+            tags.append("external_view_positive")
+            watchpoints.append("外部卖方观点偏积极，需结合研报时效和基本面变化综合判断。")
         elif target_gap_pct <= 5:
-            tags.append("target_gap_thin")
-            watchpoints.append("公开研报目标价与现价空间已经不大，注意预期兑现后的波动。")
+            tags.append("external_view_muted")
+            watchpoints.append("外部预期方向偏正面但空间有限，注意预期兑现后的波动。")
 
     published_dt = parse_date_prefix((research or {}).get("published_at"))
     if published_dt is not None:

@@ -23,12 +23,19 @@
         "openclaw_report_exec",
         "hermes_research_curator"
       ],
-      "weekdays": ["MO", "TU", "WE", "TH", "FR"],
+      "weekdays": [
+        "MO",
+        "TU",
+        "WE",
+        "TH",
+        "FR"
+      ],
       "hour": 5,
       "minute": 0,
       "continue_on_error": true,
       "timeout_seconds": 1800,
-      "purpose": "由研究知识治理岗牵头，早间刷新全网公开信息与深度市场机会扫描。"
+      "purpose": "由研究知识治理岗牵头，早间刷新全网公开信息与深度市场机会扫描。",
+      "enabled": true
     },
     {
       "schedule_id": "morning_us",
@@ -42,12 +49,19 @@
         "hermes_research_curator",
         "hermes_reporting_editor"
       ],
-      "weekdays": ["MO", "TU", "WE", "TH", "FR"],
+      "weekdays": [
+        "MO",
+        "TU",
+        "WE",
+        "TH",
+        "FR"
+      ],
       "hour": 6,
       "minute": 0,
       "continue_on_error": true,
       "timeout_seconds": 1800,
-      "purpose": "由数据执行岗牵头，完成美股行情、联动因子、动态池和解释候选刷新。"
+      "purpose": "由数据执行岗牵头，完成美股行情、联动因子、动态池和解释候选刷新。",
+      "enabled": true
     },
     {
       "schedule_id": "preopen_report",
@@ -58,12 +72,19 @@
         "openclaw_report_exec",
         "hermes_reporting_editor"
       ],
-      "weekdays": ["MO", "TU", "WE", "TH", "FR"],
+      "weekdays": [
+        "MO",
+        "TU",
+        "WE",
+        "TH",
+        "FR"
+      ],
       "hour": 9,
       "minute": 0,
       "continue_on_error": true,
       "timeout_seconds": 1800,
-      "purpose": "由日报与调度知识岗牵头，刷新盘前日报面和 dispatch 候选。"
+      "purpose": "由日报与调度知识岗牵头，刷新盘前日报面和 dispatch 候选。",
+      "enabled": true
     },
     {
       "schedule_id": "afternoon_close",
@@ -77,12 +98,19 @@
         "hermes_research_curator",
         "hermes_reporting_editor"
       ],
-      "weekdays": ["MO", "TU", "WE", "TH", "FR"],
+      "weekdays": [
+        "MO",
+        "TU",
+        "WE",
+        "TH",
+        "FR"
+      ],
       "hour": 15,
       "minute": 30,
       "continue_on_error": true,
       "timeout_seconds": 1800,
-      "purpose": "由数据执行岗牵头，完成 A/H 收盘行情、因子、研究、池子与组合动作候选刷新。"
+      "purpose": "由数据执行岗牵头，完成 A/H 收盘行情、因子、研究、池子与组合动作候选刷新。",
+      "enabled": true
     },
     {
       "schedule_id": "afternoon_refresh",
@@ -95,12 +123,19 @@
         "hermes_research_curator",
         "hermes_reporting_editor"
       ],
-      "weekdays": ["MO", "TU", "WE", "TH", "FR"],
+      "weekdays": [
+        "MO",
+        "TU",
+        "WE",
+        "TH",
+        "FR"
+      ],
       "hour": 16,
       "minute": 30,
       "continue_on_error": true,
       "timeout_seconds": 1800,
-      "purpose": "由因子与信号执行岗牵头，做收盘后第二轮因子、研究候选和 dispatch 收口。"
+      "purpose": "由因子与信号执行岗牵头，做收盘后第二轮因子、研究候选和 dispatch 收口。",
+      "enabled": true
     },
     {
       "schedule_id": "deep_market_scan_afternoon",
@@ -111,12 +146,19 @@
         "openclaw_report_exec",
         "hermes_research_curator"
       ],
-      "weekdays": ["MO", "TU", "WE", "TH", "FR"],
+      "weekdays": [
+        "MO",
+        "TU",
+        "WE",
+        "TH",
+        "FR"
+      ],
       "hour": 16,
       "minute": 55,
       "continue_on_error": true,
       "timeout_seconds": 1800,
-      "purpose": "由研究知识治理岗牵头，午后补刷公开信息与市场主题扫描。"
+      "purpose": "由研究知识治理岗牵头，午后补刷公开信息与市场主题扫描。",
+      "enabled": true
     },
     {
       "schedule_id": "opportunity_radar_close",
@@ -129,12 +171,19 @@
         "hermes_research_curator",
         "hermes_reporting_editor"
       ],
-      "weekdays": ["MO", "TU", "WE", "TH", "FR"],
+      "weekdays": [
+        "MO",
+        "TU",
+        "WE",
+        "TH",
+        "FR"
+      ],
       "hour": 17,
       "minute": 10,
       "continue_on_error": true,
       "timeout_seconds": 1800,
-      "purpose": "由研究与池子执行岗牵头，收盘后把异动、因子、研究池、策略证据、攻防推演、生命周期和纸面复盘收敛成机会闭环。"
+      "purpose": "由研究与池子执行岗牵头，收盘后把异动、因子、研究池、策略证据、攻防推演、生命周期和纸面复盘收敛成机会闭环。",
+      "enabled": false
     },
     {
       "schedule_id": "portfolio_review",
@@ -146,12 +195,19 @@
         "hermes_risk_curator",
         "hermes_reporting_editor"
       ],
-      "weekdays": ["MO", "TU", "WE", "TH", "FR"],
+      "weekdays": [
+        "MO",
+        "TU",
+        "WE",
+        "TH",
+        "FR"
+      ],
       "hour": 19,
       "minute": 30,
       "continue_on_error": true,
       "timeout_seconds": 1800,
-      "purpose": "由组合与风控执行岗牵头，更新持仓盈亏并推动风险/调仓解释候选。"
+      "purpose": "由组合与风控执行岗牵头，更新持仓盈亏并推动风险/调仓解释候选。",
+      "enabled": false
     },
     {
       "schedule_id": "daily_report",
@@ -162,12 +218,19 @@
         "openclaw_report_exec",
         "hermes_reporting_editor"
       ],
-      "weekdays": ["MO", "TU", "WE", "TH", "FR"],
+      "weekdays": [
+        "MO",
+        "TU",
+        "WE",
+        "TH",
+        "FR"
+      ],
       "hour": 20,
       "minute": 30,
       "continue_on_error": true,
       "timeout_seconds": 1800,
-      "purpose": "由日报与调度知识岗牵头，物化正式日报并同步日报解释与 dispatch 候选。"
+      "purpose": "由日报与调度知识岗牵头，物化正式日报并同步日报解释与 dispatch 候选。",
+      "enabled": true
     },
     {
       "schedule_id": "risk_review",
@@ -179,12 +242,19 @@
         "hermes_risk_curator",
         "hermes_reporting_editor"
       ],
-      "weekdays": ["MO", "TU", "WE", "TH", "FR"],
+      "weekdays": [
+        "MO",
+        "TU",
+        "WE",
+        "TH",
+        "FR"
+      ],
       "hour": 21,
       "minute": 0,
       "continue_on_error": true,
       "timeout_seconds": 1800,
-      "purpose": "由组合与风控执行岗牵头，刷新风控快照并推动风险解释候选。"
+      "purpose": "由组合与风控执行岗牵头，刷新风控快照并推动风险解释候选。",
+      "enabled": false
     },
     {
       "schedule_id": "next_day_plan",
@@ -195,12 +265,19 @@
         "openclaw_report_exec",
         "hermes_reporting_editor"
       ],
-      "weekdays": ["MO", "TU", "WE", "TH", "FR"],
+      "weekdays": [
+        "MO",
+        "TU",
+        "WE",
+        "TH",
+        "FR"
+      ],
       "hour": 22,
       "minute": 0,
       "continue_on_error": true,
       "timeout_seconds": 1800,
-      "purpose": "由日报与调度知识岗牵头，抽取未来催化日历并生成次日 dispatch 候选。"
+      "purpose": "由日报与调度知识岗牵头，抽取未来催化日历并生成次日 dispatch 候选。",
+      "enabled": true
     },
     {
       "schedule_id": "system_maintenance",
@@ -210,7 +287,15 @@
       "operator_profile_ids": [
         "openclaw_system_exec"
       ],
-      "weekdays": ["MO", "TU", "WE", "TH", "FR", "SA", "SU"],
+      "weekdays": [
+        "MO",
+        "TU",
+        "WE",
+        "TH",
+        "FR",
+        "SA",
+        "SU"
+      ],
       "hour": 2,
       "minute": 30,
       "continue_on_error": true,

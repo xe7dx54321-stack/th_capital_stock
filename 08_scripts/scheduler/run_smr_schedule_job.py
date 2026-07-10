@@ -305,23 +305,37 @@ def execution_context() -> dict:
 
 def run_command(command: tuple[str, ...], timeout_seconds: int | None = None) -> dict:
     started = time.time()
-    completed = subprocess.run(
-        list(command),
-        cwd=str(PROJECT_ROOT),
-        capture_output=True,
-        text=True,
-        timeout=timeout_seconds,
-    )
-    ended = time.time()
-    return {
-        "command": list(command),
-        "label": command_label(command),
-        "shell": command_shell(command),
-        "returncode": completed.returncode,
-        "stdout": completed.stdout or "",
-        "stderr": completed.stderr or "",
-        "duration_seconds": round(ended - started, 2),
-    }
+    try:
+        completed = subprocess.run(
+            list(command),
+            cwd=str(PROJECT_ROOT),
+            capture_output=True,
+            text=True,
+            timeout=timeout_seconds,
+        )
+        ended = time.time()
+        return {
+            "command": list(command),
+            "label": command_label(command),
+            "shell": command_shell(command),
+            "returncode": completed.returncode,
+            "stdout": completed.stdout or "",
+            "stderr": completed.stderr or "",
+            "duration_seconds": round(ended - started, 2),
+            "status": "completed",
+        }
+    except subprocess.TimeoutExpired:
+        ended = time.time()
+        return {
+            "command": list(command),
+            "label": command_label(command),
+            "shell": command_shell(command),
+            "returncode": -1,
+            "stdout": "",
+            "stderr": f"TimeoutExpired: command exceeded {timeout_seconds}s timeout",
+            "duration_seconds": round(ended - started, 2),
+            "status": "timeout",
+        }
 
 
 def write_run_artifacts(
@@ -337,6 +351,11 @@ def write_run_artifacts(
     run_dir = RUN_ROOT / f"{stamp}__{job.job_id}"
     run_dir.mkdir(parents=True, exist_ok=True)
 
+    succeeded_steps = sum(1 for item in results if item.get("returncode") == 0)
+    failed_steps = sum(1 for item in results if item.get("returncode") not in (0, None) and item.get("status") != "timeout")
+    timeout_steps = sum(1 for item in results if item.get("status") == "timeout")
+    skipped_steps = sum(1 for item in results if item.get("returncode") is None)
+
     summary = {
         "job_id": job.job_id,
         "label": job.label,
@@ -346,13 +365,18 @@ def write_run_artifacts(
         "finished_at": finished_at,
         "execution_context": context,
         "command_count": len(results),
-        "failed_count": sum(1 for item in results if item.get("returncode") not in (0, None)),
+        "succeeded_steps": succeeded_steps,
+        "failed_steps": failed_steps,
+        "timeout_steps": timeout_steps,
+        "skipped_steps": skipped_steps,
+        "final_status": status,
         "results": [
             {
                 "label": item["label"],
                 "shell": item["shell"],
                 "returncode": item["returncode"],
                 "duration_seconds": item["duration_seconds"],
+                "status": item.get("status") or "completed",
             }
             for item in results
         ],
@@ -370,15 +394,21 @@ def write_run_artifacts(
         f"- schedule_id: `{context.get('schedule_id') or ''}`",
         f"- lead_profile_id: `{context.get('lead_profile_id') or ''}`",
         f"- operator_profile_ids: `{', '.join(context.get('operator_profile_ids') or [])}`",
+        f"- succeeded_steps: `{succeeded_steps}`",
+        f"- failed_steps: `{failed_steps}`",
+        f"- timeout_steps: `{timeout_steps}`",
+        f"- skipped_steps: `{skipped_steps}`",
         "",
     ]
     for index, item in enumerate(results, start=1):
+        step_status = item.get("status") or "completed"
         lines.extend(
             [
-                f"## Step {index}: {item['label']}",
+                f"## Step {index}: {item['label']} ({step_status})",
                 "",
                 f"- command: `{item['shell']}`",
                 f"- returncode: `{item['returncode']}`",
+                f"- status: `{step_status}`",
                 f"- duration_seconds: `{item['duration_seconds']}`",
                 "",
             ]
@@ -427,14 +457,22 @@ def execute_job(job: JobSpec, dry_run: bool, continue_on_error: bool, timeout_se
                     "stdout": "",
                     "stderr": "",
                     "duration_seconds": 0.0,
+                    "status": "dry_run",
                 }
             )
             continue
 
         result = run_command(command, timeout_seconds=timeout_seconds)
         results.append(result)
-        print(f"   rc={result['returncode']} duration={result['duration_seconds']}s")
-        if result["returncode"] != 0:
+        print(f"   rc={result['returncode']} status={result.get('status') or 'completed'} duration={result['duration_seconds']}s")
+        
+        step_status = result.get("status")
+        if step_status == "timeout":
+            status = "partial_failure"
+            print(f"   TIMEOUT: command exceeded {timeout_seconds}s")
+            if not continue_on_error:
+                break
+        elif result["returncode"] != 0:
             status = "partial_failure"
             preview = (result.get("stderr") or result.get("stdout") or "").strip().splitlines()[:8]
             for line in preview:
@@ -455,6 +493,7 @@ def execute_job(job: JobSpec, dry_run: bool, continue_on_error: bool, timeout_se
             "execution_context": context,
             "command_count": len(results),
             "failed_count": sum(1 for item in results if item.get("returncode") not in (0, None)),
+            "timeout_count": sum(1 for item in results if item.get("status") == "timeout"),
             **artifact_paths,
         },
     )

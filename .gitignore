@@ -89,3 +89,4 @@ config/ifind_refresh_token.txt
 # iFinD local cache - never commit
 .ifind/
 09_runbooks/generated/phase189_*
+tmp/

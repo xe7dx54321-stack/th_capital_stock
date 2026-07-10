@@ -380,29 +380,29 @@ def score_candidate(item):
     if target_gap_pct is not None:
         if target_gap_pct >= 30:
             score += 2.0
-            reasons.append(f"公开研报目标价相对现价仍有约 {target_gap_pct:.1f}% 空间。")
+            reasons.append("外部研究关注度较高，卖方观点方向偏正面。")
         elif target_gap_pct >= 15:
             score += 1.4
-            reasons.append(f"公开研报目标价相对现价仍有约 {target_gap_pct:.1f}% 空间。")
+            reasons.append("外部卖方观点偏积极，值得跟踪验证。")
         elif target_gap_pct >= 5:
             score += 0.7
         elif target_gap_pct < 0:
             score -= 1.0
-            risks.append("公开研报目标空间已经被市场透支。")
+            risks.append("外部预期已被市场充分反映，需关注基本面驱动。")
 
     analyst_gap_pct = safe_float(item.get("analyst_gap_pct"))
     if analyst_gap_pct is not None:
         if analyst_gap_pct >= 25:
             score += 2.2
-            reasons.append(f"公开卖方平均目标价相对现价仍有约 {analyst_gap_pct:.1f}% 空间。")
+            reasons.append("外部卖方一致预期方向偏正面，关注度提升。")
         elif analyst_gap_pct >= 10:
             score += 1.4
-            reasons.append(f"公开卖方平均目标价相对现价仍有约 {analyst_gap_pct:.1f}% 空间。")
+            reasons.append("外部预期方向积极，建议结合基本面变化跟踪。")
         elif analyst_gap_pct >= 0:
             score += 0.6
         else:
             score -= 1.2
-            risks.append("公开卖方平均目标价已经低于现价，预期差不大。")
+            risks.append("外部预期分歧不大，需寻找新的预期差驱动。")
 
     public_signal = item.get("public_signal") or {}
     stance_label = public_signal.get("stance_label")
@@ -621,8 +621,8 @@ def write_markdown(path, payload):
                     f"- 当前判断: {item.get('summary')}",
                     f"- 趋势结构: {item.get('trend_summary')}",
                     f"- 估值与增长: PE(TTM) {format_number(item.get('pe_ttm'))} / PB {format_number(item.get('pb'))} / 营收同比 {format_pct(item.get('revenue_yoy'))} / 净利润同比 {format_pct(item.get('net_profit_yoy'))}",
-                    f"- 外部研究目标空间: {format_pct(item.get('target_gap_pct'))}",
-                    f"- 公开卖方目标空间: {format_pct(item.get('analyst_gap_pct'))}",
+                    f"- 外部观点倾向: {format_pct(item.get('target_gap_pct'))}",
+                    f"- 卖方预期方向: {format_pct(item.get('analyst_gap_pct'))}",
                     f"- 最近三周事件数: {item.get('event_count_21d') or 0}",
                     "- 为什么值得继续看:",
                 ]

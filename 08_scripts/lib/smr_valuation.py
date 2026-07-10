@@ -410,29 +410,59 @@ def latest_consensus_proxy(conn: sqlite3.Connection, ticker: str) -> dict[str, A
     required = {"ticker", "confidence", "source_evidence_ids_json", "is_official_consensus", "created_at"}
     if not required.issubset(columns):
         return {}
-    row = conn.execute(
-        """
-        SELECT period, confidence, source_evidence_ids_json, is_official_consensus,
-               current_value, proxy_quality, usable_for_promotion, metadata_json
-        FROM consensus_revision_proxy
-        WHERE ticker=?
-        ORDER BY datetime(created_at) DESC, id DESC
-        LIMIT 1
-        """,
-        (ticker,),
-    ).fetchone()
-    if not row:
-        return {}
-    return {
-        "period": row[0],
-        "confidence": _as_float(row[1]) or 0.0,
-        "source_evidence_ids": _loads(row[2], []),
-        "is_official_consensus": bool(row[3]),
-        "current_value": _as_float(row[4]),
-        "proxy_quality": row[5],
-        "usable_for_promotion": bool(row[6]),
-        "metadata": _loads(row[7], {}),
-    }
+    
+    has_current_value = "current_value" in columns
+    has_proxy_magnitude = "proxy_magnitude" in columns
+    
+    if has_current_value:
+        row = conn.execute(
+            """
+            SELECT period, confidence, source_evidence_ids_json, is_official_consensus,
+                   current_value, proxy_quality, usable_for_promotion, metadata_json
+            FROM consensus_revision_proxy
+            WHERE ticker=?
+            ORDER BY datetime(created_at) DESC, id DESC
+            LIMIT 1
+            """,
+            (ticker,),
+        ).fetchone()
+        if not row:
+            return {}
+        return {
+            "period": row[0],
+            "confidence": _as_float(row[1]) or 0.0,
+            "source_evidence_ids": _loads(row[2], []),
+            "is_official_consensus": bool(row[3]),
+            "current_value": _as_float(row[4]),
+            "proxy_quality": row[5],
+            "usable_for_promotion": bool(row[6]),
+            "metadata": _loads(row[7], {}),
+        }
+    else:
+        row = conn.execute(
+            """
+            SELECT period, confidence, source_evidence_ids_json, is_official_consensus,
+                   proxy_magnitude, proxy_quality, metadata_json
+            FROM consensus_revision_proxy
+            WHERE ticker=?
+            ORDER BY datetime(created_at) DESC, id DESC
+            LIMIT 1
+            """,
+            (ticker,),
+        ).fetchone()
+        if not row:
+            return {}
+        proxy_value = _as_float(row[4]) if has_proxy_magnitude else None
+        return {
+            "period": row[0],
+            "confidence": _as_float(row[1]) or 0.0,
+            "source_evidence_ids": _loads(row[2], []),
+            "is_official_consensus": bool(row[3]),
+            "current_value": proxy_value,
+            "proxy_quality": row[5],
+            "usable_for_promotion": False,
+            "metadata": _loads(row[6], {}),
+        }
 
 
 def build_forward_eps_snapshot(conn: sqlite3.Connection, ticker: str, fundamentals: dict[str, Any]) -> dict[str, Any]:
