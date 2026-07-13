@@ -57,3 +57,33 @@
 - manifest 一致性校验
 
 历史 Phase tests 不进入默认发现范围，只在归档或删除对应 Phase 代码前按组手工运行。
+
+## 归档组 2：Phase 136–140 静态 runner 与契约测试
+
+处理方式：FREEZE，移动到 `legacy/phase_contracts/`，不删除。
+
+审核结论：
+
+- 5 个 runner 与 5 个测试均为 tracked 文件。
+- 正式引用数均为 0，近 30 天成功运行数均为 0。
+- Phase 141–149 仍有引用，已从本组排除并继续 KEEP。
+- 归档前手工运行 146 项 Phase 136–140 legacy tests，全部通过。
+- runner 仅组合 `08_scripts/lib/smr_phase136_*` 至 `smr_phase140_*` 的静态契约输出；当前四条工作流已由 `smr_app/workflows/` 接管。
+
+归档 runner：
+
+- `run_phase136_deep_dive_workflow_pipeline.py`
+- `run_phase137_deep_dive_execution_pipeline.py`
+- `run_phase138_thesis_library_pipeline.py`
+- `run_phase139_scheduled_local_delivery.py`
+- `run_phase140_system_hardening.py`
+
+归档测试：
+
+- `test_phase136_all.py`
+- `test_phase137_all.py`
+- `test_phase138_all.py`
+- `test_phase139_all.py`
+- `test_phase140_all.py`
+
+替代路径：`smr_app/workflows/`、`tests/workflows/`、`scripts/check.ps1 -Full`。

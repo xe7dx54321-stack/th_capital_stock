@@ -1,5 +1,6 @@
-import json,sys,os
-sys.path.insert(0,os.path.join(os.path.dirname(__file__),"..","lib"))
+import json,sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "08_scripts" / "lib"))
 from smr_phase138_thesis_entity_registry import build_thesis_entity_registry
 from smr_phase138_thesis_status_classifier import build_thesis_status_classifier
 from smr_phase138_quality_gate import run_quality_gate

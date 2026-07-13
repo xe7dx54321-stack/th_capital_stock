@@ -168,11 +168,6 @@ path,present,tracked,size,category,approved,reference_count,runtime_success_coun
 08_scripts/jobs/run_phase133_seasonal_analytics_pipeline.py,true,true,2574,FREEZE,false,0,0,2026-06-03T10:19:59+08:00,unreferenced Phase-era asset; remove from default runtime before deletion
 08_scripts/jobs/run_phase134_personal_research_console_pipeline.py,true,true,2530,FREEZE,false,0,0,2026-06-03T10:33:25+08:00,unreferenced Phase-era asset; remove from default runtime before deletion
 08_scripts/jobs/run_phase135_owner_feedback_integration.py,true,true,2857,FREEZE,false,0,0,2026-06-03T10:42:20+08:00,unreferenced Phase-era asset; remove from default runtime before deletion
-08_scripts/jobs/run_phase136_deep_dive_workflow_pipeline.py,true,true,1546,FREEZE,false,0,0,2026-06-03T10:57:56+08:00,unreferenced Phase-era asset; remove from default runtime before deletion
-08_scripts/jobs/run_phase137_deep_dive_execution_pipeline.py,true,true,1448,FREEZE,false,0,0,2026-06-03T11:11:58+08:00,unreferenced Phase-era asset; remove from default runtime before deletion
-08_scripts/jobs/run_phase138_thesis_library_pipeline.py,true,true,1487,FREEZE,false,0,0,2026-06-03T13:33:58+08:00,unreferenced Phase-era asset; remove from default runtime before deletion
-08_scripts/jobs/run_phase139_scheduled_local_delivery.py,true,true,1430,FREEZE,false,0,0,2026-06-03T13:39:48+08:00,unreferenced Phase-era asset; remove from default runtime before deletion
-08_scripts/jobs/run_phase140_system_hardening.py,true,true,1341,FREEZE,false,0,0,2026-06-03T13:45:51+08:00,unreferenced Phase-era asset; remove from default runtime before deletion
 08_scripts/jobs/run_phase141_html_dashboard_pipeline.py,true,true,3179,KEEP,false,1,0,2026-06-03T14:27:16+08:00,legacy Phase asset still has a reference or recent runtime evidence
 08_scripts/jobs/run_phase142_ticker_detail_pipeline.py,true,true,3501,KEEP,false,1,0,2026-06-03T14:56:59+08:00,legacy Phase asset still has a reference or recent runtime evidence
 08_scripts/jobs/run_phase143_cross_link_pipeline.py,true,true,1532,KEEP,false,1,0,2026-06-18T19:14:59+08:00,legacy Phase asset still has a reference or recent runtime evidence
@@ -1291,114 +1286,114 @@ path,present,tracked,size,category,approved,reference_count,runtime_success_coun
 08_scripts/lib/smr_phase135_source_signal_feedback_intake.py,true,true,1006,KEEP,false,4,0,2026-06-03T10:42:20+08:00,legacy Phase asset still has a reference or recent runtime evidence
 08_scripts/lib/smr_phase135_source_signal_weight_feedback_adapter.py,true,true,624,KEEP,false,3,0,2026-06-03T10:42:20+08:00,legacy Phase asset still has a reference or recent runtime evidence
 08_scripts/lib/smr_phase135_ticker_card_feedback_intake.py,true,true,985,KEEP,false,4,0,2026-06-03T10:42:20+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase136_backlog_update.py,true,true,555,KEEP,false,4,0,2026-06-03T10:57:56+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase136_cannot_conclude_guard.py,true,true,1470,KEEP,false,4,0,2026-06-03T10:57:56+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase136_config.py,true,true,220,KEEP,false,3,0,2026-06-03T10:57:56+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase136_console_integration_update.py,true,true,584,KEEP,false,2,0,2026-06-03T10:57:56+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase136_daily_brief_integration_update.py,true,true,632,KEEP,false,2,0,2026-06-03T10:57:56+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase136_decision_journal_candidate_update.py,true,true,720,KEEP,false,2,0,2026-06-03T10:57:56+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase136_backlog_update.py,true,true,555,KEEP,false,2,0,2026-06-03T10:57:56+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase136_cannot_conclude_guard.py,true,true,1470,KEEP,false,2,0,2026-06-03T10:57:56+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase136_config.py,true,true,220,KEEP,false,1,0,2026-06-03T10:57:56+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase136_console_integration_update.py,true,true,584,KEEP,false,1,0,2026-06-03T10:57:56+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase136_daily_brief_integration_update.py,true,true,632,KEEP,false,1,0,2026-06-03T10:57:56+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase136_decision_journal_candidate_update.py,true,true,720,KEEP,false,1,0,2026-06-03T10:57:56+08:00,legacy Phase asset still has a reference or recent runtime evidence
 08_scripts/lib/smr_phase136_deep_dive_brief_builder.py,true,true,1744,KEEP,false,1,0,2026-06-03T10:57:56+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase136_deep_dive_quality_gate.py,true,true,1374,KEEP,false,4,0,2026-06-03T10:57:56+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase136_deep_dive_research_packet_builder.py,true,true,1886,KEEP,false,3,0,2026-06-03T10:57:56+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase136_deep_dive_task_schema.py,true,true,1269,KEEP,false,2,0,2026-06-03T10:57:56+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase136_deep_dive_workflow_domain_registry.py,true,true,1983,KEEP,false,2,0,2026-06-03T10:57:56+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase136_evidence_checklist.py,true,true,1162,KEEP,false,2,0,2026-06-03T10:57:56+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase136_evidence_requirement_builder.py,true,true,1199,KEEP,false,2,0,2026-06-03T10:57:56+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase136_execution_plan_builder.py,true,true,1407,KEEP,false,2,0,2026-06-03T10:57:56+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase136_feedback_memory_integration_update.py,true,true,649,KEEP,false,3,0,2026-06-03T10:57:56+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase136_phase135_feedback_task_loader.py,true,true,567,KEEP,false,4,0,2026-06-03T10:57:56+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase136_research_question_generator.py,true,true,1106,KEEP,false,2,0,2026-06-03T10:57:56+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase136_source_plan_builder.py,true,true,988,KEEP,false,2,0,2026-06-03T10:57:56+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase136_task_entity_linker.py,true,true,741,KEEP,false,2,0,2026-06-03T10:57:56+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase136_task_prioritizer.py,true,true,843,KEEP,false,4,0,2026-06-03T10:57:56+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase136_task_status_tracker.py,true,true,831,KEEP,false,2,0,2026-06-03T10:57:56+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase137_backlog_update.py,true,true,567,KEEP,false,4,0,2026-06-03T11:11:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase137_cannot_conclude_guard.py,true,true,1198,KEEP,false,4,0,2026-06-03T11:11:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase137_catalyst_opportunity_evidence_updater.py,true,true,767,KEEP,false,2,0,2026-06-03T11:11:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase137_config.py,true,true,221,KEEP,false,2,0,2026-06-03T11:11:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase137_console_integration_update.py,true,true,474,KEEP,false,2,0,2026-06-03T11:11:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase137_daily_brief_integration_update.py,true,true,520,KEEP,false,2,0,2026-06-03T11:11:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase137_decision_journal_update_candidate.py,true,true,468,KEEP,false,2,0,2026-06-03T11:11:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase136_deep_dive_quality_gate.py,true,true,1374,KEEP,false,2,0,2026-06-03T10:57:56+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase136_deep_dive_research_packet_builder.py,true,true,1886,KEEP,false,1,0,2026-06-03T10:57:56+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase136_deep_dive_task_schema.py,true,true,1269,KEEP,false,1,0,2026-06-03T10:57:56+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase136_deep_dive_workflow_domain_registry.py,true,true,1983,KEEP,false,1,0,2026-06-03T10:57:56+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase136_evidence_checklist.py,true,true,1162,KEEP,false,1,0,2026-06-03T10:57:56+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase136_evidence_requirement_builder.py,true,true,1199,KEEP,false,1,0,2026-06-03T10:57:56+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase136_execution_plan_builder.py,true,true,1407,KEEP,false,1,0,2026-06-03T10:57:56+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase136_feedback_memory_integration_update.py,true,true,649,KEEP,false,2,0,2026-06-03T10:57:56+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase136_phase135_feedback_task_loader.py,true,true,567,KEEP,false,2,0,2026-06-03T10:57:56+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase136_research_question_generator.py,true,true,1106,KEEP,false,1,0,2026-06-03T10:57:56+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase136_source_plan_builder.py,true,true,988,KEEP,false,1,0,2026-06-03T10:57:56+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase136_task_entity_linker.py,true,true,741,KEEP,false,1,0,2026-06-03T10:57:56+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase136_task_prioritizer.py,true,true,843,KEEP,false,2,0,2026-06-03T10:57:56+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase136_task_status_tracker.py,true,true,831,KEEP,false,1,0,2026-06-03T10:57:56+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase137_backlog_update.py,true,true,567,KEEP,false,2,0,2026-06-03T11:11:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase137_cannot_conclude_guard.py,true,true,1198,KEEP,false,2,0,2026-06-03T11:11:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase137_catalyst_opportunity_evidence_updater.py,true,true,767,KEEP,false,1,0,2026-06-03T11:11:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase137_config.py,true,true,221,KEEP,false,1,0,2026-06-03T11:11:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase137_console_integration_update.py,true,true,474,KEEP,false,1,0,2026-06-03T11:11:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase137_daily_brief_integration_update.py,true,true,520,KEEP,false,1,0,2026-06-03T11:11:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase137_decision_journal_update_candidate.py,true,true,468,KEEP,false,1,0,2026-06-03T11:11:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
 08_scripts/lib/smr_phase137_deep_dive_execution_brief.py,true,true,1452,KEEP,false,1,0,2026-06-03T11:11:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase137_domain_registry.py,true,true,2230,KEEP,false,2,0,2026-06-03T11:11:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase137_evidence_delta_classifier.py,true,true,955,KEEP,false,4,0,2026-06-03T11:11:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase137_evidence_memory_writer.py,true,true,711,KEEP,false,3,0,2026-06-03T11:11:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase137_existing_evidence_loader.py,true,true,994,KEEP,false,2,0,2026-06-03T11:11:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase137_feedback_memory_integration_update.py,true,true,611,KEEP,false,2,0,2026-06-03T11:11:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase137_hard_data_evidence_updater.py,true,true,885,KEEP,false,2,0,2026-06-03T11:11:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase137_manual_confirmation_tracker.py,true,true,792,KEEP,false,2,0,2026-06-03T11:11:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase137_phase136_task_loader.py,true,true,597,KEEP,false,4,0,2026-06-03T11:11:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase137_quality_gate.py,true,true,1124,KEEP,false,4,0,2026-06-03T11:11:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase137_risk_gap_evidence_updater.py,true,true,769,KEEP,false,2,0,2026-06-03T11:11:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase137_source_evidence_updater.py,true,true,792,KEEP,false,2,0,2026-06-03T11:11:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase137_task_execution_scope_resolver.py,true,true,866,KEEP,false,2,0,2026-06-03T11:11:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase137_task_finding_builder.py,true,true,1144,KEEP,false,2,0,2026-06-03T11:11:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase137_task_status_closeout_builder.py,true,true,1005,KEEP,false,4,0,2026-06-03T11:11:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase137_updated_research_packet_builder.py,true,true,1240,KEEP,false,2,0,2026-06-03T11:11:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase137_valuation_evidence_updater.py,true,true,776,KEEP,false,2,0,2026-06-03T11:11:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase138_backlog_update.py,true,true,547,KEEP,false,4,0,2026-06-03T13:33:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase138_cannot_conclude_guard.py,true,true,1099,KEEP,false,4,0,2026-06-03T13:33:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase138_config.py,true,true,216,KEEP,false,2,0,2026-06-03T13:33:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase138_console_integration_update.py,true,true,434,KEEP,false,2,0,2026-06-03T13:33:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase138_contradiction_risk_linker.py,true,true,761,KEEP,false,2,0,2026-06-03T13:33:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase138_cross_ticker_theme_map.py,true,true,632,KEEP,false,2,0,2026-06-03T13:33:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase138_daily_brief_integration_update.py,true,true,397,KEEP,false,2,0,2026-06-03T13:33:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase138_decision_journal_integration_update.py,true,true,499,KEEP,false,2,0,2026-06-03T13:33:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase138_domain_registry.py,true,true,2193,KEEP,false,2,0,2026-06-03T13:33:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase138_evidence_to_thesis_linker.py,true,true,1025,KEEP,false,2,0,2026-06-03T13:33:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase138_finding_to_thesis_updater.py,true,true,788,KEEP,false,2,0,2026-06-03T13:33:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase138_phase137_execution_loader.py,true,true,653,KEEP,false,3,0,2026-06-03T13:33:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase138_quality_gate.py,true,true,1085,KEEP,false,4,0,2026-06-03T13:33:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase138_research_context_loader.py,true,true,449,KEEP,false,2,0,2026-06-03T13:33:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase138_research_memory_graph_builder.py,true,true,864,KEEP,false,2,0,2026-06-03T13:33:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase138_thesis_change_log.py,true,true,821,KEEP,false,3,0,2026-06-03T13:33:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase138_thesis_confidence_scorer.py,true,true,822,KEEP,false,2,0,2026-06-03T13:33:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase138_thesis_entity_registry.py,true,true,1842,KEEP,false,3,0,2026-06-03T13:33:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase138_thesis_library_board.py,true,true,728,KEEP,false,2,0,2026-06-03T13:33:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase137_domain_registry.py,true,true,2230,KEEP,false,1,0,2026-06-03T11:11:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase137_evidence_delta_classifier.py,true,true,955,KEEP,false,2,0,2026-06-03T11:11:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase137_evidence_memory_writer.py,true,true,711,KEEP,false,2,0,2026-06-03T11:11:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase137_existing_evidence_loader.py,true,true,994,KEEP,false,1,0,2026-06-03T11:11:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase137_feedback_memory_integration_update.py,true,true,611,KEEP,false,1,0,2026-06-03T11:11:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase137_hard_data_evidence_updater.py,true,true,885,KEEP,false,1,0,2026-06-03T11:11:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase137_manual_confirmation_tracker.py,true,true,792,KEEP,false,1,0,2026-06-03T11:11:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase137_phase136_task_loader.py,true,true,597,KEEP,false,2,0,2026-06-03T11:11:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase137_quality_gate.py,true,true,1124,KEEP,false,2,0,2026-06-03T11:11:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase137_risk_gap_evidence_updater.py,true,true,769,KEEP,false,1,0,2026-06-03T11:11:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase137_source_evidence_updater.py,true,true,792,KEEP,false,1,0,2026-06-03T11:11:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase137_task_execution_scope_resolver.py,true,true,866,KEEP,false,1,0,2026-06-03T11:11:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase137_task_finding_builder.py,true,true,1144,KEEP,false,1,0,2026-06-03T11:11:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase137_task_status_closeout_builder.py,true,true,1005,KEEP,false,2,0,2026-06-03T11:11:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase137_updated_research_packet_builder.py,true,true,1240,KEEP,false,1,0,2026-06-03T11:11:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase137_valuation_evidence_updater.py,true,true,776,KEEP,false,1,0,2026-06-03T11:11:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase138_backlog_update.py,true,true,547,KEEP,false,2,0,2026-06-03T13:33:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase138_cannot_conclude_guard.py,true,true,1099,KEEP,false,2,0,2026-06-03T13:33:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase138_config.py,true,true,216,KEEP,false,1,0,2026-06-03T13:33:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase138_console_integration_update.py,true,true,434,KEEP,false,1,0,2026-06-03T13:33:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase138_contradiction_risk_linker.py,true,true,761,KEEP,false,1,0,2026-06-03T13:33:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase138_cross_ticker_theme_map.py,true,true,632,KEEP,false,1,0,2026-06-03T13:33:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase138_daily_brief_integration_update.py,true,true,397,KEEP,false,1,0,2026-06-03T13:33:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase138_decision_journal_integration_update.py,true,true,499,KEEP,false,1,0,2026-06-03T13:33:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase138_domain_registry.py,true,true,2193,KEEP,false,1,0,2026-06-03T13:33:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase138_evidence_to_thesis_linker.py,true,true,1025,KEEP,false,1,0,2026-06-03T13:33:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase138_finding_to_thesis_updater.py,true,true,788,KEEP,false,1,0,2026-06-03T13:33:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase138_phase137_execution_loader.py,true,true,653,KEEP,false,2,0,2026-06-03T13:33:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase138_quality_gate.py,true,true,1085,KEEP,false,2,0,2026-06-03T13:33:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase138_research_context_loader.py,true,true,449,KEEP,false,1,0,2026-06-03T13:33:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase138_research_memory_graph_builder.py,true,true,864,KEEP,false,1,0,2026-06-03T13:33:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase138_thesis_change_log.py,true,true,821,KEEP,false,2,0,2026-06-03T13:33:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase138_thesis_confidence_scorer.py,true,true,822,KEEP,false,1,0,2026-06-03T13:33:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase138_thesis_entity_registry.py,true,true,1842,KEEP,false,1,0,2026-06-03T13:33:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase138_thesis_library_board.py,true,true,728,KEEP,false,1,0,2026-06-03T13:33:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
 08_scripts/lib/smr_phase138_thesis_library_brief.py,true,true,1008,KEEP,false,1,0,2026-06-03T13:33:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase138_thesis_memory_writer.py,true,true,432,KEEP,false,3,0,2026-06-03T13:33:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase138_thesis_status_classifier.py,true,true,1717,KEEP,false,4,0,2026-06-03T13:33:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase138_ticker_thesis_card_builder.py,true,true,1188,KEEP,false,2,0,2026-06-03T13:33:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase138_ticker_thesis_schema.py,true,true,664,KEEP,false,2,0,2026-06-03T13:33:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase139_backlog_update.py,true,true,561,KEEP,false,4,0,2026-06-03T13:39:48+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase139_cannot_conclude_guard.py,true,true,798,KEEP,false,4,0,2026-06-03T13:39:48+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase139_config.py,true,true,221,KEEP,false,2,0,2026-06-03T13:39:48+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase139_daily_research_run_plan.py,true,true,760,KEEP,false,2,0,2026-06-03T13:39:48+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase139_delivery_archive_writer.py,true,true,347,KEEP,false,2,0,2026-06-03T13:39:48+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase139_delivery_package_builder.py,true,true,688,KEEP,false,3,0,2026-06-03T13:39:48+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase139_delivery_quality_gate.py,true,true,812,KEEP,false,4,0,2026-06-03T13:39:48+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase139_domain_registry.py,true,true,1414,KEEP,false,2,0,2026-06-03T13:39:48+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase139_failure_degraded_handling.py,true,true,647,KEEP,false,2,0,2026-06-03T13:39:48+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase139_local_notification_template.py,true,true,394,KEEP,false,2,0,2026-06-03T13:39:48+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase139_module_execution_planner.py,true,true,463,KEEP,false,2,0,2026-06-03T13:39:48+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase139_owner_delivery_index.py,true,true,552,KEEP,false,2,0,2026-06-03T13:39:48+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase139_phase138_thesis_loader.py,true,true,208,KEEP,false,3,0,2026-06-03T13:39:48+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase139_run_history_writer.py,true,true,404,KEEP,false,2,0,2026-06-03T13:39:48+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase139_run_schedule_profile.py,true,true,674,KEEP,false,4,0,2026-06-03T13:39:48+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase139_weekly_research_review_run_plan.py,true,true,706,KEEP,false,2,0,2026-06-03T13:39:48+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase140_artifact_integrity_checker.py,true,true,766,KEEP,false,2,0,2026-06-03T13:45:51+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase140_backlog_update.py,true,true,545,KEEP,false,4,0,2026-06-03T13:45:51+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase140_cannot_conclude_guard.py,true,true,711,KEEP,false,4,0,2026-06-03T13:45:51+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase140_config.py,true,true,218,KEEP,false,2,0,2026-06-03T13:45:51+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase140_config_consistency_auditor.py,true,true,433,KEEP,false,2,0,2026-06-03T13:45:51+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase140_degradation_policy_validator.py,true,true,437,KEEP,false,2,0,2026-06-03T13:45:51+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase138_thesis_memory_writer.py,true,true,432,KEEP,false,2,0,2026-06-03T13:33:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase138_thesis_status_classifier.py,true,true,1717,KEEP,false,2,0,2026-06-03T13:33:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase138_ticker_thesis_card_builder.py,true,true,1188,KEEP,false,1,0,2026-06-03T13:33:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase138_ticker_thesis_schema.py,true,true,664,KEEP,false,1,0,2026-06-03T13:33:58+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase139_backlog_update.py,true,true,561,KEEP,false,2,0,2026-06-03T13:39:48+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase139_cannot_conclude_guard.py,true,true,798,KEEP,false,2,0,2026-06-03T13:39:48+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase139_config.py,true,true,221,KEEP,false,1,0,2026-06-03T13:39:48+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase139_daily_research_run_plan.py,true,true,760,KEEP,false,1,0,2026-06-03T13:39:48+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase139_delivery_archive_writer.py,true,true,347,KEEP,false,1,0,2026-06-03T13:39:48+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase139_delivery_package_builder.py,true,true,688,KEEP,false,1,0,2026-06-03T13:39:48+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase139_delivery_quality_gate.py,true,true,812,KEEP,false,2,0,2026-06-03T13:39:48+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase139_domain_registry.py,true,true,1414,KEEP,false,1,0,2026-06-03T13:39:48+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase139_failure_degraded_handling.py,true,true,647,KEEP,false,1,0,2026-06-03T13:39:48+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase139_local_notification_template.py,true,true,394,KEEP,false,1,0,2026-06-03T13:39:48+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase139_module_execution_planner.py,true,true,463,KEEP,false,1,0,2026-06-03T13:39:48+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase139_owner_delivery_index.py,true,true,552,KEEP,false,1,0,2026-06-03T13:39:48+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase139_phase138_thesis_loader.py,true,true,208,KEEP,false,2,0,2026-06-03T13:39:48+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase139_run_history_writer.py,true,true,404,KEEP,false,1,0,2026-06-03T13:39:48+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase139_run_schedule_profile.py,true,true,674,KEEP,false,2,0,2026-06-03T13:39:48+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase139_weekly_research_review_run_plan.py,true,true,706,KEEP,false,1,0,2026-06-03T13:39:48+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase140_artifact_integrity_checker.py,true,true,766,KEEP,false,1,0,2026-06-03T13:45:51+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase140_backlog_update.py,true,true,545,KEEP,false,2,0,2026-06-03T13:45:51+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase140_cannot_conclude_guard.py,true,true,711,KEEP,false,2,0,2026-06-03T13:45:51+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase140_config.py,true,true,218,KEEP,false,1,0,2026-06-03T13:45:51+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase140_config_consistency_auditor.py,true,true,433,KEEP,false,1,0,2026-06-03T13:45:51+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase140_degradation_policy_validator.py,true,true,437,KEEP,false,1,0,2026-06-03T13:45:51+08:00,legacy Phase asset still has a reference or recent runtime evidence
 08_scripts/lib/smr_phase140_delivery_package_integrity_checker.py,true,true,291,KEEP,false,1,0,2026-06-03T13:45:51+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase140_domain_registry.py,true,true,1922,KEEP,false,2,0,2026-06-03T13:45:51+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase140_generated_path_auditor.py,true,true,452,KEEP,false,2,0,2026-06-03T13:45:51+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase140_domain_registry.py,true,true,1922,KEEP,false,1,0,2026-06-03T13:45:51+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase140_generated_path_auditor.py,true,true,452,KEEP,false,1,0,2026-06-03T13:45:51+08:00,legacy Phase asset still has a reference or recent runtime evidence
 08_scripts/lib/smr_phase140_hardening_board.py,true,true,469,KEEP,false,1,0,2026-06-03T13:45:51+08:00,legacy Phase asset still has a reference or recent runtime evidence
 08_scripts/lib/smr_phase140_hardening_brief.py,true,true,1125,KEEP,false,1,0,2026-06-03T13:45:51+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase140_known_blocker_retention_checker.py,true,true,399,KEEP,false,2,0,2026-06-03T13:45:51+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase140_known_blocker_retention_checker.py,true,true,399,KEEP,false,1,0,2026-06-03T13:45:51+08:00,legacy Phase asset still has a reference or recent runtime evidence
 08_scripts/lib/smr_phase140_link_checker.py,true,true,281,KEEP,false,1,0,2026-06-03T13:45:51+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase140_maintenance_checklist_builder.py,true,true,500,KEEP,false,2,0,2026-06-03T13:45:51+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase140_module_regression_matrix.py,true,true,662,KEEP,false,2,0,2026-06-03T13:45:51+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase140_operational_reliability_scorecard.py,true,true,550,KEEP,false,4,0,2026-06-03T13:45:51+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase140_maintenance_checklist_builder.py,true,true,500,KEEP,false,1,0,2026-06-03T13:45:51+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase140_module_regression_matrix.py,true,true,662,KEEP,false,1,0,2026-06-03T13:45:51+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase140_operational_reliability_scorecard.py,true,true,550,KEEP,false,2,0,2026-06-03T13:45:51+08:00,legacy Phase asset still has a reference or recent runtime evidence
 08_scripts/lib/smr_phase140_phase139_delivery_loader.py,true,true,249,KEEP,false,1,0,2026-06-03T13:45:51+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase140_quality_gate.py,true,true,772,KEEP,false,4,0,2026-06-03T13:45:51+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase140_recovery_recommendation_builder.py,true,true,582,KEEP,false,3,0,2026-06-03T13:45:51+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase140_quality_gate.py,true,true,772,KEEP,false,2,0,2026-06-03T13:45:51+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase140_recovery_recommendation_builder.py,true,true,582,KEEP,false,2,0,2026-06-03T13:45:51+08:00,legacy Phase asset still has a reference or recent runtime evidence
 08_scripts/lib/smr_phase140_reliability_memory_writer.py,true,true,310,KEEP,false,1,0,2026-06-03T13:45:51+08:00,legacy Phase asset still has a reference or recent runtime evidence
 08_scripts/lib/smr_phase140_run_history_consistency_checker.py,true,true,311,KEEP,false,1,0,2026-06-03T13:45:51+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase140_safety_boundary_auditor.py,true,true,425,KEEP,false,2,0,2026-06-03T13:45:51+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/lib/smr_phase140_source_limitation_visibility_checker.py,true,true,359,KEEP,false,2,0,2026-06-03T13:45:51+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase140_safety_boundary_auditor.py,true,true,425,KEEP,false,1,0,2026-06-03T13:45:51+08:00,legacy Phase asset still has a reference or recent runtime evidence
+08_scripts/lib/smr_phase140_source_limitation_visibility_checker.py,true,true,359,KEEP,false,1,0,2026-06-03T13:45:51+08:00,legacy Phase asset still has a reference or recent runtime evidence
 08_scripts/lib/smr_phase141_artifact_link_html_section.py,true,true,1034,KEEP,false,2,0,2026-06-03T14:27:16+08:00,legacy Phase asset still has a reference or recent runtime evidence
 08_scripts/lib/smr_phase141_backlog_update.py,true,true,796,KEEP,false,2,0,2026-06-03T14:27:16+08:00,legacy Phase asset still has a reference or recent runtime evidence
 08_scripts/lib/smr_phase141_cannot_conclude_guard.py,true,true,374,KEEP,false,3,0,2026-06-03T14:27:16+08:00,legacy Phase asset still has a reference or recent runtime evidence
@@ -4658,9 +4653,20 @@ legacy/phase_bootstrap/smr_phase0_dirs.py,true,true,1347,FREEZE,true,0,0,2026-07
 legacy/phase_bootstrap/smr_phase0_verify.py,true,true,4898,FREEZE,true,0,0,2026-07-14T00:21:44+08:00,unreferenced Phase-era asset; remove from default runtime before deletion
 legacy/phase_bootstrap/smr_phase0_verify2.py,true,true,3967,FREEZE,true,0,0,2026-07-14T00:21:44+08:00,unreferenced Phase-era asset; remove from default runtime before deletion
 legacy/phase_bootstrap/smr_phase0_workspaces.py,true,true,14623,FREEZE,true,0,0,2026-07-14T00:21:44+08:00,unreferenced Phase-era asset; remove from default runtime before deletion
+legacy/phase_contracts/README.md,true,false,429,KEEP,false,1,0,,has a code/config reference or recent runtime evidence
+legacy/phase_contracts/runners/run_phase136_deep_dive_workflow_pipeline.py,true,true,1580,FREEZE,true,0,0,,unreferenced Phase-era asset; remove from default runtime before deletion
+legacy/phase_contracts/runners/run_phase137_deep_dive_execution_pipeline.py,true,true,1482,FREEZE,true,0,0,,unreferenced Phase-era asset; remove from default runtime before deletion
+legacy/phase_contracts/runners/run_phase138_thesis_library_pipeline.py,true,true,1521,FREEZE,true,0,0,,unreferenced Phase-era asset; remove from default runtime before deletion
+legacy/phase_contracts/runners/run_phase139_scheduled_local_delivery.py,true,true,1464,FREEZE,true,0,0,,unreferenced Phase-era asset; remove from default runtime before deletion
+legacy/phase_contracts/runners/run_phase140_system_hardening.py,true,true,1375,FREEZE,true,0,0,,unreferenced Phase-era asset; remove from default runtime before deletion
+legacy/phase_contracts/tests/test_phase136_all.py,true,true,7917,FREEZE,true,0,0,,unreferenced Phase-era asset; remove from default runtime before deletion
+legacy/phase_contracts/tests/test_phase137_all.py,true,true,7614,FREEZE,true,0,0,,unreferenced Phase-era asset; remove from default runtime before deletion
+legacy/phase_contracts/tests/test_phase138_all.py,true,true,7230,FREEZE,true,0,0,,unreferenced Phase-era asset; remove from default runtime before deletion
+legacy/phase_contracts/tests/test_phase139_all.py,true,true,5496,FREEZE,true,0,0,,unreferenced Phase-era asset; remove from default runtime before deletion
+legacy/phase_contracts/tests/test_phase140_all.py,true,true,4208,FREEZE,true,0,0,,unreferenced Phase-era asset; remove from default runtime before deletion
 legacy_manifest/,false,false,0,KEEP,false,0,0,,"belongs to a current application, domain, configuration or documentation path"
 legacy_manifest/baseline-2026-07-13.md,true,true,3125,KEEP,false,1,0,2026-07-13T14:40:56+08:00,has a code/config reference or recent runtime evidence
-legacy_manifest/removal-log-M5.md,true,true,1952,KEEP,false,1,0,2026-07-14T00:21:44+08:00,has a code/config reference or recent runtime evidence
+legacy_manifest/removal-log-M5.md,true,true,3007,KEEP,false,1,0,2026-07-14T00:21:44+08:00,has a code/config reference or recent runtime evidence
 legacy_manifest/tracked-diff-stat.txt,true,true,1718,KEEP,false,0,0,2026-07-13T14:40:56+08:00,"belongs to a current application, domain, configuration or documentation path"
 legacy_manifest/untracked-files.txt,true,true,2192,KEEP,false,0,0,2026-07-13T14:40:56+08:00,"belongs to a current application, domain, configuration or documentation path"
 migrations/0000_schema_migrations.sql,true,true,163,KEEP,false,0,0,2026-07-13T15:15:00+08:00,tracked asset retained by default until a stronger removal signal exists
@@ -4834,17 +4840,12 @@ tests/test_phase132_all.py,true,true,8415,FREEZE,false,0,0,2026-06-03T10:09:56+0
 tests/test_phase133_all.py,true,true,6978,FREEZE,false,0,0,2026-06-03T10:19:59+08:00,unreferenced Phase-era asset; remove from default runtime before deletion
 tests/test_phase134_all.py,true,true,9850,FREEZE,false,0,0,2026-06-03T10:33:25+08:00,unreferenced Phase-era asset; remove from default runtime before deletion
 tests/test_phase135_all.py,true,true,8898,FREEZE,false,0,0,2026-06-03T10:42:20+08:00,unreferenced Phase-era asset; remove from default runtime before deletion
-tests/test_phase136_all.py,true,true,7896,FREEZE,false,0,0,2026-06-03T10:57:56+08:00,unreferenced Phase-era asset; remove from default runtime before deletion
-tests/test_phase137_all.py,true,true,7593,FREEZE,false,0,0,2026-06-03T11:11:58+08:00,unreferenced Phase-era asset; remove from default runtime before deletion
-tests/test_phase138_all.py,true,true,7209,FREEZE,false,0,0,2026-06-03T13:33:58+08:00,unreferenced Phase-era asset; remove from default runtime before deletion
-tests/test_phase139_all.py,true,true,5475,FREEZE,false,0,0,2026-06-03T13:39:48+08:00,unreferenced Phase-era asset; remove from default runtime before deletion
 tests/test_phase13_09988_revalidation.py,true,true,2170,FREEZE,false,0,0,2026-05-24T17:45:11+08:00,unreferenced Phase-era asset; remove from default runtime before deletion
 tests/test_phase13_bear_case_severity.py,true,true,2330,FREEZE,false,0,0,2026-05-24T17:45:11+08:00,unreferenced Phase-era asset; remove from default runtime before deletion
 tests/test_phase13_core_evidence_gate.py,true,true,4525,FREEZE,false,0,0,2026-05-24T17:45:11+08:00,unreferenced Phase-era asset; remove from default runtime before deletion
 tests/test_phase13_data_quality_recalibration.py,true,true,1759,FREEZE,false,0,0,2026-05-24T17:45:11+08:00,unreferenced Phase-era asset; remove from default runtime before deletion
 tests/test_phase13_reduced_size_pending.py,true,true,4671,FREEZE,false,0,0,2026-05-24T17:45:11+08:00,unreferenced Phase-era asset; remove from default runtime before deletion
 tests/test_phase13_thesis_dependency.py,true,true,1604,FREEZE,false,0,0,2026-05-24T17:45:11+08:00,unreferenced Phase-era asset; remove from default runtime before deletion
-tests/test_phase140_all.py,true,true,4187,FREEZE,false,0,0,2026-06-03T13:45:51+08:00,unreferenced Phase-era asset; remove from default runtime before deletion
 tests/test_phase141_artifact_links.py,true,true,521,FREEZE,false,0,0,2026-06-03T14:27:16+08:00,unreferenced Phase-era asset; remove from default runtime before deletion
 tests/test_phase141_backlog.py,true,true,697,FREEZE,false,0,0,2026-06-03T14:27:16+08:00,unreferenced Phase-era asset; remove from default runtime before deletion
 tests/test_phase141_cannot_conclude.py,true,true,607,FREEZE,false,0,0,2026-06-03T14:27:16+08:00,unreferenced Phase-era asset; remove from default runtime before deletion

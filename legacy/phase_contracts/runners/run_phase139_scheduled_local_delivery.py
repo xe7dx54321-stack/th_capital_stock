@@ -1,5 +1,6 @@
-import json,sys,os
-sys.path.insert(0,os.path.join(os.path.dirname(__file__),"..","lib"))
+import json,sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "08_scripts" / "lib"))
 from smr_phase139_run_schedule_profile import build_run_schedule_profile
 from smr_phase139_delivery_package_builder import build_delivery_package
 from smr_phase139_delivery_quality_gate import run_delivery_quality_gate

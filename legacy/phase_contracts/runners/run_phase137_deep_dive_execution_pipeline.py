@@ -1,5 +1,6 @@
-import json,sys,os
-sys.path.insert(0,os.path.join(os.path.dirname(__file__),"..","lib"))
+import json,sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "08_scripts" / "lib"))
 from smr_phase137_phase136_task_loader import load_phase136_tasks
 from smr_phase137_evidence_delta_classifier import build_evidence_delta_classifier
 from smr_phase137_task_status_closeout_builder import build_task_status_closeout

@@ -1,5 +1,6 @@
-import json,sys,os
-sys.path.insert(0,os.path.join(os.path.dirname(__file__),"..","lib"))
+import json,sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "08_scripts" / "lib"))
 from smr_phase140_operational_reliability_scorecard import build_operational_reliability_scorecard
 from smr_phase140_quality_gate import run_quality_gate
 from smr_phase140_cannot_conclude_guard import run_cannot_conclude_guard
