@@ -10,7 +10,7 @@ path,present,tracked,size,category,approved,reference_count,runtime_success_coun
 00_control/blocker_source_route_map.json,true,true,6866,KEEP,false,2,0,2026-05-26T15:55:15+08:00,has a code/config reference or recent runtime evidence
 00_control/data_freshness_rules.json,true,true,4522,KEEP,false,2,0,2026-07-13T15:11:11+08:00,has a code/config reference or recent runtime evidence
 00_control/deep_analysis_theme_registry.md,true,true,6137,KEEP,false,2,0,2026-05-18T23:49:56+08:00,has a code/config reference or recent runtime evidence
-00_control/dispatch_board.md,true,true,9957,KEEP,false,14,0,2026-05-21T13:47:04+08:00,has a code/config reference or recent runtime evidence
+00_control/dispatch_board.md,true,true,9957,KEEP,false,13,0,2026-05-21T13:47:04+08:00,has a code/config reference or recent runtime evidence
 00_control/engineering_autonomy_policy.json,true,true,1469,KEEP,false,3,0,2026-05-18T23:49:56+08:00,has a code/config reference or recent runtime evidence
 00_control/financial_statement_sources.json,true,true,2188,KEEP,false,5,0,2026-05-26T09:13:56+08:00,has a code/config reference or recent runtime evidence
 00_control/official_intel_target_registry.md,true,true,5660,KEEP,false,3,0,2026-05-21T13:47:04+08:00,has a code/config reference or recent runtime evidence
@@ -21,7 +21,7 @@ path,present,tracked,size,category,approved,reference_count,runtime_success_coun
 00_control/public_analyst_signal_target_registry.md,true,true,3753,KEEP,false,2,0,2026-05-18T23:49:56+08:00,has a code/config reference or recent runtime evidence
 00_control/public_transcript_target_registry.md,true,true,3812,KEEP,false,2,0,2026-05-21T13:47:04+08:00,has a code/config reference or recent runtime evidence
 00_control/research_amplification_registry.md,true,true,2236,KEEP,false,4,0,2026-05-18T23:49:56+08:00,has a code/config reference or recent runtime evidence
-00_control/sector_priority_map.md,true,true,1113,KEEP,false,4,0,2026-05-18T23:49:56+08:00,has a code/config reference or recent runtime evidence
+00_control/sector_priority_map.md,true,true,1113,KEEP,false,3,0,2026-05-18T23:49:56+08:00,has a code/config reference or recent runtime evidence
 00_control/source_connector_registry_v2.json,true,true,58643,KEEP,false,2,0,2026-05-27T14:12:16+08:00,has a code/config reference or recent runtime evidence
 00_control/source_fetch_policy.json,true,true,1853,KEEP,false,6,0,2026-05-21T13:47:04+08:00,has a code/config reference or recent runtime evidence
 00_control/source_registry.md,true,true,11860,KEEP,false,4,0,2026-05-18T23:49:56+08:00,has a code/config reference or recent runtime evidence
@@ -29,7 +29,7 @@ path,present,tracked,size,category,approved,reference_count,runtime_success_coun
 00_control/supply_chain_theme_templates.json,true,true,1478,KEEP,false,2,0,2026-05-26T21:53:05+08:00,has a code/config reference or recent runtime evidence
 00_control/thesis_evidence_requirements.json,true,true,4850,KEEP,false,1,0,2026-05-24T17:45:11+08:00,has a code/config reference or recent runtime evidence
 00_control/valuation_peer_sets.json,true,true,722,KEEP,false,1,0,2026-05-24T08:46:28+08:00,has a code/config reference or recent runtime evidence
-00_control/watchlist_registry.md,true,true,4126,KEEP,false,10,0,2026-05-18T23:49:56+08:00,has a code/config reference or recent runtime evidence
+00_control/watchlist_registry.md,true,true,4126,KEEP,false,9,0,2026-05-18T23:49:56+08:00,has a code/config reference or recent runtime evidence
 00_control/watchlists/supply_chain_pilot.json,true,true,178,KEEP,false,2,0,2026-05-26T21:53:05+08:00,has a code/config reference or recent runtime evidence
 01_data/db/smr.db,true,false,192512,GENERATED,false,0,0,,runtime/build output governed by retention and ignore rules
 06_outputs/workflows/run_07e504c27dda4ac59ccc2202fb67333c/stock_deep_dive.md,true,false,605,KEEP,false,1,0,,has a code/config reference or recent runtime evidence
@@ -38,16 +38,8 @@ path,present,tracked,size,category,approved,reference_count,runtime_success_coun
 06_outputs/workflows/run_b8b882c15eef41a187fb1d4929167687/stock_deep_dive.md,true,false,3285,KEEP,false,1,0,,has a code/config reference or recent runtime evidence
 08_scripts/_deploy_scripts/deploy_cron.py,true,true,10287,KEEP,false,2,0,2026-05-18T23:49:56+08:00,has a code/config reference or recent runtime evidence
 08_scripts/_deploy_scripts/deploy_harvester.py,true,true,798,KEEP,false,1,0,2026-05-18T23:49:56+08:00,has a code/config reference or recent runtime evidence
-08_scripts/_deploy_scripts/deploy_phase2.py,true,true,29499,FREEZE,false,0,0,2026-05-18T23:49:56+08:00,unreferenced Phase-era asset; remove from default runtime before deletion
-08_scripts/_deploy_scripts/deploy_phase34.py,true,true,20112,FREEZE,false,0,0,2026-05-18T23:49:56+08:00,unreferenced Phase-era asset; remove from default runtime before deletion
-08_scripts/_deploy_scripts/deploy_phase5.py,true,true,18774,FREEZE,false,0,0,2026-05-18T23:49:56+08:00,unreferenced Phase-era asset; remove from default runtime before deletion
 08_scripts/_deploy_scripts/deploy_scripts.py,true,true,951,KEEP,false,1,0,2026-05-18T23:49:56+08:00,has a code/config reference or recent runtime evidence
-08_scripts/_deploy_scripts/smr_phase0_db.py,true,true,4673,FREEZE,false,0,0,2026-05-18T23:49:56+08:00,unreferenced Phase-era asset; remove from default runtime before deletion
-08_scripts/_deploy_scripts/smr_phase0_dirs.py,true,true,1347,FREEZE,false,0,0,2026-05-18T23:49:56+08:00,unreferenced Phase-era asset; remove from default runtime before deletion
 08_scripts/_deploy_scripts/smr_phase0_openclaw.py,true,true,3093,KEEP,false,2,0,2026-05-18T23:49:56+08:00,legacy Phase asset still has a reference or recent runtime evidence
-08_scripts/_deploy_scripts/smr_phase0_verify.py,true,true,4898,FREEZE,false,0,0,2026-05-18T23:49:56+08:00,unreferenced Phase-era asset; remove from default runtime before deletion
-08_scripts/_deploy_scripts/smr_phase0_verify2.py,true,true,3967,FREEZE,false,0,0,2026-05-18T23:49:56+08:00,unreferenced Phase-era asset; remove from default runtime before deletion
-08_scripts/_deploy_scripts/smr_phase0_workspaces.py,true,true,14623,FREEZE,false,0,0,2026-05-18T23:49:56+08:00,unreferenced Phase-era asset; remove from default runtime before deletion
 08_scripts/_deploy_scripts/update_devlog.py,true,true,4228,KEEP,false,0,0,2026-05-18T23:49:56+08:00,tracked asset retained by default until a stronger removal signal exists
 08_scripts/_deploy_scripts/write_smr_plan.py,true,true,32601,KEEP,false,0,0,2026-05-18T23:49:56+08:00,tracked asset retained by default until a stronger removal signal exists
 08_scripts/_deploy_scripts/write_smr_plan_v2.py,true,true,44614,KEEP,false,0,0,2026-05-18T23:49:56+08:00,tracked asset retained by default until a stronger removal signal exists
@@ -79,7 +71,7 @@ path,present,tracked,size,category,approved,reference_count,runtime_success_coun
 08_scripts/agents/run_codex_cli_shadow.py,true,true,14247,KEEP,false,2,0,2026-05-18T23:49:56+08:00,has a code/config reference or recent runtime evidence
 08_scripts/agents/run_model_shadow.py,true,true,34766,KEEP,false,10,0,2026-05-21T13:47:04+08:00,has a code/config reference or recent runtime evidence
 08_scripts/agents/run_openai_p1_shadow_canary.py,true,true,14639,KEEP,false,2,0,2026-05-18T23:49:56+08:00,has a code/config reference or recent runtime evidence
-08_scripts/backtest/simple_backtest.py,true,true,7285,KEEP,false,1,0,2026-07-13T14:40:56+08:00,has a code/config reference or recent runtime evidence
+08_scripts/backtest/simple_backtest.py,true,true,7285,KEEP,false,0,0,2026-07-13T14:40:56+08:00,"belongs to a current application, domain, configuration or documentation path"
 08_scripts/check_sectors.py,false,false,0,DELETE_CANDIDATE,false,0,0,,untracked and without a current reference or runtime signal; manual review required
 08_scripts/dashboard/control_tower_service.py,true,true,8240,KEEP,false,0,0,2026-05-18T23:49:56+08:00,tracked asset retained by default until a stronger removal signal exists
 08_scripts/dashboard/run_control_tower.py,true,true,322981,CONSOLIDATE,false,1,0,2026-05-21T13:47:04+08:00,large source module should be split behind stable contracts
@@ -98,7 +90,7 @@ path,present,tracked,size,category,approved,reference_count,runtime_success_coun
 08_scripts/events/sync_source_registry.py,true,true,3850,KEEP,false,0,0,2026-05-18T23:49:56+08:00,"belongs to a current application, domain, configuration or documentation path"
 08_scripts/factor_engine/fundamental.py,true,true,27162,KEEP,false,9,0,2026-07-13T14:40:56+08:00,has a code/config reference or recent runtime evidence
 08_scripts/factor_engine/trend.py,true,true,7361,KEEP,false,5,0,2026-07-13T14:40:56+08:00,has a code/config reference or recent runtime evidence
-08_scripts/factor_engine/us_linkage.py,true,true,4230,KEEP,false,11,0,2026-05-18T23:49:56+08:00,has a code/config reference or recent runtime evidence
+08_scripts/factor_engine/us_linkage.py,true,true,4230,KEEP,false,10,0,2026-05-18T23:49:56+08:00,has a code/config reference or recent runtime evidence
 08_scripts/full_audit.py,false,false,0,DELETE_CANDIDATE,false,0,0,,untracked and without a current reference or runtime signal; manual review required
 08_scripts/handover/export_codex_context.py,true,true,15980,KEEP,false,0,0,2026-05-18T23:49:56+08:00,tracked asset retained by default until a stronger removal signal exists
 08_scripts/jobs/apply_approved_recommendations_to_paper_portfolio.py,true,true,1826,KEEP,false,0,0,2026-05-21T17:18:44+08:00,"belongs to a current application, domain, configuration or documentation path"
@@ -2282,7 +2274,7 @@ path,present,tracked,size,category,approved,reference_count,runtime_success_coun
 08_scripts/portfolio/create_holdings_intake.py,true,true,11754,KEEP,false,0,0,2026-05-18T23:49:56+08:00,"belongs to a current application, domain, configuration or documentation path"
 08_scripts/portfolio/entry.py,true,true,7832,KEEP,false,10,0,2026-05-18T23:49:56+08:00,has a code/config reference or recent runtime evidence
 08_scripts/portfolio/import_live_positions.py,true,true,9229,KEEP,false,0,0,2026-05-18T23:49:56+08:00,"belongs to a current application, domain, configuration or documentation path"
-08_scripts/portfolio/pnl.py,true,true,7294,KEEP,false,11,0,2026-07-13T14:40:56+08:00,has a code/config reference or recent runtime evidence
+08_scripts/portfolio/pnl.py,true,true,7294,KEEP,false,10,0,2026-07-13T14:40:56+08:00,has a code/config reference or recent runtime evidence
 08_scripts/portfolio/query_db_schema.py,false,false,0,DELETE_CANDIDATE,false,0,0,,temporary investigation naming pattern; requires manual approval
 08_scripts/portfolio/query_nvda_research.py,false,false,0,DELETE_CANDIDATE,false,0,0,,temporary investigation naming pattern; requires manual approval
 08_scripts/portfolio/query_nvda_reviews.py,false,false,0,DELETE_CANDIDATE,false,0,0,,temporary investigation naming pattern; requires manual approval
@@ -4157,14 +4149,14 @@ path,present,tracked,size,category,approved,reference_count,runtime_success_coun
 08_scripts/research/summarize_research_quality.py,true,true,4831,KEEP,false,2,0,2026-05-18T23:49:56+08:00,has a code/config reference or recent runtime evidence
 08_scripts/risk_engine/build_risk_case_library.py,true,true,331,KEEP,false,1,0,2026-07-13T14:40:56+08:00,has a code/config reference or recent runtime evidence
 08_scripts/risk_engine/build_trade_risk_decision_snapshot.py,true,true,39560,KEEP,false,1,0,2026-05-18T23:49:56+08:00,has a code/config reference or recent runtime evidence
-08_scripts/risk_engine/monitor.py,true,true,28202,KEEP,false,17,0,2026-07-13T15:11:11+08:00,has a code/config reference or recent runtime evidence
+08_scripts/risk_engine/monitor.py,true,true,28202,KEEP,false,16,0,2026-07-13T15:11:11+08:00,has a code/config reference or recent runtime evidence
 08_scripts/risk_engine/update_risk_playbook.py,true,true,316,KEEP,false,1,0,2026-07-13T14:40:56+08:00,has a code/config reference or recent runtime evidence
 08_scripts/scheduler/deploy_agent_launchd.py,true,true,5529,KEEP,false,1,0,2026-05-19T08:18:22+08:00,has a code/config reference or recent runtime evidence
 08_scripts/scheduler/run_agent_schedule.py,true,true,5723,KEEP,false,2,0,2026-05-19T08:18:22+08:00,has a code/config reference or recent runtime evidence
 08_scripts/scheduler/run_smr_schedule_job.py,true,true,22997,KEEP,false,5,0,2026-07-13T14:40:56+08:00,has a code/config reference or recent runtime evidence
 08_scripts/stock_pool/reconcile_dynamic_pool.py,true,true,29797,KEEP,false,5,0,2026-05-18T23:49:56+08:00,has a code/config reference or recent runtime evidence
 08_scripts/stock_pool/sync_watchlist.py,true,true,7017,KEEP,false,3,0,2026-05-18T23:49:56+08:00,has a code/config reference or recent runtime evidence
-08_scripts/us_signal_harvester/earnings_monitor.py,true,true,8268,KEEP,false,9,0,2026-05-18T23:49:56+08:00,has a code/config reference or recent runtime evidence
+08_scripts/us_signal_harvester/earnings_monitor.py,true,true,8268,KEEP,false,8,0,2026-05-18T23:49:56+08:00,has a code/config reference or recent runtime evidence
 08_scripts/verification/check_data_freshness.py,true,true,9740,KEEP,false,1,0,2026-05-18T23:49:56+08:00,has a code/config reference or recent runtime evidence
 08_scripts/verification/report_model_shadow_readiness.py,true,true,6425,KEEP,false,1,0,2026-05-19T00:22:05+08:00,has a code/config reference or recent runtime evidence
 08_scripts/verification/validate_live_filings_ingestion.py,true,true,10861,KEEP,false,2,0,2026-05-21T17:18:44+08:00,has a code/config reference or recent runtime evidence
@@ -4253,31 +4245,31 @@ path,present,tracked,size,category,approved,reference_count,runtime_success_coun
 08_scripts/wiki/resolve_review.py,true,true,6683,KEEP,false,3,0,2026-05-18T23:49:56+08:00,has a code/config reference or recent runtime evidence
 08_scripts/wiki/scan_ingest_drafts.py,true,true,5903,KEEP,false,2,0,2026-05-18T23:49:56+08:00,has a code/config reference or recent runtime evidence
 09_runbooks/phase-refactor-plan.md,true,true,15549,KEEP,false,0,0,2026-06-18T19:14:59+08:00,"belongs to a current application, domain, configuration or documentation path"
-09_runbooks/skills/smr-daily-brief/SKILL.md,true,true,2573,KEEP,false,4,0,2026-05-18T23:49:56+08:00,has a code/config reference or recent runtime evidence
+09_runbooks/skills/smr-daily-brief/SKILL.md,true,true,2573,KEEP,false,3,0,2026-05-18T23:49:56+08:00,has a code/config reference or recent runtime evidence
 09_runbooks/skills/smr-hard-evidence-validation/SKILL.md,true,true,4565,KEEP,false,5,0,2026-05-21T13:47:04+08:00,has a code/config reference or recent runtime evidence
 09_runbooks/skills/smr-hard-evidence-validation/agents/openai.yaml,true,true,315,KEEP,false,0,0,2026-05-21T13:47:04+08:00,"belongs to a current application, domain, configuration or documentation path"
 09_runbooks/skills/smr-hard-evidence-validation/references/hard-evidence-map.md,true,true,3450,KEEP,false,1,0,2026-05-21T13:47:04+08:00,has a code/config reference or recent runtime evidence
-09_runbooks/skills/smr-industry-research/SKILL.md,true,true,4886,KEEP,false,4,0,2026-05-18T23:49:56+08:00,has a code/config reference or recent runtime evidence
+09_runbooks/skills/smr-industry-research/SKILL.md,true,true,4886,KEEP,false,3,0,2026-05-18T23:49:56+08:00,has a code/config reference or recent runtime evidence
 09_runbooks/skills/smr-investment-report-writing/SKILL.md,true,true,5246,KEEP,false,3,0,2026-05-21T13:47:04+08:00,has a code/config reference or recent runtime evidence
 09_runbooks/skills/smr-investment-report-writing/agents/openai.yaml,true,true,312,KEEP,false,0,0,2026-05-21T13:47:04+08:00,"belongs to a current application, domain, configuration or documentation path"
 09_runbooks/skills/smr-investment-report-writing/references/report-template.md,true,true,1930,KEEP,false,1,0,2026-05-21T13:47:04+08:00,has a code/config reference or recent runtime evidence
-09_runbooks/skills/smr-portfolio/SKILL.md,true,true,3712,KEEP,false,3,0,2026-05-21T13:47:04+08:00,has a code/config reference or recent runtime evidence
-09_runbooks/skills/smr-recommendation/SKILL.md,true,true,4671,KEEP,false,3,0,2026-05-21T13:47:04+08:00,has a code/config reference or recent runtime evidence
+09_runbooks/skills/smr-portfolio/SKILL.md,true,true,3712,KEEP,false,2,0,2026-05-21T13:47:04+08:00,has a code/config reference or recent runtime evidence
+09_runbooks/skills/smr-recommendation/SKILL.md,true,true,4671,KEEP,false,2,0,2026-05-21T13:47:04+08:00,has a code/config reference or recent runtime evidence
 09_runbooks/skills/smr-research-synthesis/SKILL.md,true,true,4791,KEEP,false,6,0,2026-05-21T13:47:04+08:00,has a code/config reference or recent runtime evidence
 09_runbooks/skills/smr-research-synthesis/agents/openai.yaml,true,true,345,KEEP,false,0,0,2026-05-21T13:47:04+08:00,"belongs to a current application, domain, configuration or documentation path"
 09_runbooks/skills/smr-research-synthesis/references/institutional-report-standard.md,true,true,3639,KEEP,false,2,0,2026-05-21T13:47:04+08:00,has a code/config reference or recent runtime evidence
-09_runbooks/skills/smr-risk-alert/SKILL.md,true,true,2586,KEEP,false,4,0,2026-05-18T23:49:56+08:00,has a code/config reference or recent runtime evidence
-09_runbooks/skills/smr-stock-research/SKILL.md,true,true,4626,KEEP,false,3,0,2026-05-21T13:47:04+08:00,has a code/config reference or recent runtime evidence
-09_runbooks/skills/smr-thesis-check/SKILL.md,true,true,3121,KEEP,false,4,0,2026-05-18T23:49:56+08:00,has a code/config reference or recent runtime evidence
-09_runbooks/skills/smr-trend-analysis/SKILL.md,true,true,4020,KEEP,false,4,0,2026-05-18T23:49:56+08:00,has a code/config reference or recent runtime evidence
-09_runbooks/skills/smr-us-linkage/SKILL.md,true,true,3696,KEEP,false,4,0,2026-05-18T23:49:56+08:00,has a code/config reference or recent runtime evidence
-09_runbooks/skills/smr-weekly-brief/SKILL.md,true,true,1208,KEEP,false,4,0,2026-05-18T23:49:56+08:00,has a code/config reference or recent runtime evidence
+09_runbooks/skills/smr-risk-alert/SKILL.md,true,true,2586,KEEP,false,3,0,2026-05-18T23:49:56+08:00,has a code/config reference or recent runtime evidence
+09_runbooks/skills/smr-stock-research/SKILL.md,true,true,4626,KEEP,false,2,0,2026-05-21T13:47:04+08:00,has a code/config reference or recent runtime evidence
+09_runbooks/skills/smr-thesis-check/SKILL.md,true,true,3121,KEEP,false,3,0,2026-05-18T23:49:56+08:00,has a code/config reference or recent runtime evidence
+09_runbooks/skills/smr-trend-analysis/SKILL.md,true,true,4020,KEEP,false,3,0,2026-05-18T23:49:56+08:00,has a code/config reference or recent runtime evidence
+09_runbooks/skills/smr-us-linkage/SKILL.md,true,true,3696,KEEP,false,3,0,2026-05-18T23:49:56+08:00,has a code/config reference or recent runtime evidence
+09_runbooks/skills/smr-weekly-brief/SKILL.md,true,true,1208,KEEP,false,3,0,2026-05-18T23:49:56+08:00,has a code/config reference or recent runtime evidence
 09_runbooks/smr-2026-04-14-construction-table.md,true,true,23174,KEEP,false,0,0,2026-05-18T23:49:56+08:00,"belongs to a current application, domain, configuration or documentation path"
-09_runbooks/smr-afternoon-data-pipeline.md,true,true,1287,KEEP,false,2,0,2026-05-18T23:49:56+08:00,has a code/config reference or recent runtime evidence
+09_runbooks/smr-afternoon-data-pipeline.md,true,true,1287,KEEP,false,1,0,2026-05-18T23:49:56+08:00,has a code/config reference or recent runtime evidence
 09_runbooks/smr-amplified-research-coverage.md,true,true,6600,KEEP,false,1,0,2026-05-18T23:49:56+08:00,has a code/config reference or recent runtime evidence
 09_runbooks/smr-cninfo-announcement-pipeline.md,true,true,1958,KEEP,false,0,0,2026-05-18T23:49:56+08:00,"belongs to a current application, domain, configuration or documentation path"
 09_runbooks/smr-control-tower.md,true,true,4570,KEEP,false,0,0,2026-05-18T23:49:56+08:00,"belongs to a current application, domain, configuration or documentation path"
-09_runbooks/smr-daily-brief-workflow.md,true,true,1722,KEEP,false,2,0,2026-05-18T23:49:56+08:00,has a code/config reference or recent runtime evidence
+09_runbooks/smr-daily-brief-workflow.md,true,true,1722,KEEP,false,1,0,2026-05-18T23:49:56+08:00,has a code/config reference or recent runtime evidence
 09_runbooks/smr-dual-agent-architecture.md,true,true,21405,KEEP,false,3,0,2026-05-18T23:49:56+08:00,has a code/config reference or recent runtime evidence
 09_runbooks/smr-dynamic-stock-pool.md,true,true,2946,KEEP,false,0,0,2026-05-18T23:49:56+08:00,"belongs to a current application, domain, configuration or documentation path"
 09_runbooks/smr-eastmoney-news-article-pipeline.md,true,true,2280,KEEP,false,0,0,2026-05-18T23:49:56+08:00,"belongs to a current application, domain, configuration or documentation path"
@@ -4296,13 +4288,13 @@ path,present,tracked,size,category,approved,reference_count,runtime_success_coun
 09_runbooks/smr-live-position-import.md,true,true,3495,KEEP,false,0,0,2026-05-18T23:49:56+08:00,"belongs to a current application, domain, configuration or documentation path"
 09_runbooks/smr-margin-balance-pipeline.md,true,true,2439,KEEP,false,0,0,2026-05-18T23:49:56+08:00,"belongs to a current application, domain, configuration or documentation path"
 09_runbooks/smr-model-shadow-live-test-runbook.md,true,true,14012,KEEP,false,1,0,2026-05-18T23:49:56+08:00,has a code/config reference or recent runtime evidence
-09_runbooks/smr-morning-data-pipeline.md,true,true,1335,KEEP,false,2,0,2026-05-18T23:49:56+08:00,has a code/config reference or recent runtime evidence
+09_runbooks/smr-morning-data-pipeline.md,true,true,1335,KEEP,false,1,0,2026-05-18T23:49:56+08:00,has a code/config reference or recent runtime evidence
 09_runbooks/smr-next-stage-development-plan.md,true,true,26002,KEEP,false,1,0,2026-05-18T23:49:56+08:00,has a code/config reference or recent runtime evidence
 09_runbooks/smr-opportunity-engine.md,true,true,4238,KEEP,false,0,0,2026-05-21T13:47:04+08:00,"belongs to a current application, domain, configuration or documentation path"
-09_runbooks/smr-portfolio-review.md,true,true,1409,KEEP,false,2,0,2026-05-18T23:49:56+08:00,has a code/config reference or recent runtime evidence
+09_runbooks/smr-portfolio-review.md,true,true,1409,KEEP,false,1,0,2026-05-18T23:49:56+08:00,has a code/config reference or recent runtime evidence
 09_runbooks/smr-research-source-path-migration.md,true,true,2090,KEEP,false,0,0,2026-05-18T23:49:56+08:00,"belongs to a current application, domain, configuration or documentation path"
 09_runbooks/smr-research-upgrade-progress.md,true,true,36395,KEEP,false,8,0,2026-06-01T15:12:21+08:00,has a code/config reference or recent runtime evidence
-09_runbooks/smr-risk-check.md,true,true,1481,KEEP,false,2,0,2026-05-18T23:49:56+08:00,has a code/config reference or recent runtime evidence
+09_runbooks/smr-risk-check.md,true,true,1481,KEEP,false,1,0,2026-05-18T23:49:56+08:00,has a code/config reference or recent runtime evidence
 09_runbooks/smr-script-to-model-roadmap.md,true,true,15217,KEEP,false,1,0,2026-05-18T23:49:56+08:00,has a code/config reference or recent runtime evidence
 09_runbooks/smr-self-evolving-engineering-loop.md,true,true,5881,KEEP,false,0,0,2026-05-18T23:49:56+08:00,"belongs to a current application, domain, configuration or documentation path"
 09_runbooks/smr-stock-connect-pipeline.md,true,true,3126,KEEP,false,0,0,2026-05-18T23:49:56+08:00,"belongs to a current application, domain, configuration or documentation path"
@@ -4315,11 +4307,11 @@ path,present,tracked,size,category,approved,reference_count,runtime_success_coun
 09_runbooks/smr-trend-research-source-gate.md,true,true,2586,KEEP,false,0,0,2026-05-18T23:49:56+08:00,"belongs to a current application, domain, configuration or documentation path"
 09_runbooks/smr-wiki-bootstrap.md,true,true,1763,KEEP,false,0,0,2026-05-18T23:49:56+08:00,"belongs to a current application, domain, configuration or documentation path"
 09_runbooks/smr-wiki-governance.md,true,true,2651,KEEP,false,1,0,2026-05-18T23:49:56+08:00,has a code/config reference or recent runtime evidence
-09_runbooks/templates/daily_brief.md,true,true,1338,KEEP,false,5,0,2026-05-18T23:49:56+08:00,has a code/config reference or recent runtime evidence
-09_runbooks/templates/industry_research_card.md,true,true,1321,KEEP,false,1,0,2026-05-18T23:49:56+08:00,has a code/config reference or recent runtime evidence
-09_runbooks/templates/recommendation_card.md,true,true,1358,KEEP,false,3,0,2026-05-18T23:49:56+08:00,has a code/config reference or recent runtime evidence
-09_runbooks/templates/stock_research_card.md,true,true,1334,KEEP,false,1,0,2026-05-18T23:49:56+08:00,has a code/config reference or recent runtime evidence
-09_runbooks/templates/weekly_brief.md,true,true,1737,KEEP,false,2,0,2026-05-18T23:49:56+08:00,has a code/config reference or recent runtime evidence
+09_runbooks/templates/daily_brief.md,true,true,1338,KEEP,false,3,0,2026-05-18T23:49:56+08:00,has a code/config reference or recent runtime evidence
+09_runbooks/templates/industry_research_card.md,true,true,1321,KEEP,false,0,0,2026-05-18T23:49:56+08:00,"belongs to a current application, domain, configuration or documentation path"
+09_runbooks/templates/recommendation_card.md,true,true,1358,KEEP,false,1,0,2026-05-18T23:49:56+08:00,has a code/config reference or recent runtime evidence
+09_runbooks/templates/stock_research_card.md,true,true,1334,KEEP,false,0,0,2026-05-18T23:49:56+08:00,"belongs to a current application, domain, configuration or documentation path"
+09_runbooks/templates/weekly_brief.md,true,true,1737,KEEP,false,1,0,2026-05-18T23:49:56+08:00,has a code/config reference or recent runtime evidence
 09_runbooks/trae_tasks/README.md,true,true,2822,KEEP,false,1,0,2026-06-18T19:14:59+08:00,has a code/config reference or recent runtime evidence
 09_runbooks/trae_tasks/daily_brief_task.md,true,true,6613,KEEP,false,2,0,2026-06-18T19:14:59+08:00,has a code/config reference or recent runtime evidence
 09_runbooks/trae_tasks/portfolio_review_task.md,true,true,7950,KEEP,false,2,0,2026-06-18T19:14:59+08:00,has a code/config reference or recent runtime evidence
@@ -4525,7 +4517,7 @@ config/phase185_cross_check_gate.json,true,true,1173,KEEP,false,1,0,2026-06-08T0
 config/phase186_simulated_scout_cross_check.json,true,true,684,KEEP,false,1,0,2026-06-08T09:11:02+08:00,legacy Phase asset still has a reference or recent runtime evidence
 config/phase187_real_web_scout_pilot.json,true,true,1071,KEEP,false,1,0,2026-06-08T09:56:16+08:00,legacy Phase asset still has a reference or recent runtime evidence
 config/phase188_real_source_lead_ingestion.json,true,true,627,KEEP,false,1,0,2026-06-08T10:03:37+08:00,legacy Phase asset still has a reference or recent runtime evidence
-config/phase189_ifind_capability_probe.json,true,true,1975,KEEP,false,3,0,2026-06-08T15:12:17+08:00,legacy Phase asset still has a reference or recent runtime evidence
+config/phase189_ifind_capability_probe.json,true,true,1975,KEEP,false,2,0,2026-06-08T15:12:17+08:00,legacy Phase asset still has a reference or recent runtime evidence
 config/phase190_ifind_structured_snapshot.json,true,true,2343,KEEP,false,2,0,2026-06-08T15:23:28+08:00,legacy Phase asset still has a reference or recent runtime evidence
 config/phase191_ifind_metric_hardening.json,true,true,1792,KEEP,false,2,0,2026-06-08T15:34:09+08:00,legacy Phase asset still has a reference or recent runtime evidence
 config/phase192_ifind_daily_monitoring.json,true,true,1604,KEEP,false,1,0,2026-06-08T16:12:21+08:00,legacy Phase asset still has a reference or recent runtime evidence
@@ -4657,8 +4649,18 @@ docs/plans/2026-07-13-light-research-console-design.md,true,true,1996,KEEP,false
 docs/plans/2026-07-13-personal-research-workbench-mvp.md,true,true,40597,KEEP,false,1,0,2026-07-13T14:40:56+08:00,has a code/config reference or recent runtime evidence
 eslint.config.js,true,true,734,KEEP,false,0,0,2026-07-13T14:40:56+08:00,tracked asset retained by default until a stronger removal signal exists
 index.html,true,true,518,KEEP,false,1,0,2026-07-13T16:53:25+08:00,has a code/config reference or recent runtime evidence
+legacy/phase_bootstrap/README.md,true,false,542,KEEP,false,1,0,,has a code/config reference or recent runtime evidence
+legacy/phase_bootstrap/deploy_phase2.py,true,true,29499,FREEZE,true,0,0,,unreferenced Phase-era asset; remove from default runtime before deletion
+legacy/phase_bootstrap/deploy_phase34.py,true,true,20112,FREEZE,true,0,0,,unreferenced Phase-era asset; remove from default runtime before deletion
+legacy/phase_bootstrap/deploy_phase5.py,true,true,18774,FREEZE,true,0,0,,unreferenced Phase-era asset; remove from default runtime before deletion
+legacy/phase_bootstrap/smr_phase0_db.py,true,true,4673,FREEZE,true,0,0,,unreferenced Phase-era asset; remove from default runtime before deletion
+legacy/phase_bootstrap/smr_phase0_dirs.py,true,true,1347,FREEZE,true,0,0,,unreferenced Phase-era asset; remove from default runtime before deletion
+legacy/phase_bootstrap/smr_phase0_verify.py,true,true,4898,FREEZE,true,0,0,,unreferenced Phase-era asset; remove from default runtime before deletion
+legacy/phase_bootstrap/smr_phase0_verify2.py,true,true,3967,FREEZE,true,0,0,,unreferenced Phase-era asset; remove from default runtime before deletion
+legacy/phase_bootstrap/smr_phase0_workspaces.py,true,true,14623,FREEZE,true,0,0,,unreferenced Phase-era asset; remove from default runtime before deletion
 legacy_manifest/,false,false,0,KEEP,false,0,0,,"belongs to a current application, domain, configuration or documentation path"
 legacy_manifest/baseline-2026-07-13.md,true,true,3125,KEEP,false,1,0,2026-07-13T14:40:56+08:00,has a code/config reference or recent runtime evidence
+legacy_manifest/removal-log-M5.md,true,false,1952,KEEP,false,1,0,,has a code/config reference or recent runtime evidence
 legacy_manifest/tracked-diff-stat.txt,true,true,1718,KEEP,false,0,0,2026-07-13T14:40:56+08:00,"belongs to a current application, domain, configuration or documentation path"
 legacy_manifest/untracked-files.txt,true,true,2192,KEEP,false,0,0,2026-07-13T14:40:56+08:00,"belongs to a current application, domain, configuration or documentation path"
 migrations/0000_schema_migrations.sql,true,true,163,KEEP,false,0,0,2026-07-13T15:15:00+08:00,tracked asset retained by default until a stronger removal signal exists
@@ -4667,14 +4669,14 @@ migrations/0002_workflow_runtime.sql,true,true,2321,KEEP,false,0,0,2026-07-13T15
 migrations/0003_workflow_api.sql,true,true,446,KEEP,false,0,0,2026-07-13T15:43:38+08:00,tracked asset retained by default until a stronger removal signal exists
 migrations/0004_governed_memory.sql,true,true,1037,KEEP,false,0,0,2026-07-13T16:15:14+08:00,tracked asset retained by default until a stronger removal signal exists
 migrations/0005_decision_feedback.sql,true,true,2821,KEEP,false,0,0,2026-07-13T23:00:34+08:00,tracked asset retained by default until a stronger removal signal exists
-package-lock.json,true,true,247873,KEEP,false,3,0,2026-07-13T16:53:25+08:00,has a code/config reference or recent runtime evidence
-package.json,true,true,1999,KEEP,false,4,0,2026-07-13T16:53:25+08:00,has a code/config reference or recent runtime evidence
+package-lock.json,true,true,247873,KEEP,false,2,0,2026-07-13T16:53:25+08:00,has a code/config reference or recent runtime evidence
+package.json,true,true,1999,KEEP,false,3,0,2026-07-13T16:53:25+08:00,has a code/config reference or recent runtime evidence
 postcss.config.js,true,true,193,KEEP,false,0,0,2026-07-13T14:40:56+08:00,tracked asset retained by default until a stronger removal signal exists
 public/,false,false,0,KEEP,false,0,0,,"belongs to a current application, domain, configuration or documentation path"
 public/favicon.svg,true,true,453,KEEP,false,0,0,2026-07-13T14:40:56+08:00,"belongs to a current application, domain, configuration or documentation path"
 requirements-dev.txt,true,true,238,KEEP,false,0,0,2026-07-13T14:59:08+08:00,tracked asset retained by default until a stronger removal signal exists
 requirements.txt,true,true,320,KEEP,false,0,0,2026-07-13T14:59:08+08:00,"belongs to a current application, domain, configuration or documentation path"
-scripts/check.ps1,true,true,3001,KEEP,false,0,0,2026-07-13T14:59:08+08:00,tracked asset retained by default until a stronger removal signal exists
+scripts/check.ps1,true,true,4045,KEEP,false,0,0,2026-07-13T14:59:08+08:00,tracked asset retained by default until a stronger removal signal exists
 smr_app/__init__.py,true,true,50,KEEP,false,0,0,2026-07-13T15:15:00+08:00,tracked asset retained by default until a stronger removal signal exists
 smr_app/__main__.py,true,true,80,KEEP,false,1,0,2026-07-13T15:19:05+08:00,has a code/config reference or recent runtime evidence
 smr_app/adapters/__init__.py,true,true,72,KEEP,false,0,0,2026-07-13T15:25:25+08:00,tracked asset retained by default until a stronger removal signal exists
@@ -4687,7 +4689,7 @@ smr_app/adapters/fundamentals.py,true,true,1064,KEEP,false,1,0,2026-07-13T15:25:
 smr_app/adapters/memory.py,true,true,7754,KEEP,false,3,0,2026-07-13T16:15:14+08:00,has a code/config reference or recent runtime evidence
 smr_app/adapters/risk.py,true,true,2273,KEEP,false,1,0,2026-07-13T15:25:25+08:00,has a code/config reference or recent runtime evidence
 smr_app/adapters/scheduler_jobs.py,true,true,3268,KEEP,false,1,0,2026-07-13T15:25:25+08:00,has a code/config reference or recent runtime evidence
-smr_app/adapters/valuation.py,true,true,1043,KEEP,false,4,0,2026-07-13T15:25:25+08:00,has a code/config reference or recent runtime evidence
+smr_app/adapters/valuation.py,true,true,1043,KEEP,false,3,0,2026-07-13T15:25:25+08:00,has a code/config reference or recent runtime evidence
 smr_app/cli.py,true,true,6566,KEEP,false,3,0,2026-07-13T15:43:38+08:00,has a code/config reference or recent runtime evidence
 smr_app/runtime/__init__.py,true,true,61,KEEP,false,0,0,2026-07-13T15:15:00+08:00,tracked asset retained by default until a stronger removal signal exists
 smr_app/runtime/artifact_store.py,true,true,3683,KEEP,false,1,0,2026-07-13T15:15:00+08:00,has a code/config reference or recent runtime evidence
@@ -4698,7 +4700,7 @@ smr_app/runtime/migrations.py,true,true,3887,KEEP,false,2,0,2026-07-13T15:15:00+
 smr_app/runtime/registry.py,true,true,2530,KEEP,false,1,0,2026-07-13T16:15:14+08:00,has a code/config reference or recent runtime evidence
 smr_app/runtime/runner.py,true,true,8481,KEEP,false,2,0,2026-07-13T15:43:38+08:00,has a code/config reference or recent runtime evidence
 smr_app/workflows/__init__.py,true,true,63,KEEP,false,0,0,2026-07-13T15:32:14+08:00,tracked asset retained by default until a stronger removal signal exists
-smr_app/workflows/daily_brief.py,true,true,9713,KEEP,false,3,0,2026-07-13T16:06:41+08:00,has a code/config reference or recent runtime evidence
+smr_app/workflows/daily_brief.py,true,true,9713,KEEP,false,2,0,2026-07-13T16:06:41+08:00,has a code/config reference or recent runtime evidence
 smr_app/workflows/portfolio_review.py,true,true,7918,KEEP,false,1,0,2026-07-13T16:06:41+08:00,has a code/config reference or recent runtime evidence
 smr_app/workflows/stock_deep_dive.py,true,true,15740,KEEP,false,1,0,2026-07-13T23:00:34+08:00,has a code/config reference or recent runtime evidence
 smr_app/workflows/thesis_update.py,true,true,6311,KEEP,false,1,0,2026-07-13T16:15:14+08:00,has a code/config reference or recent runtime evidence
@@ -4768,7 +4770,7 @@ tests/runtime/test_migrations.py,true,true,3008,KEEP,false,1,0,2026-07-13T23:00:
 tests/runtime/test_risk_alert_deduplication.py,true,true,4386,KEEP,false,1,0,2026-07-13T15:11:11+08:00,has a code/config reference or recent runtime evidence
 tests/runtime/test_runner.py,true,true,5943,KEEP,false,1,0,2026-07-13T15:43:38+08:00,has a code/config reference or recent runtime evidence
 tests/smoke/test_development_contract.py,true,true,1154,KEEP,false,0,0,2026-07-13T14:59:08+08:00,tracked asset retained by default until a stronger removal signal exists
-tests/smoke/test_repository_inventory.py,true,true,9532,KEEP,false,1,0,2026-07-13T14:48:01+08:00,has a code/config reference or recent runtime evidence
+tests/smoke/test_repository_inventory.py,true,true,10581,KEEP,false,1,0,2026-07-14T00:13:18+08:00,has a code/config reference or recent runtime evidence
 tests/test_blocker_repair_queue.py,true,true,3046,KEEP,false,0,0,2026-05-23T22:03:51+08:00,tracked asset retained by default until a stronger removal signal exists
 tests/test_evidence_quality.py,true,true,4560,KEEP,false,0,0,2026-05-21T17:18:44+08:00,tracked asset retained by default until a stronger removal signal exists
 tests/test_live_validation_metrics.py,true,true,5314,KEEP,false,0,0,2026-05-21T17:18:44+08:00,tracked asset retained by default until a stronger removal signal exists
@@ -5897,12 +5899,12 @@ tests/test_smr_pipeline_runner.py,true,true,9352,KEEP,false,0,0,2026-06-18T19:14
 tests/test_smr_quality_gate.py,true,true,5653,KEEP,false,0,0,2026-06-18T19:14:59+08:00,tracked asset retained by default until a stronger removal signal exists
 tests/test_trusted_research_foundation.py,true,true,11120,KEEP,false,0,0,2026-05-21T13:47:04+08:00,tracked asset retained by default until a stronger removal signal exists
 tests/workflows/__init__.py,true,true,0,KEEP,false,0,0,2026-07-13T16:06:41+08:00,tracked asset retained by default until a stronger removal signal exists
-tests/workflows/test_daily_brief.py,true,true,3312,KEEP,false,1,0,2026-07-13T16:06:41+08:00,has a code/config reference or recent runtime evidence
-tests/workflows/test_portfolio_review.py,true,true,3351,KEEP,false,1,0,2026-07-13T16:06:41+08:00,has a code/config reference or recent runtime evidence
+tests/workflows/test_daily_brief.py,true,true,2864,KEEP,false,1,0,2026-07-13T16:06:41+08:00,has a code/config reference or recent runtime evidence
+tests/workflows/test_portfolio_review.py,true,true,3410,KEEP,false,1,0,2026-07-13T16:06:41+08:00,has a code/config reference or recent runtime evidence
 tests/workflows/test_stock_deep_dive.py,true,true,8302,KEEP,false,1,0,2026-07-13T23:00:34+08:00,has a code/config reference or recent runtime evidence
 tests/workflows/test_thesis_update.py,true,true,3777,KEEP,false,1,0,2026-07-13T16:15:14+08:00,has a code/config reference or recent runtime evidence
 tools/__init__.py,true,true,61,KEEP,false,0,0,2026-07-13T14:48:01+08:00,"belongs to a current application, domain, configuration or documentation path"
-tools/inventory_repository.py,true,true,21767,KEEP,false,2,0,2026-07-13T14:48:01+08:00,has a code/config reference or recent runtime evidence
+tools/inventory_repository.py,true,true,21917,KEEP,false,2,0,2026-07-14T00:13:18+08:00,has a code/config reference or recent runtime evidence
 tsconfig.json,true,true,807,KEEP,false,0,0,2026-07-13T14:40:56+08:00,tracked asset retained by default until a stronger removal signal exists
 vite.config.ts,true,true,427,KEEP,false,0,0,2026-07-13T16:53:25+08:00,tracked asset retained by default until a stronger removal signal exists
 vitest.config.ts,true,true,283,KEEP,false,0,0,2026-07-13T16:00:38+08:00,tracked asset retained by default until a stronger removal signal exists

@@ -80,6 +80,28 @@ class RepositoryInventoryTests(unittest.TestCase):
             self.assertEqual(["runbook.md"], rows["smr_phase0_openclaw.py"]["referenced_by"])
             self.assertEqual(Classification.KEEP.value, rows["smr_phase0_openclaw.py"]["category"])
 
+    def test_legacy_audit_log_does_not_resurrect_a_frozen_runtime_path(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            target = root / "smr_phase9_old_runner.py"
+            target.write_text("VALUE = 1\n", encoding="utf-8")
+            audit_dir = root / "legacy_manifest"
+            audit_dir.mkdir()
+            audit = audit_dir / "removal-log.md"
+            audit.write_text("Archived `smr_phase9_old_runner.py`.\n", encoding="utf-8")
+
+            inventory = build_inventory(
+                root,
+                tracked_paths={"smr_phase9_old_runner.py", "legacy_manifest/removal-log.md"},
+                git_changes={},
+                runtime_evidence={},
+                baseline_untracked=[],
+            )
+            rows = {row["path"]: row for row in inventory["files"]}
+
+            self.assertEqual([], rows["smr_phase9_old_runner.py"]["referenced_by"])
+            self.assertEqual(Classification.FREEZE.value, rows["smr_phase9_old_runner.py"]["category"])
+
     def test_secret_and_generated_paths_have_priority(self) -> None:
         secret = classify_path(
             "config/ifind_refresh_token.txt",

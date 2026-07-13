@@ -77,6 +77,11 @@ MANIFEST_OUTPUT_PATHS = {
     "legacy_manifest/classifications.csv",
 }
 
+AUDIT_REFERENCE_PREFIXES = (
+    "legacy/",
+    "legacy_manifest/",
+)
+
 GENERATED_PREFIXES = (
     "01_data/",
     "02_research/",
@@ -472,6 +477,8 @@ def build_reference_graph(
         text = _read_text(absolute)
         tokens = _extract_import_tokens(absolute, text)
         imports[relative] = tokens
+        if relative.startswith(AUDIT_REFERENCE_PREFIXES):
+            continue
         for token in tokens:
             for target in _resolve_token(relative, token, known_paths, stems):
                 if target != relative:

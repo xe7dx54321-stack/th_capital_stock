@@ -3,6 +3,7 @@ from __future__ import annotations
 import sqlite3
 import tempfile
 import unittest
+from contextlib import closing
 from pathlib import Path
 
 from smr_app.adapters.contracts import AdapterResult
@@ -17,33 +18,22 @@ class DailyBriefWorkflowTests(unittest.TestCase):
             root = Path(directory)
             db_path = root / "runtime.db"
             apply_migrations(db_path)
-            conn = sqlite3.connect(db_path)
-            conn.executescript(
-                """
-                CREATE TABLE decision_ledger (
-                    decision_id TEXT, ticker TEXT, market TEXT, theme TEXT, action TEXT, status TEXT,
-                    decision_time TEXT, thesis_summary TEXT, evidence_ids_json TEXT,
-                    bear_case_summary TEXT, kill_conditions_json TEXT, risk_notes TEXT,
-                    human_review_status TEXT, outcome_status TEXT, metadata_json TEXT, updated_at TEXT
-                );
-                """
-            )
-            for index in range(8):
+            with closing(sqlite3.connect(db_path)) as conn:
+                for index in range(8):
+                    conn.execute(
+                        """INSERT INTO risk_alert(
+                            alert_time, alert_type, severity, ts_code, message, action, acknowledged,
+                            lifecycle_status, occurrence_count, fingerprint
+                        ) VALUES ('2026-07-13T01:00:00Z', 'stale_data', 'warning', ?, ?, 'refresh', 0, 'opened', 1, ?)""",
+                        (f"00000{index}.SZ", f"stale fixture {index}", f"risk-{index}"),
+                    )
                 conn.execute(
                     """INSERT INTO risk_alert(
                         alert_time, alert_type, severity, ts_code, message, action, acknowledged,
                         lifecycle_status, occurrence_count, fingerprint
-                    ) VALUES ('2026-07-13T01:00:00Z', 'stale_data', 'warning', ?, ?, 'refresh', 0, 'opened', 1, ?)""",
-                    (f"00000{index}.SZ", f"stale fixture {index}", f"risk-{index}"),
+                    ) VALUES ('2026-07-13T01:00:00Z', 'stale_data', 'warning', '000000.SZ', 'stale fixture 0', 'refresh', 0, 'opened', 1, NULL)"""
                 )
-            conn.execute(
-                """INSERT INTO risk_alert(
-                    alert_time, alert_type, severity, ts_code, message, action, acknowledged,
-                    lifecycle_status, occurrence_count, fingerprint
-                ) VALUES ('2026-07-13T01:00:00Z', 'stale_data', 'warning', '000000.SZ', 'stale fixture 0', 'refresh', 0, 'opened', 1, NULL)"""
-            )
-            conn.commit()
-            conn.close()
+                conn.commit()
 
             scheduler_calls = []
 

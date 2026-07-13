@@ -1,5 +1,5 @@
 {
-  "content_fingerprint": "f7d60402bb40f0cac43bcd693e08a53bdcadfe025ca4ba3b31f47fcd9608efb0",
+  "content_fingerprint": "fb67f2a810d69a8baf905cdad291173a7f659c5660b75954ebffc1b4a43e3426",
   "files": [
     {
       "approved": false,
@@ -167,7 +167,6 @@
       "rationale": "has a code/config reference or recent runtime evidence",
       "referenced_by": [
         "08_scripts/_deploy_scripts/deploy_cron.py",
-        "08_scripts/_deploy_scripts/deploy_phase2.py",
         "08_scripts/agents/apply_dispatch_board_patch_candidate.py",
         "08_scripts/agents/build_dispatch_board_patch_candidate.py",
         "08_scripts/reporting/build_current_state_snapshot.py",
@@ -372,7 +371,6 @@
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/_deploy_scripts/deploy_phase2.py",
         "09_runbooks/skills/smr-industry-research/SKILL.md",
         "09_runbooks/skills/smr-stock-research/SKILL.md",
         "09_runbooks/skills/smr-us-linkage/SKILL.md"
@@ -528,7 +526,6 @@
       "rationale": "has a code/config reference or recent runtime evidence",
       "referenced_by": [
         "00_control/research_amplification_registry.md",
-        "08_scripts/_deploy_scripts/deploy_phase2.py",
         "08_scripts/lib/smr_universe.py",
         "08_scripts/stock_pool/reconcile_dynamic_pool.py",
         "08_scripts/stock_pool/sync_watchlist.py",
@@ -678,99 +675,6 @@
     },
     {
       "approved": false,
-      "category": "FREEZE",
-      "imports": [
-        "/Users/apple/Documents/同行资本二级市场/00_control/sector_priority_map.md",
-        "/Users/apple/Documents/同行资本二级市场/01_data/factor/trend_analysis_{date}.md",
-        "/Users/apple/Documents/同行资本二级市场/01_data/us_signals/{date}.md",
-        "00_control/dispatch_board.md",
-        "00_control/sector_priority_map.md",
-        "00_control/watchlist_registry.md",
-        "00_research-card.md",
-        "09_runbooks/skills/smr-industry-research/SKILL.md",
-        "09_runbooks/skills/smr-stock-research/SKILL.md",
-        "09_runbooks/skills/smr-trend-analysis/SKILL.md",
-        "09_runbooks/skills/smr-us-linkage/SKILL.md",
-        "09_runbooks/templates/daily_brief.md",
-        "09_runbooks/templates/industry_research_card.md",
-        "09_runbooks/templates/recommendation_card.md",
-        "09_runbooks/templates/stock_research_card.md",
-        "catalyst.md",
-        "conclusion.md",
-        "os",
-        "risk_assessment.md",
-        "thesis.md",
-        "us_linkage.md",
-        "valuation.md"
-      ],
-      "last_git_change": "2026-05-18T23:49:56+08:00",
-      "path": "08_scripts/_deploy_scripts/deploy_phase2.py",
-      "present": true,
-      "rationale": "unreferenced Phase-era asset; remove from default runtime before deletion",
-      "referenced_by": [],
-      "runtime_evidence": null,
-      "size": 29499,
-      "tracked": true
-    },
-    {
-      "approved": false,
-      "category": "FREEZE",
-      "imports": [
-        "/Users/apple/Documents/同行资本二级市场/04_portfolio/performance/daily_{date}.md",
-        "/Users/apple/Documents/同行资本二级市场/06_reports/daily/daily_brief_{date}.md",
-        "/Users/apple/Documents/同行资本二级市场/06_reports/weekly/weekly_brief_{date}.md",
-        "/Users/apple/Documents/同行资本二级市场/09_runbooks/templates/daily_brief.md",
-        "/Users/apple/Documents/同行资本二级市场/09_runbooks/templates/recommendation_card.md",
-        "05_risk/rules/risk_rules.md",
-        "09_runbooks/skills/smr-daily-brief/SKILL.md",
-        "09_runbooks/skills/smr-portfolio/SKILL.md",
-        "09_runbooks/skills/smr-recommendation/SKILL.md",
-        "09_runbooks/skills/smr-risk-alert/SKILL.md",
-        "09_runbooks/skills/smr-thesis-check/SKILL.md",
-        "09_runbooks/skills/smr-weekly-brief/SKILL.md",
-        "os",
-        "python3 /Users/apple/Documents/同行资本二级市场/08_scripts/portfolio/pnl.py",
-        "python3 /Users/apple/Documents/同行资本二级市场/08_scripts/risk_engine/monitor.py"
-      ],
-      "last_git_change": "2026-05-18T23:49:56+08:00",
-      "path": "08_scripts/_deploy_scripts/deploy_phase34.py",
-      "present": true,
-      "rationale": "unreferenced Phase-era asset; remove from default runtime before deletion",
-      "referenced_by": [],
-      "runtime_evidence": null,
-      "size": 20112,
-      "tracked": true
-    },
-    {
-      "approved": false,
-      "category": "FREEZE",
-      "imports": [
-        ")}.md",
-        "08_scripts/backtest/simple_backtest.py",
-        "08_scripts/us_signal_harvester/earnings_monitor.py",
-        "09_runbooks/smr-afternoon-data-pipeline.md",
-        "09_runbooks/smr-daily-brief-workflow.md",
-        "09_runbooks/smr-morning-data-pipeline.md",
-        "09_runbooks/smr-portfolio-review.md",
-        "09_runbooks/smr-risk-check.md",
-        "09_runbooks/templates/weekly_brief.md",
-        "__promptpack_smr_advisor__AGENTS.md",
-        "__promptpack_smr_lead__AGENTS.md",
-        "__promptpack_smr_researcher__AGENTS.md",
-        "__promptpack_smr_risk_controller__AGENTS.md",
-        "os"
-      ],
-      "last_git_change": "2026-05-18T23:49:56+08:00",
-      "path": "08_scripts/_deploy_scripts/deploy_phase5.py",
-      "present": true,
-      "rationale": "unreferenced Phase-era asset; remove from default runtime before deletion",
-      "referenced_by": [],
-      "runtime_evidence": null,
-      "size": 18774,
-      "tracked": true
-    },
-    {
-      "approved": false,
       "category": "KEEP",
       "imports": [
         "08_scripts/factor_engine/fundamental.py",
@@ -793,37 +697,6 @@
     },
     {
       "approved": false,
-      "category": "FREEZE",
-      "imports": [
-        "os",
-        "sqlite3"
-      ],
-      "last_git_change": "2026-05-18T23:49:56+08:00",
-      "path": "08_scripts/_deploy_scripts/smr_phase0_db.py",
-      "present": true,
-      "rationale": "unreferenced Phase-era asset; remove from default runtime before deletion",
-      "referenced_by": [],
-      "runtime_evidence": null,
-      "size": 4673,
-      "tracked": true
-    },
-    {
-      "approved": false,
-      "category": "FREEZE",
-      "imports": [
-        "os"
-      ],
-      "last_git_change": "2026-05-18T23:49:56+08:00",
-      "path": "08_scripts/_deploy_scripts/smr_phase0_dirs.py",
-      "present": true,
-      "rationale": "unreferenced Phase-era asset; remove from default runtime before deletion",
-      "referenced_by": [],
-      "runtime_evidence": null,
-      "size": 1347,
-      "tracked": true
-    },
-    {
-      "approved": false,
       "category": "KEEP",
       "imports": [
         "/Users/apple/.openclaw/openclaw.json",
@@ -841,79 +714,6 @@
       ],
       "runtime_evidence": null,
       "size": 3093,
-      "tracked": true
-    },
-    {
-      "approved": false,
-      "category": "FREEZE",
-      "imports": [
-        "/Users/apple/.openclaw/openclaw.json",
-        "AGENTS.md",
-        "IDENTITY.md",
-        "SOUL.md",
-        "akshare",
-        "json",
-        "os",
-        "sqlite3",
-        "yfinance"
-      ],
-      "last_git_change": "2026-05-18T23:49:56+08:00",
-      "path": "08_scripts/_deploy_scripts/smr_phase0_verify.py",
-      "present": true,
-      "rationale": "unreferenced Phase-era asset; remove from default runtime before deletion",
-      "referenced_by": [],
-      "runtime_evidence": null,
-      "size": 4898,
-      "tracked": true
-    },
-    {
-      "approved": false,
-      "category": "FREEZE",
-      "imports": [
-        "/Users/apple/.openclaw/openclaw.json",
-        "AGENTS.md",
-        "HEARTBEAT.md",
-        "IDENTITY.md",
-        "SOUL.md",
-        "USER.md",
-        "akshare",
-        "json",
-        "os",
-        "sqlite3",
-        "yfinance"
-      ],
-      "last_git_change": "2026-05-18T23:49:56+08:00",
-      "path": "08_scripts/_deploy_scripts/smr_phase0_verify2.py",
-      "present": true,
-      "rationale": "unreferenced Phase-era asset; remove from default runtime before deletion",
-      "referenced_by": [],
-      "runtime_evidence": null,
-      "size": 3967,
-      "tracked": true
-    },
-    {
-      "approved": false,
-      "category": "FREEZE",
-      "imports": [
-        "00_longterm.md",
-        "01_midterm.md",
-        "02_shortterm.md",
-        "AGENTS.md",
-        "HEARTBEAT.md",
-        "IDENTITY.md",
-        "MEMORY.md",
-        "SOUL.md",
-        "TOOLS.md",
-        "USER.md",
-        "os"
-      ],
-      "last_git_change": "2026-05-18T23:49:56+08:00",
-      "path": "08_scripts/_deploy_scripts/smr_phase0_workspaces.py",
-      "present": true,
-      "rationale": "unreferenced Phase-era asset; remove from default runtime before deletion",
-      "referenced_by": [],
-      "runtime_evidence": null,
-      "size": 14623,
       "tracked": true
     },
     {
@@ -1777,10 +1577,8 @@
       "last_git_change": "2026-07-13T14:40:56+08:00",
       "path": "08_scripts/backtest/simple_backtest.py",
       "present": true,
-      "rationale": "has a code/config reference or recent runtime evidence",
-      "referenced_by": [
-        "08_scripts/_deploy_scripts/deploy_phase5.py"
-      ],
+      "rationale": "belongs to a current application, domain, configuration or documentation path",
+      "referenced_by": [],
       "runtime_evidence": null,
       "size": 7285,
       "tracked": true
@@ -2264,7 +2062,6 @@
       "rationale": "has a code/config reference or recent runtime evidence",
       "referenced_by": [
         "00_control/source_registry.md",
-        "08_scripts/_deploy_scripts/deploy_phase2.py",
         "08_scripts/_deploy_scripts/deploy_scripts.py",
         "08_scripts/_deploy_scripts/write_smr_plan_v2.py",
         "08_scripts/research/generate_trend_batch.py",
@@ -44445,7 +44242,6 @@
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/_deploy_scripts/deploy_phase34.py",
         "08_scripts/_deploy_scripts/write_smr_plan.py",
         "08_scripts/_deploy_scripts/write_smr_plan_v2.py",
         "08_scripts/scheduler/run_smr_schedule_job.py",
@@ -79001,7 +78797,6 @@
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/_deploy_scripts/deploy_phase34.py",
         "08_scripts/_deploy_scripts/deploy_scripts.py",
         "08_scripts/_deploy_scripts/write_smr_plan.py",
         "08_scripts/_deploy_scripts/write_smr_plan_v2.py",
@@ -79267,7 +79062,6 @@
       "rationale": "has a code/config reference or recent runtime evidence",
       "referenced_by": [
         "00_control/source_registry.md",
-        "08_scripts/_deploy_scripts/deploy_phase5.py",
         "08_scripts/_deploy_scripts/write_smr_plan_v2.py",
         "08_scripts/scheduler/run_smr_schedule_job.py",
         "08_scripts/verification/validate_us_signal_agent_chain.py",
@@ -82000,7 +81794,6 @@
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/_deploy_scripts/deploy_phase34.py",
         "09_runbooks/skills/smr-portfolio/SKILL.md",
         "09_runbooks/skills/smr-recommendation/SKILL.md",
         "09_runbooks/skills/smr-stock-research/SKILL.md"
@@ -82075,7 +81868,6 @@
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/_deploy_scripts/deploy_phase2.py",
         "09_runbooks/skills/smr-portfolio/SKILL.md",
         "09_runbooks/skills/smr-recommendation/SKILL.md",
         "09_runbooks/skills/smr-stock-research/SKILL.md"
@@ -82145,7 +81937,6 @@
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/_deploy_scripts/deploy_phase34.py",
         "09_runbooks/skills/smr-recommendation/SKILL.md",
         "09_runbooks/skills/smr-stock-research/SKILL.md"
       ],
@@ -82165,7 +81956,6 @@
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/_deploy_scripts/deploy_phase34.py",
         "09_runbooks/skills/smr-portfolio/SKILL.md",
         "09_runbooks/skills/smr-stock-research/SKILL.md"
       ],
@@ -82236,7 +82026,6 @@
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/_deploy_scripts/deploy_phase34.py",
         "09_runbooks/skills/smr-portfolio/SKILL.md",
         "09_runbooks/skills/smr-recommendation/SKILL.md",
         "09_runbooks/skills/smr-stock-research/SKILL.md"
@@ -82263,7 +82052,6 @@
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/_deploy_scripts/deploy_phase2.py",
         "09_runbooks/skills/smr-portfolio/SKILL.md",
         "09_runbooks/skills/smr-recommendation/SKILL.md"
       ],
@@ -82280,7 +82068,6 @@
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/_deploy_scripts/deploy_phase34.py",
         "09_runbooks/skills/smr-portfolio/SKILL.md",
         "09_runbooks/skills/smr-recommendation/SKILL.md",
         "09_runbooks/skills/smr-stock-research/SKILL.md"
@@ -82300,7 +82087,6 @@
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/_deploy_scripts/deploy_phase2.py",
         "09_runbooks/skills/smr-portfolio/SKILL.md",
         "09_runbooks/skills/smr-recommendation/SKILL.md",
         "09_runbooks/skills/smr-stock-research/SKILL.md"
@@ -82321,7 +82107,6 @@
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/_deploy_scripts/deploy_phase2.py",
         "09_runbooks/skills/smr-portfolio/SKILL.md",
         "09_runbooks/skills/smr-recommendation/SKILL.md",
         "09_runbooks/skills/smr-stock-research/SKILL.md"
@@ -82341,7 +82126,6 @@
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/_deploy_scripts/deploy_phase34.py",
         "09_runbooks/skills/smr-portfolio/SKILL.md",
         "09_runbooks/skills/smr-recommendation/SKILL.md",
         "09_runbooks/skills/smr-stock-research/SKILL.md"
@@ -82391,7 +82175,6 @@
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/_deploy_scripts/deploy_phase5.py",
         "09_runbooks/smr-system-patch-plan.md"
       ],
       "runtime_evidence": null,
@@ -82465,7 +82248,6 @@
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/_deploy_scripts/deploy_phase5.py",
         "09_runbooks/smr-system-patch-plan.md"
       ],
       "runtime_evidence": null,
@@ -82849,7 +82631,6 @@
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/_deploy_scripts/deploy_phase5.py",
         "09_runbooks/smr-system-patch-plan.md"
       ],
       "runtime_evidence": null,
@@ -82954,7 +82735,6 @@
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/_deploy_scripts/deploy_phase5.py",
         "09_runbooks/smr-system-patch-plan.md"
       ],
       "runtime_evidence": null,
@@ -83015,7 +82795,6 @@
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/_deploy_scripts/deploy_phase5.py",
         "09_runbooks/smr-system-patch-plan.md"
       ],
       "runtime_evidence": null,
@@ -83300,8 +83079,6 @@
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/_deploy_scripts/deploy_phase2.py",
-        "08_scripts/_deploy_scripts/deploy_phase34.py",
         "09_runbooks/skills/smr-daily-brief/SKILL.md",
         "09_runbooks/smr-trae-playbook.md",
         "smr_app/workflows/daily_brief.py"
@@ -83317,10 +83094,8 @@
       "last_git_change": "2026-05-18T23:49:56+08:00",
       "path": "09_runbooks/templates/industry_research_card.md",
       "present": true,
-      "rationale": "has a code/config reference or recent runtime evidence",
-      "referenced_by": [
-        "08_scripts/_deploy_scripts/deploy_phase2.py"
-      ],
+      "rationale": "belongs to a current application, domain, configuration or documentation path",
+      "referenced_by": [],
       "runtime_evidence": null,
       "size": 1321,
       "tracked": true
@@ -83334,8 +83109,6 @@
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/_deploy_scripts/deploy_phase2.py",
-        "08_scripts/_deploy_scripts/deploy_phase34.py",
         "09_runbooks/skills/smr-recommendation/SKILL.md"
       ],
       "runtime_evidence": null,
@@ -83349,10 +83122,8 @@
       "last_git_change": "2026-05-18T23:49:56+08:00",
       "path": "09_runbooks/templates/stock_research_card.md",
       "present": true,
-      "rationale": "has a code/config reference or recent runtime evidence",
-      "referenced_by": [
-        "08_scripts/_deploy_scripts/deploy_phase2.py"
-      ],
+      "rationale": "belongs to a current application, domain, configuration or documentation path",
+      "referenced_by": [],
       "runtime_evidence": null,
       "size": 1334,
       "tracked": true
@@ -83366,7 +83137,6 @@
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/_deploy_scripts/deploy_phase5.py",
         "09_runbooks/smr-trae-playbook.md"
       ],
       "runtime_evidence": null,
@@ -86668,8 +86438,7 @@
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
         "08_scripts/lib/smr_config_loader.py",
-        "08_scripts/lib/smr_phase189_ifind_capability_probe.py",
-        "legacy_manifest/baseline-2026-07-13.md"
+        "08_scripts/lib/smr_phase189_ifind_capability_probe.py"
       ],
       "runtime_evidence": null,
       "size": 1975,
@@ -89158,6 +88927,220 @@
     {
       "approved": false,
       "category": "KEEP",
+      "imports": [
+        "legacy_manifest/removal-log-M5.md"
+      ],
+      "last_git_change": null,
+      "path": "legacy/phase_bootstrap/README.md",
+      "present": true,
+      "rationale": "has a code/config reference or recent runtime evidence",
+      "referenced_by": [
+        "09_runbooks/smr-dual-agent-architecture.md"
+      ],
+      "runtime_evidence": null,
+      "size": 542,
+      "tracked": false
+    },
+    {
+      "approved": true,
+      "category": "FREEZE",
+      "imports": [
+        "/Users/apple/Documents/同行资本二级市场/00_control/sector_priority_map.md",
+        "/Users/apple/Documents/同行资本二级市场/01_data/factor/trend_analysis_{date}.md",
+        "/Users/apple/Documents/同行资本二级市场/01_data/us_signals/{date}.md",
+        "00_control/dispatch_board.md",
+        "00_control/sector_priority_map.md",
+        "00_control/watchlist_registry.md",
+        "00_research-card.md",
+        "09_runbooks/skills/smr-industry-research/SKILL.md",
+        "09_runbooks/skills/smr-stock-research/SKILL.md",
+        "09_runbooks/skills/smr-trend-analysis/SKILL.md",
+        "09_runbooks/skills/smr-us-linkage/SKILL.md",
+        "09_runbooks/templates/daily_brief.md",
+        "09_runbooks/templates/industry_research_card.md",
+        "09_runbooks/templates/recommendation_card.md",
+        "09_runbooks/templates/stock_research_card.md",
+        "catalyst.md",
+        "conclusion.md",
+        "os",
+        "risk_assessment.md",
+        "thesis.md",
+        "us_linkage.md",
+        "valuation.md"
+      ],
+      "last_git_change": null,
+      "path": "legacy/phase_bootstrap/deploy_phase2.py",
+      "present": true,
+      "rationale": "unreferenced Phase-era asset; remove from default runtime before deletion",
+      "referenced_by": [],
+      "runtime_evidence": null,
+      "size": 29499,
+      "tracked": true
+    },
+    {
+      "approved": true,
+      "category": "FREEZE",
+      "imports": [
+        "/Users/apple/Documents/同行资本二级市场/04_portfolio/performance/daily_{date}.md",
+        "/Users/apple/Documents/同行资本二级市场/06_reports/daily/daily_brief_{date}.md",
+        "/Users/apple/Documents/同行资本二级市场/06_reports/weekly/weekly_brief_{date}.md",
+        "/Users/apple/Documents/同行资本二级市场/09_runbooks/templates/daily_brief.md",
+        "/Users/apple/Documents/同行资本二级市场/09_runbooks/templates/recommendation_card.md",
+        "05_risk/rules/risk_rules.md",
+        "09_runbooks/skills/smr-daily-brief/SKILL.md",
+        "09_runbooks/skills/smr-portfolio/SKILL.md",
+        "09_runbooks/skills/smr-recommendation/SKILL.md",
+        "09_runbooks/skills/smr-risk-alert/SKILL.md",
+        "09_runbooks/skills/smr-thesis-check/SKILL.md",
+        "09_runbooks/skills/smr-weekly-brief/SKILL.md",
+        "os",
+        "python3 /Users/apple/Documents/同行资本二级市场/08_scripts/portfolio/pnl.py",
+        "python3 /Users/apple/Documents/同行资本二级市场/08_scripts/risk_engine/monitor.py"
+      ],
+      "last_git_change": null,
+      "path": "legacy/phase_bootstrap/deploy_phase34.py",
+      "present": true,
+      "rationale": "unreferenced Phase-era asset; remove from default runtime before deletion",
+      "referenced_by": [],
+      "runtime_evidence": null,
+      "size": 20112,
+      "tracked": true
+    },
+    {
+      "approved": true,
+      "category": "FREEZE",
+      "imports": [
+        ")}.md",
+        "08_scripts/backtest/simple_backtest.py",
+        "08_scripts/us_signal_harvester/earnings_monitor.py",
+        "09_runbooks/smr-afternoon-data-pipeline.md",
+        "09_runbooks/smr-daily-brief-workflow.md",
+        "09_runbooks/smr-morning-data-pipeline.md",
+        "09_runbooks/smr-portfolio-review.md",
+        "09_runbooks/smr-risk-check.md",
+        "09_runbooks/templates/weekly_brief.md",
+        "__promptpack_smr_advisor__AGENTS.md",
+        "__promptpack_smr_lead__AGENTS.md",
+        "__promptpack_smr_researcher__AGENTS.md",
+        "__promptpack_smr_risk_controller__AGENTS.md",
+        "os"
+      ],
+      "last_git_change": null,
+      "path": "legacy/phase_bootstrap/deploy_phase5.py",
+      "present": true,
+      "rationale": "unreferenced Phase-era asset; remove from default runtime before deletion",
+      "referenced_by": [],
+      "runtime_evidence": null,
+      "size": 18774,
+      "tracked": true
+    },
+    {
+      "approved": true,
+      "category": "FREEZE",
+      "imports": [
+        "os",
+        "sqlite3"
+      ],
+      "last_git_change": null,
+      "path": "legacy/phase_bootstrap/smr_phase0_db.py",
+      "present": true,
+      "rationale": "unreferenced Phase-era asset; remove from default runtime before deletion",
+      "referenced_by": [],
+      "runtime_evidence": null,
+      "size": 4673,
+      "tracked": true
+    },
+    {
+      "approved": true,
+      "category": "FREEZE",
+      "imports": [
+        "os"
+      ],
+      "last_git_change": null,
+      "path": "legacy/phase_bootstrap/smr_phase0_dirs.py",
+      "present": true,
+      "rationale": "unreferenced Phase-era asset; remove from default runtime before deletion",
+      "referenced_by": [],
+      "runtime_evidence": null,
+      "size": 1347,
+      "tracked": true
+    },
+    {
+      "approved": true,
+      "category": "FREEZE",
+      "imports": [
+        "/Users/apple/.openclaw/openclaw.json",
+        "AGENTS.md",
+        "IDENTITY.md",
+        "SOUL.md",
+        "akshare",
+        "json",
+        "os",
+        "sqlite3",
+        "yfinance"
+      ],
+      "last_git_change": null,
+      "path": "legacy/phase_bootstrap/smr_phase0_verify.py",
+      "present": true,
+      "rationale": "unreferenced Phase-era asset; remove from default runtime before deletion",
+      "referenced_by": [],
+      "runtime_evidence": null,
+      "size": 4898,
+      "tracked": true
+    },
+    {
+      "approved": true,
+      "category": "FREEZE",
+      "imports": [
+        "/Users/apple/.openclaw/openclaw.json",
+        "AGENTS.md",
+        "HEARTBEAT.md",
+        "IDENTITY.md",
+        "SOUL.md",
+        "USER.md",
+        "akshare",
+        "json",
+        "os",
+        "sqlite3",
+        "yfinance"
+      ],
+      "last_git_change": null,
+      "path": "legacy/phase_bootstrap/smr_phase0_verify2.py",
+      "present": true,
+      "rationale": "unreferenced Phase-era asset; remove from default runtime before deletion",
+      "referenced_by": [],
+      "runtime_evidence": null,
+      "size": 3967,
+      "tracked": true
+    },
+    {
+      "approved": true,
+      "category": "FREEZE",
+      "imports": [
+        "00_longterm.md",
+        "01_midterm.md",
+        "02_shortterm.md",
+        "AGENTS.md",
+        "HEARTBEAT.md",
+        "IDENTITY.md",
+        "MEMORY.md",
+        "SOUL.md",
+        "TOOLS.md",
+        "USER.md",
+        "os"
+      ],
+      "last_git_change": null,
+      "path": "legacy/phase_bootstrap/smr_phase0_workspaces.py",
+      "present": true,
+      "rationale": "unreferenced Phase-era asset; remove from default runtime before deletion",
+      "referenced_by": [],
+      "runtime_evidence": null,
+      "size": 14623,
+      "tracked": true
+    },
+    {
+      "approved": false,
+      "category": "KEEP",
       "imports": [],
       "last_git_change": null,
       "path": "legacy_manifest/",
@@ -89186,6 +89169,32 @@
       "runtime_evidence": null,
       "size": 3125,
       "tracked": true
+    },
+    {
+      "approved": false,
+      "category": "KEEP",
+      "imports": [
+        "08_scripts/registry/query_registry.py",
+        "api/server.js",
+        "deploy_phase2.py",
+        "deploy_phase34.py",
+        "deploy_phase5.py",
+        "smr_phase0_db.py",
+        "smr_phase0_dirs.py",
+        "smr_phase0_verify.py",
+        "smr_phase0_verify2.py",
+        "smr_phase0_workspaces.py"
+      ],
+      "last_git_change": null,
+      "path": "legacy_manifest/removal-log-M5.md",
+      "present": true,
+      "rationale": "has a code/config reference or recent runtime evidence",
+      "referenced_by": [
+        "docs/plans/2026-07-13-personal-research-workbench-mvp.md"
+      ],
+      "runtime_evidence": null,
+      "size": 1952,
+      "tracked": false
     },
     {
       "approved": false,
@@ -89329,7 +89338,6 @@
       "rationale": "has a code/config reference or recent runtime evidence",
       "referenced_by": [
         "docs/plans/2026-07-13-personal-research-workbench-mvp.md",
-        "legacy_manifest/baseline-2026-07-13.md",
         "tools/inventory_repository.py"
       ],
       "runtime_evidence": null,
@@ -89350,7 +89358,6 @@
       "rationale": "has a code/config reference or recent runtime evidence",
       "referenced_by": [
         "docs/plans/2026-07-13-personal-research-workbench-mvp.md",
-        "legacy_manifest/baseline-2026-07-13.md",
         "tests/smoke/test_development_contract.py",
         "tools/inventory_repository.py"
       ],
@@ -89429,6 +89436,7 @@
       "imports": [
         "api/server.js",
         "test*.py",
+        "tests/api/*.test.js",
         "tools/inventory_repository.py"
       ],
       "last_git_change": "2026-07-13T14:59:08+08:00",
@@ -89437,7 +89445,7 @@
       "rationale": "tracked asset retained by default until a stronger removal signal exists",
       "referenced_by": [],
       "runtime_evidence": null,
-      "size": 3001,
+      "size": 4045,
       "tracked": true
     },
     {
@@ -89705,7 +89713,6 @@
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/_deploy_scripts/deploy_phase2.py",
         "08_scripts/research/generate_trend_batch.py",
         "09_runbooks/skills/smr-stock-research/SKILL.md",
         "docs/plans/2026-07-13-personal-research-workbench-mvp.md"
@@ -89967,7 +89974,6 @@
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/_deploy_scripts/deploy_phase34.py",
         "09_runbooks/skills/smr-daily-brief/SKILL.md",
         "docs/plans/2026-07-13-personal-research-workbench-mvp.md"
       ],
@@ -91491,18 +91497,21 @@
         "inventory.json",
         "json",
         "legacy_manifest/inventory.json",
+        "legacy_manifest/removal-log.md",
         "module.py",
         "pathlib",
         "query_registry.py",
+        "removal-log.md",
         "runbook.md",
         "server.js",
         "smr_phase0_openclaw.py",
+        "smr_phase9_old_runner.py",
         "src/app.js",
         "tempfile",
         "tools.inventory_repository",
         "unittest"
       ],
-      "last_git_change": "2026-07-13T14:48:01+08:00",
+      "last_git_change": "2026-07-14T00:13:18+08:00",
       "path": "tests/smoke/test_repository_inventory.py",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -91510,7 +91519,7 @@
         "docs/plans/2026-07-13-personal-research-workbench-mvp.md"
       ],
       "runtime_evidence": null,
-      "size": 9532,
+      "size": 10581,
       "tracked": true
     },
     {
@@ -111261,6 +111270,7 @@
       "category": "KEEP",
       "imports": [
         "__future__",
+        "contextlib",
         "pathlib",
         "smr_app.adapters.contracts",
         "smr_app.runtime.migrations",
@@ -111278,7 +111288,7 @@
         "docs/plans/2026-07-13-personal-research-workbench-mvp.md"
       ],
       "runtime_evidence": null,
-      "size": 3312,
+      "size": 2864,
       "tracked": true
     },
     {
@@ -111286,6 +111296,7 @@
       "category": "KEEP",
       "imports": [
         "__future__",
+        "contextlib",
         "json",
         "pathlib",
         "smr_app.adapters.contracts",
@@ -111304,7 +111315,7 @@
         "docs/plans/2026-07-13-personal-research-workbench-mvp.md"
       ],
       "runtime_evidence": null,
-      "size": 3351,
+      "size": 3410,
       "tracked": true
     },
     {
@@ -111407,7 +111418,7 @@
         "sys",
         "typing"
       ],
-      "last_git_change": "2026-07-13T14:48:01+08:00",
+      "last_git_change": "2026-07-14T00:13:18+08:00",
       "path": "tools/inventory_repository.py",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -111416,7 +111427,7 @@
         "scripts/check.ps1"
       ],
       "runtime_evidence": null,
-      "size": 21767,
+      "size": 21917,
       "tracked": true
     },
     {
@@ -111467,7 +111478,7 @@
       "tracked": true
     }
   ],
-  "generated_at": "2026-07-13T16:12:39.448095+00:00",
+  "generated_at": "2026-07-13T16:20:00.912527+00:00",
   "project_root": ".",
   "schema_version": 1,
   "summary": {
@@ -111476,12 +111487,12 @@
       "DELETE_CANDIDATE": 52,
       "FREEZE": 3230,
       "GENERATED": 11,
-      "KEEP": 2610,
+      "KEEP": 2612,
       "SECRET": 1
     },
     "delete_approved_count": 0,
-    "file_count": 5907,
-    "present_count": 5849,
+    "file_count": 5909,
+    "present_count": 5851,
     "tracked_count": 5833
   }
 }

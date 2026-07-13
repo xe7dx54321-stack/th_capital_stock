@@ -4,6 +4,7 @@ import json
 import sqlite3
 import tempfile
 import unittest
+from contextlib import closing
 from pathlib import Path
 
 from smr_app.adapters.contracts import AdapterResult
@@ -18,38 +19,36 @@ class PortfolioReviewWorkflowTests(unittest.TestCase):
             root = Path(directory)
             db_path = root / "runtime.db"
             apply_migrations(db_path)
-            conn = sqlite3.connect(db_path)
-            conn.executescript(
-                """
-                CREATE TABLE paper_portfolio_positions (
-                    id INTEGER PRIMARY KEY, position_id TEXT, ticker TEXT, market TEXT, quantity REAL,
-                    avg_cost REAL, position_pct REAL, status TEXT, opened_at TEXT, closed_at TEXT,
-                    source_recommendation_id TEXT, metadata_json TEXT
-                );
-                CREATE TABLE decision_ledger (
-                    decision_id TEXT, ticker TEXT, market TEXT, theme TEXT, action TEXT, status TEXT,
-                    decision_time TEXT, thesis_summary TEXT, evidence_ids_json TEXT,
-                    bear_case_summary TEXT, kill_conditions_json TEXT, risk_notes TEXT,
-                    human_review_status TEXT, outcome_status TEXT, metadata_json TEXT, updated_at TEXT
-                );
-                """
-            )
-            conn.executemany(
-                "INSERT INTO paper_portfolio_positions VALUES (?, ?, ?, ?, 10, 100, ?, 'open', '2026-07-01', NULL, ?, ?)",
-                [
-                    (1, "pos-a", "300308.SZ", "A", 24.0, "rec-a", json.dumps({"theme": "AI"})),
-                    (2, "pos-b", "0700.HK", "H", 8.0, "rec-b", json.dumps({"theme": "Internet"})),
-                ],
-            )
-            conn.executemany(
-                "INSERT INTO decision_ledger VALUES (?, ?, ?, ?, 'hold', 'pending_human_review', '2026-07-12', ?, '[]', '', '[]', '', 'pending', '', '{}', '2026-07-13')",
-                [
-                    ("dec-a", "300308.SZ", "A", "AI", "thesis a"),
-                    ("dec-b", "0700.HK", "H", "Internet", "thesis b"),
-                ],
-            )
-            conn.commit()
-            conn.close()
+            with closing(sqlite3.connect(db_path)) as conn:
+                conn.executescript(
+                    """
+                    CREATE TABLE paper_portfolio_positions (
+                        id INTEGER PRIMARY KEY, position_id TEXT, ticker TEXT, market TEXT, quantity REAL,
+                        avg_cost REAL, position_pct REAL, status TEXT, opened_at TEXT, closed_at TEXT,
+                        source_recommendation_id TEXT, metadata_json TEXT
+                    );
+                    """
+                )
+                conn.executemany(
+                    "INSERT INTO paper_portfolio_positions VALUES (?, ?, ?, ?, 10, 100, ?, 'open', '2026-07-01', NULL, ?, ?)",
+                    [
+                        (1, "pos-a", "300308.SZ", "A", 24.0, "rec-a", json.dumps({"theme": "AI"})),
+                        (2, "pos-b", "0700.HK", "H", 8.0, "rec-b", json.dumps({"theme": "Internet"})),
+                    ],
+                )
+                conn.executemany(
+                    """INSERT INTO decision_ledger(
+                        decision_id, recommendation_id, ticker, market, theme, action, status,
+                        decision_time, thesis_summary, evidence_ids_json, bear_case_summary,
+                        kill_conditions_json, risk_notes, human_review_status, outcome_status,
+                        metadata_json, updated_at
+                    ) VALUES (?, ?, ?, ?, ?, 'hold', 'pending_human_review', '2026-07-12', ?, '[]', '', '[]', '', 'pending', 'open', '{}', '2026-07-13')""",
+                    [
+                        ("dec-a", "rec-a", "300308.SZ", "A", "AI", "thesis a"),
+                        ("dec-b", "rec-b", "0700.HK", "H", "Internet", "thesis b"),
+                    ],
+                )
+                conn.commit()
 
             def scheduler(request):
                 return AdapterResult("ok", {"job_id": request.job_id, "dry_run": request.dry_run})

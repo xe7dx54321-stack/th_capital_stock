@@ -83,9 +83,35 @@ try {
     if ($Full) {
         $inventoryArgs = @($python.Prefix) + @(
             "tools/inventory_repository.py",
-            "--check-only"
+            "--verify-manifest"
         )
         Invoke-Checked -Label "Repository inventory audit" -Executable $python.Executable -Arguments $inventoryArgs
+
+        $runtimeArgs = @($python.Prefix) + @(
+            "-m", "unittest", "discover",
+            "-s", "tests/runtime",
+            "-p", "test*.py",
+            "-v"
+        )
+        Invoke-Checked -Label "Python runtime tests" -Executable $python.Executable -Arguments $runtimeArgs
+
+        $workflowArgs = @($python.Prefix) + @(
+            "-m", "unittest", "discover",
+            "-s", "tests/workflows",
+            "-p", "test*.py",
+            "-v"
+        )
+        Invoke-Checked -Label "Python workflow tests" -Executable $python.Executable -Arguments $workflowArgs
+
+        Invoke-Checked -Label "Express API tests" -Executable $node -Arguments @(
+            "--test", "tests/api/*.test.js"
+        )
+
+        $vitest = Join-Path $ProjectRoot "node_modules\.bin\vitest.cmd"
+        if (-not (Test-Path -LiteralPath $vitest -PathType Leaf)) {
+            throw "Vitest is not installed. Run 'npm ci' in $ProjectRoot first."
+        }
+        Invoke-Checked -Label "React UI tests" -Executable $vitest -Arguments @("run")
     }
 
     Write-Host "All requested checks passed."
