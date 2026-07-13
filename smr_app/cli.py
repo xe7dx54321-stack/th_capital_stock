@@ -23,6 +23,13 @@ def _json(value: Any) -> str:
     return json.dumps(value, ensure_ascii=False, sort_keys=True)
 
 
+def _configure_console_encoding() -> None:
+    for stream in (sys.stdout, sys.stderr):
+        reconfigure = getattr(stream, "reconfigure", None)
+        if reconfigure:
+            reconfigure(encoding="utf-8", errors="replace")
+
+
 def _test_fixture() -> WorkflowDefinition:
     return WorkflowDefinition(
         workflow_id="test_fixture",
@@ -125,6 +132,7 @@ def _migrate(args: argparse.Namespace) -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
+    _configure_console_encoding()
     args = build_parser().parse_args(argv)
     try:
         if args.command == "list":

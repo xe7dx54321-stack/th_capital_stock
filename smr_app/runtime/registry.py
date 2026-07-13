@@ -39,12 +39,19 @@ def production_registry() -> WorkflowRegistry:
         "thesis_update": ("Thesis update", "Propose a governed update to an investment thesis."),
         "portfolio_review": ("Portfolio review", "Review paper portfolio risk and decisions."),
     }
-    return WorkflowRegistry(
-        WorkflowDefinition(
-            workflow_id=workflow_id,
-            title=metadata[workflow_id][0],
-            description=metadata[workflow_id][1],
-            enabled=False,
-        )
-        for workflow_id in sorted(PRODUCTION_WORKFLOW_IDS)
-    )
+    definitions = []
+    for workflow_id in sorted(PRODUCTION_WORKFLOW_IDS):
+        if workflow_id == "stock_deep_dive":
+            from smr_app.workflows.stock_deep_dive import stock_deep_dive_definition
+
+            definitions.append(stock_deep_dive_definition())
+        else:
+            definitions.append(
+                WorkflowDefinition(
+                    workflow_id=workflow_id,
+                    title=metadata[workflow_id][0],
+                    description=metadata[workflow_id][1],
+                    enabled=False,
+                )
+            )
+    return WorkflowRegistry(definitions)

@@ -11,6 +11,7 @@ class StageResult:
     message: str
     summary: dict[str, Any] = field(default_factory=dict)
     payload: dict[str, Any] = field(default_factory=dict)
+    artifacts: tuple[dict[str, Any], ...] = ()
 
     @classmethod
     def completed(
@@ -18,8 +19,9 @@ class StageResult:
         message: str,
         summary: Mapping[str, Any] | None = None,
         payload: Mapping[str, Any] | None = None,
+        artifacts: tuple[dict[str, Any], ...] = (),
     ) -> "StageResult":
-        return cls("completed", message, dict(summary or {}), dict(payload or {}))
+        return cls("completed", message, dict(summary or {}), dict(payload or {}), artifacts)
 
     @classmethod
     def waiting_review(
@@ -27,8 +29,9 @@ class StageResult:
         message: str,
         summary: Mapping[str, Any] | None = None,
         payload: Mapping[str, Any] | None = None,
+        artifacts: tuple[dict[str, Any], ...] = (),
     ) -> "StageResult":
-        return cls("waiting_review", message, dict(summary or {}), dict(payload or {}))
+        return cls("waiting_review", message, dict(summary or {}), dict(payload or {}), artifacts)
 
 
 @dataclass
@@ -38,6 +41,7 @@ class WorkflowContext:
     input_data: dict[str, Any]
     db_path: Path
     _request_cancel: Callable[[], None]
+    state: dict[str, Any] = field(default_factory=dict)
 
     def request_cancel(self) -> None:
         self._request_cancel()

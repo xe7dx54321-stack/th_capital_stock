@@ -123,6 +123,14 @@ class WorkflowRunner:
                     stage_id=stage.stage_id,
                     payload={**result.payload, "summary": result.summary},
                 )
+                for artifact in result.artifacts:
+                    store.append_event(
+                        run_id,
+                        "artifact.created",
+                        artifact.get("title") or "Artifact created",
+                        stage_id=stage.stage_id,
+                        payload=artifact,
+                    )
 
             if cancellation.is_requested():
                 return self._mark_cancelled(store, run_id)
