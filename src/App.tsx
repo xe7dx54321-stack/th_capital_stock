@@ -7,6 +7,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Dashboard from "./pages/Dashboard";
 import StockDetailPage from "./pages/StockDetailPage";
+import ResearchWorkbench from "./app/ResearchWorkbench";
 
 export default function App() {
   return (
@@ -14,6 +15,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Dashboard />} />
         <Route path="/stock/:code" element={<StockDetailPage />} />
+        <Route path="/workbench" element={<ResearchWorkbench />} />
       </Routes>
     </BrowserRouter>
   );

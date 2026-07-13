@@ -16,6 +16,7 @@
     "check:types": "tsc -b --noEmit",
     "check:api": "node --check api/server.js",
     "test:api": "node --test tests/api/*.test.js",
+    "test:ui": "vitest run",
     "test:smoke": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/check.ps1 -PythonOnly"
   },
   "dependencies": {
@@ -35,6 +36,9 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.25.0",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
     "@types/better-sqlite3": "^7.6.13",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
@@ -48,12 +52,14 @@
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.19",
     "globals": "^16.0.0",
+    "jsdom": "^29.1.1",
     "postcss": "^8.5.15",
     "tailwindcss": "^3.4.19",
     "typescript": "~5.8.3",
     "typescript-eslint": "^8.30.1",
     "vite": "^6.3.5",
     "vite-plugin-trae-solo-badge": "^1.0.0",
-    "vite-tsconfig-paths": "^5.1.4"
+    "vite-tsconfig-paths": "^5.1.4",
+    "vitest": "^4.1.10"
   }
 }

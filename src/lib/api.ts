@@ -287,3 +287,125 @@ export function fetchNewsDetail(id: number): Promise<NewsDetail> {
 export function fetchStockDetail(code: string): Promise<StockDetail> {
   return apiGet<StockDetail>(`/api/stock/${encodeURIComponent(code)}`);
 }
+
+// ---------- Local research workflow API ----------
+
+export interface WorkflowDefinition {
+  workflow_id: string;
+  title: string;
+  description: string;
+  enabled: boolean;
+  input_schema: Record<string, unknown>;
+}
+
+export interface WorkflowArtifact {
+  artifact_id: string;
+  run_id: string;
+  artifact_type: string;
+  title: string;
+  relative_path: string;
+  mime_type: string;
+  metadata?: Record<string, unknown>;
+  created_at: string;
+}
+
+export interface WorkflowRun {
+  run_id: string;
+  workflow_id: string;
+  status: string;
+  input: Record<string, unknown>;
+  summary?: Record<string, unknown>;
+  error_code?: string | null;
+  error_message?: string | null;
+  created_at: string;
+  started_at?: string | null;
+  completed_at?: string | null;
+  cancel_requested_at?: string | null;
+  process_id?: number | null;
+  process_status?: string | null;
+  artifacts?: WorkflowArtifact[];
+}
+
+export interface WorkflowEvent {
+  event_id?: number;
+  run_id: string;
+  sequence: number;
+  event_type: string;
+  stage_id?: string | null;
+  level?: string;
+  message?: string;
+  payload: Record<string, unknown>;
+  created_at: string;
+}
+
+async function apiRequest<T>(path: string, init?: RequestInit): Promise<T> {
+  const response = await fetch(path, {
+    ...init,
+    headers: { "Content-Type": "application/json", ...init?.headers },
+  });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error((body as { error?: string }).error || `API ${path} failed: ${response.status}`);
+  }
+  return body as T;
+}
+
+export function fetchWorkflows(): Promise<{ workflows: WorkflowDefinition[] }> {
+  return apiRequest("/api/workflows");
+}
+
+export function fetchWorkflowRuns(limit = 50): Promise<{ runs: WorkflowRun[] }> {
+  return apiRequest(`/api/workflow-runs?limit=${limit}`);
+}
+
+export function fetchWorkflowRun(runId: string): Promise<WorkflowRun> {
+  return apiRequest(`/api/workflow-runs/${encodeURIComponent(runId)}`);
+}
+
+export function createWorkflowRun(
+  workflowId: string,
+  input: Record<string, unknown>,
+  idempotencyKey?: string,
+): Promise<WorkflowRun> {
+  return apiRequest("/api/workflow-runs", {
+    method: "POST",
+    headers: idempotencyKey ? { "Idempotency-Key": idempotencyKey } : undefined,
+    body: JSON.stringify({ workflow_id: workflowId, input }),
+  });
+}
+
+export function fetchWorkflowEvents(runId: string, after = 0): Promise<{ events: WorkflowEvent[] }> {
+  return apiRequest(`/api/workflow-runs/${encodeURIComponent(runId)}/events?after=${after}`);
+}
+
+export function cancelWorkflowRun(runId: string): Promise<{ requested: boolean; run: WorkflowRun }> {
+  return apiRequest(`/api/workflow-runs/${encodeURIComponent(runId)}/cancel`, { method: "POST" });
+}
+
+export function artifactUrl(artifactId: string): string {
+  return `/api/artifacts/${encodeURIComponent(artifactId)}`;
+}
+
+const workflowEventTypes = [
+  "run.queued", "run.started", "stage.started", "stage.progress", "stage.completed",
+  "stage.warning", "artifact.created", "review.requested", "run.completed", "run.failed",
+  "run.cancelled",
+];
+
+export function subscribeWorkflowEvents(
+  runId: string,
+  after: number,
+  onEvent: (event: WorkflowEvent) => void,
+  onError: () => void,
+): () => void {
+  const source = new EventSource(
+    `/api/workflow-runs/${encodeURIComponent(runId)}/stream?after=${after}`,
+  );
+  const handle = (raw: MessageEvent<string>) => {
+    try { onEvent(JSON.parse(raw.data) as WorkflowEvent); } catch { /* heartbeat or malformed event */ }
+  };
+  workflowEventTypes.forEach((name) => source.addEventListener(name, handle as EventListener));
+  source.onmessage = handle;
+  source.onerror = onError;
+  return () => source.close();
+}
