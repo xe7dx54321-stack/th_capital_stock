@@ -53,6 +53,10 @@ def production_registry() -> WorkflowRegistry:
             from smr_app.workflows.portfolio_review import portfolio_review_definition
 
             definitions.append(portfolio_review_definition())
+        elif workflow_id == "thesis_update":
+            from smr_app.workflows.thesis_update import thesis_update_definition
+
+            definitions.append(thesis_update_definition())
         else:
             definitions.append(
                 WorkflowDefinition(

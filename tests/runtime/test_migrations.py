@@ -16,12 +16,12 @@ class MigrationTests(unittest.TestCase):
             first = apply_migrations(db_path)
             second = apply_migrations(db_path)
 
-            self.assertEqual(["0000", "0001", "0002", "0003"], first.applied_versions)
+            self.assertEqual(["0000", "0001", "0002", "0003", "0004"], first.applied_versions)
             self.assertEqual([], second.applied_versions)
             conn = sqlite3.connect(db_path)
             try:
                 versions = [row[0] for row in conn.execute("SELECT version FROM schema_migrations ORDER BY version")]
-                self.assertEqual(["0000", "0001", "0002", "0003"], versions)
+                self.assertEqual(["0000", "0001", "0002", "0003", "0004"], versions)
                 self.assertEqual("ok", conn.execute("PRAGMA integrity_check").fetchone()[0])
             finally:
                 conn.close()
@@ -45,7 +45,7 @@ class MigrationTests(unittest.TestCase):
 
             result = apply_migrations(db_path)
 
-            self.assertEqual(["0000", "0001", "0002", "0003"], result.applied_versions)
+            self.assertEqual(["0000", "0001", "0002", "0003", "0004"], result.applied_versions)
 
     def test_changed_applied_migration_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:

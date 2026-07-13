@@ -409,3 +409,58 @@ export function subscribeWorkflowEvents(
   source.onerror = onError;
   return () => source.close();
 }
+
+export interface MemoryEvidenceLink {
+  evidence_id: string;
+  relation: "supports" | "contradicts" | "supersedes" | "context";
+  created_at: string;
+}
+
+export interface MemoryFieldDiff { field: string; before: unknown; after: unknown; }
+
+export interface MemoryReviewLog {
+  review_id: string;
+  action: string;
+  previous_status: string;
+  new_status: string;
+  reviewer: string;
+  reason: string;
+  reviewed_at: string;
+}
+
+export interface MemoryDetail {
+  memory_id: string;
+  entity_type: string;
+  entity_id: string;
+  memory_type: string;
+  content: Record<string, unknown>;
+  status: "candidate" | "approved" | "rejected" | "archived";
+  confidence?: number | null;
+  source_run_id?: string | null;
+  parent_memory_id?: string | null;
+  version: number;
+  field_diff: MemoryFieldDiff[];
+  evidence_links: MemoryEvidenceLink[];
+  review_log: MemoryReviewLog[];
+  reviewed_by?: string | null;
+  review_reason?: string | null;
+  reviewed_at?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export function fetchMemory(memoryId: string): Promise<MemoryDetail> {
+  return apiRequest(`/api/memories/${encodeURIComponent(memoryId)}`);
+}
+
+export function reviewMemory(
+  memoryId: string,
+  action: "approve" | "reject" | "archive",
+  reviewer: string,
+  reason: string,
+): Promise<{ memory: MemoryDetail }> {
+  return apiRequest(`/api/memories/${encodeURIComponent(memoryId)}/review`, {
+    method: "POST",
+    body: JSON.stringify({ action, reviewer, reason }),
+  });
+}

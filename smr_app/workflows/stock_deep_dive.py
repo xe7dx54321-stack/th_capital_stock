@@ -1,20 +1,18 @@
 from __future__ import annotations
 
-import json
 import os
 import re
 import sqlite3
-import uuid
 from pathlib import Path
 from typing import Any
 
 from smr_app.adapters.evidence import EvidenceRequest, load_evidence
 from smr_app.adapters.fundamentals import FundamentalsRequest, load_fundamentals
+from smr_app.adapters.memory import create_memory_candidate
 from smr_app.adapters.risk import RiskContextRequest, load_risk_context
 from smr_app.adapters.valuation import ValuationRequest, load_valuation
 from smr_app.runtime.artifact_store import ArtifactStore
 from smr_app.runtime.contracts import StageDefinition, StageResult, WorkflowContext, WorkflowDefinition
-from smr_app.runtime.event_store import immediate_transaction, utc_now
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -292,43 +290,24 @@ def _write_outputs_stage(artifact_root: Path):
             )
             memory_id = None
             if summary["conclusion_status"] == "supported":
-                memory_id = f"memory_{uuid.uuid4().hex}"
-                now = utc_now()
-                with immediate_transaction(conn):
-                    conn.execute(
-                        """
-                        INSERT INTO memory_items(
-                            memory_id, entity_type, entity_id, memory_type, content,
-                            status, confidence, source_run_id, created_at, updated_at
-                        ) VALUES (?, 'ticker', ?, 'thesis_candidate', ?, 'candidate', ?, ?, ?, ?)
-                        """,
-                        (
-                            memory_id,
-                            summary["ticker"],
-                            json.dumps(
-                                {
-                                    "claims": summary["claims"],
-                                    "scenarios": summary["scenarios"],
-                                    "freshness": summary["freshness"],
-                                },
-                                ensure_ascii=False,
-                                sort_keys=True,
-                            ),
-                            0.7,
-                            context.run_id,
-                            now,
-                            now,
-                        ),
-                    )
-                    for evidence_id in summary["evidence_ids"]:
-                        conn.execute(
-                            """
-                            INSERT OR IGNORE INTO memory_evidence_links(
-                                memory_id, evidence_id, relation, created_at
-                            ) VALUES (?, ?, 'supports', ?)
-                            """,
-                            (memory_id, evidence_id, now),
-                        )
+                candidate = create_memory_candidate(
+                    conn,
+                    entity_type="ticker",
+                    entity_id=summary["ticker"],
+                    memory_type="investment_thesis",
+                    content={
+                        "claims": summary["claims"],
+                        "scenarios": summary["scenarios"],
+                        "freshness": summary["freshness"],
+                    },
+                    evidence_links=[
+                        {"evidence_id": evidence_id, "relation": "supports"}
+                        for evidence_id in summary["evidence_ids"]
+                    ],
+                    confidence=0.7,
+                    source_run_id=context.run_id,
+                )
+                memory_id = candidate["memory_id"]
         finally:
             conn.close()
 

@@ -126,6 +126,15 @@ export default function ResearchWorkbench() {
     } finally { setLaunching(false); }
   }
 
+  async function refreshSelectedRun() {
+    if (!selectedRunId) return;
+    try {
+      const run = await fetchWorkflowRun(selectedRunId);
+      setSelectedRun(run);
+      setRuns((current) => [run, ...current.filter((item) => item.run_id !== run.run_id)]);
+    } catch { /* the next history refresh can recover this view */ }
+  }
+
   return (
     <main className="workbench-shell">
       <header className="workbench-masthead">
@@ -139,7 +148,7 @@ export default function ResearchWorkbench() {
           <RunTimeline run={selectedRun} events={events} connection={connection} />
           <ArtifactViewer artifacts={selectedRun?.artifacts || []} />
         </div>
-        <ResearchContextPanel run={selectedRun} />
+        <ResearchContextPanel run={selectedRun} onMemoryReviewed={() => void refreshSelectedRun()} />
       </div>
     </main>
   );

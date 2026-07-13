@@ -53,8 +53,19 @@ export const WORKFLOWS = [
     workflow_id: "thesis_update",
     title: "Thesis update",
     description: "Propose a governed update to an investment thesis.",
-    enabled: false,
-    input_schema: { type: "object", additionalProperties: false },
+    enabled: true,
+    input_schema: {
+      type: "object",
+      required: ["ticker", "updates", "evidence_links"],
+      properties: {
+        ticker: { type: "string" },
+        updates: { type: "object" },
+        evidence_links: { type: "array" },
+        confidence: { type: "number", minimum: 0, maximum: 1 },
+        allow_network: { type: "boolean", default: false },
+      },
+      additionalProperties: false,
+    },
   },
 ];
 
@@ -107,6 +118,24 @@ function validateRunRequest(body) {
       workflow,
       input: { allow_network: false, run_refresh_job: input.run_refresh_job === true },
     };
+  }
+  if (workflow.workflow_id === "thesis_update") {
+    if (Object.keys(input).some((key) => !["ticker", "updates", "evidence_links", "confidence", "allow_network"].includes(key))) {
+      throw new TypeError("thesis_update input contains unsupported fields");
+    }
+    const ticker = String(input.ticker || "").trim().toUpperCase();
+    if (!TICKER_PATTERN.test(ticker)) throw new TypeError("invalid ticker");
+    if (!input.updates || typeof input.updates !== "object" || Array.isArray(input.updates) || Object.keys(input.updates).length === 0) {
+      throw new TypeError("updates must be a non-empty object");
+    }
+    if (!Array.isArray(input.evidence_links) || input.evidence_links.length === 0) {
+      throw new TypeError("at least one evidence link is required");
+    }
+    if (input.allow_network === true) throw new TypeError("MVP only supports allow_network=false");
+    if (input.confidence !== undefined && (typeof input.confidence !== "number" || input.confidence < 0 || input.confidence > 1)) {
+      throw new TypeError("confidence must be between 0 and 1");
+    }
+    return { workflow, input: { ...input, ticker, allow_network: false } };
   }
   return { workflow, input };
 }

@@ -1,14 +1,31 @@
-import { BookOpenCheck, Database, Hourglass, Layers3 } from "lucide-react";
+import { Database, Hourglass, Layers3 } from "lucide-react";
 
 import type { WorkflowRun } from "../../lib/api";
+import MemoryReviewPanel from "../memories/MemoryReviewPanel";
 
 function list(value: unknown): string[] { return Array.isArray(value) ? value.map(String) : []; }
 
-export default function ResearchContextPanel({ run }: { run: WorkflowRun | null }) {
+function claimTexts(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value.map((item) => {
+    if (item && typeof item === "object" && "text" in item) return String((item as { text: unknown }).text);
+    return String(item);
+  });
+}
+
+function freshnessLabel(value: unknown): string {
+  if (value && typeof value === "object") {
+    const item = value as { condition?: unknown; status?: unknown };
+    return [item.condition, item.status].filter(Boolean).map(String).join(" / ") || "待检测";
+  }
+  return String(value || "待检测");
+}
+
+export default function ResearchContextPanel({ run, onMemoryReviewed }: { run: WorkflowRun | null; onMemoryReviewed?: () => void }) {
   const summary = run?.summary || {};
   const evidence = list(summary.evidence_ids);
-  const claims = list(summary.claims);
-  const freshness = String(summary.freshness || summary.data_freshness || "待检测");
+  const claims = claimTexts(summary.claims);
+  const freshness = freshnessLabel(summary.freshness || summary.data_freshness);
 
   return (
     <aside className="context-panel" aria-label="研究上下文">
@@ -26,11 +43,7 @@ export default function ResearchContextPanel({ run }: { run: WorkflowRun | null 
         <h3><Layers3 size={15} /> 关键判断 <span>{claims.length}</span></h3>
         {claims.length ? claims.map((claim) => <p className="claim" key={claim}>{claim}</p>) : <p>当前没有经过证据约束的新增判断。</p>}
       </section>
-      <section className="context-block memory-placeholder">
-        <h3><BookOpenCheck size={15} /> 研究记忆</h3>
-        <p>候选论点必须人工审核，才会写入长期研究记忆。</p>
-        <span>审核工作流 · 下一阶段</span>
-      </section>
+      <MemoryReviewPanel memoryId={summary.memory_candidate_id ? String(summary.memory_candidate_id) : null} onReviewed={onMemoryReviewed} />
     </aside>
   );
 }

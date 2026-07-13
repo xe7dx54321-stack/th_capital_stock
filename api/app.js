@@ -4,6 +4,7 @@ import { fileURLToPath } from "url";
 import { legacyApp } from "./legacy-app.js";
 import { WorkflowRepository } from "./repositories/workflow-repository.js";
 import { createArtifactRouter } from "./routes/artifacts.js";
+import { createMemoryRouter } from "./routes/memories.js";
 import { createWorkflowRouter } from "./routes/workflows.js";
 import { WorkflowProcessService } from "./services/workflow-process.js";
 
@@ -29,6 +30,7 @@ export function createApp({
   const processService = new WorkflowProcessService({ dbPath, repository, pythonExecutable });
   legacyApp.use(createWorkflowRouter({ repository, processService }));
   legacyApp.use(createArtifactRouter({ repository, allowedRoots: artifactRoots }));
+  legacyApp.use(createMemoryRouter({ database: repository.db }));
   legacyApp.locals.workflowRuntimeMounted = true;
   legacyApp.locals.workflowRepository = repository;
   return legacyApp;
