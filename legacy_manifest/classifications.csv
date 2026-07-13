@@ -4653,20 +4653,20 @@ legacy/phase_bootstrap/smr_phase0_dirs.py,true,true,1347,FREEZE,true,0,0,2026-07
 legacy/phase_bootstrap/smr_phase0_verify.py,true,true,4898,FREEZE,true,0,0,2026-07-14T00:21:44+08:00,unreferenced Phase-era asset; remove from default runtime before deletion
 legacy/phase_bootstrap/smr_phase0_verify2.py,true,true,3967,FREEZE,true,0,0,2026-07-14T00:21:44+08:00,unreferenced Phase-era asset; remove from default runtime before deletion
 legacy/phase_bootstrap/smr_phase0_workspaces.py,true,true,14623,FREEZE,true,0,0,2026-07-14T00:21:44+08:00,unreferenced Phase-era asset; remove from default runtime before deletion
-legacy/phase_contracts/README.md,true,false,429,KEEP,false,1,0,,has a code/config reference or recent runtime evidence
-legacy/phase_contracts/runners/run_phase136_deep_dive_workflow_pipeline.py,true,true,1580,FREEZE,true,0,0,,unreferenced Phase-era asset; remove from default runtime before deletion
-legacy/phase_contracts/runners/run_phase137_deep_dive_execution_pipeline.py,true,true,1482,FREEZE,true,0,0,,unreferenced Phase-era asset; remove from default runtime before deletion
-legacy/phase_contracts/runners/run_phase138_thesis_library_pipeline.py,true,true,1521,FREEZE,true,0,0,,unreferenced Phase-era asset; remove from default runtime before deletion
-legacy/phase_contracts/runners/run_phase139_scheduled_local_delivery.py,true,true,1464,FREEZE,true,0,0,,unreferenced Phase-era asset; remove from default runtime before deletion
-legacy/phase_contracts/runners/run_phase140_system_hardening.py,true,true,1375,FREEZE,true,0,0,,unreferenced Phase-era asset; remove from default runtime before deletion
-legacy/phase_contracts/tests/test_phase136_all.py,true,true,7917,FREEZE,true,0,0,,unreferenced Phase-era asset; remove from default runtime before deletion
-legacy/phase_contracts/tests/test_phase137_all.py,true,true,7614,FREEZE,true,0,0,,unreferenced Phase-era asset; remove from default runtime before deletion
-legacy/phase_contracts/tests/test_phase138_all.py,true,true,7230,FREEZE,true,0,0,,unreferenced Phase-era asset; remove from default runtime before deletion
-legacy/phase_contracts/tests/test_phase139_all.py,true,true,5496,FREEZE,true,0,0,,unreferenced Phase-era asset; remove from default runtime before deletion
-legacy/phase_contracts/tests/test_phase140_all.py,true,true,4208,FREEZE,true,0,0,,unreferenced Phase-era asset; remove from default runtime before deletion
+legacy/phase_contracts/README.md,true,true,429,KEEP,false,1,0,2026-07-14T00:30:32+08:00,has a code/config reference or recent runtime evidence
+legacy/phase_contracts/runners/run_phase136_deep_dive_workflow_pipeline.py,true,true,1580,FREEZE,true,0,0,2026-07-14T00:30:32+08:00,unreferenced Phase-era asset; remove from default runtime before deletion
+legacy/phase_contracts/runners/run_phase137_deep_dive_execution_pipeline.py,true,true,1482,FREEZE,true,0,0,2026-07-14T00:30:32+08:00,unreferenced Phase-era asset; remove from default runtime before deletion
+legacy/phase_contracts/runners/run_phase138_thesis_library_pipeline.py,true,true,1521,FREEZE,true,0,0,2026-07-14T00:30:32+08:00,unreferenced Phase-era asset; remove from default runtime before deletion
+legacy/phase_contracts/runners/run_phase139_scheduled_local_delivery.py,true,true,1464,FREEZE,true,0,0,2026-07-14T00:30:32+08:00,unreferenced Phase-era asset; remove from default runtime before deletion
+legacy/phase_contracts/runners/run_phase140_system_hardening.py,true,true,1375,FREEZE,true,0,0,2026-07-14T00:30:32+08:00,unreferenced Phase-era asset; remove from default runtime before deletion
+legacy/phase_contracts/tests/test_phase136_all.py,true,true,7917,FREEZE,true,0,0,2026-07-14T00:30:32+08:00,unreferenced Phase-era asset; remove from default runtime before deletion
+legacy/phase_contracts/tests/test_phase137_all.py,true,true,7614,FREEZE,true,0,0,2026-07-14T00:30:32+08:00,unreferenced Phase-era asset; remove from default runtime before deletion
+legacy/phase_contracts/tests/test_phase138_all.py,true,true,7230,FREEZE,true,0,0,2026-07-14T00:30:32+08:00,unreferenced Phase-era asset; remove from default runtime before deletion
+legacy/phase_contracts/tests/test_phase139_all.py,true,true,5496,FREEZE,true,0,0,2026-07-14T00:30:32+08:00,unreferenced Phase-era asset; remove from default runtime before deletion
+legacy/phase_contracts/tests/test_phase140_all.py,true,true,4208,FREEZE,true,0,0,2026-07-14T00:30:32+08:00,unreferenced Phase-era asset; remove from default runtime before deletion
 legacy_manifest/,false,false,0,KEEP,false,0,0,,"belongs to a current application, domain, configuration or documentation path"
 legacy_manifest/baseline-2026-07-13.md,true,true,3125,KEEP,false,1,0,2026-07-13T14:40:56+08:00,has a code/config reference or recent runtime evidence
-legacy_manifest/removal-log-M5.md,true,true,3007,KEEP,false,1,0,2026-07-14T00:21:44+08:00,has a code/config reference or recent runtime evidence
+legacy_manifest/removal-log-M5.md,true,true,3007,KEEP,false,1,0,2026-07-14T00:30:32+08:00,has a code/config reference or recent runtime evidence
 legacy_manifest/tracked-diff-stat.txt,true,true,1718,KEEP,false,0,0,2026-07-13T14:40:56+08:00,"belongs to a current application, domain, configuration or documentation path"
 legacy_manifest/untracked-files.txt,true,true,2192,KEEP,false,0,0,2026-07-13T14:40:56+08:00,"belongs to a current application, domain, configuration or documentation path"
 migrations/0000_schema_migrations.sql,true,true,163,KEEP,false,0,0,2026-07-13T15:15:00+08:00,tracked asset retained by default until a stronger removal signal exists
