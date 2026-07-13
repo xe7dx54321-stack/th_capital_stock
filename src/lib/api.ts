@@ -446,3 +446,82 @@ export function reviewMemory(
     body: JSON.stringify({ action, reviewer, reason }),
   });
 }
+
+// ---------- Personal decision feedback API ----------
+
+export interface DecisionOutcome {
+  outcome_id: string;
+  outcome_status: string;
+  summary: string;
+  evidence_ids: string[];
+  observed_price?: number | null;
+  recorded_by: string;
+  recorded_at: string;
+  metadata?: Record<string, unknown>;
+}
+
+export interface DecisionDetail {
+  decision_id: string;
+  recommendation_id: string;
+  ticker: string;
+  market?: string | null;
+  theme?: string | null;
+  action: string;
+  status: string;
+  decision_time: string;
+  reference_price?: number | null;
+  thesis_summary: string;
+  bear_case_summary: string;
+  evidence_ids: string[];
+  kill_conditions: string[];
+  risk_notes?: string | null;
+  outcome_status: string;
+  outcome_summary?: string | null;
+  outcome_recorded_at?: string | null;
+  outcome_evidence_ids: string[];
+  source_run_id?: string | null;
+  source_memory_id?: string | null;
+  review_due_at?: string | null;
+  review_state: "upcoming" | "overdue" | "reviewed";
+  outcome_history: DecisionOutcome[];
+}
+
+export interface CreateDecisionInput {
+  ticker: string;
+  action: string;
+  thesis: string;
+  counterargument: string;
+  evidence_ids: string[];
+  invalidation_conditions: string[];
+  reference_price?: number | null;
+  review_due_at: string;
+  source_run_id?: string | null;
+  source_memory_id?: string | null;
+  recorded_by?: string;
+  time_horizon?: string;
+}
+
+export function fetchDecisions(ticker?: string): Promise<{ decisions: DecisionDetail[] }> {
+  const query = ticker ? `?ticker=${encodeURIComponent(ticker)}` : "";
+  return apiRequest(`/api/decisions${query}`);
+}
+
+export function createDecision(input: CreateDecisionInput): Promise<{ decision: DecisionDetail }> {
+  return apiRequest("/api/decisions", { method: "POST", body: JSON.stringify(input) });
+}
+
+export function recordDecisionOutcome(
+  decisionId: string,
+  input: {
+    outcome_status: string;
+    summary: string;
+    evidence_ids: string[];
+    observed_price?: number | null;
+    recorded_by: string;
+  },
+): Promise<{ decision: DecisionDetail }> {
+  return apiRequest(`/api/decisions/${encodeURIComponent(decisionId)}/outcome`, {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}

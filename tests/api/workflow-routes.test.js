@@ -99,7 +99,7 @@ test("workflow API validates, queues, resumes, streams and serves a safe artifac
   const artifact = await fetch(`${baseUrl}/api/artifacts/${run.artifacts[0].artifact_id}`);
   assert.equal(artifact.status, 200);
   assert.match(artifact.headers.get("content-type"), /text\/markdown/);
-  assert.match(await artifact.text(), /cannot_conclude/);
+  assert.match(await artifact.text(), /结论状态：\*\*暂无法判断\*\*/);
 
   const cancelMissing = await jsonRequest("/api/workflow-runs/run_missing/cancel", { method: "POST" });
   assert.equal(cancelMissing.response.status, 404);

@@ -41,6 +41,30 @@ def price_on_or_after(conn: sqlite3.Connection, ticker: str, target_date: str, m
     return float(row[0]) if row and row[0] is not None else None
 
 
+def record_outcome_prices(
+    conn: sqlite3.Connection,
+    *,
+    recommendation_id: str,
+    prices: dict[str, float | None],
+    updated_at: str,
+    performance_status: str = "updated",
+    performance_reason: str | None = None,
+) -> None:
+    """Append factual price observations without interpreting or rewriting the thesis."""
+    conn.execute(
+        """
+        UPDATE decision_ledger
+        SET outcome_price_1d=?, outcome_price_1w=?, outcome_price_1m=?, outcome_price_3m=?,
+            performance_update_status=?, performance_update_reason=?, updated_at=?
+        WHERE recommendation_id=?
+        """,
+        (
+            prices.get("1d"), prices.get("1w"), prices.get("1m"), prices.get("3m"),
+            performance_status, performance_reason, updated_at, recommendation_id,
+        ),
+    )
+
+
 def update_outcomes(conn: sqlite3.Connection, limit: int = 200) -> dict[str, int]:
     ensure_decision_tables(conn)
     gate = check_freshness_gate(conn, "paper_performance", ["daily_bar"], allow_degraded=False)
@@ -73,20 +97,22 @@ def update_outcomes(conn: sqlite3.Connection, limit: int = 200) -> dict[str, int
         p1w = price_on_or_after(conn, ticker, (base + timedelta(days=7)).isoformat(), market)
         p1m = price_on_or_after(conn, ticker, (base + timedelta(days=30)).isoformat(), market)
         p3m = price_on_or_after(conn, ticker, (base + timedelta(days=90)).isoformat(), market)
-        conn.execute(
-            """
-            UPDATE decision_ledger
-            SET outcome_price_1d=?, outcome_price_1w=?, outcome_price_1m=?, outcome_price_3m=?,
-                performance_update_status='updated', performance_update_reason=NULL, updated_at=?
-            WHERE recommendation_id=?
-            """,
-            (p1d, p1w, p1m, p3m, now, rec_id),
+        record_outcome_prices(
+            conn,
+            recommendation_id=rec_id,
+            prices={"1d": p1d, "1w": p1w, "1m": p1m, "3m": p3m},
+            updated_at=now,
         )
         updated += 1
     return {"updated": updated, "skipped": 0, **mark_open_positions_to_market(conn)}
 
 
-def update_thesis_outcome_status(conn: sqlite3.Connection, limit: int = 50) -> dict[str, Any]:
+def update_thesis_outcome_status(
+    conn: sqlite3.Connection,
+    limit: int = 50,
+    *,
+    allow_automatic_interpretation: bool = False,
+) -> dict[str, Any]:
     """根据 outcome_price 与 reference_price 的对比，更新复盘结论字段。
 
     【功能】
@@ -122,6 +148,21 @@ def update_thesis_outcome_status(conn: sqlite3.Connection, limit: int = 50) -> d
     - reference_price 为空时回退到 outcome_price_1d 作为参考价
     """
     ensure_decision_tables(conn)
+    if not allow_automatic_interpretation:
+        pending = conn.execute(
+            """
+            SELECT COUNT(*) FROM decision_ledger
+            WHERE status IN ('approved_paper', 'observation_only')
+              AND (outcome_price_1m IS NOT NULL OR outcome_price_3m IS NOT NULL)
+            """
+        ).fetchone()[0]
+        return {
+            "updated": 0,
+            "skipped": pending,
+            "details": [],
+            "manual_review_required": True,
+            "reason": "price observations do not automatically confirm or invalidate a thesis",
+        }
     now = datetime.now()
     now_str = now.strftime("%Y-%m-%d %H:%M:%S")
 

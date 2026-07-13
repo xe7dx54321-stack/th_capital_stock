@@ -15,6 +15,7 @@ vi.mock("../../../lib/api", async () => {
     fetchWorkflowEvents: vi.fn(),
     createWorkflowRun: vi.fn(),
     subscribeWorkflowEvents: vi.fn(),
+    fetchDecisions: vi.fn(),
   };
 });
 
@@ -45,6 +46,7 @@ describe("ResearchWorkbench", () => {
     vi.mocked(api.fetchWorkflowRun).mockResolvedValue(completedRun);
     vi.mocked(api.fetchWorkflowEvents).mockResolvedValue({ events: [] });
     vi.mocked(api.subscribeWorkflowEvents).mockReturnValue(() => undefined);
+    vi.mocked(api.fetchDecisions).mockResolvedValue({ decisions: [] });
   });
 
   it("launches a ticker workflow and renders streamed progress", async () => {

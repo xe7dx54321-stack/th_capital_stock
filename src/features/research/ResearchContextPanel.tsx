@@ -22,6 +22,12 @@ function freshnessLabel(value: unknown): string {
     partial: "部分完整",
     local: "本地数据",
     unknown: "待检测",
+    not_configured: "未配置",
+    current: "当前有效",
+    market_closed: "市场休市",
+    source_not_due: "未到更新时间",
+    fetch_failed: "获取失败",
+    data_stale: "数据过期",
   };
   const translate = (item: unknown) => labels[String(item).toLowerCase()] || String(item);
   if (value && typeof value === "object") {

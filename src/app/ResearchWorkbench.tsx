@@ -10,6 +10,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 
 import ArtifactViewer from "../features/workflows/ArtifactViewer";
+import DecisionPanel from "../features/decisions/DecisionPanel";
 import RunTimeline from "../features/workflows/RunTimeline";
 import WorkflowLauncher from "../features/workflows/WorkflowLauncher";
 import WorkflowSidebar from "../features/workflows/WorkflowSidebar";
@@ -34,6 +35,11 @@ function mergeEvents(current: WorkflowEvent[], incoming: WorkflowEvent[]) {
   const merged = new Map(current.map((event) => [event.sequence, event]));
   incoming.forEach((event) => merged.set(event.sequence, event));
   return [...merged.values()].sort((a, b) => a.sequence - b.sequence);
+}
+
+function mergeRunHistory(current: WorkflowRun[], run: WorkflowRun) {
+  return [run, ...current.filter((item) => item.run_id !== run.run_id)]
+    .sort((left, right) => Date.parse(right.created_at) - Date.parse(left.created_at));
 }
 
 export default function ResearchWorkbench() {
@@ -81,7 +87,7 @@ export default function ResearchWorkbench() {
       setEvents((current) => mergeEvents(current, incoming));
       if (incoming.some((event) => ["artifact.created", "run.completed", "run.failed", "run.cancelled", "review.requested"].includes(event.event_type))) {
         void fetchWorkflowRun(selectedRunId).then((run) => {
-          if (!stopped) { setSelectedRun(run); setRuns((current) => [run, ...current.filter((item) => item.run_id !== run.run_id)]); }
+          if (!stopped) { setSelectedRun(run); setRuns((current) => mergeRunHistory(current, run)); }
         });
       }
     };
@@ -126,7 +132,7 @@ export default function ResearchWorkbench() {
         { ticker, allow_network: false },
         `deep-dive:${ticker}:${new Date().toISOString().slice(0, 16)}`,
       );
-      setRuns((current) => [run, ...current.filter((item) => item.run_id !== run.run_id)]);
+      setRuns((current) => mergeRunHistory(current, run));
       setSelectedRunId(run.run_id);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "研究任务创建失败");
@@ -138,7 +144,7 @@ export default function ResearchWorkbench() {
     try {
       const run = await fetchWorkflowRun(selectedRunId);
       setSelectedRun(run);
-      setRuns((current) => [run, ...current.filter((item) => item.run_id !== run.run_id)]);
+      setRuns((current) => mergeRunHistory(current, run));
     } catch { /* the next history refresh can recover this view */ }
   }
 
@@ -171,6 +177,7 @@ export default function ResearchWorkbench() {
           </section>
           <RunTimeline run={selectedRun} events={events} connection={connection} />
           <ArtifactViewer artifacts={selectedRun?.artifacts || []} />
+          <DecisionPanel run={selectedRun} />
         </div>
         <ResearchContextPanel run={selectedRun} onMemoryReviewed={() => void refreshSelectedRun()} />
       </div>

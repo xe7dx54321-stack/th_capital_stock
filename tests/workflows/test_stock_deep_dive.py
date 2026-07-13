@@ -147,7 +147,8 @@ class StockDeepDiveWorkflowTests(unittest.TestCase):
                     )
                     report = artifact_path.read_text(encoding="utf-8")
                     self.assertIn(fixture["evidence_id"], report)
-                    self.assertIn("Bull scenario", report)
+                    self.assertIn("乐观情景", report)
+                    self.assertIn("本报告仅用于本地研究辅助", report)
                     event_types = [event["event_type"] for event in EventStore(conn).list_events(run["run_id"])]
                     self.assertIn("artifact.created", event_types)
                 finally:

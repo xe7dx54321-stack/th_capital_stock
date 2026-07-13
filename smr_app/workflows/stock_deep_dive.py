@@ -166,7 +166,7 @@ def _build_analysis(context: WorkflowContext) -> StageResult:
         item = selected[0]
         qualitative = _claim(
             "business_evidence",
-            item.get("text_excerpt") or f"{ticker} has a material official-source update.",
+            item.get("text_excerpt") or f"{ticker} 出现一项值得关注的官方信息更新。",
             [item.get("evidence_id")],
         )
         if qualitative:
@@ -176,7 +176,7 @@ def _build_analysis(context: WorkflowContext) -> StageResult:
         cash_flow = fundamentals.get("operating_cash_flow")
         fundamental = _claim(
             "fundamentals",
-            f"Latest fundamentals snapshot reports revenue={revenue} and operating_cash_flow={cash_flow}.",
+            f"最新基本面快照显示：营业收入={revenue}，经营现金流={cash_flow}。",
             fundamental_ids,
         )
         if fundamental:
@@ -184,7 +184,7 @@ def _build_analysis(context: WorkflowContext) -> StageResult:
     if valuation and all_ids:
         valuation_claim = _claim(
             "valuation_context",
-            f"Latest valuation context reports price={valuation.get('current_price')} and PE={valuation.get('pe_ttm')}; this is context, not a price target.",
+            f"最新估值信息显示：价格={valuation.get('current_price')}，市盈率={valuation.get('pe_ttm')}；该信息仅作背景，不构成目标价。",
             all_ids[:3],
         )
         if valuation_claim:
@@ -196,23 +196,23 @@ def _build_analysis(context: WorkflowContext) -> StageResult:
         scenarios = [
             {
                 "scenario": "bull",
-                "judgment": "Bull case requires the cited operating momentum to persist and cash conversion to improve.",
+                "judgment": "乐观情景要求已引用的经营动能持续，并且现金转化能力改善。",
                 "evidence_ids": scenario_ids,
             },
             {
                 "scenario": "base",
-                "judgment": "Base case assumes the cited evidence remains valid without extrapolating beyond the disclosed period.",
+                "judgment": "基准情景仅假设现有证据继续有效，不外推至披露期之外。",
                 "evidence_ids": scenario_ids,
             },
             {
                 "scenario": "bear",
-                "judgment": "Bear case is triggered if the cited growth or cash-flow evidence reverses in a later official disclosure.",
+                "judgment": "如果后续官方披露显示增长或现金流证据发生逆转，则进入谨慎情景。",
                 "evidence_ids": scenario_ids,
             },
         ]
     else:
         scenarios = [
-            {"scenario": name, "judgment": "cannot_conclude", "evidence_ids": []}
+            {"scenario": name, "judgment": "当前证据不足，暂时无法判断。", "evidence_ids": []}
             for name in ("bull", "base", "bear")
         ]
 
@@ -233,35 +233,51 @@ def _build_analysis(context: WorkflowContext) -> StageResult:
 
 
 def _render_markdown(summary: dict[str, Any]) -> str:
+    conclusion_labels = {"supported": "证据支持", "cannot_conclude": "暂无法判断"}
+    market_labels = {"A": "A 股", "H": "港股", "US": "美股"}
+    freshness_labels = {
+        "current": "当前有效", "fresh": "新鲜", "unknown": "待检测",
+        "not_configured": "未配置", "stale": "已过期", "missing": "缺失",
+        "market_closed": "市场休市", "source_not_due": "未到更新时间",
+        "fetch_failed": "获取失败", "data_stale": "数据过期",
+    }
+    claim_labels = {
+        "business_evidence": "业务证据",
+        "fundamentals": "基本面",
+        "valuation_context": "估值背景",
+    }
+    scenario_labels = {"bull": "乐观情景", "base": "基准情景", "bear": "谨慎情景"}
+    freshness = summary["freshness"]
     lines = [
-        f"# Stock Deep Dive — {summary['ticker']}",
+        f"# 个股深挖报告 — {summary['ticker']}",
         "",
-        f"- Market: {summary['market']}",
-        f"- Conclusion status: **{summary['conclusion_status']}**",
-        f"- Evidence count: {summary['evidence_count']}",
-        f"- Data freshness: {summary['freshness'].get('condition')} / {summary['freshness'].get('status')}",
+        f"- 市场：{market_labels.get(summary['market'], summary['market'])}",
+        f"- 结论状态：**{conclusion_labels.get(summary['conclusion_status'], summary['conclusion_status'])}**",
+        f"- 证据数量：{summary['evidence_count']}",
+        f"- 数据新鲜度：{freshness_labels.get(freshness.get('condition'), freshness.get('condition'))} / {freshness_labels.get(freshness.get('status'), freshness.get('status'))}",
         "",
-        "## Cited claims",
+        "## 有证据支撑的判断",
         "",
     ]
     if not summary["claims"]:
-        lines.append("- cannot_conclude: no core claim has sufficient traceable evidence.")
+        lines.append("- 暂无法判断：当前没有核心观点具备足够的可追溯证据。")
     for claim in summary["claims"]:
         citations = ", ".join(f"[{evidence_id}]" for evidence_id in claim["evidence_ids"])
-        lines.append(f"- **{claim['claim_type']}**: {claim['text']} {citations}")
-    lines.extend(["", "## Three scenarios", ""])
+        label = claim_labels.get(claim["claim_type"], "研究判断")
+        lines.append(f"- **{label}**：{claim['text']} {citations}")
+    lines.extend(["", "## 三种情景", ""])
     for scenario in summary["scenarios"]:
-        label = scenario["scenario"].title()
+        label = scenario_labels.get(scenario["scenario"], "研究情景")
         citations = ", ".join(f"[{evidence_id}]" for evidence_id in scenario["evidence_ids"])
-        lines.append(f"### {label} scenario")
+        lines.append(f"### {label}")
         lines.append("")
         lines.append(f"{scenario['judgment']} {citations}".rstrip())
         lines.append("")
     lines.extend(
         [
-            "## Risk and limitations",
+            "## 风险与边界",
             "",
-            "This is a local research aid. It does not place orders and does not constitute an automatic recommendation.",
+            "本报告仅用于本地研究辅助，不会执行交易，也不构成自动投资建议。",
         ]
     )
     return "\n".join(lines) + "\n"
@@ -280,7 +296,7 @@ def _write_outputs_stage(artifact_root: Path):
             artifact = ArtifactStore(conn, [artifact_root]).register_artifact(
                 context.run_id,
                 "stock_deep_dive_report",
-                f"Stock deep dive — {summary['ticker']}",
+                f"个股深挖报告 — {summary['ticker']}",
                 report_path,
                 "text/markdown",
                 metadata={
