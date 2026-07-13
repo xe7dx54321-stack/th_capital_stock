@@ -6,18 +6,27 @@
         "source_key": "daily_bar",
         "stale_after_minutes": 1440,
         "blocking_level_when_stale": "block",
+        "blocking_level_when_fetch_failed": "block",
+        "market_calendar_aware": true,
+        "healthy_when_market_closed": true,
         "affected_modules": ["opportunity_radar", "market_signal", "paper_watch", "risk_agent", "report_generation"]
       },
       "H": {
         "source_key": "daily_bar",
         "stale_after_minutes": 1440,
         "blocking_level_when_stale": "block",
+        "blocking_level_when_fetch_failed": "block",
+        "market_calendar_aware": true,
+        "healthy_when_market_closed": true,
         "affected_modules": ["opportunity_radar", "market_signal", "paper_watch", "risk_agent", "report_generation"]
       },
       "US": {
         "source_key": "daily_bar",
         "stale_after_minutes": 1440,
         "blocking_level_when_stale": "block",
+        "blocking_level_when_fetch_failed": "block",
+        "market_calendar_aware": true,
+        "healthy_when_market_closed": true,
         "affected_modules": ["opportunity_radar", "market_signal", "paper_watch", "risk_agent", "report_generation"]
       }
     },
@@ -26,6 +35,7 @@
         "source_key": "eastmoney_news_article",
         "stale_after_minutes": 1440,
         "blocking_level_when_stale": "degrade",
+        "blocking_level_when_fetch_failed": "degrade",
         "affected_modules": ["deep_market_scan", "opportunity_radar", "report_generation"],
         "source_blocking_overrides": {
           "manual_news": "warn",
@@ -38,6 +48,7 @@
         "source_key": "official_filings",
         "stale_after_minutes": 1440,
         "blocking_level_when_stale": "warn",
+        "blocking_level_when_fetch_failed": "warn",
         "affected_modules": ["deep_market_scan", "opportunity_radar", "report_generation"]
       }
     },
@@ -46,6 +57,7 @@
         "source_key": "fundamental_factor",
         "stale_after_minutes": 10080,
         "blocking_level_when_stale": "warn",
+        "blocking_level_when_fetch_failed": "warn",
         "affected_modules": ["deep_market_scan", "risk_agent", "report_generation"]
       }
     },

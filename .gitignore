@@ -112,3 +112,4 @@ financial_statement_reports/
 # Temporary local investigation scripts
 _debug_*.py
 _inspect_*.py
+.tmp/

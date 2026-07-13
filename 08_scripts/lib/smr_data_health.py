@@ -24,6 +24,16 @@ GATE_RANK = {"pass": 0, "warn": 1, "degrade": 2, "block": 3}
 CAPABILITY_RANK = {"allowed": 0, "allowed_with_warning": 1, "degraded": 2, "blocked": 3}
 
 
+@dataclass(frozen=True)
+class HealthClassification:
+    """Semantic cause plus the legacy-compatible status used by existing gates."""
+
+    condition: str
+    freshness_status: str
+    blocking_level: str
+    reason: str
+
+
 @dataclass
 class FreshnessGateResult:
     status: str
@@ -297,6 +307,65 @@ def classify_daily_bar_freshness(
     return "fresh", "none", ""
 
 
+def classify_health_semantics(
+    data_type: str,
+    source_key: str,
+    last_data_timestamp: str | None,
+    stale_after_minutes: int | None,
+    rule: dict[str, Any],
+    now: datetime | None = None,
+    collection_state: str | None = None,
+) -> HealthClassification:
+    """Explain why a source is healthy or unhealthy without changing legacy gates."""
+    if collection_state == "market_closed":
+        return HealthClassification("market_closed", "fresh", "none", "Market is closed; no update is due.")
+    if collection_state == "source_not_due":
+        return HealthClassification("source_not_due", "fresh", "none", "Source is not due for collection.")
+    if collection_state == "fetch_failed":
+        blocking = rule.get("blocking_level_when_fetch_failed") or "degrade"
+        return HealthClassification("fetch_failed", "degraded", blocking, f"{source_key} collection failed.")
+    if collection_state == "not_configured" or rule.get("configured") is False:
+        blocking = rule.get("blocking_level_when_missing") or rule.get("blocking_level_when_stale") or "warn"
+        return HealthClassification("not_configured", "missing", blocking, f"{data_type} is not configured.")
+
+    configured_status = rule.get("freshness_status")
+    source_status = source_registry_planned_or_disabled(data_type, source_key)
+    if configured_status in {"planned", "disabled"}:
+        blocking = rule.get("blocking_level_when_missing") or "degrade"
+        if BLOCKING_RANK.get(blocking, 0) < BLOCKING_RANK["degrade"]:
+            blocking = "degrade"
+        return HealthClassification(configured_status, configured_status, blocking, f"{data_type} is {configured_status}.")
+    if source_status in {"planned", "disabled", "deprecated", "error"}:
+        if source_status == "error":
+            blocking = rule.get("blocking_level_when_fetch_failed") or "degrade"
+            return HealthClassification("fetch_failed", "degraded", blocking, f"{source_key} source registry reports an error.")
+        blocking = rule.get("blocking_level_when_missing") or "degrade"
+        return HealthClassification(source_status, source_status, blocking, f"{source_key} is {source_status} in the source registry.")
+
+    age = minutes_since(last_data_timestamp, now=now)
+    if age is None:
+        blocking = rule.get("blocking_level_when_missing") or rule.get("blocking_level_when_stale") or "warn"
+        return HealthClassification("missing_data", "missing", blocking, f"{data_type} has no recent data timestamp.")
+    stale_after = stale_after_minutes or 1440
+    stale_blocking = rule.get("blocking_level_when_stale") or "warn"
+    if age > stale_after:
+        return HealthClassification(
+            "data_stale",
+            "stale",
+            stale_blocking,
+            f"{data_type} exceeded stale_after_minutes={stale_after}; age is about {int(age)} minutes.",
+        )
+    if age > stale_after * 0.75:
+        blocking = "warn" if stale_blocking == "block" else stale_blocking
+        return HealthClassification(
+            "nearing_stale",
+            "degraded",
+            blocking,
+            f"{data_type} is nearing its stale threshold; age is about {int(age)} minutes.",
+        )
+    return HealthClassification("current", "fresh", "none", "")
+
+
 def classify_freshness(
     data_type: str,
     source_key: str,
@@ -305,25 +374,15 @@ def classify_freshness(
     rule: dict[str, Any],
     now: datetime | None = None,
 ) -> tuple[str, str, str]:
-    configured_status = rule.get("freshness_status")
-    source_status = source_registry_planned_or_disabled(data_type, source_key)
-    if configured_status in {"planned", "disabled"}:
-        blocking = rule.get("blocking_level_when_missing") or "degrade"
-        return configured_status, blocking, f"{data_type} 当前配置为 {configured_status}。"
-    if source_status in {"planned", "disabled", "deprecated", "error"}:
-        blocking = rule.get("blocking_level_when_missing") or "degrade"
-        return source_status, blocking, f"{source_key} 在 source registry 中为 {source_status}。"
-    age = minutes_since(last_data_timestamp, now=now)
-    if age is None:
-        blocking = rule.get("blocking_level_when_missing") or rule.get("blocking_level_when_stale") or "warn"
-        return "missing", blocking, f"{data_type} 未找到最近数据时间戳。"
-    stale_after = stale_after_minutes or 1440
-    stale_blocking = rule.get("blocking_level_when_stale") or "warn"
-    if age > stale_after:
-        return "stale", stale_blocking, f"{data_type} 已超过 stale_after_minutes={stale_after}，当前约 {int(age)} 分钟未更新。"
-    if age > stale_after * 0.75:
-        return "degraded", "warn" if stale_blocking == "block" else stale_blocking, f"{data_type} 接近过期阈值，当前约 {int(age)} 分钟未更新。"
-    return "fresh", "none", ""
+    result = classify_health_semantics(
+        data_type=data_type,
+        source_key=source_key,
+        last_data_timestamp=last_data_timestamp,
+        stale_after_minutes=stale_after_minutes,
+        rule=rule,
+        now=now,
+    )
+    return result.freshness_status, result.blocking_level, result.reason
 
 
 def upsert_health_row(conn: sqlite3.Connection, row: dict[str, Any]) -> dict[str, Any]:
@@ -401,8 +460,23 @@ def update_data_source_health(
     last_success_at, last_data_timestamp, metadata = discover_source_timestamps(conn, data_type, market, source_key)
     if data_type == "daily_bar" and metadata.get("freshness_basis") == "market_calendar":
         status, blocking, reason = classify_daily_bar_freshness(source_key, market, metadata, rule)
+        if status == "fresh":
+            expected = metadata.get("expected_latest_trading_day")
+            condition = "market_closed" if rule.get("healthy_when_market_closed") and expected and str(expected) < date.today().isoformat() else "current"
+        elif status == "stale":
+            condition = "data_stale"
+        elif status == "missing":
+            condition = "missing_data"
+        elif status == "error":
+            condition = "fetch_failed"
+        else:
+            condition = status
     else:
-        status, blocking, reason = classify_freshness(data_type, source_key, last_data_timestamp, stale_after, rule)
+        classification = classify_health_semantics(data_type, source_key, last_data_timestamp, stale_after, rule)
+        status = classification.freshness_status
+        blocking = classification.blocking_level
+        reason = classification.reason
+        condition = classification.condition
     row = {
         "source_key": source_key,
         "market": normalize_market(market),
@@ -416,7 +490,7 @@ def update_data_source_health(
         "blocking_level": blocking,
         "staleness_reason": reason,
         "affected_modules": rule.get("affected_modules") or [],
-        "metadata": {**metadata, "rule": rule},
+        "metadata": {**metadata, "condition": condition, "rule": rule},
     }
     return upsert_health_row(conn, row)
 

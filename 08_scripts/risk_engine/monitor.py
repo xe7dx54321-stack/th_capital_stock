@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 """SMR Risk Engine - Monitors portfolio risk and triggers alerts."""
 
+import argparse
+import hashlib
 import json
 import os
+import re
 import sqlite3
 import sys
 from datetime import datetime
@@ -50,14 +53,166 @@ def count_by_key(items, key):
     return counts
 
 
-def build_alert(alert_type, severity, message, action, ts_code=None):
-    return {
+def build_alert(
+    alert_type,
+    severity,
+    message,
+    action,
+    ts_code=None,
+    source_state=None,
+    reason_key=None,
+):
+    alert = {
         "alert_type": alert_type,
         "severity": severity,
         "ts_code": ts_code,
         "message": message,
         "action": action,
     }
+    if source_state is not None:
+        alert["source_state"] = source_state
+    if reason_key is not None:
+        alert["reason_key"] = reason_key
+    return alert
+
+
+RISK_ALERT_LIFECYCLE_COLUMNS = {
+    "fingerprint": "TEXT",
+    "source_state": "TEXT",
+    "lifecycle_status": "TEXT NOT NULL DEFAULT 'opened'",
+    "first_seen_at": "TEXT",
+    "last_seen_at": "TEXT",
+    "occurrence_count": "INTEGER NOT NULL DEFAULT 1",
+    "resolved_at": "TEXT",
+}
+
+
+def ensure_risk_alert_lifecycle_schema(conn):
+    """Add lifecycle fields without rewriting or deleting historical alerts."""
+    existing = {row[1] for row in conn.execute("PRAGMA table_info(risk_alert)").fetchall()}
+    if not existing:
+        raise RuntimeError("risk_alert table does not exist")
+    for column, definition in RISK_ALERT_LIFECYCLE_COLUMNS.items():
+        if column not in existing:
+            conn.execute(f"ALTER TABLE risk_alert ADD COLUMN {column} {definition}")
+    conn.execute(
+        """
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_risk_alert_fingerprint
+        ON risk_alert(fingerprint)
+        WHERE fingerprint IS NOT NULL
+        """
+    )
+
+
+def normalize_alert_reason(alert):
+    reason = alert.get("reason_key") or alert.get("message") or ""
+    reason = str(reason).strip().lower()
+    reason = re.sub(r"\d{4}-\d{1,2}-\d{1,2}(?:[ t]\d{1,2}:\d{2}(?::\d{2})?)?", "<date>", reason)
+    reason = re.sub(r"(?<![a-z])[-+]?\d+(?:\.\d+)?%?", "<n>", reason)
+    return " ".join(reason.split())
+
+
+def alert_fingerprint(alert):
+    identity = "|".join(
+        [
+            str(alert.get("ts_code") or "portfolio").strip().upper(),
+            str(alert.get("alert_type") or "unknown").strip().lower(),
+            normalize_alert_reason(alert),
+            str(alert.get("source_state") or alert.get("severity") or "unknown").strip().lower(),
+        ]
+    )
+    return hashlib.sha256(identity.encode("utf-8")).hexdigest()
+
+
+def persist_alerts(conn, alerts, now, dry_run=False):
+    """Open or update managed alerts by stable fingerprint."""
+    ensure_risk_alert_lifecycle_schema(conn)
+    results = []
+    for alert in alerts:
+        fingerprint = alert_fingerprint(alert)
+        row = conn.execute(
+            "SELECT alert_id, occurrence_count FROM risk_alert WHERE fingerprint=?",
+            (fingerprint,),
+        ).fetchone()
+        if row:
+            status = "updated"
+            alert_id, occurrence_count = row
+            if not dry_run:
+                conn.execute(
+                    """
+                    UPDATE risk_alert
+                    SET alert_time=?, severity=?, ts_code=?, message=?, action=?,
+                        source_state=?, lifecycle_status='updated', last_seen_at=?,
+                        occurrence_count=?, resolved_at=NULL, acknowledged=0
+                    WHERE alert_id=?
+                    """,
+                    (
+                        now,
+                        alert["severity"],
+                        alert.get("ts_code"),
+                        alert["message"],
+                        alert["action"],
+                        alert.get("source_state"),
+                        now,
+                        int(occurrence_count or 0) + 1,
+                        alert_id,
+                    ),
+                )
+        else:
+            status = "opened"
+            alert_id = None
+            if not dry_run:
+                cursor = conn.execute(
+                    """
+                    INSERT INTO risk_alert (
+                        alert_time, alert_type, severity, ts_code, message, action,
+                        fingerprint, source_state, lifecycle_status, first_seen_at,
+                        last_seen_at, occurrence_count, resolved_at
+                    )
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'opened', ?, ?, 1, NULL)
+                    """,
+                    (
+                        now,
+                        alert["alert_type"],
+                        alert["severity"],
+                        alert.get("ts_code"),
+                        alert["message"],
+                        alert["action"],
+                        fingerprint,
+                        alert.get("source_state"),
+                        now,
+                        now,
+                    ),
+                )
+                alert_id = cursor.lastrowid
+        results.append({"fingerprint": fingerprint, "status": status, "alert_id": alert_id})
+    return results
+
+
+def resolve_inactive_alerts(conn, active_fingerprints, now, dry_run=False):
+    """Resolve managed alerts that disappeared; historical unmanaged rows remain untouched."""
+    ensure_risk_alert_lifecycle_schema(conn)
+    rows = conn.execute(
+        """
+        SELECT alert_id, fingerprint
+        FROM risk_alert
+        WHERE fingerprint IS NOT NULL
+          AND acknowledged=0
+          AND lifecycle_status IN ('opened', 'updated')
+        """
+    ).fetchall()
+    inactive_ids = [alert_id for alert_id, fingerprint in rows if fingerprint not in active_fingerprints]
+    if inactive_ids and not dry_run:
+        placeholders = ",".join("?" for _ in inactive_ids)
+        conn.execute(
+            f"""
+            UPDATE risk_alert
+            SET lifecycle_status='resolved', resolved_at=?
+            WHERE alert_id IN ({placeholders})
+            """,
+            (now, *inactive_ids),
+        )
+    return len(inactive_ids)
 
 
 def build_reference_observations(conn, limit=4):
@@ -299,17 +454,20 @@ def check_stop_target_hits(conn):
 
 
 def escalate_existing_alerts(conn, now):
+    ensure_risk_alert_lifecycle_schema(conn)
     generated = []
     rows = conn.execute(
         """
-        SELECT alert_id, alert_time, severity, ts_code, message
+        SELECT alert_id, alert_time, alert_type, severity, ts_code, message
         FROM risk_alert
         WHERE acknowledged=0
+          AND alert_type NOT IN ('critical_repeat', 'alert_escalation')
+          AND (fingerprint IS NULL OR lifecycle_status IN ('opened', 'updated'))
         """
     ).fetchall()
 
     now_dt = datetime.strptime(now, "%Y-%m-%d %H:%M:%S")
-    for alert_id, alert_time, severity, ts_code, message in rows:
+    for alert_id, alert_time, _alert_type, severity, ts_code, message in rows:
         alert_dt = datetime.strptime(alert_time, "%Y-%m-%d %H:%M:%S")
         age_hours = (now_dt - alert_dt).total_seconds() / 3600
         if severity == "warning" and age_hours >= 24:
@@ -321,6 +479,8 @@ def escalate_existing_alerts(conn, now):
                     f"Warning alert escalated after 24h: {message}",
                     "Handle immediately",
                     ts_code,
+                    source_state=f"base:{alert_id}",
+                    reason_key="warning_unacknowledged_24h",
                 )
             )
         elif severity == "critical" and age_hours >= 4:
@@ -331,15 +491,35 @@ def escalate_existing_alerts(conn, now):
                     f"Critical alert still unacknowledged after 4h: {message}",
                     "Urgent review required",
                     ts_code,
+                    source_state=f"base:{alert_id}",
+                    reason_key="critical_unacknowledged_4h",
                 )
             )
     return generated
 
 
-def main():
-    ALERT_DIR.mkdir(parents=True, exist_ok=True)
-    conn = sqlite3.connect(DB_PATH)
-    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+def parse_args(argv=None):
+    parser = argparse.ArgumentParser(description="Run the local SMR risk monitor.")
+    parser.add_argument("--dry-run", action="store_true", help="Evaluate alerts and roll back all database/file changes.")
+    parser.add_argument("--db-path", type=Path, default=DB_PATH)
+    parser.add_argument("--alert-dir", type=Path, default=ALERT_DIR)
+    parser.add_argument("--now", help="Override time using YYYY-MM-DD HH:MM:SS.")
+    return parser.parse_args(argv)
+
+
+def main(argv=None):
+    args = parse_args(argv)
+    alert_dir = args.alert_dir
+    if args.dry_run:
+        source_uri = args.db_path.resolve().as_uri() + "?mode=ro"
+        source_conn = sqlite3.connect(source_uri, uri=True)
+        conn = sqlite3.connect(":memory:")
+        source_conn.backup(conn)
+        source_conn.close()
+    else:
+        conn = sqlite3.connect(args.db_path)
+    ensure_risk_alert_lifecycle_schema(conn)
+    now = args.now or datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     policy = load_portfolio_policy()
     freshness_gate = check_freshness_gate(
         conn,
@@ -376,19 +556,34 @@ def main():
     all_alerts.extend(escalate_existing_alerts(conn, now))
     reference_observations = build_reference_observations(conn)
 
-    for alert in all_alerts:
-        conn.execute(
-            """
-            INSERT INTO risk_alert
-            (alert_time, alert_type, severity, ts_code, message, action)
-            VALUES (?, ?, ?, ?, ?, ?)
-            """,
-            (now, alert["alert_type"], alert["severity"], alert.get("ts_code"), alert["message"], alert["action"]),
+    persistence_results = persist_alerts(conn, all_alerts, now, dry_run=args.dry_run)
+    active_fingerprints = {result["fingerprint"] for result in persistence_results}
+    resolved_count = resolve_inactive_alerts(conn, active_fingerprints, now, dry_run=args.dry_run)
+
+    if args.dry_run:
+        conn.rollback()
+        conn.close()
+        print(
+            json.dumps(
+                {
+                    "dry_run": True,
+                    "alert_count": len(all_alerts),
+                    "would_open": sum(result["status"] == "opened" for result in persistence_results),
+                    "would_update": sum(result["status"] == "updated" for result in persistence_results),
+                    "would_resolve": resolved_count,
+                    "counts_by_type": count_by_key(all_alerts, "alert_type"),
+                },
+                ensure_ascii=False,
+                sort_keys=True,
+            )
         )
+        return 0
+
+    alert_dir.mkdir(parents=True, exist_ok=True)
 
     alert_file = None
     if all_alerts:
-        alert_file = ALERT_DIR / f"alert_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
+        alert_file = alert_dir / f"alert_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
         lines = [f"# Risk Alert - {now}", ""]
         for alert in all_alerts:
             scope = f" {alert['ts_code']}" if alert.get("ts_code") else ""
@@ -467,7 +662,7 @@ def main():
         observation_file = None
         relationships = {}
         if reference_observations:
-            observation_file = ALERT_DIR / f"observation_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
+            observation_file = alert_dir / f"observation_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
             lines = [f"# Risk Observation - {now}", "", "## 参考组合观察", ""]
             for item in reference_observations:
                 lines.append(f"- {item}")
@@ -534,4 +729,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
