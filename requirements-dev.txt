@@ -1,0 +1,4 @@
+# The MVP smoke suite intentionally uses Python's standard-library unittest.
+# Install this file in a fresh virtual environment to obtain runtime dependencies
+# without maintaining a second, divergent dependency list.
+-r requirements.txt
