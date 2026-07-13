@@ -3,6 +3,7 @@ import express from "express";
 import { buildDiscoveries } from "../services/discovery-service.js";
 import { buildDashboard, buildNewsDetail, buildNewsList } from "../services/report-service.js";
 import { buildValueScores } from "../services/scoring-service.js";
+import { buildStockDetail } from "../services/stock-detail-service.js";
 
 
 export function createResearchRouter({ repository, cacheTtlMs = 5 * 60 * 1000 }) {
@@ -25,6 +26,23 @@ export function createResearchRouter({ repository, cacheTtlMs = 5 * 60 * 1000 })
         return;
       }
       res.json(cached("value_scores", () => buildValueScores(repository.getValueScoreInputs())));
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  router.get("/api/stock/:code", (req, res) => {
+    try {
+      if (!repository.hasStockDetailTables()) {
+        res.status(404).json({ error: "研究数据尚未初始化" });
+        return;
+      }
+      const input = repository.getStockDetailInput(req.params.code);
+      if (!input) {
+        res.status(404).json({ error: "标的不存在" });
+        return;
+      }
+      res.json(buildStockDetail(req.params.code, input));
     } catch (error) {
       res.status(500).json({ error: error.message });
     }

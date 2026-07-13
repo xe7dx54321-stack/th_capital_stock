@@ -8,9 +8,9 @@ import test from "node:test";
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 const legacySource = readFileSync(path.join(ROOT, "api", "legacy-app.js"), "utf8");
 const researchSource = readFileSync(path.join(ROOT, "api", "routes", "research.js"), "utf8");
-const expectedLegacyRoutes = ["/api/health", "/api/stock/:code", "/api/phases"];
+const expectedLegacyRoutes = ["/api/health", "/api/phases"];
 const expectedResearchRoutes = [
-  "/api/dashboard", "/api/value-scores", "/api/discoveries", "/api/news", "/api/news/:id",
+  "/api/dashboard", "/api/value-scores", "/api/stock/:code", "/api/discoveries", "/api/news", "/api/news/:id",
 ];
 
 test("legacy GET route response contracts remain present after bootstrap split", () => {
@@ -21,7 +21,7 @@ test("legacy GET route response contracts remain present after bootstrap split",
     assert.match(researchSource, new RegExp(`router\\.get\\(["']${route.replaceAll("/", "\\/").replace(":", "\\:")}["']`));
   }
   assert.match(legacySource, /app\.use\(createResearchRouter\(\{ repository: researchRepository \}\)\)/);
-  assert.doesNotMatch(legacySource, /app\.get\(["']\/api\/(?:dashboard|value-scores|discoveries|news)/);
+  assert.doesNotMatch(legacySource, /app\.get\(["']\/api\/(?:dashboard|value-scores|stock|discoveries|news)/);
 });
 
 test("server bootstrap stays small and delegates application assembly", () => {

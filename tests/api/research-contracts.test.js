@@ -123,7 +123,14 @@ test("research endpoints retain their golden response contracts", async (t) => {
 
   const stock = await get("/api/stock/300308.SZ");
   assert.equal(stock.tsCode, "300308.SZ");
-  assert.ok(stock.report);
+  assert.deepEqual(Object.keys(stock).sort(), [
+    "addedDate", "factors", "latestPrice", "market", "name", "news", "poolType",
+    "priceHistory", "report", "sector", "tsCode", "updatedAt",
+  ]);
+  assert.deepEqual(Object.keys(stock.report).sort(), [
+    "catalysts", "claims", "deepReport", "fundamentals", "moat",
+    "overallRecommendation", "peerComparison", "riskAlerts", "technical", "valuation",
+  ]);
   assert.ok(stock.report.deepReport);
   assert.ok(Array.isArray(stock.priceHistory));
 

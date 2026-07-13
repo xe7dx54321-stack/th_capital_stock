@@ -3,6 +3,8 @@ import Database from "better-sqlite3";
 import {
   buildPeerAvgForSector,
   getFundamentalsData,
+  getNewsClaimsAndRisks,
+  getPeerGroupData,
   getValuationData,
 } from "./research-readers.js";
 
@@ -35,6 +37,71 @@ export class ResearchRepository {
     return this.hasTables([
       "stock_pool_current", "factor_daily", "daily_bar", "us_daily_bar",
     ]);
+  }
+
+  hasStockDetailTables() {
+    return this.hasTables(["stock_pool_current", "factor_daily"]);
+  }
+
+  getStockDetailInput(code) {
+    return this.read((db) => {
+      const poolInfo = db.prepare(`
+        SELECT ts_code, sector, pool_type, added_date
+        FROM stock_pool_current WHERE ts_code=?
+      `).get(code);
+      if (!poolInfo) return undefined;
+
+      const factorMap = {};
+      for (const row of db.prepare(`
+        SELECT factor_name, factor_value
+        FROM factor_daily WHERE ts_code=? ORDER BY trade_date DESC LIMIT 100
+      `).all(code)) {
+        if (!(row.factor_name in factorMap)) factorMap[row.factor_name] = row.factor_value;
+      }
+
+      const isDomestic = code.endsWith(".SH") || code.endsWith(".SZ") || code.endsWith(".HK");
+      const isUs = /^[A-Z]+$/.test(code);
+      let priceRows = [];
+      if (isDomestic && this.hasTablesInConnection(db, ["daily_bar"])) {
+        priceRows = db.prepare(`
+          SELECT close, open, high, low, vol, trade_date
+          FROM daily_bar WHERE ts_code=? ORDER BY trade_date DESC LIMIT 30
+        `).all(code);
+      } else if (isUs && this.hasTablesInConnection(db, ["us_daily_bar"])) {
+        priceRows = db.prepare(`
+          SELECT close, open, high, low, vol, trade_date
+          FROM us_daily_bar WHERE symbol=? ORDER BY trade_date DESC LIMIT 30
+        `).all(code);
+      }
+
+      const priceHistory = priceRows.reverse().map((row) => ({
+        date: row.trade_date,
+        close: row.close,
+        open: row.open,
+        high: row.high,
+        low: row.low,
+        vol: row.vol,
+      }));
+      const sector = poolInfo.sector || null;
+      return {
+        poolInfo,
+        factorMap,
+        priceHistory,
+        valuationData: getValuationData(db, code, factorMap),
+        fundamentalsData: getFundamentalsData(db, code, factorMap),
+        peerGroupData: getPeerGroupData(db, code, sector),
+        moatPeerAvg: buildPeerAvgForSector(db, code, sector),
+        newsClaimsData: getNewsClaimsAndRisks(db, code),
+      };
+    });
+  }
+
+  hasTablesInConnection(db, tableNames) {
+    const placeholders = tableNames.map(() => "?").join(", ");
+    const rows = db.prepare(
+      `SELECT name FROM sqlite_master WHERE type='table' AND name IN (${placeholders})`,
+    ).all(...tableNames);
+    return rows.length === tableNames.length;
   }
 
   getValueScoreInputs() {
