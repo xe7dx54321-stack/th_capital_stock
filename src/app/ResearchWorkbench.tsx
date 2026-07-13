@@ -1,4 +1,11 @@
-import { Landmark, LayoutDashboard, RefreshCcw } from "lucide-react";
+import {
+  BadgeCheck,
+  CircleDot,
+  Database,
+  FileStack,
+  LayoutDashboard,
+  RefreshCcw,
+} from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 
@@ -135,16 +142,33 @@ export default function ResearchWorkbench() {
     } catch { /* the next history refresh can recover this view */ }
   }
 
+  const completedRuns = runs.filter((run) => run.status === "completed").length;
+  const pendingReviews = runs.filter((run) => run.status === "waiting_review").length;
+
   return (
     <main className="workbench-shell">
       <header className="workbench-masthead">
-        <Link className="workbench-brand" to="/workbench"><Landmark size={20} /><span>TH CAPITAL</span><em>local research desk</em></Link>
-        <nav><Link to="/"><LayoutDashboard size={15} /> 旧版看板</Link><button onClick={() => void loadIndex()} disabled={loading}><RefreshCcw size={14} /> {loading ? "同步中" : "同步档案"}</button></nav>
+        <Link className="workbench-brand" to="/">
+          <span className="brand-mark" aria-hidden="true"><span /></span>
+          <strong>同行资本</strong>
+          <em>个人研究工作台</em>
+        </Link>
+        <nav>
+          <span className="today-status"><CircleDot size={14} /> 今日研究</span>
+          <Link to="/legacy/dashboard"><LayoutDashboard size={15} /> 经典看板</Link>
+          <button onClick={() => void loadIndex()} disabled={loading}><RefreshCcw className={loading ? "spin" : ""} size={14} /> {loading ? "同步中" : "同步档案"}</button>
+        </nav>
       </header>
       <div className="workbench-grid">
         <WorkflowSidebar workflows={workflows} runs={runs} selectedRunId={selectedRunId} onSelectRun={setSelectedRunId} />
         <div className="workbench-center">
           <WorkflowLauncher busy={launching} error={error} onLaunch={launch} />
+          <section className="overview-strip" aria-label="研究概览">
+            <article><span className="overview-icon is-blue"><FileStack size={18} /></span><div><small>研究总数</small><strong>{runs.length}</strong></div></article>
+            <article><span className="overview-icon is-amber"><CircleDot size={18} /></span><div><small>待审核</small><strong>{pendingReviews}</strong></div></article>
+            <article><span className="overview-icon is-green"><BadgeCheck size={18} /></span><div><small>已完成</small><strong>{completedRuns}</strong></div></article>
+            <article><span className="overview-icon is-slate"><Database size={18} /></span><div><small>数据边界</small><strong className="boundary-value">本地优先</strong></div></article>
+          </section>
           <RunTimeline run={selectedRun} events={events} connection={connection} />
           <ArtifactViewer artifacts={selectedRun?.artifacts || []} />
         </div>

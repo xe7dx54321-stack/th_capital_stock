@@ -67,20 +67,6 @@ export interface DiscoveryList {
   updatedAt: string;
 }
 
-export interface PhaseInfo {
-  phaseId: string;
-  phaseName: string;
-  description: string;
-  status: string;
-  taskCount: number;
-  completedCount: number;
-}
-
-export interface PhaseList {
-  phases: PhaseInfo[];
-  updatedAt: string;
-}
-
 export interface NewsItem {
   id: number;
   title: string;
@@ -270,10 +256,6 @@ export function fetchValueScores(): Promise<ValueScoreList> {
 
 export function fetchDiscoveries(): Promise<DiscoveryList> {
   return apiGet<DiscoveryList>("/api/discoveries");
-}
-
-export function fetchPhases(): Promise<PhaseList> {
-  return apiGet<PhaseList>("/api/phases");
 }
 
 export function fetchNews(): Promise<NewsList> {

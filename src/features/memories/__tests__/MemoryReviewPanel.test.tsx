@@ -26,7 +26,7 @@ describe("MemoryReviewPanel", () => {
 
     expect(await screen.findByText("old")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /查看来源/ }));
-    expect(screen.getByText("[supports] ev-1")).toBeInTheDocument();
+    expect(screen.getByText("[支持] ev-1")).toBeInTheDocument();
     fireEvent.change(screen.getByLabelText("审核原因"), { target: { value: "证据已核验" } });
     fireEvent.click(screen.getByRole("button", { name: "批准写入" }));
 

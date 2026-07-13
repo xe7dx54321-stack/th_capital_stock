@@ -16,15 +16,27 @@ const labels: Record<string, string> = {
   thesis_update: "论点更新",
 };
 
+const statusLabels: Record<string, string> = {
+  queued: "排队中",
+  running: "运行中",
+  waiting_review: "待审核",
+  completed: "已完成",
+  failed: "失败",
+  cancelled: "已取消",
+};
+
+const workflowOrder = ["stock_deep_dive", "daily_brief", "portfolio_review", "thesis_update"];
+
 export default function WorkflowSidebar({ workflows, runs, selectedRunId, onSelectRun }: Props) {
+  const orderedWorkflows = [...workflows].sort((left, right) => workflowOrder.indexOf(left.workflow_id) - workflowOrder.indexOf(right.workflow_id));
   return (
     <aside className="workbench-sidebar" aria-label="工作流和历史记录">
       <section>
-        <p className="eyebrow">Research protocols</p>
+        <p className="eyebrow">研究导航</p>
         <h2>研究流程</h2>
         <div className="protocol-list">
-          {workflows.map((workflow) => (
-            <div className={`protocol ${workflow.enabled ? "is-ready" : "is-locked"}`} key={workflow.workflow_id}>
+          {orderedWorkflows.map((workflow) => (
+            <div className={`protocol ${workflow.enabled ? "is-ready" : "is-locked"} ${workflow.workflow_id === "stock_deep_dive" ? "is-active" : ""}`} key={workflow.workflow_id}>
               {workflow.enabled ? <FileSearch size={17} /> : <LockKeyhole size={16} />}
               <span><strong>{labels[workflow.workflow_id] || workflow.title}</strong><small>{workflow.enabled ? "可运行" : "即将接入"}</small></span>
             </div>
@@ -47,7 +59,7 @@ export default function WorkflowSidebar({ workflows, runs, selectedRunId, onSele
                   <strong>{String(run.input.ticker || labels[run.workflow_id] || run.workflow_id)}</strong>
                   <small><Clock3 size={11} /> {new Date(run.created_at).toLocaleString("zh-CN", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })}</small>
                 </span>
-                <em>{run.status.replace("_", " ")}</em>
+                <em>{statusLabels[run.status] || "状态未知"}</em>
               </button>
             ))}
           </div>

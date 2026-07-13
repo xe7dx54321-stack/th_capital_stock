@@ -22,9 +22,9 @@ export default function WorkflowLauncher({ busy, error, onLaunch }: Props) {
   return (
     <section className="launcher">
       <div>
-        <p className="eyebrow">Evidence before conviction</p>
-        <h1>从一个代码，建立一条可追溯的研究链。</h1>
-        <p>读取本地证据、标记数据新鲜度、生成结构化报告。网络访问默认关闭。</p>
+        <p className="eyebrow">今日研究</p>
+        <h1>从一个标的开始研究</h1>
+        <p>连接本地证据、数据新鲜度与研究记忆，形成一条可复查、可沉淀的研究链。</p>
       </div>
       <form onSubmit={submit}>
         <label htmlFor="ticker">研究标的</label>

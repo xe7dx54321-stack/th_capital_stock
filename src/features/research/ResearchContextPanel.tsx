@@ -14,11 +14,21 @@ function claimTexts(value: unknown): string[] {
 }
 
 function freshnessLabel(value: unknown): string {
+  const labels: Record<string, string> = {
+    fresh: "新鲜",
+    stale: "已过期",
+    missing: "有缺失",
+    complete: "完整",
+    partial: "部分完整",
+    local: "本地数据",
+    unknown: "待检测",
+  };
+  const translate = (item: unknown) => labels[String(item).toLowerCase()] || String(item);
   if (value && typeof value === "object") {
     const item = value as { condition?: unknown; status?: unknown };
-    return [item.condition, item.status].filter(Boolean).map(String).join(" / ") || "待检测";
+    return [item.condition, item.status].filter(Boolean).map(translate).join(" / ") || "待检测";
   }
-  return String(value || "待检测");
+  return value ? translate(value) : "待检测";
 }
 
 export default function ResearchContextPanel({ run, onMemoryReviewed }: { run: WorkflowRun | null; onMemoryReviewed?: () => void }) {
@@ -29,7 +39,7 @@ export default function ResearchContextPanel({ run, onMemoryReviewed }: { run: W
 
   return (
     <aside className="context-panel" aria-label="研究上下文">
-      <div><p className="eyebrow">Research context</p><h2>证据侧栏</h2></div>
+      <div><p className="eyebrow">研究上下文</p><h2>证据与判断</h2></div>
       <section className="context-block">
         <h3><Database size={15} /> 证据索引 <span>{evidence.length}</span></h3>
         {evidence.length ? evidence.map((item) => <code key={item}>{item}</code>) : <p>报告生成后，证据 ID 会陈列在此。</p>}

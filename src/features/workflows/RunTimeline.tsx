@@ -4,8 +4,34 @@ import type { WorkflowEvent, WorkflowRun } from "../../lib/api";
 
 interface Props { run: WorkflowRun | null; events: WorkflowEvent[]; connection: "live" | "polling" | "idle"; }
 
+const eventLabels: Record<string, string> = {
+  "run.queued": "研究任务已进入队列",
+  "run.started": "研究任务已启动",
+  "stage.started": "开始执行研究步骤",
+  "stage.progress": "研究步骤正在推进",
+  "stage.completed": "研究步骤已完成",
+  "stage.warning": "研究步骤需要关注",
+  "artifact.created": "研究报告已生成",
+  "review.requested": "研究记忆等待人工审核",
+  "run.completed": "本次研究已完成",
+  "run.failed": "本次研究未能完成",
+  "run.cancelled": "本次研究已取消",
+};
+
+const stageLabels: Record<string, string> = {
+  input_validation: "输入校验",
+  evidence_collection: "证据收集",
+  evidence_normalization: "证据整理",
+  reasoning: "研究推演",
+  report_generation: "报告生成",
+  memory_candidate: "记忆候选",
+};
+
 function eventMessage(event: WorkflowEvent) {
-  return event.message || String(event.payload.message || event.payload.stage || event.event_type);
+  const payloadMessage = String(event.payload.message || "");
+  if (/[一-鿿]/.test(payloadMessage)) return payloadMessage;
+  const stage = stageLabels[String(event.stage_id || event.payload.stage || "")];
+  return stage ? `${eventLabels[event.event_type] || "研究进程更新"}：${stage}` : eventLabels[event.event_type] || "研究进程更新";
 }
 
 export default function RunTimeline({ run, events, connection }: Props) {
@@ -13,7 +39,7 @@ export default function RunTimeline({ run, events, connection }: Props) {
   return (
     <section className="timeline" aria-label="运行时间线">
       <div className="timeline-header">
-        <div><p className="eyebrow">Run ledger</p><h2>{String(run.input.ticker || run.workflow_id)}</h2></div>
+        <div><p className="eyebrow">研究进程</p><h2>{String(run.input.ticker || run.workflow_id)}</h2></div>
         <span className={`connection ${connection}`}><Radio size={13} /> {connection === "polling" ? "轮询恢复" : connection === "live" ? "实时连接" : "已归档"}</span>
       </div>
       <div className="event-rail">
@@ -24,7 +50,7 @@ export default function RunTimeline({ run, events, connection }: Props) {
           return (
             <div className={`event-row ${warning || failed ? "is-warning" : ""}`} key={`${event.run_id}-${event.sequence}`}>
               {warning || failed ? <AlertTriangle size={16} /> : complete ? <Check size={16} /> : <LoaderCircle size={16} />}
-              <span><strong>{eventMessage(event)}</strong><small>{event.event_type} · #{event.sequence}</small></span>
+              <span><strong>{eventMessage(event)}</strong><small>第 {event.sequence} 条进程记录</small></span>
               <time>{new Date(event.created_at).toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}</time>
             </div>
           );
