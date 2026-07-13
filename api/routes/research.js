@@ -2,6 +2,7 @@ import express from "express";
 
 import { buildDiscoveries } from "../services/discovery-service.js";
 import { buildDashboard, buildNewsDetail, buildNewsList } from "../services/report-service.js";
+import { buildValueScores } from "../services/scoring-service.js";
 
 
 export function createResearchRouter({ repository, cacheTtlMs = 5 * 60 * 1000 }) {
@@ -17,16 +18,13 @@ export function createResearchRouter({ repository, cacheTtlMs = 5 * 60 * 1000 })
     return data;
   };
 
-  // Compatibility bridge until the legacy scoring engine is extracted in the
-  // next endpoint batch. A workflow-only MVP database should render an empty
-  // classic dashboard instead of failing because legacy market tables are absent.
-  router.get("/api/value-scores", (_req, res, next) => {
+  router.get("/api/value-scores", (_req, res) => {
     try {
-      if (repository.hasValueScoreTables()) {
-        next();
+      if (!repository.hasValueScoreTables()) {
+        res.json({ scores: [], updatedAt: new Date().toISOString() });
         return;
       }
-      res.json({ scores: [], updatedAt: new Date().toISOString() });
+      res.json(cached("value_scores", () => buildValueScores(repository.getValueScoreInputs())));
     } catch (error) {
       res.status(500).json({ error: error.message });
     }

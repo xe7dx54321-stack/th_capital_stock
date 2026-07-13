@@ -100,3 +100,114 @@ export function buildNewsDetail(row, now = new Date()) {
     updatedAt: now.toISOString(),
   };
 }
+
+export function getCatalystsReport(newsClaimsData) {
+  const news = (newsClaimsData?.news || []).slice(0, 10);
+  const claims = newsClaimsData?.claims || [];
+  const risks = newsClaimsData?.risks || [];
+
+  // 利好 / 利空关键词（启发式匹配，中英文兼顾）
+  const bullKeywords = ["增长", "上涨", "创新高", "买入", "增持", "超预期", "超预期增长",
+    "获批", "中标", "签", "回购", "分红", "业绩预增", "预增", "利好",
+    "涨价", "量价齐升", "订单", "突破", "入选", "上市",
+    "buy", "hold", "outperform", "positive", "upgrade", "beat"];
+  const bearKeywords = ["下跌", "亏损", "利空", "减持", "卖出", "下修", "调查",
+    "诉讼", "违约", "风险", "暴雷", "下滑", "亏损", "承压", "拖累",
+    "sell", "downgrade", "miss", "negative", "warning"];
+
+  // --- 1) 分析每条新闻的方向 + 强度 ---
+  const scoredNews = news.map((n) => {
+    const txt = `${n.title || ""} ${n.summary || ""}`.toLowerCase();
+    let bull = 0, bear = 0;
+    for (const k of bullKeywords) if (txt.includes(k.toLowerCase())) bull++;
+    for (const k of bearKeywords) if (txt.includes(k.toLowerCase())) bear++;
+    // 方向：+1 利好，-1 利空，0 中性
+    let direction = 0;
+    if (bull > bear) direction = 1;
+    else if (bear > bull) direction = -1;
+    // 强度 = 关键词命中数量
+    return { ...n, direction, intensity: bull + bear };
+  });
+
+  // --- 2) 分析研究主张（research claims） ---
+  // 用 `stance` 字段作方向，`confidence` 作强度
+  const scoredClaims = claims.map((c) => {
+    const s = (c.stance || "").toLowerCase();
+    let direction = 0;
+    if (/买|多|加|bull|buy|outperform|strong|overweight/i.test(s)) direction = 1;
+    else if (/卖|空|减|sell|bear|underweight|down|negative/i.test(s)) direction = -1;
+    const intensity = (c.confidence != null ? Number(c.confidence) : 0.5) * 2;
+    return { ...c, direction, intensity };
+  });
+
+  // --- 3) 综合催化评分：新闻占 60%，研究主张占 40% ---
+  let newsScore = 0, newsTotal = 0;
+  for (const n of scoredNews) {
+    if (n.direction !== 0) {
+      const w = Math.min(10, n.intensity);
+      newsScore += n.direction * (10 + w * 10); // 每条 -100 ~ +100 之间加权
+      newsTotal++;
+    }
+  }
+  const newsAvg = newsTotal > 0 ? newsScore / newsTotal : 0;
+
+  let claimScore = 0, claimTotal = 0;
+  for (const c of scoredClaims) {
+    if (c.direction !== 0) {
+      claimScore += c.direction * (30 + c.intensity * 40); // 研究主张权重更大
+      claimTotal++;
+    }
+  }
+  const claimAvg = claimTotal > 0 ? claimScore / claimTotal : 0;
+
+  // 风险提示对催化评分的负面影响
+  let riskPenalty = 0;
+  const highRisks = risks.filter((r) => (r.severity || "").toString().toLowerCase().includes("高") || (r.severity || "") === "HIGH");
+  riskPenalty = Math.min(30, highRisks.length * 10);
+
+  // 综合（-100 ~ +100）
+  let catalystScore = null;
+  let netDirection = "neutral";
+  let summary = "暂无近期新闻或研究主张，无法评估催化方向。";
+  if (newsTotal > 0 || claimTotal > 0) {
+    // 按新闻 60%，研究主张 40% 加权（若无其中一项则 100% 给另一项）
+    if (newsTotal > 0 && claimTotal > 0) catalystScore = Math.round(newsAvg * 0.6 + claimAvg * 0.4 - riskPenalty);
+    else if (newsTotal > 0) catalystScore = Math.round(newsAvg - riskPenalty);
+    else catalystScore = Math.round(claimAvg - riskPenalty);
+    catalystScore = Math.max(-100, Math.min(100, catalystScore));
+
+    if (catalystScore >= 30) netDirection = "bullish";
+    else if (catalystScore <= -30) netDirection = "bearish";
+
+    if (catalystScore >= 40) summary = `催化评分 ${catalystScore}，市场情绪显著偏多，需关注利好兑现时点。`;
+    else if (catalystScore >= 10) summary = `催化评分 ${catalystScore}，市场情绪偏积极。`;
+    else if (catalystScore >= -10) summary = `催化评分 ${catalystScore}，市场情绪中性，缺乏明确催化。`;
+    else if (catalystScore >= -40) summary = `催化评分 ${catalystScore}，市场情绪偏谨慎，需关注利空消化。`;
+    else summary = `催化评分 ${catalystScore}，市场情绪显著偏空，需高度谨慎。`;
+  }
+
+  // --- 4) 返回：取前 5 条新闻、前 10 条研究主张用于前端标签页展示 ---
+  //    同时补充每条新闻的方向标签（bullish / bearish / neutral）
+  const recentNews = scoredNews.slice(0, 5).map((n) => ({
+    id: n.id, title: n.title, source: n.source, sourceName: n.sourceName,
+    publishedAt: n.publishedAt, tickers: n.tickers, url: n.url,
+    credibility: n.credibility, summary: n.summary, hasFullBody: n.hasFullBody,
+    direction: n.direction > 0 ? "bullish" : (n.direction < 0 ? "bearish" : "neutral"),
+    intensity: n.intensity,
+  }));
+  const upcomingClaims = scoredClaims.slice(0, 10).map((c) => ({
+    claimId: c.claimId, claimType: c.claimType, theme: c.theme,
+    claimText: c.claimText, stance: c.stance, importance: c.importance,
+    confidence: c.confidence, createdAt: c.createdAt,
+    direction: c.direction > 0 ? "bullish" : (c.direction < 0 ? "bearish" : "neutral"),
+    intensity: c.intensity,
+  }));
+
+  return {
+    recentNews,
+    upcomingClaims,
+    catalystScore,
+    netDirection,
+    summary,
+  };
+}

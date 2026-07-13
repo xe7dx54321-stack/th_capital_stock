@@ -1,5 +1,11 @@
 import Database from "better-sqlite3";
 
+import {
+  buildPeerAvgForSector,
+  getFundamentalsData,
+  getValuationData,
+} from "./research-readers.js";
+
 
 export class ResearchRepository {
   constructor(dbPath) {
@@ -29,6 +35,82 @@ export class ResearchRepository {
     return this.hasTables([
       "stock_pool_current", "factor_daily", "daily_bar", "us_daily_bar",
     ]);
+  }
+
+  getValueScoreInputs() {
+    return this.read((db) => {
+      const poolRows = db.prepare(`
+        SELECT ts_code, sector, pool_type
+        FROM (
+          SELECT ts_code, sector, pool_type,
+            ROW_NUMBER() OVER (
+              PARTITION BY ts_code
+              ORDER BY CASE pool_type
+                WHEN 'portfolio_seed' THEN 1
+                WHEN 'seed' THEN 2
+                WHEN 'watchlist' THEN 3
+                WHEN 'candidate' THEN 4
+                WHEN 'recommended' THEN 5
+                WHEN 'us_benchmark' THEN 6
+                ELSE 9
+              END
+            ) AS rn
+          FROM stock_pool_current
+        ) sub
+        WHERE rn = 1
+      `).all();
+
+      const factorsMap = new Map();
+      for (const row of db.prepare(
+        "SELECT ts_code, factor_name, factor_value FROM factor_daily",
+      ).all()) {
+        if (!factorsMap.has(row.ts_code)) factorsMap.set(row.ts_code, {});
+        factorsMap.get(row.ts_code)[row.factor_name] = row.factor_value;
+      }
+
+      const pricesMap = new Map();
+      for (const row of db.prepare(`
+        SELECT ts_code, close FROM daily_bar
+        WHERE (ts_code, trade_date) IN (
+          SELECT ts_code, MAX(trade_date) FROM daily_bar GROUP BY ts_code
+        )
+      `).all()) pricesMap.set(row.ts_code, row.close);
+      for (const row of db.prepare(`
+        SELECT symbol, close FROM us_daily_bar
+        WHERE (symbol, trade_date) IN (
+          SELECT symbol, MAX(trade_date) FROM us_daily_bar GROUP BY symbol
+        )
+      `).all()) pricesMap.set(row.symbol, row.close);
+
+      const priceHistMap = new Map();
+      for (const row of db.prepare(
+        "SELECT ts_code, trade_date, close FROM daily_bar ORDER BY ts_code, trade_date ASC",
+      ).all()) {
+        if (!priceHistMap.has(row.ts_code)) priceHistMap.set(row.ts_code, []);
+        priceHistMap.get(row.ts_code).push({ close: row.close, date: row.trade_date });
+      }
+      for (const row of db.prepare(`
+        SELECT symbol AS ts_code, trade_date, close
+        FROM us_daily_bar ORDER BY symbol, trade_date ASC
+      `).all()) {
+        if (!priceHistMap.has(row.ts_code)) priceHistMap.set(row.ts_code, []);
+        priceHistMap.get(row.ts_code).push({ close: row.close, date: row.trade_date });
+      }
+
+      return poolRows.map(({ ts_code: tsCode, sector }) => {
+        const factorMap = factorsMap.get(tsCode) || {};
+        return {
+          tsCode,
+          sector,
+          factorMap,
+          priceHistory: priceHistMap.get(tsCode) || [],
+          latestPrice: pricesMap.has(tsCode) ? Number(pricesMap.get(tsCode)) : null,
+          valuationData: getValuationData(db, tsCode, factorMap),
+          fundamentalsData: getFundamentalsData(db, tsCode, factorMap),
+          peerGroupData: buildPeerAvgForSector(db, tsCode, sector),
+        };
+      });
+    });
   }
 
   getDashboardSnapshot() {
