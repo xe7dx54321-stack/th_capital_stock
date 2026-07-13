@@ -1,3 +1,14 @@
+CREATE TABLE IF NOT EXISTS risk_alert (
+    alert_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    alert_time TEXT NOT NULL,
+    alert_type TEXT NOT NULL,
+    severity TEXT NOT NULL,
+    ts_code TEXT,
+    message TEXT,
+    action TEXT,
+    acknowledged INTEGER DEFAULT 0
+);
+
 ALTER TABLE risk_alert ADD COLUMN fingerprint TEXT;
 ALTER TABLE risk_alert ADD COLUMN source_state TEXT;
 ALTER TABLE risk_alert ADD COLUMN lifecycle_status TEXT NOT NULL DEFAULT 'opened';
