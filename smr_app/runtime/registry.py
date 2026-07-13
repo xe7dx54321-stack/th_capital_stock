@@ -45,6 +45,14 @@ def production_registry() -> WorkflowRegistry:
             from smr_app.workflows.stock_deep_dive import stock_deep_dive_definition
 
             definitions.append(stock_deep_dive_definition())
+        elif workflow_id == "daily_brief":
+            from smr_app.workflows.daily_brief import daily_brief_definition
+
+            definitions.append(daily_brief_definition())
+        elif workflow_id == "portfolio_review":
+            from smr_app.workflows.portfolio_review import portfolio_review_definition
+
+            definitions.append(portfolio_review_definition())
         else:
             definitions.append(
                 WorkflowDefinition(

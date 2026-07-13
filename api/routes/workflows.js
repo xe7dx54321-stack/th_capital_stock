@@ -10,15 +10,29 @@ export const WORKFLOWS = [
     workflow_id: "daily_brief",
     title: "Daily brief",
     description: "Summarize material changes for the day.",
-    enabled: false,
-    input_schema: { type: "object", additionalProperties: false },
+    enabled: true,
+    input_schema: {
+      type: "object",
+      properties: {
+        allow_network: { type: "boolean", default: false },
+        run_refresh_job: { type: "boolean", default: false },
+      },
+      additionalProperties: false,
+    },
   },
   {
     workflow_id: "portfolio_review",
     title: "Portfolio review",
     description: "Review paper portfolio risk and decisions.",
-    enabled: false,
-    input_schema: { type: "object", additionalProperties: false },
+    enabled: true,
+    input_schema: {
+      type: "object",
+      properties: {
+        allow_network: { type: "boolean", default: false },
+        run_refresh_job: { type: "boolean", default: false },
+      },
+      additionalProperties: false,
+    },
   },
   {
     workflow_id: "stock_deep_dive",
@@ -77,6 +91,22 @@ function validateRunRequest(body) {
     }
     if (input.allow_network === true) throw new TypeError("MVP only supports allow_network=false");
     return { workflow, input: { ticker, allow_network: false } };
+  }
+  if (["daily_brief", "portfolio_review"].includes(workflow.workflow_id)) {
+    if (Object.keys(input).some((key) => !["allow_network", "run_refresh_job"].includes(key))) {
+      throw new TypeError(`${workflow.workflow_id} input contains unsupported fields`);
+    }
+    if (input.allow_network !== undefined && typeof input.allow_network !== "boolean") {
+      throw new TypeError("allow_network must be a boolean");
+    }
+    if (input.allow_network === true) throw new TypeError("MVP only supports allow_network=false");
+    if (input.run_refresh_job !== undefined && typeof input.run_refresh_job !== "boolean") {
+      throw new TypeError("run_refresh_job must be a boolean");
+    }
+    return {
+      workflow,
+      input: { allow_network: false, run_refresh_job: input.run_refresh_job === true },
+    };
   }
   return { workflow, input };
 }
