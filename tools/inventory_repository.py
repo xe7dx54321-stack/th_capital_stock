@@ -72,6 +72,11 @@ SCAN_EXCLUDED_PARTS = {
     "venv",
 }
 
+MANIFEST_OUTPUT_PATHS = {
+    "legacy_manifest/inventory.json",
+    "legacy_manifest/classifications.csv",
+}
+
 GENERATED_PREFIXES = (
     "01_data/",
     "02_research/",
@@ -131,10 +136,13 @@ SCRATCH_RE = re.compile(
     re.IGNORECASE,
 )
 QUOTED_PATH_RE = re.compile(
-    r"[\"']([^\"']+(?:\.py|\.js|\.mjs|\.cjs|\.ts|\.tsx|\.json|\.md))[\"']"
+    r"[\"'`]([^\"'`]+(?:\.py|\.js|\.mjs|\.cjs|\.ts|\.tsx|\.json|\.md))[\"'`]"
 )
 JS_IMPORT_RE = re.compile(
     r"(?:from\s+|import\s*\(|require\s*\()\s*[\"']([^\"']+)[\"']"
+)
+MARKDOWN_LINK_PATH_RE = re.compile(
+    r"\]\(([^)\s]+(?:\.py|\.js|\.mjs|\.cjs|\.ts|\.tsx|\.json|\.md))\)"
 )
 
 
@@ -194,6 +202,11 @@ def classify_path(
         )
 
     if _is_scratch(path):
+        if runtime_success or reference_count > 0:
+            return ClassificationResult(
+                Classification.KEEP,
+                "scratch-like name retained because it has a reference or recent runtime evidence",
+            )
         return ClassificationResult(
             Classification.DELETE_CANDIDATE,
             "temporary investigation naming pattern; requires manual approval",
@@ -355,6 +368,22 @@ def load_baseline_untracked(path: Path | None) -> list[str]:
     return result
 
 
+def load_manual_approvals(path: Path | None) -> set[str]:
+    """Preserve explicit approvals without allowing them to override a new category."""
+
+    if not path or not path.exists():
+        return set()
+    approved: set[str] = set()
+    try:
+        with path.open("r", encoding="utf-8", errors="replace", newline="") as handle:
+            for row in csv.DictReader(handle):
+                if str(row.get("approved", "")).strip().lower() in {"true", "yes", "1"}:
+                    approved.add(normalize_path(row.get("path", "")))
+    except OSError:
+        return set()
+    return approved
+
+
 def _iter_present_files(root: Path) -> Iterable[Path]:
     for path in root.rglob("*"):
         if not path.is_file():
@@ -363,10 +392,7 @@ def _iter_present_files(root: Path) -> Iterable[Path]:
         if any(part in SCAN_EXCLUDED_PARTS for part in relative.parts):
             continue
         normalized = relative.as_posix()
-        if normalized in {
-            "legacy_manifest/inventory.json",
-            "legacy_manifest/classifications.csv",
-        }:
+        if normalized in MANIFEST_OUTPUT_PATHS:
             continue
         yield path
 
@@ -397,6 +423,8 @@ def _extract_import_tokens(path: Path, text: str) -> list[str]:
         tokens.add(match.group(1))
     for match in JS_IMPORT_RE.finditer(text):
         tokens.add(match.group(1))
+    for match in MARKDOWN_LINK_PATH_RE.finditer(text):
+        tokens.add(match.group(1))
     return sorted(tokens)
 
 
@@ -421,7 +449,7 @@ def _resolve_token(
             variants.extend(f"{candidate}{ext}" for ext in (".js", ".mjs", ".ts", ".tsx", ".py"))
         return [item for item in variants if item in known_paths]
 
-    module_stem = normalized.rsplit(".", 1)[-1]
+    module_stem = PurePosixPath(normalized).stem if suffix else normalized.rsplit(".", 1)[-1]
     return stems.get(module_stem, [])
 
 
@@ -483,15 +511,17 @@ def build_inventory(
     git_changes: dict[str, str] | None = None,
     runtime_evidence: dict[str, dict[str, Any]] | None = None,
     baseline_untracked: list[str] | None = None,
+    approved_paths: set[str] | None = None,
 ) -> dict[str, Any]:
     root = root.resolve()
     tracked_paths = tracked_paths if tracked_paths is not None else load_tracked_paths(root)
     git_changes = git_changes if git_changes is not None else load_latest_git_changes(root)
     runtime_evidence = runtime_evidence or {}
     baseline_untracked = baseline_untracked or []
+    approved_paths = approved_paths or set()
 
     present_paths = {path.relative_to(root).as_posix() for path in _iter_present_files(root)}
-    all_paths = present_paths | tracked_paths | set(baseline_untracked)
+    all_paths = (present_paths | tracked_paths | set(baseline_untracked)) - MANIFEST_OUTPUT_PATHS
     all_paths.add("config/ifind_refresh_token.txt")
     imports, referenced_by = build_reference_graph(root, all_paths)
 
@@ -509,6 +539,10 @@ def build_inventory(
             reference_count=len(references),
             runtime_evidence=runtime,
         )
+        approval_allowed = result.category in {
+            Classification.FREEZE,
+            Classification.DELETE_CANDIDATE,
+        }
         rows.append(
             {
                 "path": relative,
@@ -516,7 +550,10 @@ def build_inventory(
                 "tracked": relative in tracked_paths,
                 "size": size,
                 "category": result.category.value,
-                "approved": result.approved,
+                "approved": bool(
+                    result.approved
+                    or (relative in approved_paths and relative in tracked_paths and approval_allowed)
+                ),
                 "rationale": result.rationale,
                 "imports": imports.get(relative, []),
                 "referenced_by": references,
@@ -622,6 +659,7 @@ def main(argv: list[str] | None = None) -> int:
         root,
         runtime_evidence=load_runtime_evidence(runtime_log),
         baseline_untracked=load_baseline_untracked(baseline_path),
+        approved_paths=load_manual_approvals(output / "classifications.csv"),
     )
     print(json.dumps(inventory["summary"], ensure_ascii=False, sort_keys=True))
 

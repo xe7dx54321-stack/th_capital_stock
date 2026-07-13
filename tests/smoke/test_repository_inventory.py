@@ -26,6 +26,60 @@ class RepositoryInventoryTests(unittest.TestCase):
         self.assertEqual(Classification.DELETE_CANDIDATE, classification.category)
         self.assertFalse(classification.approved)
 
+    def test_scratch_like_name_is_kept_when_a_runbook_references_it(self) -> None:
+        classification = classify_path(
+            "08_scripts/registry/query_registry.py",
+            tracked=True,
+            size=20,
+            reference_count=1,
+            runtime_evidence=None,
+        )
+
+        self.assertEqual(Classification.KEEP, classification.category)
+
+    def test_markdown_backtick_path_counts_as_a_reference(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            target = root / "query_registry.py"
+            target.write_text("VALUE = 1\n", encoding="utf-8")
+            runbook = root / "runbook.md"
+            runbook.write_text("Run `query_registry.py` for inspection.\n", encoding="utf-8")
+
+            inventory = build_inventory(
+                root,
+                tracked_paths={"query_registry.py", "runbook.md"},
+                git_changes={},
+                runtime_evidence={},
+                baseline_untracked=[],
+            )
+            rows = {row["path"]: row for row in inventory["files"]}
+
+            self.assertEqual(["runbook.md"], rows["query_registry.py"]["referenced_by"])
+            self.assertEqual(Classification.KEEP.value, rows["query_registry.py"]["category"])
+
+    def test_markdown_link_destination_counts_as_a_reference(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            target = root / "smr_phase0_openclaw.py"
+            target.write_text("VALUE = 1\n", encoding="utf-8")
+            runbook = root / "runbook.md"
+            runbook.write_text(
+                "[bootstrap](/old/project/08_scripts/_deploy_scripts/smr_phase0_openclaw.py)\n",
+                encoding="utf-8",
+            )
+
+            inventory = build_inventory(
+                root,
+                tracked_paths={"smr_phase0_openclaw.py", "runbook.md"},
+                git_changes={},
+                runtime_evidence={},
+                baseline_untracked=[],
+            )
+            rows = {row["path"]: row for row in inventory["files"]}
+
+            self.assertEqual(["runbook.md"], rows["smr_phase0_openclaw.py"]["referenced_by"])
+            self.assertEqual(Classification.KEEP.value, rows["smr_phase0_openclaw.py"]["category"])
+
     def test_secret_and_generated_paths_have_priority(self) -> None:
         secret = classify_path(
             "config/ifind_refresh_token.txt",
@@ -115,6 +169,29 @@ class RepositoryInventoryTests(unittest.TestCase):
             }
             self.assertTrue(required.issubset(inventory["files"][0]))
 
+    def test_generated_manifest_outputs_do_not_make_fingerprint_self_referential(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            manifest_dir = root / "legacy_manifest"
+            manifest_dir.mkdir()
+            (manifest_dir / "inventory.json").write_text("{}\n", encoding="utf-8")
+            (manifest_dir / "classifications.csv").write_text("path,approved\n", encoding="utf-8")
+
+            inventory = build_inventory(
+                root,
+                tracked_paths={
+                    "legacy_manifest/inventory.json",
+                    "legacy_manifest/classifications.csv",
+                },
+                git_changes={},
+                runtime_evidence={},
+                baseline_untracked=[],
+            )
+
+            paths = {row["path"] for row in inventory["files"]}
+            self.assertNotIn("legacy_manifest/inventory.json", paths)
+            self.assertNotIn("legacy_manifest/classifications.csv", paths)
+
     def test_manifest_output_is_deterministic_except_generated_at(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)
@@ -139,6 +216,28 @@ class RepositoryInventoryTests(unittest.TestCase):
             second_json.pop("generated_at", None)
             self.assertEqual(first_json, second_json)
             self.assertEqual(first_csv, second_csv)
+
+    def test_manual_approval_survives_rescan_only_for_safe_tracked_categories(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            scratch = root / "_debug_once.py"
+            scratch.write_text("VALUE = 1\n", encoding="utf-8")
+            (root / "api").mkdir()
+            server = root / "api" / "server.js"
+            server.write_text("export const app = true;\n", encoding="utf-8")
+
+            inventory = build_inventory(
+                root,
+                tracked_paths={"_debug_once.py", "api/server.js"},
+                git_changes={},
+                runtime_evidence={},
+                baseline_untracked=[],
+                approved_paths={"_debug_once.py", "api/server.js"},
+            )
+            rows = {row["path"]: row for row in inventory["files"]}
+
+            self.assertTrue(rows["_debug_once.py"]["approved"])
+            self.assertFalse(rows["api/server.js"]["approved"])
 
 
 if __name__ == "__main__":
