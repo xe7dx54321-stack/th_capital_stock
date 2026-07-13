@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 import sqlite3
 import uuid
@@ -17,7 +18,8 @@ from smr_app.runtime.event_store import immediate_transaction, utc_now
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_ARTIFACT_ROOT = PROJECT_ROOT / "06_outputs" / "workflows"
+_configured_artifact_roots = os.environ.get("SMR_ARTIFACT_ROOTS", "").split(os.pathsep)
+DEFAULT_ARTIFACT_ROOT = Path(_configured_artifact_roots[0]) if _configured_artifact_roots[0] else PROJECT_ROOT / "06_outputs" / "workflows"
 A_SHARE_RE = re.compile(r"^\d{6}\.(?:SZ|SH|BJ)$")
 H_SHARE_RE = re.compile(r"^\d{5}\.HK$")
 US_SHARE_RE = re.compile(r"^[A-Z][A-Z0-9.-]{0,9}$")

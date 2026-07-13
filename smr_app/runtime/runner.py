@@ -76,12 +76,61 @@ class WorkflowRunner:
         store = EventStore(conn)
         try:
             self._claim_run(conn, definition, input_data, run_id)
-            store.append_event(run_id, "run.queued", f"Queued {definition.workflow_id}")
-            started_at = utc_now()
-            store.update_run(run_id, status="running", started_at=started_at)
+            return self._execute_claimed(conn, store, definition, input_data, run_id, emit_queued=True)
+        finally:
+            conn.close()
+
+    def run_existing(self, definition: WorkflowDefinition, run_id: str) -> dict[str, Any]:
+        if not definition.enabled:
+            raise WorkflowDisabledError(f"Workflow is not implemented yet: {definition.workflow_id}")
+        conn = self._connect()
+        store = EventStore(conn)
+        try:
+            with immediate_transaction(conn):
+                row = conn.execute(
+                    "SELECT workflow_id, status, input_json FROM workflow_runs WHERE run_id=?",
+                    (run_id,),
+                ).fetchone()
+                if row is None:
+                    raise KeyError(f"Unknown workflow run: {run_id}")
+                if row[0] != definition.workflow_id:
+                    raise ValueError("workflow definition does not match queued run")
+                if row[1] != "queued":
+                    return store.get_run(run_id)
+                active = conn.execute(
+                    """
+                    SELECT run_id FROM workflow_runs
+                    WHERE run_id<>? AND status IN ('queued', 'running')
+                    ORDER BY created_at LIMIT 1
+                    """,
+                    (run_id,),
+                ).fetchone()
+                if active:
+                    raise WorkflowBusyError(f"Write workflow already active: {active[0]}")
+                input_data = json.loads(row[2] or "{}")
+            return self._execute_claimed(conn, store, definition, input_data, run_id, emit_queued=False)
+        finally:
+            conn.close()
+
+    def _execute_claimed(
+        self,
+        conn: sqlite3.Connection,
+        store: EventStore,
+        definition: WorkflowDefinition,
+        input_data: dict[str, Any],
+        run_id: str,
+        *,
+        emit_queued: bool,
+    ) -> dict[str, Any]:
+        try:
+            if emit_queued:
+                store.append_event(run_id, "run.queued", f"Queued {definition.workflow_id}")
+            cancellation = CancellationController(conn, run_id)
+            if cancellation.is_requested():
+                return self._mark_cancelled(store, run_id)
+            store.update_run(run_id, status="running", started_at=utc_now())
             store.append_event(run_id, "run.started", f"Started {definition.workflow_id}")
 
-            cancellation = CancellationController(conn, run_id)
             context = WorkflowContext(
                 run_id=run_id,
                 workflow_id=definition.workflow_id,
@@ -134,12 +183,11 @@ class WorkflowRunner:
 
             if cancellation.is_requested():
                 return self._mark_cancelled(store, run_id)
-            completed_at = utc_now()
             store.update_run(
                 run_id,
                 status="completed",
                 summary_json=final_summary,
-                completed_at=completed_at,
+                completed_at=utc_now(),
             )
             store.append_event(
                 run_id,
@@ -152,26 +200,21 @@ class WorkflowRunner:
             raise
         except Exception as exc:
             error_message = str(exc)[:2000]
-            try:
-                store.update_run(
-                    run_id,
-                    status="failed",
-                    error_code=type(exc).__name__,
-                    error_message=error_message,
-                    completed_at=utc_now(),
-                )
-                store.append_event(
-                    run_id,
-                    "run.failed",
-                    error_message or type(exc).__name__,
-                    level="error",
-                    payload={"error_code": type(exc).__name__},
-                )
-                return store.get_run(run_id)
-            except KeyError:
-                raise exc
-        finally:
-            conn.close()
+            store.update_run(
+                run_id,
+                status="failed",
+                error_code=type(exc).__name__,
+                error_message=error_message,
+                completed_at=utc_now(),
+            )
+            store.append_event(
+                run_id,
+                "run.failed",
+                error_message or type(exc).__name__,
+                level="error",
+                payload={"error_code": type(exc).__name__},
+            )
+            return store.get_run(run_id)
 
     @staticmethod
     def _mark_cancelled(store: EventStore, run_id: str) -> dict[str, Any]:

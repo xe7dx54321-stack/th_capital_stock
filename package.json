@@ -15,6 +15,7 @@
     "check:full": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/check.ps1 -Full",
     "check:types": "tsc -b --noEmit",
     "check:api": "node --check api/server.js",
+    "test:api": "node --test tests/api/*.test.js",
     "test:smoke": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/check.ps1 -PythonOnly"
   },
   "dependencies": {

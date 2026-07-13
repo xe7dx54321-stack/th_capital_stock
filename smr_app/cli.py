@@ -54,6 +54,10 @@ def build_parser() -> argparse.ArgumentParser:
     run_parser.add_argument("--run-id")
     run_parser.add_argument("--db-path", type=Path, default=DEFAULT_DB_PATH)
 
+    existing_parser = commands.add_parser("run-existing", help="Execute an already queued workflow run")
+    existing_parser.add_argument("--run-id", required=True)
+    existing_parser.add_argument("--db-path", type=Path, default=DEFAULT_DB_PATH)
+
     status_parser = commands.add_parser("status", help="Show one run and its events")
     status_parser.add_argument("run_id")
     status_parser.add_argument("--db-path", type=Path, default=DEFAULT_DB_PATH)
@@ -109,6 +113,21 @@ def _status(args: argparse.Namespace) -> int:
     return 0
 
 
+def _run_existing(args: argparse.Namespace) -> int:
+    apply_migrations(args.db_path)
+    conn = sqlite3.connect(args.db_path)
+    try:
+        row = conn.execute("SELECT workflow_id FROM workflow_runs WHERE run_id=?", (args.run_id,)).fetchone()
+    finally:
+        conn.close()
+    if row is None:
+        raise KeyError(f"Unknown workflow run: {args.run_id}")
+    definition = _test_fixture() if row[0] == "test_fixture" else production_registry().get(row[0])
+    run = WorkflowRunner(args.db_path).run_existing(definition, args.run_id)
+    print(_json(run))
+    return 0 if run["status"] in {"completed", "waiting_review", "cancelled"} else 1
+
+
 def _cancel(args: argparse.Namespace) -> int:
     apply_migrations(args.db_path)
     conn = sqlite3.connect(args.db_path)
@@ -139,6 +158,8 @@ def main(argv: list[str] | None = None) -> int:
             return _list_workflows()
         if args.command == "run":
             return _run_workflow(args)
+        if args.command == "run-existing":
+            return _run_existing(args)
         if args.command == "status":
             return _status(args)
         if args.command == "cancel":

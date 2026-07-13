@@ -140,6 +140,23 @@ class WorkflowRunnerTests(unittest.TestCase):
         finally:
             conn.close()
 
+    def test_existing_queued_run_resumes_without_duplicate_queue_event(self) -> None:
+        conn = sqlite3.connect(self.db_path)
+        store = EventStore(conn)
+        store.create_run("run_existing", "test_fixture", {"source": "api"})
+        store.append_event("run_existing", "run.queued", "Queued by API")
+        conn.close()
+
+        run = self.runner.run_existing(
+            workflow(StageDefinition("work", lambda _context: StageResult.completed("done", {"ok": True}))),
+            "run_existing",
+        )
+
+        self.assertEqual("completed", run["status"])
+        events = self.events("run_existing")
+        self.assertEqual(1, sum(event["event_type"] == "run.queued" for event in events))
+        self.assertEqual(list(range(1, len(events) + 1)), [event["sequence"] for event in events])
+
 
 if __name__ == "__main__":
     unittest.main()
