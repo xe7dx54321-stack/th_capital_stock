@@ -219,6 +219,52 @@ JOB_SPECS: dict[str, JobSpec] = {
             py("08_scripts/agents/build_dispatch_board_patch_candidate.py"),
         ),
     ),
+    # ========== 新增：激活剩余 Agent 的任务 ==========
+    "investment_analysis": JobSpec(
+        job_id="investment_analysis",
+        label="深度投研分析链",
+        description="由投研分析代理牵头，对重点标的进行深度研究分析，输出投资研究综合报告。",
+        commands=(
+            py("08_scripts/research/build_investment_evidence_pack.py", "--limit", "6"),
+            py("08_scripts/research/build_investment_research_synthesis_snapshot.py", "--limit", "6"),
+        ),
+    ),
+    "report_writing": JobSpec(
+        job_id="report_writing",
+        label="投资报告撰写链",
+        description="由报告撰写代理牵头，基于研究综合结果撰写正式投资报告。",
+        commands=(
+            py("08_scripts/research/build_investment_report_snapshot.py", "--limit", "4"),
+        ),
+    ),
+    "system_maintenance": JobSpec(
+        job_id="system_maintenance",
+        label="系统维护链",
+        description="由系统执行代理牵头，执行系统级维护任务：验证数据完整性、清理过期数据、备份重要文件。",
+        commands=(
+            py("08_scripts/maintenance/validate_data_integrity.py"),
+            py("08_scripts/maintenance/cleanup_expired_data.py"),
+            py("08_scripts/maintenance/backup_system_files.py"),
+        ),
+    ),
+    "risk_governance": JobSpec(
+        job_id="risk_governance",
+        label="风险治理链",
+        description="由风险治理代理牵头，整理风险案例、更新风险 playbook、沉淀风险知识。",
+        commands=(
+            py("08_scripts/risk_engine/build_risk_case_library.py"),
+            py("08_scripts/risk_engine/update_risk_playbook.py"),
+        ),
+    ),
+    "report_exec": JobSpec(
+        job_id="report_exec",
+        label="报告执行链",
+        description="由报告执行代理牵头，执行报告分发、归档和版本管理任务。",
+        commands=(
+            py("08_scripts/reporting/archive_reports.py"),
+            py("08_scripts/reporting/distribute_reports.py"),
+        ),
+    ),
 }
 
 

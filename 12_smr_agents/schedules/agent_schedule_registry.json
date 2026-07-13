@@ -201,6 +201,87 @@
       "continue_on_error": true,
       "timeout_seconds": 1800,
       "purpose": "由日报与调度知识岗牵头，抽取未来催化日历并生成次日 dispatch 候选。"
+    },
+    // ========== 新增：激活剩余 Agent 的定时任务 ==========
+    {
+      "schedule_id": "investment_analysis",
+      "label": "深度投研分析链",
+      "job_id": "investment_analysis",
+      "lead_profile_id": "hermes_investment_analyst",
+      "operator_profile_ids": [
+        "hermes_investment_analyst",
+        "openclaw_report_exec"
+      ],
+      "weekdays": ["MO", "TU", "WE", "TH", "FR"],
+      "hour": 10,
+      "minute": 30,
+      "continue_on_error": true,
+      "timeout_seconds": 1800,
+      "purpose": "由深度投研分析岗牵头，对重点标的进行深度研究分析，输出投资研究综合报告。"
+    },
+    {
+      "schedule_id": "report_writing",
+      "label": "投资报告撰写链",
+      "job_id": "report_writing",
+      "lead_profile_id": "hermes_investment_report_writer",
+      "operator_profile_ids": [
+        "hermes_investment_report_writer",
+        "openclaw_report_exec",
+        "hermes_reporting_editor"
+      ],
+      "weekdays": ["MO", "WE", "FR"],
+      "hour": 14,
+      "minute": 0,
+      "continue_on_error": true,
+      "timeout_seconds": 1800,
+      "purpose": "由投资报告撰写岗牵头，基于研究综合结果撰写正式投资报告。"
+    },
+    {
+      "schedule_id": "system_maintenance",
+      "label": "系统维护链",
+      "job_id": "system_maintenance",
+      "lead_profile_id": "openclaw_system_exec",
+      "operator_profile_ids": [
+        "openclaw_system_exec"
+      ],
+      "weekdays": ["SU"],
+      "hour": 3,
+      "minute": 0,
+      "continue_on_error": true,
+      "timeout_seconds": 3600,
+      "purpose": "由系统执行岗牵头，执行系统级维护任务：验证数据完整性、清理过期数据、备份重要文件。"
+    },
+    {
+      "schedule_id": "risk_governance",
+      "label": "风险治理链",
+      "job_id": "risk_governance",
+      "lead_profile_id": "hermes_risk_curator",
+      "operator_profile_ids": [
+        "hermes_risk_curator",
+        "openclaw_risk_exec"
+      ],
+      "weekdays": ["FR"],
+      "hour": 18,
+      "minute": 0,
+      "continue_on_error": true,
+      "timeout_seconds": 1800,
+      "purpose": "由风险知识治理岗牵头，整理风险案例、更新风险 playbook、沉淀风险知识。"
+    },
+    {
+      "schedule_id": "report_exec",
+      "label": "报告执行链",
+      "job_id": "report_exec",
+      "lead_profile_id": "openclaw_report_exec",
+      "operator_profile_ids": [
+        "openclaw_report_exec",
+        "hermes_reporting_editor"
+      ],
+      "weekdays": ["MO", "TU", "WE", "TH", "FR"],
+      "hour": 23,
+      "minute": 0,
+      "continue_on_error": true,
+      "timeout_seconds": 1800,
+      "purpose": "由报告执行岗牵头，执行报告分发、归档和版本管理任务。"
     }
   ]
 }

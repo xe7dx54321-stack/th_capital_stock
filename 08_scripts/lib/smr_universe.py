@@ -64,7 +64,17 @@ def normalize_ah_code(raw_code, market):
 
 
 def split_ts_code(ts_code):
+    """把代码拆成 (纯代码部分, 市场标识)。
+
+    【小白讲解】
+    - 有后缀的：00981.HK → ("00981", "HK"), 300308.SZ → ("300308", "SZ")
+    - 纯字母的（美股）：NVDA → ("NVDA", "US"), AMD → ("AMD", "US")
+    - 纯数字无后缀：300308 → ("300308", "")（这种情况极少）
+    """
     if "." not in ts_code:
+        # 纯字母 = 美股，纯数字 = 非法/无法识别，返回空市场
+        if ts_code and ts_code[0].isalpha():
+            return ts_code, "US"
         return ts_code, ""
     code, market = ts_code.split(".", 1)
     return code, market.upper()
@@ -580,6 +590,8 @@ def load_active_equity_universe(conn, include_seed=True):
     pool_types = ["watchlist", "candidate", "recommended"]
     if include_seed:
         pool_types.extend(["seed", "portfolio_seed"])
+    # 美股基准池（us_benchmark）里的标的也要纳入
+    pool_types.append("us_benchmark")
     placeholders = ",".join("?" for _ in pool_types)
     rows = conn.execute(
         f"""

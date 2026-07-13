@@ -306,6 +306,7 @@ def insert_us_daily_bars(conn, rows):
             inserted += 1
         except Exception as e:
             print(f"    Error inserting {r['symbol']} {r['trade_date']}: {e}")
+    conn.commit()
     return inserted
 
 

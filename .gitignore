@@ -1,10 +1,19 @@
-# macOS / editor
+# Operating system / editors
 .DS_Store
+Thumbs.db
 *.swp
 *.swo
 *.tmp
 *.bak
 *.orig
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.trae/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
 
 # Python runtime
 __pycache__/
@@ -22,21 +31,33 @@ venv/
 # Node / frontend runtime
 node_modules/
 dist/
+dist-ssr/
 build/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
 
 # Runtime logs and process files
+logs/
 10_logs/
 *.log
 *.pid
+
+# Local environment and credentials
 .env
 .env.*
 !.env.example
 .smr_env.local
 .smr_env.*
+*.local
 *.local.env
 secrets/
 *.pem
 *.key
+config/ifind_refresh_token.txt
+config/*token*.txt
 
 # Local databases and generated market data
 *.db
@@ -75,7 +96,7 @@ financial_statement_reports/
 12_smr_agents/workspaces/
 .smr_sandboxes/
 
-# Imported reference repos are managed independently
+# Imported reference repositories are managed independently
 12_agent_references/*
 !12_agent_references/README.md
 12_agent_references/openclaw/
@@ -84,8 +105,10 @@ financial_statement_reports/
 # Historical Codex handover exports can be very large and machine-specific
 00_control/codex_handover/
 
-config/ifind_refresh_token.txt
-
 # iFinD local cache - never commit
 .ifind/
 09_runbooks/generated/phase189_*
+
+# Temporary local investigation scripts
+_debug_*.py
+_inspect_*.py

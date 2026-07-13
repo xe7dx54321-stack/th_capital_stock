@@ -22,6 +22,7 @@ from smr_decision import record_agent_run
 from smr_registry import register_snapshot
 from smr_runlog import log_run
 from smr_universe import combined_name_map
+from smr_value_framework import ValueScoreCard, build_all_value_scores, render_value_score_section
 
 DB_PATH = env_or_project_path("SMR_DB_PATH", "01_data", "db", "smr.db")
 OUTPUT_DIR = env_or_project_path("SMR_OPPORTUNITY_RADAR_DIR", "02_research", "opportunity_radar")
@@ -660,6 +661,14 @@ def write_markdown(path, payload):
     else:
         lines.append("- 当前没有足够强的赛道聚合信号。")
     lines.append("")
+
+    # 价值评分卡区块：从 value_score_cards 渲染
+    value_section = render_value_score_section(
+        payload.get("value_score_cards") or [],
+        max_items=10,
+    )
+    lines.extend(value_section.split("\n"))
+
     for market in MARKET_ORDER:
         lines.extend(render_market_section(market, payload["markets"].get(market) or []))
     path.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
@@ -679,11 +688,15 @@ def main():
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     try:
+        # 门控检查：allow_degraded=True 允许 news 数据降级时仍生成雷达快照
+        # 原因：news 降级不应阻断机会雷达，只需在快照中标注降级状态即可
+        # （consensus_revision 未接入属 planned 状态，已通过 data_freshness_rules.json
+        #   将其 blocking_level_when_missing 从 degrade 调整为 warn，不再阻断）
         gate = check_freshness_gate(
             conn,
             module_name="opportunity_radar",
             required_data_types=["daily_bar", "news", "filings", "consensus_revision"],
-            allow_degraded=False,
+            allow_degraded=True,
         )
         if gate.status == "block":
             payload = blocked_payload_for_gate("opportunity_radar", gate)
@@ -740,6 +753,20 @@ def main():
             print("  status=blocked_by_data")
             print(f"  freshness_gate_status={gate.status}")
             return
+
+        # 降级状态标注：当门控状态为 degrade 时，提取处于降级状态的数据类型
+        # 这些数据类型会写入快照 metadata 的 degraded_data_types 字段，
+        # 便于后续研究代理和风控代理识别当前数据质量，对降级数据保持谨慎
+        degraded_data_types = []
+        if gate.status == "degrade":
+            # 合并 stale_sources（过期/降级）和 missing_sources（缺失/未接入），
+            # 筛选出 blocking_level 仍为 degrade 的数据类型
+            for row in (gate.stale_sources + gate.missing_sources):
+                if row.get("blocking_level") == "degrade":
+                    data_type = row.get("data_type")
+                    if data_type and data_type not in degraded_data_types:
+                        degraded_data_types.append(data_type)
+
         name_map = combined_name_map(conn)
         factors_map = load_factor_map(conn)
         pool_map = load_pool_types(conn)
@@ -778,8 +805,32 @@ def main():
             "policy_rel_path": relative_to_project(POLICY_PATH),
             "freshness_gate_result": gate_to_dict(gate),
             "data_health_snapshot": gate.data_health_snapshot,
+            # 降级数据类型标注：当门控状态为 degrade 时记录哪些数据类型处于降级状态，
+            # 为空列表表示无降级；便于研究/风控代理识别数据质量
+            "degraded_data_types": degraded_data_types,
         }
         payload["overview_lines"] = overview_lines(payload)
+
+        # 价值评分卡：对所有 radar 评分的标的生成 5 维价值评分
+        value_ts_codes = [item["ts_code"] for item in scored_items]
+        value_cards = build_all_value_scores(conn, value_ts_codes) if value_ts_codes else []
+        # 把评分卡与雷达 item 关联（给每只 radar item 补 value_score）
+        code_to_value = {card["ts_code"]: card for card in value_cards if card.get("composite_score")}
+        for item in scored_items:
+            vc = code_to_value.get(item["ts_code"])
+            if vc:
+                item["value_score"] = vc["composite_score"]
+                item["value_dimensions"] = {
+                    k: vc.get(k) for k in [
+                        "fundamental_quality", "valuation_position",
+                        "technical_momentum", "theme_relevance",
+                        "industry_position",
+                    ]
+                }
+                item["value_red_flags"] = vc.get("red_flags") or []
+        payload["value_score_cards"] = value_cards
+        payload["value_score_top"] = [card for card in value_cards if card.get("composite_score")][:15]
+
         write_markdown(output_path, payload)
 
         registry_entry = register_snapshot(
@@ -828,6 +879,12 @@ def main():
     print(f"Opportunity radar snapshot: {relative_to_project(output_path)}")
     print(f"  candidate_count={payload['candidate_count']}")
     print(f"  paper_watch_candidate_count={payload['paper_watch_candidate_count']}")
+    # 输出门控状态与降级数据类型，便于直观确认雷达是否在降级状态下运行
+    gate_status = payload.get("freshness_gate_result", {}).get("status", "unknown")
+    if payload.get("degraded_data_types"):
+        print(f"  status=degraded (freshness_gate={gate_status}, 降级数据类型: {', '.join(payload['degraded_data_types'])})")
+    else:
+        print(f"  status=active (freshness_gate={gate_status})")
 
 
 if __name__ == "__main__":

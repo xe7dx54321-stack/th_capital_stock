@@ -129,18 +129,45 @@ def main():
 
     if args.ts_code:
         codes = [args.ts_code]
+        source = "single"
+        us_codes = []  # 单代码时不需要预判，逻辑在循环内处理
     else:
-        codes = [r[0] for r in conn.execute("SELECT DISTINCT ts_code FROM daily_bar").fetchall()]
+        # A股/H股：从 daily_bar 读取
+        ah_codes = [r[0] for r in conn.execute("SELECT DISTINCT ts_code FROM daily_bar").fetchall()]
+        # 美股：从 us_daily_bar 读取（纯字母 symbol 字段）
+        us_codes = [r[0] for r in conn.execute("SELECT DISTINCT symbol FROM us_daily_bar").fetchall()]
+        codes = ah_codes + us_codes
+        source = "batch_ah_us"
 
     total = 0
     processed = 0
     factor_names = set()
     processed_trade_dates = set()
     for code in codes:
-        rows = conn.execute(
-            "SELECT trade_date, close FROM daily_bar WHERE ts_code=? ORDER BY trade_date",
-            (code,),
-        ).fetchall()
+        # 区分 A/H 股（daily_bar）和美股（us_daily_bar）
+        if source == "single":
+            # 单代码处理：先尝试 daily_bar，再尝试 us_daily_bar
+            rows = conn.execute(
+                "SELECT trade_date, close FROM daily_bar WHERE ts_code=? ORDER BY trade_date",
+                (code,),
+            ).fetchall()
+            if len(rows) < 5:
+                rows = conn.execute(
+                    "SELECT trade_date, close FROM us_daily_bar WHERE symbol=? ORDER BY trade_date",
+                    (code,),
+                ).fetchall()
+        elif code in us_codes:
+            # 批量中美股：从 us_daily_bar 读取
+            rows = conn.execute(
+                "SELECT trade_date, close FROM us_daily_bar WHERE symbol=? ORDER BY trade_date",
+                (code,),
+            ).fetchall()
+        else:
+            # 批量中 A/H 股：从 daily_bar 读取
+            rows = conn.execute(
+                "SELECT trade_date, close FROM daily_bar WHERE ts_code=? ORDER BY trade_date",
+                (code,),
+            ).fetchall()
         if len(rows) < 5:
             continue
         closes = [row[1] for row in rows if row[1] is not None]
@@ -171,13 +198,14 @@ def main():
         entity_id=batch_entity_id(args.ts_code),
         status="computed" if total else "empty",
         source="trend.py",
-        relationships={"ts_code_filter": args.ts_code},
+        relationships={"ts_code_filter": args.ts_code, "source": source},
         payload={
             "requested_code": args.ts_code,
             "processed_codes": processed,
             "factor_count": total,
             "factor_names": sorted(factor_names),
             "latest_trade_dates": sorted(processed_trade_dates),
+            "us_count": len(us_codes) if source == "batch_ah_us" else 0,
         },
     )
     conn.commit()

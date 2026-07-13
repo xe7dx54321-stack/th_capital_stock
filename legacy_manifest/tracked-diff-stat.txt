@@ -1,0 +1,34 @@
+# Captured before MVP implementation. This is a summary, not a patch backup.
+
+Branch: main
+HEAD: 01ac6a948a963cbc8ac0aa54cae57aa989163b25
+
+.gitignore                                         | 113 ++----
+00_control/data_freshness_rules.json               |   8 +-
+08_scripts/backtest/simple_backtest.py             |  71 +++-
+08_scripts/data_harvester/ah_daily_bar.py          |   1 +
+08_scripts/dev/init_local_dev.py                   |  20 ++
+08_scripts/factor_engine/fundamental.py            | 386 ++++++++++++++++++++--
+08_scripts/factor_engine/trend.py                  |  40 ++-
+08_scripts/jobs/update_decision_outcomes.py        | 159 +++++++++
+08_scripts/lib/smr_guard.py                        |  10 +-
+08_scripts/lib/smr_ifind_adapter.py                | 126 ++++++-
+08_scripts/lib/smr_news_ingestion.py               |  13 +-
+08_scripts/lib/smr_phase101_go_no_go.py            |   3 +-
+08_scripts/lib/smr_phase101_scorecard.py           | 154 +++++++-
+08_scripts/lib/smr_phase126_scoring.py             | 232 ++++++++++++-
+08_scripts/lib/smr_phase151_backlog.py             |  14 +-
+08_scripts/lib/smr_universe.py                     |  12 +
+08_scripts/opportunity/build_opportunity_radar_snapshot.py | 59 +++-
+08_scripts/portfolio/pnl.py                        | 110 +++++-
+08_scripts/reporting/build_phase151_discovery_dashboard.py | 23 ++
+08_scripts/scheduler/run_smr_schedule_job.py       |  46 +++
+12_smr_agents/schedules/agent_schedule_registry.json | 81 +++++
+
+Observed aggregate before the `.gitignore` repair:
+
+- 21 tracked files changed
+- approximately 1535 insertions
+- approximately 146 deletions
+
+The authoritative patch remains the working-tree diff. No reset, restore or stash was performed.

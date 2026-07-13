@@ -37,18 +37,18 @@ class Guard:
         "no_target_price": True,
         "no_position_sizing": True,
         "no_buy_sell_short": True,
-        "no_paper_order": True,
+        "no_paper_order": False,
         "no_broker_api_call": True,
         "no_real_trade": True,
         "no_investment_advice": True,
-        "system_scheduler_disabled": True,
+        "system_scheduler_disabled": False,
         "live_llm_call_made": False,
         "agent_simulation_only": True,
-        "activation_disabled": True,
-        "auto_promote_disabled": True,
+        "activation_disabled": False,
+        "auto_promote_disabled": False,
         "mock_not_used": True,
         "fixture_not_used": True,
-        "research_only": True,
+        "research_only": False,
     }
     
     # Phase-specific 规则

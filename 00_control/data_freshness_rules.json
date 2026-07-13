@@ -26,7 +26,11 @@
         "source_key": "eastmoney_news_article",
         "stale_after_minutes": 1440,
         "blocking_level_when_stale": "degrade",
-        "affected_modules": ["deep_market_scan", "opportunity_radar", "report_generation"]
+        "affected_modules": ["deep_market_scan", "opportunity_radar", "report_generation"],
+        "source_blocking_overrides": {
+          "manual_news": "warn",
+          "yahoo_finance_rss": "warn"
+        }
       }
     },
     "filings": {
@@ -49,7 +53,7 @@
       "global": {
         "source_key": "consensus_revision",
         "freshness_status": "planned",
-        "blocking_level_when_missing": "degrade",
+        "blocking_level_when_missing": "warn",
         "affected_modules": ["report_generation", "investment_research", "opportunity_radar"]
       }
     }

@@ -1,4 +1,4 @@
-﻿"""iFinD adapter for th_capital_stock — production version with confirmed working indicators."""
+"""iFinD adapter for th_capital_stock — production version with confirmed working indicators."""
 import json, os, sys
 from datetime import datetime
 
@@ -25,6 +25,74 @@ WORKING_FINANCIAL = {
 }
 
 
+def _get_latest_trade_date():
+    """
+    动态获取最近一个 A 股交易日（格式 YYYYMMDD）。
+
+    功能说明（小白版）：
+        这个函数会根据"现在"是几点几分，自动算出最近一个已经收盘的 A 股交易日。
+        比如周三下午调用就返回今天，周日调用就返回上周五。
+        它会复用项目里 smr_trade_calendar.py 已经写好的交易日逻辑，
+        包括跳过周末和节假日。
+
+    参数：
+        无
+
+    返回值：
+        str: 8 位日期字符串，例如 "20240606"（仅作格式示例）
+
+    异常处理：
+        如果 smr_trade_calendar 模块加载失败或出错，
+        会退回到"只跳过周末"的简单逻辑，保证函数不会崩。
+    """
+    try:
+        from smr_trade_calendar import expected_trade_date
+        trade_date = expected_trade_date(datetime.now(), "A")
+        return trade_date.strftime("%Y%m%d")
+    except Exception:
+        # 兜底方案：日历模块不可用时，至少跳过周六周日
+        from datetime import timedelta
+        d = datetime.now().date()
+        while d.weekday() >= 5:  # 5=周六, 6=周日
+            d -= timedelta(days=1)
+        return d.strftime("%Y%m%d")
+
+
+def _get_latest_report_period():
+    """
+    根据当前月份推断最新可用的财报期（格式 YYYYMMDD）。
+
+    功能说明（小白版）：
+        A 股公司一年发四次财报，但披露有时间窗口，不能随时拿到最新一期。
+        这个函数按当前月份返回"最近一份已经披露完的财报"对应的日期：
+        - 1~4 月：上一年三季报（9 月 30 日），例如 2024 年 3 月调用返回 "20230930"
+        - 5~8 月：上一年年报（12 月 31 日），例如 2025 年 6 月调用返回 "20241231"
+        - 9~10 月：当年一季报（3 月 31 日），例如 2025 年 9 月调用返回 "20250331"
+        - 11~12 月：当年中报（6 月 30 日），例如 2025 年 11 月调用返回 "20250630"
+
+    参数：
+        无
+
+    返回值：
+        str: 8 位日期字符串，例如 "20241231"
+    """
+    now = datetime.now()
+    year = now.year
+    month = now.month
+    if 1 <= month <= 4:
+        # 1-4 月：上年三季报已披露完，年报还没全部披露
+        return "{}0930".format(year - 1)
+    elif 5 <= month <= 8:
+        # 5-8 月：上年年报披露完毕
+        return "{}1231".format(year - 1)
+    elif 9 <= month <= 10:
+        # 9-10 月：当年一季报已披露完
+        return "{}0331".format(year)
+    else:
+        # 11-12 月：当年中报已披露完
+        return "{}0630".format(year)
+
+
 class IFindAdapter:
     def __init__(self):
         tok = os.getenv("IFIND_REFRESH_TOKEN")
@@ -44,7 +112,23 @@ class IFindAdapter:
         except Exception as e:
             return {"status": "failed", "error": str(e)}
 
-    def get_market_data(self, tickers, date_str="20250606", indicators=None):
+    def get_market_data(self, tickers, date_str=None, indicators=None):
+        """
+        获取股票的市场行情数据（收盘价、PE、PB、换手率等）。
+
+        参数（小白版）：
+            tickers (list[str] | str): 股票代码列表，比如 ["300308.SZ", "688041.SH"]；
+                也可以直接传逗号分隔的字符串
+            date_str (str | None): 查询日期，8 位字符串如 "20240606"（仅作格式示例）。
+                传 None（默认）时会自动取最近一个 A 股交易日，省得自己算
+            indicators (list[str] | None): 想要哪些指标，比如 ["close_price", "pe_ttm"]。
+                传 None 时取全部默认指标
+
+        返回值：
+            dict: iFinD 接口返回的原始数据
+        """
+        if date_str is None:
+            date_str = _get_latest_trade_date()
         if indicators is None:
             indicators = list(WORKING_MARKET.keys())
         indipara = []
@@ -57,7 +141,24 @@ class IFindAdapter:
         codes = ",".join(tickers) if isinstance(tickers, list) else tickers
         return self.client.call("basic_data_service", {"codes": codes, "indipara": indipara})
 
-    def get_financial_data(self, tickers, report_date="20251231", indicators=None):
+    def get_financial_data(self, tickers, report_date=None, indicators=None):
+        """
+        获取股票的财务数据（营收、净利润、ROE、每股收益等）。
+
+        参数（小白版）：
+            tickers (list[str] | str): 股票代码列表，比如 ["300308.SZ"]；
+                也可以直接传逗号分隔的字符串
+            report_date (str | None): 财报期，8 位字符串如 "20241231"。
+                传 None（默认）时会自动根据当前月份推断最新可用的财报期，
+                避免拿到还没披露完的数据
+            indicators (list[str] | None): 想要哪些财务指标。
+                传 None 时取全部默认指标
+
+        返回值：
+            dict: iFinD 接口返回的原始数据
+        """
+        if report_date is None:
+            report_date = _get_latest_report_period()
         if indicators is None:
             indicators = list(WORKING_FINANCIAL.keys())
         indipara = [{"indicator": "ths_stock_short_name_stock", "indiparams": []}]
@@ -69,7 +170,18 @@ class IFindAdapter:
         codes = ",".join(tickers) if isinstance(tickers, list) else tickers
         return self.client.call("basic_data_service", {"codes": codes, "indipara": indipara})
 
-    def get_full_snapshot(self, tickers, market_date="20250606", report_date="20251231"):
+    def get_full_snapshot(self, tickers, market_date=None, report_date=None):
+        """
+        一次性拿到行情 + 财务数据的完整快照。
+
+        参数（小白版）：
+            tickers (list[str] | str): 股票代码列表
+            market_date (str | None): 行情日期，None 时自动取最近 A 股交易日
+            report_date (str | None): 财报期，None 时自动取最新可用财报期
+
+        返回值：
+            dict: 包含 market（行情）、financial（财务）、timestamp（时间戳）三个字段
+        """
         market = self.get_market_data(tickers, market_date)
         financial = self.get_financial_data(tickers, report_date)
         return {"market": market, "financial": financial, "timestamp": datetime.now().isoformat()}
@@ -82,7 +194,7 @@ def run_smoke():
     tickers_all = ["300308.SZ", "688041.SH", "002230.SZ", "300394.SZ"]
 
     print("\n=== Market Data ===")
-    result = adapter.get_market_data(tickers_all, "20250606")
+    result = adapter.get_market_data(tickers_all)
     for t in result.get("tables", []):
         tbl = t["table"]
         print("  {} {}: close={} pe={} pb={}".format(
@@ -93,8 +205,8 @@ def run_smoke():
             tbl.get("ths_pb_mrq_stock", [None])[0],
         ))
 
-    print("\n=== Financial Data (2025年报) ===")
-    fin = adapter.get_financial_data(["300308.SZ", "688041.SH", "002230.SZ"], "20251231")
+    print("\n=== Financial Data ===")
+    fin = adapter.get_financial_data(["300308.SZ", "688041.SH", "002230.SZ"])
     for t in fin.get("tables", []):
         tbl = t["table"]
         rev = tbl.get("ths_revenue_stock", [None])[0]

@@ -24,7 +24,9 @@ from smr_consensus_proxy import ensure_consensus_proxy_table
 from smr_data_health import ensure_data_health_tables
 from smr_decision import ensure_decision_tables
 from smr_events import ensure_input_source_registry_table, ensure_market_event_table
+from smr_fundamentals import ensure_fundamentals_tables
 from smr_market_flow import ensure_margin_tables, ensure_stock_connect_tables
+from smr_paper_portfolio import ensure_paper_portfolio_tables
 from smr_paths import env_or_project_path, project_path
 from smr_registry import ensure_task_registry_tables
 from smr_valuation import ensure_valuation_table
@@ -345,6 +347,19 @@ def ensure_pool_views(conn: sqlite3.Connection) -> None:
 
 
 def initialize_database(conn: sqlite3.Connection) -> None:
+    """初始化本地 SMR 开发数据库的全部表结构。
+
+    作用：按顺序调用各个模块的 ensure_* 函数，把 SMR 系统运行所需的
+    全部 SQLite 表和视图创建出来（已存在的表会被跳过，所以是幂等的）。
+
+    参数：
+        conn: 已经打开的 sqlite3 数据库连接对象，所有建表操作都通过它执行。
+
+    返回值：无（None）。所有改动通过 conn 直接写入数据库。
+
+    异常处理：本函数不主动捕获异常；若某个 ensure_* 函数内部出错，
+    异常会向上抛出，由调用方（main 函数）负责关闭连接。
+    """
     ensure_market_schema(conn)
     ensure_pool_views(conn)
     ensure_task_registry_tables(conn)
@@ -359,6 +374,11 @@ def initialize_database(conn: sqlite3.Connection) -> None:
     ensure_claim_graph_tables(conn)
     ensure_consensus_proxy_table(conn)
     ensure_valuation_table(conn)
+    # 补建基本面快照表（fundamentals_snapshot），用于存放个股财务指标快照
+    ensure_fundamentals_tables(conn)
+    # 补建模拟组合订单表与持仓表（paper_portfolio_orders / paper_portfolio_positions），
+    # 用于跟踪已批准建议的模拟下单与持仓生命周期
+    ensure_paper_portfolio_tables(conn)
     ensure_input_source_registry_table(conn)
     ensure_market_event_table(conn)
     ensure_margin_tables(conn)

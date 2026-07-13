@@ -572,11 +572,15 @@ def update_news_health_rows(
     affected_modules: list[str] | None = None,
     source_keys: set[str] | None = None,
 ) -> dict[str, Any]:
-    from smr_data_health import ensure_data_health_tables
+    from smr_data_health import ensure_data_health_tables, load_rules, rule_for
 
     ensure_news_tables(conn)
     ensure_data_health_tables(conn)
     affected_modules = affected_modules or ["deep_market_scan", "opportunity_radar", "report_generation"]
+    # 读取 data_freshness_rules.json 中 news 的规则，取出 per-source 的 blocking_level 覆盖配置
+    # 作用：让 manual_news 这类手动维护的源在过期时只 warn 而不 degrade，避免拖累整个机会雷达
+    news_rule = rule_for("news", "global", load_rules())
+    source_blocking_overrides = news_rule.get("source_blocking_overrides") or {}
     snapshot = build_news_health_snapshot(conn, stale_after_minutes=stale_after_minutes, source_keys=source_keys)
     rows = snapshot["source_rows"] or [
         {
@@ -594,7 +598,12 @@ def update_news_health_rows(
     timestamp = now_ts()
     for row in rows:
         status = row["freshness_status"]
-        blocking = "none" if status == "fresh" else "degrade"
+        source_key = row.get("source_key") or "news"
+        if status == "fresh":
+            blocking = "none"
+        else:
+            # 过期时优先用 source_blocking_overrides 里配置的 blocking_level，没配置则默认 degrade
+            blocking = source_blocking_overrides.get(source_key, "degrade")
         reason = ""
         if status != "fresh":
             reason = (
