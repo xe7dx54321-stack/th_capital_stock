@@ -1,5 +1,5 @@
 {
-  "content_fingerprint": "fb67f2a810d69a8baf905cdad291173a7f659c5660b75954ebffc1b4a43e3426",
+  "content_fingerprint": "1ed6cc42c49516c2e65fac11303e6ca21afc7011e5255820b1bce434ee269c3e",
   "files": [
     {
       "approved": false,
@@ -88930,7 +88930,7 @@
       "imports": [
         "legacy_manifest/removal-log-M5.md"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-14T00:21:44+08:00",
       "path": "legacy/phase_bootstrap/README.md",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -88939,7 +88939,7 @@
       ],
       "runtime_evidence": null,
       "size": 542,
-      "tracked": false
+      "tracked": true
     },
     {
       "approved": true,
@@ -88968,7 +88968,7 @@
         "us_linkage.md",
         "valuation.md"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-14T00:21:44+08:00",
       "path": "legacy/phase_bootstrap/deploy_phase2.py",
       "present": true,
       "rationale": "unreferenced Phase-era asset; remove from default runtime before deletion",
@@ -88997,7 +88997,7 @@
         "python3 /Users/apple/Documents/同行资本二级市场/08_scripts/portfolio/pnl.py",
         "python3 /Users/apple/Documents/同行资本二级市场/08_scripts/risk_engine/monitor.py"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-14T00:21:44+08:00",
       "path": "legacy/phase_bootstrap/deploy_phase34.py",
       "present": true,
       "rationale": "unreferenced Phase-era asset; remove from default runtime before deletion",
@@ -89025,7 +89025,7 @@
         "__promptpack_smr_risk_controller__AGENTS.md",
         "os"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-14T00:21:44+08:00",
       "path": "legacy/phase_bootstrap/deploy_phase5.py",
       "present": true,
       "rationale": "unreferenced Phase-era asset; remove from default runtime before deletion",
@@ -89041,7 +89041,7 @@
         "os",
         "sqlite3"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-14T00:21:44+08:00",
       "path": "legacy/phase_bootstrap/smr_phase0_db.py",
       "present": true,
       "rationale": "unreferenced Phase-era asset; remove from default runtime before deletion",
@@ -89056,7 +89056,7 @@
       "imports": [
         "os"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-14T00:21:44+08:00",
       "path": "legacy/phase_bootstrap/smr_phase0_dirs.py",
       "present": true,
       "rationale": "unreferenced Phase-era asset; remove from default runtime before deletion",
@@ -89079,7 +89079,7 @@
         "sqlite3",
         "yfinance"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-14T00:21:44+08:00",
       "path": "legacy/phase_bootstrap/smr_phase0_verify.py",
       "present": true,
       "rationale": "unreferenced Phase-era asset; remove from default runtime before deletion",
@@ -89104,7 +89104,7 @@
         "sqlite3",
         "yfinance"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-14T00:21:44+08:00",
       "path": "legacy/phase_bootstrap/smr_phase0_verify2.py",
       "present": true,
       "rationale": "unreferenced Phase-era asset; remove from default runtime before deletion",
@@ -89129,7 +89129,7 @@
         "USER.md",
         "os"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-14T00:21:44+08:00",
       "path": "legacy/phase_bootstrap/smr_phase0_workspaces.py",
       "present": true,
       "rationale": "unreferenced Phase-era asset; remove from default runtime before deletion",
@@ -89185,7 +89185,7 @@
         "smr_phase0_verify2.py",
         "smr_phase0_workspaces.py"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-14T00:21:44+08:00",
       "path": "legacy_manifest/removal-log-M5.md",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -89194,7 +89194,7 @@
       ],
       "runtime_evidence": null,
       "size": 1952,
-      "tracked": false
+      "tracked": true
     },
     {
       "approved": false,
@@ -89439,7 +89439,7 @@
         "tests/api/*.test.js",
         "tools/inventory_repository.py"
       ],
-      "last_git_change": "2026-07-13T14:59:08+08:00",
+      "last_git_change": "2026-07-14T00:21:44+08:00",
       "path": "scripts/check.ps1",
       "present": true,
       "rationale": "tracked asset retained by default until a stronger removal signal exists",
@@ -91511,7 +91511,7 @@
         "tools.inventory_repository",
         "unittest"
       ],
-      "last_git_change": "2026-07-14T00:13:18+08:00",
+      "last_git_change": "2026-07-14T00:21:44+08:00",
       "path": "tests/smoke/test_repository_inventory.py",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -111280,7 +111280,7 @@
         "tempfile",
         "unittest"
       ],
-      "last_git_change": "2026-07-13T16:06:41+08:00",
+      "last_git_change": "2026-07-14T00:21:44+08:00",
       "path": "tests/workflows/test_daily_brief.py",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -111307,7 +111307,7 @@
         "tempfile",
         "unittest"
       ],
-      "last_git_change": "2026-07-13T16:06:41+08:00",
+      "last_git_change": "2026-07-14T00:21:44+08:00",
       "path": "tests/workflows/test_portfolio_review.py",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -111418,7 +111418,7 @@
         "sys",
         "typing"
       ],
-      "last_git_change": "2026-07-14T00:13:18+08:00",
+      "last_git_change": "2026-07-14T00:21:44+08:00",
       "path": "tools/inventory_repository.py",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -111478,7 +111478,7 @@
       "tracked": true
     }
   ],
-  "generated_at": "2026-07-13T16:20:00.912527+00:00",
+  "generated_at": "2026-07-13T16:22:04.752151+00:00",
   "project_root": ".",
   "schema_version": 1,
   "summary": {
@@ -111493,6 +111493,6 @@
     "delete_approved_count": 0,
     "file_count": 5909,
     "present_count": 5851,
-    "tracked_count": 5833
+    "tracked_count": 5835
   }
 }

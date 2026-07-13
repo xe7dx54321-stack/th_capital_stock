@@ -4649,18 +4649,18 @@ docs/plans/2026-07-13-light-research-console-design.md,true,true,1996,KEEP,false
 docs/plans/2026-07-13-personal-research-workbench-mvp.md,true,true,40597,KEEP,false,1,0,2026-07-13T14:40:56+08:00,has a code/config reference or recent runtime evidence
 eslint.config.js,true,true,734,KEEP,false,0,0,2026-07-13T14:40:56+08:00,tracked asset retained by default until a stronger removal signal exists
 index.html,true,true,518,KEEP,false,1,0,2026-07-13T16:53:25+08:00,has a code/config reference or recent runtime evidence
-legacy/phase_bootstrap/README.md,true,false,542,KEEP,false,1,0,,has a code/config reference or recent runtime evidence
-legacy/phase_bootstrap/deploy_phase2.py,true,true,29499,FREEZE,true,0,0,,unreferenced Phase-era asset; remove from default runtime before deletion
-legacy/phase_bootstrap/deploy_phase34.py,true,true,20112,FREEZE,true,0,0,,unreferenced Phase-era asset; remove from default runtime before deletion
-legacy/phase_bootstrap/deploy_phase5.py,true,true,18774,FREEZE,true,0,0,,unreferenced Phase-era asset; remove from default runtime before deletion
-legacy/phase_bootstrap/smr_phase0_db.py,true,true,4673,FREEZE,true,0,0,,unreferenced Phase-era asset; remove from default runtime before deletion
-legacy/phase_bootstrap/smr_phase0_dirs.py,true,true,1347,FREEZE,true,0,0,,unreferenced Phase-era asset; remove from default runtime before deletion
-legacy/phase_bootstrap/smr_phase0_verify.py,true,true,4898,FREEZE,true,0,0,,unreferenced Phase-era asset; remove from default runtime before deletion
-legacy/phase_bootstrap/smr_phase0_verify2.py,true,true,3967,FREEZE,true,0,0,,unreferenced Phase-era asset; remove from default runtime before deletion
-legacy/phase_bootstrap/smr_phase0_workspaces.py,true,true,14623,FREEZE,true,0,0,,unreferenced Phase-era asset; remove from default runtime before deletion
+legacy/phase_bootstrap/README.md,true,true,542,KEEP,false,1,0,2026-07-14T00:21:44+08:00,has a code/config reference or recent runtime evidence
+legacy/phase_bootstrap/deploy_phase2.py,true,true,29499,FREEZE,true,0,0,2026-07-14T00:21:44+08:00,unreferenced Phase-era asset; remove from default runtime before deletion
+legacy/phase_bootstrap/deploy_phase34.py,true,true,20112,FREEZE,true,0,0,2026-07-14T00:21:44+08:00,unreferenced Phase-era asset; remove from default runtime before deletion
+legacy/phase_bootstrap/deploy_phase5.py,true,true,18774,FREEZE,true,0,0,2026-07-14T00:21:44+08:00,unreferenced Phase-era asset; remove from default runtime before deletion
+legacy/phase_bootstrap/smr_phase0_db.py,true,true,4673,FREEZE,true,0,0,2026-07-14T00:21:44+08:00,unreferenced Phase-era asset; remove from default runtime before deletion
+legacy/phase_bootstrap/smr_phase0_dirs.py,true,true,1347,FREEZE,true,0,0,2026-07-14T00:21:44+08:00,unreferenced Phase-era asset; remove from default runtime before deletion
+legacy/phase_bootstrap/smr_phase0_verify.py,true,true,4898,FREEZE,true,0,0,2026-07-14T00:21:44+08:00,unreferenced Phase-era asset; remove from default runtime before deletion
+legacy/phase_bootstrap/smr_phase0_verify2.py,true,true,3967,FREEZE,true,0,0,2026-07-14T00:21:44+08:00,unreferenced Phase-era asset; remove from default runtime before deletion
+legacy/phase_bootstrap/smr_phase0_workspaces.py,true,true,14623,FREEZE,true,0,0,2026-07-14T00:21:44+08:00,unreferenced Phase-era asset; remove from default runtime before deletion
 legacy_manifest/,false,false,0,KEEP,false,0,0,,"belongs to a current application, domain, configuration or documentation path"
 legacy_manifest/baseline-2026-07-13.md,true,true,3125,KEEP,false,1,0,2026-07-13T14:40:56+08:00,has a code/config reference or recent runtime evidence
-legacy_manifest/removal-log-M5.md,true,false,1952,KEEP,false,1,0,,has a code/config reference or recent runtime evidence
+legacy_manifest/removal-log-M5.md,true,true,1952,KEEP,false,1,0,2026-07-14T00:21:44+08:00,has a code/config reference or recent runtime evidence
 legacy_manifest/tracked-diff-stat.txt,true,true,1718,KEEP,false,0,0,2026-07-13T14:40:56+08:00,"belongs to a current application, domain, configuration or documentation path"
 legacy_manifest/untracked-files.txt,true,true,2192,KEEP,false,0,0,2026-07-13T14:40:56+08:00,"belongs to a current application, domain, configuration or documentation path"
 migrations/0000_schema_migrations.sql,true,true,163,KEEP,false,0,0,2026-07-13T15:15:00+08:00,tracked asset retained by default until a stronger removal signal exists
@@ -4676,7 +4676,7 @@ public/,false,false,0,KEEP,false,0,0,,"belongs to a current application, domain,
 public/favicon.svg,true,true,453,KEEP,false,0,0,2026-07-13T14:40:56+08:00,"belongs to a current application, domain, configuration or documentation path"
 requirements-dev.txt,true,true,238,KEEP,false,0,0,2026-07-13T14:59:08+08:00,tracked asset retained by default until a stronger removal signal exists
 requirements.txt,true,true,320,KEEP,false,0,0,2026-07-13T14:59:08+08:00,"belongs to a current application, domain, configuration or documentation path"
-scripts/check.ps1,true,true,4045,KEEP,false,0,0,2026-07-13T14:59:08+08:00,tracked asset retained by default until a stronger removal signal exists
+scripts/check.ps1,true,true,4045,KEEP,false,0,0,2026-07-14T00:21:44+08:00,tracked asset retained by default until a stronger removal signal exists
 smr_app/__init__.py,true,true,50,KEEP,false,0,0,2026-07-13T15:15:00+08:00,tracked asset retained by default until a stronger removal signal exists
 smr_app/__main__.py,true,true,80,KEEP,false,1,0,2026-07-13T15:19:05+08:00,has a code/config reference or recent runtime evidence
 smr_app/adapters/__init__.py,true,true,72,KEEP,false,0,0,2026-07-13T15:25:25+08:00,tracked asset retained by default until a stronger removal signal exists
@@ -4770,7 +4770,7 @@ tests/runtime/test_migrations.py,true,true,3008,KEEP,false,1,0,2026-07-13T23:00:
 tests/runtime/test_risk_alert_deduplication.py,true,true,4386,KEEP,false,1,0,2026-07-13T15:11:11+08:00,has a code/config reference or recent runtime evidence
 tests/runtime/test_runner.py,true,true,5943,KEEP,false,1,0,2026-07-13T15:43:38+08:00,has a code/config reference or recent runtime evidence
 tests/smoke/test_development_contract.py,true,true,1154,KEEP,false,0,0,2026-07-13T14:59:08+08:00,tracked asset retained by default until a stronger removal signal exists
-tests/smoke/test_repository_inventory.py,true,true,10581,KEEP,false,1,0,2026-07-14T00:13:18+08:00,has a code/config reference or recent runtime evidence
+tests/smoke/test_repository_inventory.py,true,true,10581,KEEP,false,1,0,2026-07-14T00:21:44+08:00,has a code/config reference or recent runtime evidence
 tests/test_blocker_repair_queue.py,true,true,3046,KEEP,false,0,0,2026-05-23T22:03:51+08:00,tracked asset retained by default until a stronger removal signal exists
 tests/test_evidence_quality.py,true,true,4560,KEEP,false,0,0,2026-05-21T17:18:44+08:00,tracked asset retained by default until a stronger removal signal exists
 tests/test_live_validation_metrics.py,true,true,5314,KEEP,false,0,0,2026-05-21T17:18:44+08:00,tracked asset retained by default until a stronger removal signal exists
@@ -5899,12 +5899,12 @@ tests/test_smr_pipeline_runner.py,true,true,9352,KEEP,false,0,0,2026-06-18T19:14
 tests/test_smr_quality_gate.py,true,true,5653,KEEP,false,0,0,2026-06-18T19:14:59+08:00,tracked asset retained by default until a stronger removal signal exists
 tests/test_trusted_research_foundation.py,true,true,11120,KEEP,false,0,0,2026-05-21T13:47:04+08:00,tracked asset retained by default until a stronger removal signal exists
 tests/workflows/__init__.py,true,true,0,KEEP,false,0,0,2026-07-13T16:06:41+08:00,tracked asset retained by default until a stronger removal signal exists
-tests/workflows/test_daily_brief.py,true,true,2864,KEEP,false,1,0,2026-07-13T16:06:41+08:00,has a code/config reference or recent runtime evidence
-tests/workflows/test_portfolio_review.py,true,true,3410,KEEP,false,1,0,2026-07-13T16:06:41+08:00,has a code/config reference or recent runtime evidence
+tests/workflows/test_daily_brief.py,true,true,2864,KEEP,false,1,0,2026-07-14T00:21:44+08:00,has a code/config reference or recent runtime evidence
+tests/workflows/test_portfolio_review.py,true,true,3410,KEEP,false,1,0,2026-07-14T00:21:44+08:00,has a code/config reference or recent runtime evidence
 tests/workflows/test_stock_deep_dive.py,true,true,8302,KEEP,false,1,0,2026-07-13T23:00:34+08:00,has a code/config reference or recent runtime evidence
 tests/workflows/test_thesis_update.py,true,true,3777,KEEP,false,1,0,2026-07-13T16:15:14+08:00,has a code/config reference or recent runtime evidence
 tools/__init__.py,true,true,61,KEEP,false,0,0,2026-07-13T14:48:01+08:00,"belongs to a current application, domain, configuration or documentation path"
-tools/inventory_repository.py,true,true,21917,KEEP,false,2,0,2026-07-14T00:13:18+08:00,has a code/config reference or recent runtime evidence
+tools/inventory_repository.py,true,true,21917,KEEP,false,2,0,2026-07-14T00:21:44+08:00,has a code/config reference or recent runtime evidence
 tsconfig.json,true,true,807,KEEP,false,0,0,2026-07-13T14:40:56+08:00,tracked asset retained by default until a stronger removal signal exists
 vite.config.ts,true,true,427,KEEP,false,0,0,2026-07-13T16:53:25+08:00,tracked asset retained by default until a stronger removal signal exists
 vitest.config.ts,true,true,283,KEEP,false,0,0,2026-07-13T16:00:38+08:00,tracked asset retained by default until a stronger removal signal exists
