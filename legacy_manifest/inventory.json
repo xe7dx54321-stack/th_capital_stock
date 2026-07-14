@@ -1,5 +1,5 @@
 {
-  "content_fingerprint": "9f93d388dab194ca4aa4c61c10159caec0d94a9a4d4218fe0d0de487c29bbbb8",
+  "content_fingerprint": "1745f2f15031c106331ca1f59cfe8ca59d4dc8e0a2727a988c13bea0195632b3",
   "files": [
     {
       "approved": false,
@@ -107,6 +107,32 @@
       ],
       "runtime_evidence": null,
       "size": 3285,
+      "tracked": false
+    },
+    {
+      "approved": false,
+      "category": "GENERATED",
+      "imports": [],
+      "last_git_change": null,
+      "path": ".tmp/task16-rehearsal-20260714075659710/backups/smr-backup-20260714-155707-687.db",
+      "present": true,
+      "rationale": "runtime/build output governed by retention and ignore rules",
+      "referenced_by": [],
+      "runtime_evidence": null,
+      "size": 147456,
+      "tracked": false
+    },
+    {
+      "approved": false,
+      "category": "GENERATED",
+      "imports": [],
+      "last_git_change": null,
+      "path": ".tmp/task16-rehearsal-20260714075659710/restore-candidate.db",
+      "present": true,
+      "rationale": "runtime/build output governed by retention and ignore rules",
+      "referenced_by": [],
+      "runtime_evidence": null,
+      "size": 147456,
       "tracked": false
     },
     {
@@ -81805,6 +81831,24 @@
       "approved": false,
       "category": "KEEP",
       "imports": [
+        ".tmp/local-runtime/local-3000-5173.json"
+      ],
+      "last_git_change": "2026-07-14T16:03:26+08:00",
+      "path": "09_runbooks/smr-local-operations.md",
+      "present": true,
+      "rationale": "has a code/config reference or recent runtime evidence",
+      "referenced_by": [
+        "README.md",
+        "tests/smoke/test_local_operations_contract.py"
+      ],
+      "runtime_evidence": null,
+      "size": 6860,
+      "tracked": true
+    },
+    {
+      "approved": false,
+      "category": "KEEP",
+      "imports": [
         "01_data/capital_flow/YYYY-MM-DD_margin_balance_snapshot.md",
         "08_scripts/events/snapshot_margin_balance.py"
       ],
@@ -82501,6 +82545,214 @@
       "category": "GENERATED",
       "imports": [],
       "last_git_change": null,
+      "path": "10_logs/dev/local-53101-api.stderr.log",
+      "present": true,
+      "rationale": "runtime/build output governed by retention and ignore rules",
+      "referenced_by": [],
+      "runtime_evidence": null,
+      "size": 0,
+      "tracked": false
+    },
+    {
+      "approved": false,
+      "category": "GENERATED",
+      "imports": [],
+      "last_git_change": null,
+      "path": "10_logs/dev/local-53101-api.stdout.log",
+      "present": true,
+      "rationale": "runtime/build output governed by retention and ignore rules",
+      "referenced_by": [],
+      "runtime_evidence": null,
+      "size": 337,
+      "tracked": false
+    },
+    {
+      "approved": false,
+      "category": "GENERATED",
+      "imports": [],
+      "last_git_change": null,
+      "path": "10_logs/dev/local-53102-ui.stderr.log",
+      "present": true,
+      "rationale": "runtime/build output governed by retention and ignore rules",
+      "referenced_by": [],
+      "runtime_evidence": null,
+      "size": 0,
+      "tracked": false
+    },
+    {
+      "approved": false,
+      "category": "GENERATED",
+      "imports": [],
+      "last_git_change": null,
+      "path": "10_logs/dev/local-53102-ui.stdout.log",
+      "present": true,
+      "rationale": "runtime/build output governed by retention and ignore rules",
+      "referenced_by": [],
+      "runtime_evidence": null,
+      "size": 161,
+      "tracked": false
+    },
+    {
+      "approved": false,
+      "category": "GENERATED",
+      "imports": [],
+      "last_git_change": null,
+      "path": "10_logs/dev/local-53103-api.stderr.log",
+      "present": true,
+      "rationale": "runtime/build output governed by retention and ignore rules",
+      "referenced_by": [],
+      "runtime_evidence": null,
+      "size": 0,
+      "tracked": false
+    },
+    {
+      "approved": false,
+      "category": "GENERATED",
+      "imports": [],
+      "last_git_change": null,
+      "path": "10_logs/dev/local-53103-api.stdout.log",
+      "present": true,
+      "rationale": "runtime/build output governed by retention and ignore rules",
+      "referenced_by": [],
+      "runtime_evidence": null,
+      "size": 311,
+      "tracked": false
+    },
+    {
+      "approved": false,
+      "category": "GENERATED",
+      "imports": [],
+      "last_git_change": null,
+      "path": "10_logs/dev/local-53104-ui.stderr.log",
+      "present": true,
+      "rationale": "runtime/build output governed by retention and ignore rules",
+      "referenced_by": [],
+      "runtime_evidence": null,
+      "size": 0,
+      "tracked": false
+    },
+    {
+      "approved": false,
+      "category": "GENERATED",
+      "imports": [],
+      "last_git_change": null,
+      "path": "10_logs/dev/local-53104-ui.stdout.log",
+      "present": true,
+      "rationale": "runtime/build output governed by retention and ignore rules",
+      "referenced_by": [],
+      "runtime_evidence": null,
+      "size": 161,
+      "tracked": false
+    },
+    {
+      "approved": false,
+      "category": "GENERATED",
+      "imports": [],
+      "last_git_change": null,
+      "path": "10_logs/dev/local-53105-api.stderr.log",
+      "present": true,
+      "rationale": "runtime/build output governed by retention and ignore rules",
+      "referenced_by": [],
+      "runtime_evidence": null,
+      "size": 0,
+      "tracked": false
+    },
+    {
+      "approved": false,
+      "category": "GENERATED",
+      "imports": [],
+      "last_git_change": null,
+      "path": "10_logs/dev/local-53105-api.stdout.log",
+      "present": true,
+      "rationale": "runtime/build output governed by retention and ignore rules",
+      "referenced_by": [],
+      "runtime_evidence": null,
+      "size": 337,
+      "tracked": false
+    },
+    {
+      "approved": false,
+      "category": "GENERATED",
+      "imports": [],
+      "last_git_change": null,
+      "path": "10_logs/dev/local-53106-ui.stderr.log",
+      "present": true,
+      "rationale": "runtime/build output governed by retention and ignore rules",
+      "referenced_by": [],
+      "runtime_evidence": null,
+      "size": 0,
+      "tracked": false
+    },
+    {
+      "approved": false,
+      "category": "GENERATED",
+      "imports": [],
+      "last_git_change": null,
+      "path": "10_logs/dev/local-53106-ui.stdout.log",
+      "present": true,
+      "rationale": "runtime/build output governed by retention and ignore rules",
+      "referenced_by": [],
+      "runtime_evidence": null,
+      "size": 161,
+      "tracked": false
+    },
+    {
+      "approved": false,
+      "category": "GENERATED",
+      "imports": [],
+      "last_git_change": null,
+      "path": "10_logs/dev/local-53107-api.stderr.log",
+      "present": true,
+      "rationale": "runtime/build output governed by retention and ignore rules",
+      "referenced_by": [],
+      "runtime_evidence": null,
+      "size": 0,
+      "tracked": false
+    },
+    {
+      "approved": false,
+      "category": "GENERATED",
+      "imports": [],
+      "last_git_change": null,
+      "path": "10_logs/dev/local-53107-api.stdout.log",
+      "present": true,
+      "rationale": "runtime/build output governed by retention and ignore rules",
+      "referenced_by": [],
+      "runtime_evidence": null,
+      "size": 337,
+      "tracked": false
+    },
+    {
+      "approved": false,
+      "category": "GENERATED",
+      "imports": [],
+      "last_git_change": null,
+      "path": "10_logs/dev/local-53108-ui.stderr.log",
+      "present": true,
+      "rationale": "runtime/build output governed by retention and ignore rules",
+      "referenced_by": [],
+      "runtime_evidence": null,
+      "size": 0,
+      "tracked": false
+    },
+    {
+      "approved": false,
+      "category": "GENERATED",
+      "imports": [],
+      "last_git_change": null,
+      "path": "10_logs/dev/local-53108-ui.stdout.log",
+      "present": true,
+      "rationale": "runtime/build output governed by retention and ignore rules",
+      "referenced_by": [],
+      "runtime_evidence": null,
+      "size": 161,
+      "tracked": false
+    },
+    {
+      "approved": false,
+      "category": "GENERATED",
+      "imports": [],
+      "last_git_change": null,
       "path": "10_logs/dev/ui.stderr.log",
       "present": true,
       "rationale": "runtime/build output governed by retention and ignore rules",
@@ -83097,10 +83349,9 @@
       "approved": false,
       "category": "KEEP",
       "imports": [
-        "api/server.js",
-        "docs/plans/2026-07-13-personal-research-workbench-mvp.md"
+        "09_runbooks/smr-local-operations.md"
       ],
-      "last_git_change": "2026-07-14T08:18:17+08:00",
+      "last_git_change": "2026-07-14T16:03:26+08:00",
       "path": "README.md",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -83109,10 +83360,11 @@
         "12_agent_references/README.md",
         "docs/plans/2026-07-13-personal-research-workbench-mvp.md",
         "tests/smoke/test_development_contract.py",
+        "tests/smoke/test_local_operations_contract.py",
         "tools/inventory_repository.py"
       ],
       "runtime_evidence": null,
-      "size": 3433,
+      "size": 4355,
       "tracked": true
     },
     {
@@ -83814,7 +84066,6 @@
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
       "referenced_by": [
-        "README.md",
         "docs/plans/2026-07-13-personal-research-workbench-mvp.md",
         "package.json",
         "scripts/check.ps1",
@@ -88107,10 +88358,8 @@
       "last_git_change": "2026-07-13T14:40:56+08:00",
       "path": "docs/plans/2026-07-13-personal-research-workbench-mvp.md",
       "present": true,
-      "rationale": "has a code/config reference or recent runtime evidence",
-      "referenced_by": [
-        "README.md"
-      ],
+      "rationale": "belongs to a current application, domain, configuration or documentation path",
+      "referenced_by": [],
       "runtime_evidence": null,
       "size": 40597,
       "tracked": true
@@ -89544,13 +89793,13 @@
       "imports": [
         "runtime-$ApiPort-$UiPort.json"
       ],
-      "last_git_change": "2026-07-14T08:34:13+08:00",
+      "last_git_change": "2026-07-14T16:03:26+08:00",
       "path": "scripts/local-common.ps1",
       "present": true,
       "rationale": "tracked asset retained by default until a stronger removal signal exists",
       "referenced_by": [],
       "runtime_evidence": null,
-      "size": 4103,
+      "size": 5269,
       "tracked": true
     },
     {
@@ -89587,26 +89836,26 @@
         "node_modules\\vite\\bin\\vite.js",
         "vite\\bin\\vite.js"
       ],
-      "last_git_change": "2026-07-14T08:34:13+08:00",
+      "last_git_change": "2026-07-14T16:03:26+08:00",
       "path": "scripts/start-local.ps1",
       "present": true,
       "rationale": "tracked asset retained by default until a stronger removal signal exists",
       "referenced_by": [],
       "runtime_evidence": null,
-      "size": 5304,
+      "size": 6764,
       "tracked": true
     },
     {
       "approved": false,
       "category": "KEEP",
       "imports": [],
-      "last_git_change": "2026-07-14T08:34:13+08:00",
+      "last_git_change": "2026-07-14T16:03:26+08:00",
       "path": "scripts/stop-local.ps1",
       "present": true,
       "rationale": "tracked asset retained by default until a stronger removal signal exists",
       "referenced_by": [],
       "runtime_evidence": null,
-      "size": 1833,
+      "size": 2364,
       "tracked": true
     },
     {
@@ -91655,34 +91904,36 @@
         "pathlib",
         "unittest"
       ],
-      "last_git_change": "2026-07-13T14:59:08+08:00",
+      "last_git_change": "2026-07-14T16:03:26+08:00",
       "path": "tests/smoke/test_development_contract.py",
       "present": true,
       "rationale": "tracked asset retained by default until a stronger removal signal exists",
       "referenced_by": [],
       "runtime_evidence": null,
-      "size": 1154,
+      "size": 1227,
       "tracked": true
     },
     {
       "approved": false,
       "category": "KEEP",
       "imports": [
+        "README.md",
         "__future__",
         "api\\\\server.js",
         "local_db_ops.py",
         "pathlib",
+        "smr-local-operations.md",
         "unittest",
         "vite.config.ts",
         "vite\\\\bin\\\\vite.js"
       ],
-      "last_git_change": "2026-07-14T08:34:13+08:00",
+      "last_git_change": "2026-07-14T16:03:26+08:00",
       "path": "tests/smoke/test_local_operations_contract.py",
       "present": true,
       "rationale": "tracked asset retained by default until a stronger removal signal exists",
       "referenced_by": [],
       "runtime_evidence": null,
-      "size": 1648,
+      "size": 3144,
       "tracked": true
     },
     {
@@ -111337,7 +111588,7 @@
       "tracked": true
     }
   ],
-  "generated_at": "2026-07-14T00:34:43.487616+00:00",
+  "generated_at": "2026-07-14T08:03:53.694997+00:00",
   "project_root": ".",
   "schema_version": 1,
   "summary": {
@@ -111345,13 +111596,13 @@
       "CONSOLIDATE": 2,
       "DELETE_CANDIDATE": 52,
       "FREEZE": 3230,
-      "GENERATED": 11,
-      "KEEP": 2622,
+      "GENERATED": 29,
+      "KEEP": 2623,
       "SECRET": 1
     },
     "delete_approved_count": 0,
-    "file_count": 5918,
-    "present_count": 5860,
-    "tracked_count": 5844
+    "file_count": 5937,
+    "present_count": 5879,
+    "tracked_count": 5845
   }
 }
