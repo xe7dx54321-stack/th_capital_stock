@@ -1,5 +1,5 @@
 {
-  "content_fingerprint": "50dbb77f27481eb5662e51c5bd1896998d047c4a38d12eee0a948481ddf444b3",
+  "content_fingerprint": "484e6f3d4ece6fb4a13f68fb47e70c8d2fececf84c75bc2cc7d1d246f0393d59",
   "files": [
     {
       "approved": false,
@@ -83100,7 +83100,7 @@
         "api/server.js",
         "docs/plans/2026-07-13-personal-research-workbench-mvp.md"
       ],
-      "last_git_change": "2026-07-13T14:59:08+08:00",
+      "last_git_change": "2026-07-14T08:18:17+08:00",
       "path": "README.md",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -89242,7 +89242,7 @@
         "test_phase139_all.py",
         "test_phase140_all.py"
       ],
-      "last_git_change": "2026-07-14T08:09:25+08:00",
+      "last_git_change": "2026-07-14T08:18:17+08:00",
       "path": "legacy_manifest/removal-log-M5.md",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -91568,7 +91568,7 @@
         "tools.inventory_repository",
         "unittest"
       ],
-      "last_git_change": "2026-07-14T00:21:44+08:00",
+      "last_git_change": "2026-07-14T08:18:17+08:00",
       "path": "tests/smoke/test_repository_inventory.py",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -111129,7 +111129,7 @@
         "sys",
         "typing"
       ],
-      "last_git_change": "2026-07-14T00:21:44+08:00",
+      "last_git_change": "2026-07-14T08:18:17+08:00",
       "path": "tools/inventory_repository.py",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -111189,7 +111189,7 @@
       "tracked": true
     }
   ],
-  "generated_at": "2026-07-14T00:16:13.161802+00:00",
+  "generated_at": "2026-07-14T00:18:46.587021+00:00",
   "project_root": ".",
   "schema_version": 1,
   "summary": {
