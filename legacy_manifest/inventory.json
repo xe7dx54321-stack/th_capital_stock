@@ -1,5 +1,5 @@
 {
-  "content_fingerprint": "40ec1ac7cfb3050c9930a166ae49d21c9d7d6a08ddc24c4b2f81a51b148fa952",
+  "content_fingerprint": "2fae714ce02dda76debc77a6ce1070d5d2c4f8e3446efad1061f8dfcb09eec31",
   "files": [
     {
       "approved": false,
@@ -88411,7 +88411,7 @@
         "smr_phase127_workflow_map",
         "sys"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-14T08:09:25+08:00",
       "path": "legacy/phase_contracts/runners/run_phase127_mainline_closeout.py",
       "present": true,
       "rationale": "unreferenced Phase-era asset; remove from default runtime before deletion",
@@ -88453,7 +88453,7 @@
         "smr_phase129_transcript_fallback",
         "sys"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-14T08:09:25+08:00",
       "path": "legacy/phase_contracts/runners/run_phase129_official_source_fallback_pipeline.py",
       "present": true,
       "rationale": "unreferenced Phase-era asset; remove from default runtime before deletion",
@@ -88496,7 +88496,7 @@
         "smr_phase130_watchlist_status_update",
         "sys"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-14T08:09:25+08:00",
       "path": "legacy/phase_contracts/runners/run_phase130_cninfo_resolution_pipeline.py",
       "present": true,
       "rationale": "unreferenced Phase-era asset; remove from default runtime before deletion",
@@ -88536,7 +88536,7 @@
         "smr_phase131_watchlist_coverage_update",
         "sys"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-14T08:09:25+08:00",
       "path": "legacy/phase_contracts/runners/run_phase131_alternative_source_integration_pipeline.py",
       "present": true,
       "rationale": "unreferenced Phase-era asset; remove from default runtime before deletion",
@@ -88579,7 +88579,7 @@
         "smr_phase132_watchlist_valuation_update",
         "sys"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-14T08:09:25+08:00",
       "path": "legacy/phase_contracts/runners/run_phase132_valuation_hardening_pipeline.py",
       "present": true,
       "rationale": "unreferenced Phase-era asset; remove from default runtime before deletion",
@@ -88618,7 +88618,7 @@
         "smr_phase133_watchlist_status_panel_builder",
         "sys"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-14T08:09:25+08:00",
       "path": "legacy/phase_contracts/runners/run_phase133_seasonal_analytics_pipeline.py",
       "present": true,
       "rationale": "unreferenced Phase-era asset; remove from default runtime before deletion",
@@ -88657,7 +88657,7 @@
         "smr_phase134_watchlist_status_center",
         "sys"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-14T08:09:25+08:00",
       "path": "legacy/phase_contracts/runners/run_phase134_personal_research_console_pipeline.py",
       "present": true,
       "rationale": "unreferenced Phase-era asset; remove from default runtime before deletion",
@@ -88695,7 +88695,7 @@
         "smr_phase135_ticker_card_feedback_intake",
         "sys"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-14T08:09:25+08:00",
       "path": "legacy/phase_contracts/runners/run_phase135_owner_feedback_integration.py",
       "present": true,
       "rationale": "unreferenced Phase-era asset; remove from default runtime before deletion",
@@ -88820,7 +88820,7 @@
       "approved": true,
       "category": "FREEZE",
       "imports": [],
-      "last_git_change": null,
+      "last_git_change": "2026-07-14T08:09:25+08:00",
       "path": "legacy/phase_contracts/tests/test_phase127_all.py",
       "present": true,
       "rationale": "unreferenced Phase-era asset; remove from default runtime before deletion",
@@ -88833,7 +88833,7 @@
       "approved": true,
       "category": "FREEZE",
       "imports": [],
-      "last_git_change": null,
+      "last_git_change": "2026-07-14T08:09:25+08:00",
       "path": "legacy/phase_contracts/tests/test_phase129_all.py",
       "present": true,
       "rationale": "unreferenced Phase-era asset; remove from default runtime before deletion",
@@ -88846,7 +88846,7 @@
       "approved": true,
       "category": "FREEZE",
       "imports": [],
-      "last_git_change": null,
+      "last_git_change": "2026-07-14T08:09:25+08:00",
       "path": "legacy/phase_contracts/tests/test_phase130_all.py",
       "present": true,
       "rationale": "unreferenced Phase-era asset; remove from default runtime before deletion",
@@ -88859,7 +88859,7 @@
       "approved": true,
       "category": "FREEZE",
       "imports": [],
-      "last_git_change": null,
+      "last_git_change": "2026-07-14T08:09:25+08:00",
       "path": "legacy/phase_contracts/tests/test_phase131_all.py",
       "present": true,
       "rationale": "unreferenced Phase-era asset; remove from default runtime before deletion",
@@ -88872,7 +88872,7 @@
       "approved": true,
       "category": "FREEZE",
       "imports": [],
-      "last_git_change": null,
+      "last_git_change": "2026-07-14T08:09:25+08:00",
       "path": "legacy/phase_contracts/tests/test_phase132_all.py",
       "present": true,
       "rationale": "unreferenced Phase-era asset; remove from default runtime before deletion",
@@ -88885,7 +88885,7 @@
       "approved": true,
       "category": "FREEZE",
       "imports": [],
-      "last_git_change": null,
+      "last_git_change": "2026-07-14T08:09:25+08:00",
       "path": "legacy/phase_contracts/tests/test_phase133_all.py",
       "present": true,
       "rationale": "unreferenced Phase-era asset; remove from default runtime before deletion",
@@ -88925,7 +88925,7 @@
         "sys",
         "unittest"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-14T08:09:25+08:00",
       "path": "legacy/phase_contracts/tests/test_phase134_all.py",
       "present": true,
       "rationale": "unreferenced Phase-era asset; remove from default runtime before deletion",
@@ -88966,7 +88966,7 @@
         "sys",
         "unittest"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-14T08:09:25+08:00",
       "path": "legacy/phase_contracts/tests/test_phase135_all.py",
       "present": true,
       "rationale": "unreferenced Phase-era asset; remove from default runtime before deletion",
@@ -89239,7 +89239,7 @@
         "test_phase139_all.py",
         "test_phase140_all.py"
       ],
-      "last_git_change": "2026-07-14T00:30:32+08:00",
+      "last_git_change": "2026-07-14T08:09:25+08:00",
       "path": "legacy_manifest/removal-log-M5.md",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -111187,7 +111187,7 @@
       "tracked": true
     }
   ],
-  "generated_at": "2026-07-14T00:07:45.282440+00:00",
+  "generated_at": "2026-07-14T00:09:54.037053+00:00",
   "project_root": ".",
   "schema_version": 1,
   "summary": {
