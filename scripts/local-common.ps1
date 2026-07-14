@@ -94,23 +94,58 @@ function Get-SmrRuntimeStatePath {
 function Get-SmrProcess {
     param([Parameter(Mandatory = $true)][int]$ProcessId)
 
-    return Get-CimInstance Win32_Process -Filter "ProcessId = $ProcessId" -ErrorAction SilentlyContinue
+    return Get-Process -Id $ProcessId -ErrorAction SilentlyContinue
 }
 
 function Test-SmrOwnedProcess {
     param(
         [Parameter(Mandatory = $true)][int]$ProcessId,
         [Parameter(Mandatory = $true)][string]$ProjectRoot,
-        [Parameter(Mandatory = $true)][string]$ExpectedMarker
+        [Parameter(Mandatory = $true)][string]$ExpectedMarker,
+        [string]$ExpectedExecutable,
+        [string]$ExpectedStartTimeUtc
     )
 
     $process = Get-SmrProcess -ProcessId $ProcessId
     if (-not $process) {
         return $false
     }
-    $commandLine = [string]$process.CommandLine
-    return $commandLine.Contains($ProjectRoot, [StringComparison]::OrdinalIgnoreCase) -and
-        $commandLine.Contains($ExpectedMarker, [StringComparison]::OrdinalIgnoreCase)
+
+    $cimProcess = Get-CimInstance Win32_Process `
+        -Filter "ProcessId = $ProcessId" `
+        -ErrorAction SilentlyContinue
+    if ($cimProcess) {
+        $commandLine = [string]$cimProcess.CommandLine
+        if ($commandLine.Contains($ProjectRoot, [StringComparison]::OrdinalIgnoreCase) -and
+            $commandLine.Contains($ExpectedMarker, [StringComparison]::OrdinalIgnoreCase)) {
+            return $true
+        }
+    }
+
+    if (-not $ExpectedExecutable -or -not $ExpectedStartTimeUtc) {
+        return $false
+    }
+    try {
+        $actualExecutable = [IO.Path]::GetFullPath($process.Path)
+        $expectedExecutableFullPath = [IO.Path]::GetFullPath($ExpectedExecutable)
+        $actualStartedAt = $process.StartTime.ToUniversalTime()
+        $expectedStartedAt = [DateTime]::Parse(
+            $ExpectedStartTimeUtc,
+            [Globalization.CultureInfo]::InvariantCulture,
+            [Globalization.DateTimeStyles]::RoundtripKind
+        ).ToUniversalTime()
+        $sameExecutable = $actualExecutable.Equals(
+            $expectedExecutableFullPath,
+            [StringComparison]::OrdinalIgnoreCase
+        )
+        $sameStartTime = [Math]::Abs(
+            ($actualStartedAt - $expectedStartedAt).TotalSeconds
+        ) -lt 1
+        return $sameExecutable -and $sameStartTime
+    }
+    catch {
+        return $false
+    }
 }
 
 function Wait-SmrHttp {

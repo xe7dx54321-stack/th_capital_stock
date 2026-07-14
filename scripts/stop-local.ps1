@@ -20,7 +20,9 @@ function Stop-ManagedProcess {
     param(
         [Parameter(Mandatory = $true)][int]$ProcessId,
         [Parameter(Mandatory = $true)][string]$Name,
-        [Parameter(Mandatory = $true)][string]$ExpectedMarker
+        [Parameter(Mandatory = $true)][string]$ExpectedMarker,
+        [Parameter(Mandatory = $true)][string]$ExpectedExecutable,
+        [Parameter(Mandatory = $true)][string]$ExpectedStartTimeUtc
     )
 
     $process = Get-SmrProcess -ProcessId $ProcessId
@@ -28,7 +30,12 @@ function Stop-ManagedProcess {
         Write-Host "$Name process $ProcessId is already stopped."
         return
     }
-    if (-not (Test-SmrOwnedProcess -ProcessId $ProcessId -ProjectRoot $ProjectRoot -ExpectedMarker $ExpectedMarker)) {
+    if (-not (Test-SmrOwnedProcess `
+        -ProcessId $ProcessId `
+        -ProjectRoot $ProjectRoot `
+        -ExpectedMarker $ExpectedMarker `
+        -ExpectedExecutable $ExpectedExecutable `
+        -ExpectedStartTimeUtc $ExpectedStartTimeUtc)) {
         throw "Refusing to stop process $ProcessId because it is not owned by this SMR workspace."
     }
 
@@ -43,7 +50,17 @@ function Stop-ManagedProcess {
     Write-Host "$Name process $ProcessId stopped."
 }
 
-Stop-ManagedProcess -ProcessId ([int]$state.ui_pid) -Name "UI" -ExpectedMarker ([string]$state.ui_marker)
-Stop-ManagedProcess -ProcessId ([int]$state.api_pid) -Name "API" -ExpectedMarker ([string]$state.api_marker)
+Stop-ManagedProcess `
+    -ProcessId ([int]$state.ui_pid) `
+    -Name "UI" `
+    -ExpectedMarker ([string]$state.ui_marker) `
+    -ExpectedExecutable ([string]$state.node_path) `
+    -ExpectedStartTimeUtc ([string]$state.ui_started_at)
+Stop-ManagedProcess `
+    -ProcessId ([int]$state.api_pid) `
+    -Name "API" `
+    -ExpectedMarker ([string]$state.api_marker) `
+    -ExpectedExecutable ([string]$state.node_path) `
+    -ExpectedStartTimeUtc ([string]$state.api_started_at)
 Remove-Item -LiteralPath $statePath -Force
 Write-Host "SMR local workbench stopped."

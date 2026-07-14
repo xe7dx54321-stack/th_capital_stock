@@ -25,8 +25,9 @@ class DevelopmentContractTests(unittest.TestCase):
 
         self.assertIn("npm ci", readme)
         self.assertIn("scripts\\check.ps1", readme)
-        self.assertIn("npm run dev:api", readme)
-        self.assertIn("npm run dev", readme)
+        self.assertIn("scripts\\start-local.ps1", readme)
+        self.assertIn("scripts\\stop-local.ps1", readme)
+        self.assertNotIn("npm run dev:api", readme)
         self.assertIn("IFIND_REFRESH_TOKEN", readme)
 
 

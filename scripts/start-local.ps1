@@ -22,8 +22,18 @@ $viteEntry = Join-Path $ProjectRoot "node_modules\vite\bin\vite.js"
 if (Test-Path -LiteralPath $statePath -PathType Leaf) {
     try {
         $existingState = Get-Content -Raw -LiteralPath $statePath | ConvertFrom-Json
-        $apiOwned = Test-SmrOwnedProcess -ProcessId ([int]$existingState.api_pid) -ProjectRoot $ProjectRoot -ExpectedMarker "api\server.js"
-        $uiOwned = Test-SmrOwnedProcess -ProcessId ([int]$existingState.ui_pid) -ProjectRoot $ProjectRoot -ExpectedMarker "vite\bin\vite.js"
+        $apiOwned = Test-SmrOwnedProcess `
+            -ProcessId ([int]$existingState.api_pid) `
+            -ProjectRoot $ProjectRoot `
+            -ExpectedMarker "api\server.js" `
+            -ExpectedExecutable ([string]$existingState.node_path) `
+            -ExpectedStartTimeUtc ([string]$existingState.api_started_at)
+        $uiOwned = Test-SmrOwnedProcess `
+            -ProcessId ([int]$existingState.ui_pid) `
+            -ProjectRoot $ProjectRoot `
+            -ExpectedMarker "vite\bin\vite.js" `
+            -ExpectedExecutable ([string]$existingState.node_path) `
+            -ExpectedStartTimeUtc ([string]$existingState.ui_started_at)
         if ($apiOwned -and $uiOwned) {
             Write-Host "SMR is already running."
             Write-Host "UI:  http://$HostAddress`:$UiPort/workbench"
@@ -83,6 +93,25 @@ $previousApiOrigin = $env:SMR_API_ORIGIN
 $apiProcess = $null
 $uiProcess = $null
 
+# Some launchers provide both Path and PATH. Windows treats those names as the
+# same variable, but Windows PowerShell 5.1 Start-Process builds a case-insensitive
+# dictionary and fails when both entries are present. Recreate one canonical
+# process-scoped entry before launching child processes.
+$processPath = [Environment]::GetEnvironmentVariable(
+    "Path",
+    [EnvironmentVariableTarget]::Process
+)
+[Environment]::SetEnvironmentVariable(
+    "PATH",
+    $null,
+    [EnvironmentVariableTarget]::Process
+)
+[Environment]::SetEnvironmentVariable(
+    "Path",
+    $processPath,
+    [EnvironmentVariableTarget]::Process
+)
+
 try {
     $env:HOST = $HostAddress
     $env:PORT = [string]$ApiPort
@@ -106,6 +135,15 @@ try {
         -WindowStyle Hidden `
         -PassThru
 }
+catch {
+    if ($uiProcess -and -not $uiProcess.HasExited) {
+        Stop-Process -Id $uiProcess.Id -Force -ErrorAction SilentlyContinue
+    }
+    if ($apiProcess -and -not $apiProcess.HasExited) {
+        Stop-Process -Id $apiProcess.Id -Force -ErrorAction SilentlyContinue
+    }
+    throw
+}
 finally {
     $env:HOST = $previousHost
     $env:PORT = $previousPort
@@ -120,8 +158,11 @@ $state = [ordered]@{
     api_port = $ApiPort
     ui_port = $UiPort
     database_path = $databaseFullPath
+    node_path = $node
     api_pid = $apiProcess.Id
     ui_pid = $uiProcess.Id
+    api_started_at = $apiProcess.StartTime.ToUniversalTime().ToString("o")
+    ui_started_at = $uiProcess.StartTime.ToUniversalTime().ToString("o")
     api_marker = "api\server.js"
     ui_marker = "vite\bin\vite.js"
     started_at = [DateTime]::UtcNow.ToString("o")
