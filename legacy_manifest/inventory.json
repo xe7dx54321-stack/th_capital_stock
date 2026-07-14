@@ -1,5 +1,5 @@
 {
-  "content_fingerprint": "2fae714ce02dda76debc77a6ce1070d5d2c4f8e3446efad1061f8dfcb09eec31",
+  "content_fingerprint": "50dbb77f27481eb5662e51c5bd1896998d047c4a38d12eee0a948481ddf444b3",
   "files": [
     {
       "approved": false,
@@ -83112,7 +83112,7 @@
         "tools/inventory_repository.py"
       ],
       "runtime_evidence": null,
-      "size": 3404,
+      "size": 3433,
       "tracked": true
     },
     {
@@ -83804,7 +83804,7 @@
     },
     {
       "approved": false,
-      "category": "CONSOLIDATE",
+      "category": "KEEP",
       "imports": [
         "./app.js",
         "./legacy-app.js"
@@ -83812,15 +83812,14 @@
       "last_git_change": "2026-07-13T15:43:38+08:00",
       "path": "api/server.js",
       "present": true,
-      "rationale": "large source module should be split behind stable contracts",
+      "rationale": "has a code/config reference or recent runtime evidence",
       "referenced_by": [
         "README.md",
         "docs/plans/2026-07-13-personal-research-workbench-mvp.md",
         "package.json",
         "scripts/check.ps1",
         "tests/api/legacy-route-contracts.test.js",
-        "tests/smoke/test_repository_inventory.py",
-        "tools/inventory_repository.py"
+        "tests/smoke/test_repository_inventory.py"
       ],
       "runtime_evidence": null,
       "size": 666,
@@ -89199,8 +89198,12 @@
       "approved": false,
       "category": "KEEP",
       "imports": [
+        "08_scripts/dashboard/run_control_tower.py",
+        "08_scripts/lib/smr_dashboard.py",
         "08_scripts/registry/query_registry.py",
+        "09_runbooks/smr-control-tower.md",
         "api/server.js",
+        "control_tower_service.py",
         "deploy_phase2.py",
         "deploy_phase34.py",
         "deploy_phase5.py",
@@ -89247,7 +89250,7 @@
         "docs/plans/2026-07-13-personal-research-workbench-mvp.md"
       ],
       "runtime_evidence": null,
-      "size": 4899,
+      "size": 5878,
       "tracked": true
     },
     {
@@ -91573,7 +91576,7 @@
         "docs/plans/2026-07-13-personal-research-workbench-mvp.md"
       ],
       "runtime_evidence": null,
-      "size": 10581,
+      "size": 11195,
       "tracked": true
     },
     {
@@ -111106,7 +111109,6 @@
         "README.md",
         "[^\\\"'`]+(?:\\.py|\\.js|\\.mjs|\\.cjs|\\.ts|\\.tsx|\\.json|\\.md",
         "__future__",
-        "api/server.js",
         "argparse",
         "ast",
         "collections",
@@ -111136,7 +111138,7 @@
         "scripts/check.ps1"
       ],
       "runtime_evidence": null,
-      "size": 21917,
+      "size": 21874,
       "tracked": true
     },
     {
@@ -111187,16 +111189,16 @@
       "tracked": true
     }
   ],
-  "generated_at": "2026-07-14T00:09:54.037053+00:00",
+  "generated_at": "2026-07-14T00:16:13.161802+00:00",
   "project_root": ".",
   "schema_version": 1,
   "summary": {
     "categories": {
-      "CONSOLIDATE": 3,
+      "CONSOLIDATE": 2,
       "DELETE_CANDIDATE": 52,
       "FREEZE": 3230,
       "GENERATED": 11,
-      "KEEP": 2613,
+      "KEEP": 2614,
       "SECRET": 1
     },
     "delete_approved_count": 0,

@@ -126,3 +126,17 @@
 排除项：`run_phase128_external_source_probe_pipeline.py` 与 `test_phase128_all.py`，待历史断言单独审查后再决定是否归档。
 
 替代路径：当前研究控制台由 `src/app/ResearchWorkbench.tsx` 承载，正式工作流由 `smr_app/workflows/` 与 `tests/workflows/` 承载。
+
+## 审计组 4：生成物、临时文件与大型重复入口
+
+处理方式：修正清单，不删除、不移动。
+
+审核结论：
+
+- 11 个 GENERATED 对象均为未跟踪的本地数据库或开发日志，按边界不处理。
+- 52 个 DELETE_CANDIDATE 均为已经不存在的旧临时文件记录；当前没有 present、tracked 的删除候选。
+- `api/server.js` 已完成拆分，当前仅 20 行、666 字节，继续作为正式 API 启动入口；旧分类规则无条件将其标为 CONSOLIDATE，现已改为仅对大于等于 100 KB 的源码标记 CONSOLIDATE。
+- `08_scripts/dashboard/run_control_tower.py` 与 `08_scripts/lib/smr_dashboard.py` 仍由 `control_tower_service.py` 和 `09_runbooks/smr-control-tower.md` 引用；结合经典前台保留边界，本批继续保留，不做孤立移动。
+- 新增分类回归测试，保证小型 API bootstrap 为 KEEP，而旧式大型单文件仍为 CONSOLIDATE。
+
+本组没有删除 tracked 文件。

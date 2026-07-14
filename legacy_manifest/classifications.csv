@@ -4342,7 +4342,7 @@ path,present,tracked,size,category,approved,reference_count,runtime_success_coun
 12_smr_agents/prompt_packs/hermes_risk_curator.md,true,true,657,KEEP,false,2,0,2026-05-18T23:49:56+08:00,has a code/config reference or recent runtime evidence
 12_smr_agents/prompt_packs/openclaw_system_exec.md,true,true,807,KEEP,false,1,0,2026-05-18T23:49:56+08:00,has a code/config reference or recent runtime evidence
 12_smr_agents/schedules/agent_schedule_registry.json,true,true,9959,KEEP,false,3,0,2026-07-13T14:40:56+08:00,has a code/config reference or recent runtime evidence
-README.md,true,true,3404,KEEP,false,5,0,2026-07-13T14:59:08+08:00,has a code/config reference or recent runtime evidence
+README.md,true,true,3433,KEEP,false,5,0,2026-07-13T14:59:08+08:00,has a code/config reference or recent runtime evidence
 _check_factor_data.mjs,false,false,0,DELETE_CANDIDATE,false,0,0,,temporary investigation naming pattern; requires manual approval
 _check_full_spec.mjs,false,false,0,DELETE_CANDIDATE,false,0,0,,temporary investigation naming pattern; requires manual approval
 _check_spec_progress.mjs,false,false,0,DELETE_CANDIDATE,false,0,0,,temporary investigation naming pattern; requires manual approval
@@ -4390,7 +4390,7 @@ api/routes/decisions.js,true,true,9730,KEEP,false,2,0,2026-07-13T23:00:34+08:00,
 api/routes/memories.js,true,true,6042,KEEP,false,2,0,2026-07-13T16:15:14+08:00,has a code/config reference or recent runtime evidence
 api/routes/research.js,true,true,2724,KEEP,false,3,0,2026-07-13T23:44:16+08:00,has a code/config reference or recent runtime evidence
 api/routes/workflows.js,true,true,8193,KEEP,false,2,0,2026-07-13T16:15:14+08:00,has a code/config reference or recent runtime evidence
-api/server.js,true,true,666,CONSOLIDATE,false,7,0,2026-07-13T15:43:38+08:00,large source module should be split behind stable contracts
+api/server.js,true,true,666,KEEP,false,6,0,2026-07-13T15:43:38+08:00,has a code/config reference or recent runtime evidence
 api/services/deep-report-service.js,true,true,20257,KEEP,false,1,0,2026-07-13T23:38:09+08:00,has a code/config reference or recent runtime evidence
 api/services/discovery-service.js,true,true,5327,KEEP,false,0,0,2026-07-13T23:27:16+08:00,"belongs to a current application, domain, configuration or documentation path"
 api/services/event-stream.js,true,true,1311,KEEP,false,1,0,2026-07-13T15:43:38+08:00,has a code/config reference or recent runtime evidence
@@ -4674,7 +4674,7 @@ legacy/phase_contracts/tests/test_phase139_all.py,true,true,5496,FREEZE,true,0,0
 legacy/phase_contracts/tests/test_phase140_all.py,true,true,4208,FREEZE,true,0,0,2026-07-14T00:30:32+08:00,unreferenced Phase-era asset; remove from default runtime before deletion
 legacy_manifest/,false,false,0,KEEP,false,0,0,,"belongs to a current application, domain, configuration or documentation path"
 legacy_manifest/baseline-2026-07-13.md,true,true,3125,KEEP,false,1,0,2026-07-13T14:40:56+08:00,has a code/config reference or recent runtime evidence
-legacy_manifest/removal-log-M5.md,true,true,4899,KEEP,false,1,0,2026-07-14T08:09:25+08:00,has a code/config reference or recent runtime evidence
+legacy_manifest/removal-log-M5.md,true,true,5878,KEEP,false,1,0,2026-07-14T08:09:25+08:00,has a code/config reference or recent runtime evidence
 legacy_manifest/tracked-diff-stat.txt,true,true,1718,KEEP,false,0,0,2026-07-13T14:40:56+08:00,"belongs to a current application, domain, configuration or documentation path"
 legacy_manifest/untracked-files.txt,true,true,2192,KEEP,false,0,0,2026-07-13T14:40:56+08:00,"belongs to a current application, domain, configuration or documentation path"
 migrations/0000_schema_migrations.sql,true,true,163,KEEP,false,0,0,2026-07-13T15:15:00+08:00,tracked asset retained by default until a stronger removal signal exists
@@ -4784,7 +4784,7 @@ tests/runtime/test_migrations.py,true,true,3008,KEEP,false,1,0,2026-07-13T23:00:
 tests/runtime/test_risk_alert_deduplication.py,true,true,4386,KEEP,false,1,0,2026-07-13T15:11:11+08:00,has a code/config reference or recent runtime evidence
 tests/runtime/test_runner.py,true,true,5943,KEEP,false,1,0,2026-07-13T15:43:38+08:00,has a code/config reference or recent runtime evidence
 tests/smoke/test_development_contract.py,true,true,1154,KEEP,false,0,0,2026-07-13T14:59:08+08:00,tracked asset retained by default until a stronger removal signal exists
-tests/smoke/test_repository_inventory.py,true,true,10581,KEEP,false,1,0,2026-07-14T00:21:44+08:00,has a code/config reference or recent runtime evidence
+tests/smoke/test_repository_inventory.py,true,true,11195,KEEP,false,1,0,2026-07-14T00:21:44+08:00,has a code/config reference or recent runtime evidence
 tests/test_blocker_repair_queue.py,true,true,3046,KEEP,false,0,0,2026-05-23T22:03:51+08:00,tracked asset retained by default until a stronger removal signal exists
 tests/test_evidence_quality.py,true,true,4560,KEEP,false,0,0,2026-05-21T17:18:44+08:00,tracked asset retained by default until a stronger removal signal exists
 tests/test_live_validation_metrics.py,true,true,5314,KEEP,false,0,0,2026-05-21T17:18:44+08:00,tracked asset retained by default until a stronger removal signal exists
@@ -5905,7 +5905,7 @@ tests/workflows/test_portfolio_review.py,true,true,3410,KEEP,false,1,0,2026-07-1
 tests/workflows/test_stock_deep_dive.py,true,true,8302,KEEP,false,1,0,2026-07-13T23:00:34+08:00,has a code/config reference or recent runtime evidence
 tests/workflows/test_thesis_update.py,true,true,3777,KEEP,false,1,0,2026-07-13T16:15:14+08:00,has a code/config reference or recent runtime evidence
 tools/__init__.py,true,true,61,KEEP,false,0,0,2026-07-13T14:48:01+08:00,"belongs to a current application, domain, configuration or documentation path"
-tools/inventory_repository.py,true,true,21917,KEEP,false,2,0,2026-07-14T00:21:44+08:00,has a code/config reference or recent runtime evidence
+tools/inventory_repository.py,true,true,21874,KEEP,false,2,0,2026-07-14T00:21:44+08:00,has a code/config reference or recent runtime evidence
 tsconfig.json,true,true,807,KEEP,false,0,0,2026-07-13T14:40:56+08:00,tracked asset retained by default until a stronger removal signal exists
 vite.config.ts,true,true,427,KEEP,false,0,0,2026-07-13T16:53:25+08:00,tracked asset retained by default until a stronger removal signal exists
 vitest.config.ts,true,true,283,KEEP,false,0,0,2026-07-13T16:00:38+08:00,tracked asset retained by default until a stronger removal signal exists

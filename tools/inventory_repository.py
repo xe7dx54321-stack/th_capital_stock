@@ -228,9 +228,7 @@ def classify_path(
             "unreferenced Phase-era asset; remove from default runtime before deletion",
         )
 
-    if path == "api/server.js" or (
-        size >= 100_000 and PurePosixPath(path).suffix.lower() in {".py", ".js", ".ts", ".tsx"}
-    ):
+    if size >= 100_000 and PurePosixPath(path).suffix.lower() in {".py", ".js", ".ts", ".tsx"}:
         return ClassificationResult(
             Classification.CONSOLIDATE,
             "large source module should be split behind stable contracts",

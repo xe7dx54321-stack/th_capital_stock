@@ -37,6 +37,25 @@ class RepositoryInventoryTests(unittest.TestCase):
 
         self.assertEqual(Classification.KEEP, classification.category)
 
+    def test_small_api_bootstrap_is_kept_after_large_server_split(self) -> None:
+        bootstrap = classify_path(
+            "api/server.js",
+            tracked=True,
+            size=666,
+            reference_count=0,
+            runtime_evidence=None,
+        )
+        legacy_monolith = classify_path(
+            "api/server.js",
+            tracked=True,
+            size=150_000,
+            reference_count=0,
+            runtime_evidence=None,
+        )
+
+        self.assertEqual(Classification.KEEP, bootstrap.category)
+        self.assertEqual(Classification.CONSOLIDATE, legacy_monolith.category)
+
     def test_markdown_backtick_path_counts_as_a_reference(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)
