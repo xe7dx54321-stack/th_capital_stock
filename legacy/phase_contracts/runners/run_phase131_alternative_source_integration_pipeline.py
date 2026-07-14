@@ -1,5 +1,6 @@
 import json,sys,os
-sys.path.insert(0,os.path.join(os.path.dirname(__file__),"..","lib"))
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "08_scripts" / "lib"))
 from smr_phase131_config import load_config
 from smr_phase131_domain_registry import build_domain_registry
 from smr_phase131_phase130_resolution_loader import load_phase130_resolution

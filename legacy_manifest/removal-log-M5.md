@@ -87,3 +87,42 @@
 - `test_phase140_all.py`
 
 替代路径：`smr_app/workflows/`、`tests/workflows/`、`scripts/check.ps1 -Full`。
+
+## 归档组 3：Phase 127、129–135 静态 runner 与契约测试
+
+处理方式：FREEZE，移动到 `legacy/phase_contracts/`，不删除。
+
+审核结论：
+
+- 最初审核 Phase 127–135 共 9 个 runner 与 9 个测试；正式引用数均为 0，近 30 天成功运行数均为 0。
+- scheduler、正式 API、`smr_app`、前台入口和工作流注册表均未调用这些 runner；底层 `08_scripts/lib/smr_phase*` 模块与配置文件继续保留。
+- 原路径首次运行 316 项测试时，Phase 128 的 `pending_network_after <= pending_network_before` 既有断言失败（实际为 `13 <= 12`），因此 Phase 128 runner 与测试从本组排除并原地保留。
+- 最终归档范围为 Phase 127、129–135，共 8 个 runner 与 8 个测试。
+- 归档前、归档后均运行 277 项对应 legacy tests，全部通过。
+- 归档后的 Phase 127、134、135 runner 已分别完成 dry-run，契约输出与安全 guard 正常。
+
+归档 runner：
+
+- `run_phase127_mainline_closeout.py`
+- `run_phase129_official_source_fallback_pipeline.py`
+- `run_phase130_cninfo_resolution_pipeline.py`
+- `run_phase131_alternative_source_integration_pipeline.py`
+- `run_phase132_valuation_hardening_pipeline.py`
+- `run_phase133_seasonal_analytics_pipeline.py`
+- `run_phase134_personal_research_console_pipeline.py`
+- `run_phase135_owner_feedback_integration.py`
+
+归档测试：
+
+- `test_phase127_all.py`
+- `test_phase129_all.py`
+- `test_phase130_all.py`
+- `test_phase131_all.py`
+- `test_phase132_all.py`
+- `test_phase133_all.py`
+- `test_phase134_all.py`
+- `test_phase135_all.py`
+
+排除项：`run_phase128_external_source_probe_pipeline.py` 与 `test_phase128_all.py`，待历史断言单独审查后再决定是否归档。
+
+替代路径：当前研究控制台由 `src/app/ResearchWorkbench.tsx` 承载，正式工作流由 `smr_app/workflows/` 与 `tests/workflows/` 承载。

@@ -1,5 +1,5 @@
 {
-  "content_fingerprint": "bb7f8516c1c7968e5e1e535f3ceddb6f291031337844293dfa2558dcfa9aad91",
+  "content_fingerprint": "40ec1ac7cfb3050c9930a166ae49d21c9d7d6a08ddc24c4b2f81a51b148fa952",
   "files": [
     {
       "approved": false,
@@ -4200,44 +4200,6 @@
       "imports": [
         "json",
         "os",
-        "smr_phase127_acceptance",
-        "smr_phase127_artifact_index",
-        "smr_phase127_backlog",
-        "smr_phase127_blocker_register",
-        "smr_phase127_board",
-        "smr_phase127_brief",
-        "smr_phase127_capability_map",
-        "smr_phase127_command_index",
-        "smr_phase127_config",
-        "smr_phase127_domain",
-        "smr_phase127_gap_register",
-        "smr_phase127_guard",
-        "smr_phase127_maintenance",
-        "smr_phase127_memory",
-        "smr_phase127_phase_summary",
-        "smr_phase127_research_closeout",
-        "smr_phase127_roadmap",
-        "smr_phase127_runbook",
-        "smr_phase127_safety_closeout",
-        "smr_phase127_signal_closeout",
-        "smr_phase127_workflow_map",
-        "sys"
-      ],
-      "last_git_change": "2026-06-02T11:24:45+08:00",
-      "path": "08_scripts/jobs/run_phase127_mainline_closeout.py",
-      "present": true,
-      "rationale": "unreferenced Phase-era asset; remove from default runtime before deletion",
-      "referenced_by": [],
-      "runtime_evidence": null,
-      "size": 3188,
-      "tracked": true
-    },
-    {
-      "approved": false,
-      "category": "FREEZE",
-      "imports": [
-        "json",
-        "os",
         "smr_phase128_availability_classifier",
         "smr_phase128_backlog_update",
         "smr_phase128_cannot_conclude_guard",
@@ -4272,283 +4234,6 @@
       "referenced_by": [],
       "runtime_evidence": null,
       "size": 3172,
-      "tracked": true
-    },
-    {
-      "approved": false,
-      "category": "FREEZE",
-      "imports": [
-        "json",
-        "os",
-        "smr_phase129_access_route_planner",
-        "smr_phase129_api_key_classifier",
-        "smr_phase129_backlog_update",
-        "smr_phase129_blocked_source_loader",
-        "smr_phase129_cannot_conclude_guard",
-        "smr_phase129_config",
-        "smr_phase129_coverage_update_builder",
-        "smr_phase129_domain_registry",
-        "smr_phase129_equivalence_scorer",
-        "smr_phase129_fallback_board",
-        "smr_phase129_fallback_brief",
-        "smr_phase129_fallback_memory",
-        "smr_phase129_fallback_probe_executor",
-        "smr_phase129_fallback_probe_policy",
-        "smr_phase129_gap_register",
-        "smr_phase129_hkex_fallback",
-        "smr_phase129_integration_update",
-        "smr_phase129_manual_workflow_builder",
-        "smr_phase129_mirror_registry",
-        "smr_phase129_official_source_identity_map",
-        "smr_phase129_proxy_classifier",
-        "smr_phase129_sec_edgar_fallback",
-        "smr_phase129_third_party_equivalent_registry",
-        "smr_phase129_transcript_fallback",
-        "sys"
-      ],
-      "last_git_change": "2026-06-03T08:57:00+08:00",
-      "path": "08_scripts/jobs/run_phase129_official_source_fallback_pipeline.py",
-      "present": true,
-      "rationale": "unreferenced Phase-era asset; remove from default runtime before deletion",
-      "referenced_by": [],
-      "runtime_evidence": null,
-      "size": 2921,
-      "tracked": true
-    },
-    {
-      "approved": false,
-      "category": "FREEZE",
-      "imports": [
-        "json",
-        "os",
-        "smr_phase130_alternative_disclosure_registry",
-        "smr_phase130_backlog_update",
-        "smr_phase130_cannot_conclude_guard",
-        "smr_phase130_cninfo_candidate_registry",
-        "smr_phase130_cninfo_verification_runner",
-        "smr_phase130_company_ir_loader",
-        "smr_phase130_config",
-        "smr_phase130_disclosure_coverage_classifier",
-        "smr_phase130_domain_registry",
-        "smr_phase130_gap_closeout_report",
-        "smr_phase130_hard_data_readiness",
-        "smr_phase130_historical_blocker_loader",
-        "smr_phase130_identity_evidence_pack",
-        "smr_phase130_integration_update",
-        "smr_phase130_irm_interaction_fallback",
-        "smr_phase130_known_url_validator",
-        "smr_phase130_manual_action_template",
-        "smr_phase130_manual_url_template",
-        "smr_phase130_resolution_board",
-        "smr_phase130_resolution_brief",
-        "smr_phase130_resolution_decision_report",
-        "smr_phase130_resolution_memory",
-        "smr_phase130_source_equivalence_scorer",
-        "smr_phase130_szse_disclosure_fallback",
-        "smr_phase130_watchlist_status_update",
-        "sys"
-      ],
-      "last_git_change": "2026-06-03T09:19:55+08:00",
-      "path": "08_scripts/jobs/run_phase130_cninfo_resolution_pipeline.py",
-      "present": true,
-      "rationale": "unreferenced Phase-era asset; remove from default runtime before deletion",
-      "referenced_by": [],
-      "runtime_evidence": null,
-      "size": 3061,
-      "tracked": true
-    },
-    {
-      "approved": false,
-      "category": "FREEZE",
-      "imports": [
-        "json",
-        "os",
-        "smr_phase131_alternative_source_normalizer",
-        "smr_phase131_alternative_source_quality_gate",
-        "smr_phase131_alternative_source_registry_loader",
-        "smr_phase131_backlog_update",
-        "smr_phase131_cannot_conclude_guard",
-        "smr_phase131_company_ir_adapter",
-        "smr_phase131_config",
-        "smr_phase131_daily_brief_integration_update",
-        "smr_phase131_domain_registry",
-        "smr_phase131_eastmoney_financial_adapter",
-        "smr_phase131_hard_data_integration_update",
-        "smr_phase131_health_gap_register_update",
-        "smr_phase131_integration_board",
-        "smr_phase131_integration_brief",
-        "smr_phase131_integration_decision_builder",
-        "smr_phase131_integration_memory",
-        "smr_phase131_irm_interaction_adapter",
-        "smr_phase131_known_url_integration_loader",
-        "smr_phase131_phase130_resolution_loader",
-        "smr_phase131_signal_effectiveness_update",
-        "smr_phase131_szse_disclosure_adapter",
-        "smr_phase131_watchlist_coverage_update",
-        "sys"
-      ],
-      "last_git_change": "2026-06-03T09:36:57+08:00",
-      "path": "08_scripts/jobs/run_phase131_alternative_source_integration_pipeline.py",
-      "present": true,
-      "rationale": "unreferenced Phase-era asset; remove from default runtime before deletion",
-      "referenced_by": [],
-      "runtime_evidence": null,
-      "size": 2963,
-      "tracked": true
-    },
-    {
-      "approved": false,
-      "category": "FREEZE",
-      "imports": [
-        "json",
-        "os",
-        "smr_phase132_akshare_star_valuation_adapter",
-        "smr_phase132_alternative_valuation_metric_builder",
-        "smr_phase132_backlog_update",
-        "smr_phase132_cannot_conclude_guard",
-        "smr_phase132_config",
-        "smr_phase132_daily_brief_valuation_update",
-        "smr_phase132_domain_registry",
-        "smr_phase132_eastmoney_valuation_adapter",
-        "smr_phase132_ev_ebitda_input_builder",
-        "smr_phase132_financial_metric_dependency_resolver",
-        "smr_phase132_gap_closeout_report",
-        "smr_phase132_hard_data_valuation_update",
-        "smr_phase132_historical_valuation_gap_loader",
-        "smr_phase132_phase131_coverage_loader",
-        "smr_phase132_ps_ratio_input_builder",
-        "smr_phase132_signal_effectiveness_valuation_update",
-        "smr_phase132_third_party_valuation_fallback",
-        "smr_phase132_valuation_coverage_classifier",
-        "smr_phase132_valuation_integration_board",
-        "smr_phase132_valuation_integration_brief",
-        "smr_phase132_valuation_memory",
-        "smr_phase132_valuation_quality_gate",
-        "smr_phase132_valuation_source_normalizer",
-        "smr_phase132_valuation_source_registry",
-        "smr_phase132_watchlist_valuation_update",
-        "sys"
-      ],
-      "last_git_change": "2026-06-03T10:09:56+08:00",
-      "path": "08_scripts/jobs/run_phase132_valuation_hardening_pipeline.py",
-      "present": true,
-      "rationale": "unreferenced Phase-era asset; remove from default runtime before deletion",
-      "referenced_by": [],
-      "runtime_evidence": null,
-      "size": 3214,
-      "tracked": true
-    },
-    {
-      "approved": false,
-      "category": "FREEZE",
-      "imports": [
-        "json",
-        "os",
-        "smr_phase133_backlog_update",
-        "smr_phase133_cannot_conclude_guard",
-        "smr_phase133_config",
-        "smr_phase133_cross_market_comparison_builder",
-        "smr_phase133_domain_registry",
-        "smr_phase133_financial_trend_panel_builder",
-        "smr_phase133_gap_risk_panel_builder",
-        "smr_phase133_opportunity_catalyst_panel_builder",
-        "smr_phase133_owner_action_queue_builder",
-        "smr_phase133_phase132_coverage_loader",
-        "smr_phase133_seasonal_analytics_board",
-        "smr_phase133_seasonal_analytics_brief",
-        "smr_phase133_seasonal_dashboard_exporter",
-        "smr_phase133_seasonal_memory",
-        "smr_phase133_seasonal_period_registry",
-        "smr_phase133_signal_effectiveness_panel_builder",
-        "smr_phase133_source_coverage_panel_builder",
-        "smr_phase133_ticker_financial_valuation_loader",
-        "smr_phase133_ticker_seasonal_profile_builder",
-        "smr_phase133_valuation_trend_panel_builder",
-        "smr_phase133_watchlist_status_panel_builder",
-        "sys"
-      ],
-      "last_git_change": "2026-06-03T10:19:59+08:00",
-      "path": "08_scripts/jobs/run_phase133_seasonal_analytics_pipeline.py",
-      "present": true,
-      "rationale": "unreferenced Phase-era asset; remove from default runtime before deletion",
-      "referenced_by": [],
-      "runtime_evidence": null,
-      "size": 2574,
-      "tracked": true
-    },
-    {
-      "approved": false,
-      "category": "FREEZE",
-      "imports": [
-        "json",
-        "os",
-        "smr_phase134_artifact_link_index",
-        "smr_phase134_backlog_update",
-        "smr_phase134_cannot_conclude_guard",
-        "smr_phase134_config",
-        "smr_phase134_console_data_aggregator",
-        "smr_phase134_console_memory",
-        "smr_phase134_console_quality_gate",
-        "smr_phase134_daily_brief_preview",
-        "smr_phase134_domain_registry",
-        "smr_phase134_gap_risk_center",
-        "smr_phase134_market_section_builder",
-        "smr_phase134_memory_feedback_center",
-        "smr_phase134_opportunity_catalyst_center",
-        "smr_phase134_owner_action_center",
-        "smr_phase134_phase133_dashboard_loader",
-        "smr_phase134_research_priority_builder",
-        "smr_phase134_seasonal_insight_center",
-        "smr_phase134_source_signal_quality_center",
-        "smr_phase134_system_health_snapshot",
-        "smr_phase134_ticker_card_builder",
-        "smr_phase134_watchlist_status_center",
-        "sys"
-      ],
-      "last_git_change": "2026-06-03T10:33:25+08:00",
-      "path": "08_scripts/jobs/run_phase134_personal_research_console_pipeline.py",
-      "present": true,
-      "rationale": "unreferenced Phase-era asset; remove from default runtime before deletion",
-      "referenced_by": [],
-      "runtime_evidence": null,
-      "size": 2530,
-      "tracked": true
-    },
-    {
-      "approved": false,
-      "category": "FREEZE",
-      "imports": [
-        "json",
-        "os",
-        "smr_phase135_backlog_update",
-        "smr_phase135_brief_layout_feedback_adapter",
-        "smr_phase135_cannot_conclude_guard",
-        "smr_phase135_config",
-        "smr_phase135_console_feedback_schema",
-        "smr_phase135_daily_brief_feedback_intake",
-        "smr_phase135_deep_dive_task_feedback_adapter",
-        "smr_phase135_domain_registry",
-        "smr_phase135_feedback_entity_linker",
-        "smr_phase135_feedback_impact_board",
-        "smr_phase135_feedback_validator",
-        "smr_phase135_gap_risk_feedback_intake",
-        "smr_phase135_owner_action_feedback_intake",
-        "smr_phase135_phase134_console_loader",
-        "smr_phase135_research_loop_tuning_recommendation",
-        "smr_phase135_research_priority_feedback_adapter",
-        "smr_phase135_seasonal_insight_feedback_intake",
-        "smr_phase135_source_signal_feedback_intake",
-        "smr_phase135_source_signal_weight_feedback_adapter",
-        "smr_phase135_ticker_card_feedback_intake",
-        "sys"
-      ],
-      "last_git_change": "2026-06-03T10:42:20+08:00",
-      "path": "08_scripts/jobs/run_phase135_owner_feedback_integration.py",
-      "present": true,
-      "rationale": "unreferenced Phase-era asset; remove from default runtime before deletion",
-      "referenced_by": [],
-      "runtime_evidence": null,
-      "size": 2857,
       "tracked": true
     },
     {
@@ -22580,7 +22265,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase127_mainline_closeout.py",
         "08_scripts/reporting/build_phase127_acceptance_report.py",
         "08_scripts/reporting/build_phase127_dashboard.py"
       ],
@@ -22609,7 +22293,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase127_mainline_closeout.py",
         "08_scripts/reporting/build_phase127_artifact_index_report.py"
       ],
       "runtime_evidence": null,
@@ -22625,7 +22308,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase127_mainline_closeout.py",
         "08_scripts/reporting/build_phase127_backlog_report.py",
         "08_scripts/reporting/build_phase127_dashboard.py"
       ],
@@ -22642,7 +22324,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase127_mainline_closeout.py",
         "08_scripts/lib/smr_phase128_known_gap_loader.py",
         "08_scripts/reporting/build_phase127_blocker_register_report.py",
         "08_scripts/reporting/build_phase127_dashboard.py"
@@ -22660,7 +22341,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase127_mainline_closeout.py",
         "08_scripts/reporting/build_phase127_board_report.py"
       ],
       "runtime_evidence": null,
@@ -22678,7 +22358,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase127_mainline_closeout.py",
         "08_scripts/reporting/build_phase127_brief_report.py"
       ],
       "runtime_evidence": null,
@@ -22694,7 +22373,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase127_mainline_closeout.py",
         "08_scripts/reporting/build_phase127_capability_map_report.py"
       ],
       "runtime_evidence": null,
@@ -22712,7 +22390,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase127_mainline_closeout.py",
         "08_scripts/reporting/build_phase127_command_index_report.py"
       ],
       "runtime_evidence": null,
@@ -22733,7 +22410,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase127_mainline_closeout.py",
         "08_scripts/reporting/build_phase127_config_report.py"
       ],
       "runtime_evidence": null,
@@ -22749,7 +22425,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase127_mainline_closeout.py",
         "08_scripts/reporting/build_phase127_domain_report.py"
       ],
       "runtime_evidence": null,
@@ -22765,7 +22440,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase127_mainline_closeout.py",
         "08_scripts/lib/smr_phase128_known_gap_loader.py",
         "08_scripts/reporting/build_phase127_dashboard.py",
         "08_scripts/reporting/build_phase127_gap_register_report.py"
@@ -22783,7 +22457,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase127_mainline_closeout.py",
         "08_scripts/reporting/build_phase127_dashboard.py",
         "08_scripts/reporting/build_phase127_guard_report.py"
       ],
@@ -22800,7 +22473,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase127_mainline_closeout.py",
         "08_scripts/reporting/build_phase127_maintenance_report.py"
       ],
       "runtime_evidence": null,
@@ -22816,7 +22488,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase127_mainline_closeout.py",
         "08_scripts/jobs/write_phase127_mainline_closeout.py",
         "08_scripts/reporting/build_phase127_memory_report.py"
       ],
@@ -22833,7 +22504,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase127_mainline_closeout.py",
         "08_scripts/reporting/build_phase127_phase_summary_report.py"
       ],
       "runtime_evidence": null,
@@ -22849,7 +22519,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase127_mainline_closeout.py",
         "08_scripts/reporting/build_phase127_dashboard.py",
         "08_scripts/reporting/build_phase127_research_closeout_report.py"
       ],
@@ -22866,7 +22535,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase127_mainline_closeout.py",
         "08_scripts/reporting/build_phase127_roadmap_report.py"
       ],
       "runtime_evidence": null,
@@ -22882,7 +22550,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase127_mainline_closeout.py",
         "08_scripts/reporting/build_phase127_runbook_report.py"
       ],
       "runtime_evidence": null,
@@ -22898,7 +22565,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase127_mainline_closeout.py",
         "08_scripts/reporting/build_phase127_safety_closeout_report.py"
       ],
       "runtime_evidence": null,
@@ -22914,7 +22580,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase127_mainline_closeout.py",
         "08_scripts/reporting/build_phase127_signal_closeout_report.py"
       ],
       "runtime_evidence": null,
@@ -22930,7 +22595,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase127_mainline_closeout.py",
         "08_scripts/reporting/build_phase127_workflow_map_report.py"
       ],
       "runtime_evidence": null,
@@ -23488,7 +23152,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase129_official_source_fallback_pipeline.py",
         "08_scripts/lib/smr_phase129_fallback_probe_executor.py",
         "08_scripts/reporting/build_phase129_access_route_planner_report.py"
       ],
@@ -23509,7 +23172,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase129_official_source_fallback_pipeline.py",
         "08_scripts/reporting/build_phase129_api_key_classifier_report.py"
       ],
       "runtime_evidence": null,
@@ -23529,7 +23191,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase129_official_source_fallback_pipeline.py",
         "08_scripts/reporting/build_phase129_backlog_update_report.py",
         "08_scripts/reporting/build_phase129_dashboard.py"
       ],
@@ -23550,7 +23211,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase129_official_source_fallback_pipeline.py",
         "08_scripts/reporting/build_phase129_blocked_source_loader_report.py"
       ],
       "runtime_evidence": null,
@@ -23571,7 +23231,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase129_official_source_fallback_pipeline.py",
         "08_scripts/reporting/build_phase129_cannot_conclude_guard_report.py",
         "08_scripts/reporting/build_phase129_dashboard.py"
       ],
@@ -23593,7 +23252,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase129_official_source_fallback_pipeline.py",
         "08_scripts/reporting/build_phase129_config_report.py"
       ],
       "runtime_evidence": null,
@@ -23614,7 +23272,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase129_official_source_fallback_pipeline.py",
         "08_scripts/lib/smr_phase129_integration_update.py",
         "08_scripts/reporting/build_phase129_coverage_update_builder_report.py"
       ],
@@ -23631,7 +23288,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase129_official_source_fallback_pipeline.py",
         "08_scripts/reporting/build_phase129_domain_registry_report.py"
       ],
       "runtime_evidence": null,
@@ -23651,7 +23307,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase129_official_source_fallback_pipeline.py",
         "08_scripts/lib/smr_phase129_coverage_update_builder.py",
         "08_scripts/reporting/build_phase129_equivalence_scorer_report.py"
       ],
@@ -23673,7 +23328,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase129_official_source_fallback_pipeline.py",
         "08_scripts/lib/smr_phase129_fallback_brief.py",
         "08_scripts/reporting/build_phase129_fallback_board_report.py"
       ],
@@ -23695,7 +23349,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase129_official_source_fallback_pipeline.py",
         "08_scripts/reporting/build_phase129_fallback_brief_report.py"
       ],
       "runtime_evidence": null,
@@ -23711,7 +23364,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase129_official_source_fallback_pipeline.py",
         "08_scripts/jobs/write_phase129_fallback_memory.py",
         "08_scripts/reporting/build_phase129_fallback_memory_report.py"
       ],
@@ -23732,7 +23384,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase129_official_source_fallback_pipeline.py",
         "08_scripts/lib/smr_phase129_api_key_classifier.py",
         "08_scripts/lib/smr_phase129_backlog_update.py",
         "08_scripts/lib/smr_phase129_cannot_conclude_guard.py",
@@ -23758,7 +23409,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase129_official_source_fallback_pipeline.py",
         "08_scripts/reporting/build_phase129_fallback_probe_policy_report.py"
       ],
       "runtime_evidence": null,
@@ -23779,7 +23429,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase129_official_source_fallback_pipeline.py",
         "08_scripts/lib/smr_phase129_cannot_conclude_guard.py",
         "08_scripts/lib/smr_phase129_fallback_board.py",
         "08_scripts/lib/smr_phase129_fallback_brief.py",
@@ -23799,7 +23448,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase129_official_source_fallback_pipeline.py",
         "08_scripts/lib/smr_phase129_access_route_planner.py",
         "08_scripts/reporting/build_phase129_hkex_fallback_report.py"
       ],
@@ -23821,7 +23469,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase129_official_source_fallback_pipeline.py",
         "08_scripts/reporting/build_phase129_integration_update_report.py"
       ],
       "runtime_evidence": null,
@@ -23841,7 +23488,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase129_official_source_fallback_pipeline.py",
         "08_scripts/lib/smr_phase129_gap_register.py",
         "08_scripts/reporting/build_phase129_manual_workflow_builder_report.py"
       ],
@@ -23858,7 +23504,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase129_official_source_fallback_pipeline.py",
         "08_scripts/lib/smr_phase129_access_route_planner.py",
         "08_scripts/reporting/build_phase129_mirror_registry_report.py"
       ],
@@ -23875,7 +23520,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase129_official_source_fallback_pipeline.py",
         "08_scripts/reporting/build_phase129_official_source_identity_map_report.py"
       ],
       "runtime_evidence": null,
@@ -23895,7 +23539,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase129_official_source_fallback_pipeline.py",
         "08_scripts/reporting/build_phase129_proxy_classifier_report.py"
       ],
       "runtime_evidence": null,
@@ -23911,7 +23554,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase129_official_source_fallback_pipeline.py",
         "08_scripts/lib/smr_phase129_access_route_planner.py",
         "08_scripts/reporting/build_phase129_sec_edgar_fallback_report.py"
       ],
@@ -23928,7 +23570,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase129_official_source_fallback_pipeline.py",
         "08_scripts/lib/smr_phase129_access_route_planner.py",
         "08_scripts/lib/smr_phase129_equivalence_scorer.py",
         "08_scripts/reporting/build_phase129_third_party_equivalent_registry_report.py"
@@ -23946,7 +23587,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase129_official_source_fallback_pipeline.py",
         "08_scripts/lib/smr_phase129_access_route_planner.py",
         "08_scripts/reporting/build_phase129_transcript_fallback_report.py"
       ],
@@ -23969,7 +23609,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase130_cninfo_resolution_pipeline.py",
         "08_scripts/lib/smr_phase130_source_equivalence_scorer.py",
         "08_scripts/lib/smr_phase131_alternative_source_registry_loader.py",
         "08_scripts/reporting/build_phase130_alternative_disclosure_registry_report.py"
@@ -23987,7 +23626,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase130_cninfo_resolution_pipeline.py",
         "08_scripts/reporting/build_phase130_backlog_update_report.py",
         "08_scripts/reporting/build_phase130_dashboard.py"
       ],
@@ -24004,7 +23642,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase130_cninfo_resolution_pipeline.py",
         "08_scripts/reporting/build_phase130_cannot_conclude_guard_report.py",
         "08_scripts/reporting/build_phase130_dashboard.py"
       ],
@@ -24021,7 +23658,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase130_cninfo_resolution_pipeline.py",
         "08_scripts/lib/smr_phase130_cninfo_verification_runner.py",
         "08_scripts/reporting/build_phase130_cninfo_candidate_registry_report.py"
       ],
@@ -24042,7 +23678,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase130_cninfo_resolution_pipeline.py",
         "08_scripts/reporting/build_phase130_cninfo_verification_runner_report.py"
       ],
       "runtime_evidence": null,
@@ -24058,7 +23693,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase130_cninfo_resolution_pipeline.py",
         "08_scripts/lib/smr_phase130_alternative_disclosure_registry.py",
         "08_scripts/lib/smr_phase130_known_url_validator.py",
         "08_scripts/reporting/build_phase130_company_ir_loader_report.py"
@@ -24081,7 +23715,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase130_cninfo_resolution_pipeline.py",
         "08_scripts/reporting/build_phase130_config_report.py"
       ],
       "runtime_evidence": null,
@@ -24101,7 +23734,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase130_cninfo_resolution_pipeline.py",
         "08_scripts/lib/smr_phase130_gap_closeout_report.py",
         "08_scripts/lib/smr_phase130_resolution_board.py",
         "08_scripts/lib/smr_phase130_watchlist_status_update.py",
@@ -24121,7 +23753,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase130_cninfo_resolution_pipeline.py",
         "08_scripts/reporting/build_phase130_domain_registry_report.py"
       ],
       "runtime_evidence": null,
@@ -24142,7 +23773,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase130_cninfo_resolution_pipeline.py",
         "08_scripts/lib/smr_phase130_integration_update.py",
         "08_scripts/lib/smr_phase130_manual_action_template.py",
         "08_scripts/lib/smr_phase130_resolution_board.py",
@@ -24164,7 +23794,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase130_cninfo_resolution_pipeline.py",
         "08_scripts/lib/smr_phase130_resolution_decision_report.py",
         "08_scripts/reporting/build_phase130_hard_data_readiness_report.py"
       ],
@@ -24181,7 +23810,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase130_cninfo_resolution_pipeline.py",
         "08_scripts/reporting/build_phase130_historical_blocker_loader_report.py"
       ],
       "runtime_evidence": null,
@@ -24197,7 +23825,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase130_cninfo_resolution_pipeline.py",
         "08_scripts/lib/smr_phase130_gap_closeout_report.py",
         "08_scripts/reporting/build_phase130_identity_evidence_pack_report.py"
       ],
@@ -24218,7 +23845,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase130_cninfo_resolution_pipeline.py",
         "08_scripts/reporting/build_phase130_integration_update_report.py"
       ],
       "runtime_evidence": null,
@@ -24234,7 +23860,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase130_cninfo_resolution_pipeline.py",
         "08_scripts/lib/smr_phase130_alternative_disclosure_registry.py",
         "08_scripts/reporting/build_phase130_irm_interaction_fallback_report.py"
       ],
@@ -24256,7 +23881,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase130_cninfo_resolution_pipeline.py",
         "08_scripts/reporting/build_phase130_known_url_validator_report.py"
       ],
       "runtime_evidence": null,
@@ -24277,7 +23901,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase130_cninfo_resolution_pipeline.py",
         "08_scripts/reporting/build_phase130_manual_action_template_report.py"
       ],
       "runtime_evidence": null,
@@ -24293,7 +23916,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase130_cninfo_resolution_pipeline.py",
         "08_scripts/lib/smr_phase130_manual_action_template.py",
         "08_scripts/reporting/build_phase130_manual_url_template_report.py"
       ],
@@ -24316,7 +23938,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase130_cninfo_resolution_pipeline.py",
         "08_scripts/reporting/build_phase130_resolution_board_report.py"
       ],
       "runtime_evidence": null,
@@ -24332,7 +23953,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase130_cninfo_resolution_pipeline.py",
         "08_scripts/reporting/build_phase130_resolution_brief_report.py"
       ],
       "runtime_evidence": null,
@@ -24353,7 +23973,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase130_cninfo_resolution_pipeline.py",
         "08_scripts/lib/smr_phase130_resolution_board.py",
         "08_scripts/lib/smr_phase131_phase130_resolution_loader.py",
         "08_scripts/reporting/build_phase130_dashboard.py",
@@ -24372,7 +23991,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase130_cninfo_resolution_pipeline.py",
         "08_scripts/jobs/write_phase130_resolution_memory.py",
         "08_scripts/reporting/build_phase130_resolution_memory_report.py"
       ],
@@ -24393,7 +24011,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase130_cninfo_resolution_pipeline.py",
         "08_scripts/lib/smr_phase130_disclosure_coverage_classifier.py",
         "08_scripts/reporting/build_phase130_source_equivalence_scorer_report.py"
       ],
@@ -24410,7 +24027,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase130_cninfo_resolution_pipeline.py",
         "08_scripts/lib/smr_phase130_alternative_disclosure_registry.py",
         "08_scripts/lib/smr_phase130_known_url_validator.py",
         "08_scripts/reporting/build_phase130_szse_disclosure_fallback_report.py"
@@ -24432,7 +24048,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase130_cninfo_resolution_pipeline.py",
         "08_scripts/reporting/build_phase130_watchlist_status_update_report.py"
       ],
       "runtime_evidence": null,
@@ -24448,7 +24063,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase131_alternative_source_integration_pipeline.py",
         "08_scripts/reporting/build_phase131_alternative_source_normalizer_report.py"
       ],
       "runtime_evidence": null,
@@ -24464,7 +24078,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase131_alternative_source_integration_pipeline.py",
         "08_scripts/reporting/build_phase131_alternative_source_quality_gate_report.py"
       ],
       "runtime_evidence": null,
@@ -24484,7 +24097,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase131_alternative_source_integration_pipeline.py",
         "08_scripts/reporting/build_phase131_alternative_source_registry_loader_report.py"
       ],
       "runtime_evidence": null,
@@ -24500,7 +24112,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase131_alternative_source_integration_pipeline.py",
         "08_scripts/reporting/build_phase131_backlog_update_report.py",
         "08_scripts/reporting/build_phase131_dashboard.py"
       ],
@@ -24517,7 +24128,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase131_alternative_source_integration_pipeline.py",
         "08_scripts/reporting/build_phase131_cannot_conclude_guard_report.py",
         "08_scripts/reporting/build_phase131_dashboard.py"
       ],
@@ -24534,7 +24144,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase131_alternative_source_integration_pipeline.py",
         "08_scripts/lib/smr_phase131_known_url_integration_loader.py",
         "08_scripts/reporting/build_phase131_company_ir_adapter_report.py"
       ],
@@ -24556,7 +24165,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase131_alternative_source_integration_pipeline.py",
         "08_scripts/reporting/build_phase131_config_report.py"
       ],
       "runtime_evidence": null,
@@ -24572,7 +24180,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase131_alternative_source_integration_pipeline.py",
         "08_scripts/reporting/build_phase131_daily_brief_integration_update_report.py"
       ],
       "runtime_evidence": null,
@@ -24588,7 +24195,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase131_alternative_source_integration_pipeline.py",
         "08_scripts/reporting/build_phase131_domain_registry_report.py"
       ],
       "runtime_evidence": null,
@@ -24604,7 +24210,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase131_alternative_source_integration_pipeline.py",
         "08_scripts/lib/smr_phase131_known_url_integration_loader.py",
         "08_scripts/reporting/build_phase131_eastmoney_financial_adapter_report.py"
       ],
@@ -24621,7 +24226,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase131_alternative_source_integration_pipeline.py",
         "08_scripts/lib/smr_phase131_integration_decision_builder.py",
         "08_scripts/reporting/build_phase131_hard_data_integration_update_report.py"
       ],
@@ -24638,7 +24242,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase131_alternative_source_integration_pipeline.py",
         "08_scripts/reporting/build_phase131_health_gap_register_update_report.py"
       ],
       "runtime_evidence": null,
@@ -24659,7 +24262,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase131_alternative_source_integration_pipeline.py",
         "08_scripts/lib/smr_phase131_integration_brief.py",
         "08_scripts/reporting/build_phase131_integration_board_report.py"
       ],
@@ -24680,7 +24282,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase131_alternative_source_integration_pipeline.py",
         "08_scripts/reporting/build_phase131_integration_brief_report.py"
       ],
       "runtime_evidence": null,
@@ -24701,7 +24302,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase131_alternative_source_integration_pipeline.py",
         "08_scripts/lib/smr_phase131_integration_board.py",
         "08_scripts/reporting/build_phase131_dashboard.py",
         "08_scripts/reporting/build_phase131_integration_decision_builder_report.py"
@@ -24719,7 +24319,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase131_alternative_source_integration_pipeline.py",
         "08_scripts/jobs/write_phase131_integration_memory.py",
         "08_scripts/reporting/build_phase131_integration_memory_report.py"
       ],
@@ -24736,7 +24335,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase131_alternative_source_integration_pipeline.py",
         "08_scripts/lib/smr_phase131_known_url_integration_loader.py",
         "08_scripts/reporting/build_phase131_irm_interaction_adapter_report.py"
       ],
@@ -24760,7 +24358,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase131_alternative_source_integration_pipeline.py",
         "08_scripts/reporting/build_phase131_known_url_integration_loader_report.py"
       ],
       "runtime_evidence": null,
@@ -24782,7 +24379,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase131_alternative_source_integration_pipeline.py",
         "08_scripts/reporting/build_phase131_phase130_resolution_loader_report.py"
       ],
       "runtime_evidence": null,
@@ -24798,7 +24394,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase131_alternative_source_integration_pipeline.py",
         "08_scripts/reporting/build_phase131_signal_effectiveness_update_report.py"
       ],
       "runtime_evidence": null,
@@ -24814,7 +24409,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase131_alternative_source_integration_pipeline.py",
         "08_scripts/lib/smr_phase131_known_url_integration_loader.py",
         "08_scripts/reporting/build_phase131_szse_disclosure_adapter_report.py"
       ],
@@ -24831,7 +24425,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase131_alternative_source_integration_pipeline.py",
         "08_scripts/lib/smr_phase131_integration_board.py",
         "08_scripts/lib/smr_phase131_integration_decision_builder.py",
         "08_scripts/lib/smr_phase132_phase131_coverage_loader.py",
@@ -24851,7 +24444,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase132_valuation_hardening_pipeline.py",
         "08_scripts/reporting/build_phase132_akshare_star_valuation_adapter_report.py"
       ],
       "runtime_evidence": null,
@@ -24867,7 +24459,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase132_valuation_hardening_pipeline.py",
         "08_scripts/reporting/build_phase132_alternative_valuation_metric_builder_report.py"
       ],
       "runtime_evidence": null,
@@ -24883,7 +24474,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase132_valuation_hardening_pipeline.py",
         "08_scripts/reporting/build_phase132_backlog_update_report.py",
         "08_scripts/reporting/build_phase132_dashboard.py"
       ],
@@ -24900,7 +24490,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase132_valuation_hardening_pipeline.py",
         "08_scripts/reporting/build_phase132_cannot_conclude_guard_report.py",
         "08_scripts/reporting/build_phase132_dashboard.py"
       ],
@@ -24922,7 +24511,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase132_valuation_hardening_pipeline.py",
         "08_scripts/reporting/build_phase132_config_report.py"
       ],
       "runtime_evidence": null,
@@ -24938,7 +24526,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase132_valuation_hardening_pipeline.py",
         "08_scripts/reporting/build_phase132_daily_brief_valuation_update_report.py"
       ],
       "runtime_evidence": null,
@@ -24954,7 +24541,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase132_valuation_hardening_pipeline.py",
         "08_scripts/reporting/build_phase132_domain_registry_report.py"
       ],
       "runtime_evidence": null,
@@ -24970,7 +24556,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase132_valuation_hardening_pipeline.py",
         "08_scripts/reporting/build_phase132_eastmoney_valuation_adapter_report.py"
       ],
       "runtime_evidence": null,
@@ -24986,7 +24571,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase132_valuation_hardening_pipeline.py",
         "08_scripts/reporting/build_phase132_ev_ebitda_input_builder_report.py"
       ],
       "runtime_evidence": null,
@@ -25002,7 +24586,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase132_valuation_hardening_pipeline.py",
         "08_scripts/reporting/build_phase132_financial_metric_dependency_resolver_report.py"
       ],
       "runtime_evidence": null,
@@ -25018,7 +24601,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase132_valuation_hardening_pipeline.py",
         "08_scripts/lib/smr_phase132_valuation_integration_board.py",
         "08_scripts/lib/smr_phase133_phase132_coverage_loader.py",
         "08_scripts/reporting/build_phase132_dashboard.py",
@@ -25037,7 +24619,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase132_valuation_hardening_pipeline.py",
         "08_scripts/reporting/build_phase132_hard_data_valuation_update_report.py"
       ],
       "runtime_evidence": null,
@@ -25053,7 +24634,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase132_valuation_hardening_pipeline.py",
         "08_scripts/reporting/build_phase132_historical_valuation_gap_loader_report.py"
       ],
       "runtime_evidence": null,
@@ -25073,7 +24653,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase132_valuation_hardening_pipeline.py",
         "08_scripts/reporting/build_phase132_phase131_coverage_loader_report.py"
       ],
       "runtime_evidence": null,
@@ -25089,7 +24668,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase132_valuation_hardening_pipeline.py",
         "08_scripts/reporting/build_phase132_ps_ratio_input_builder_report.py"
       ],
       "runtime_evidence": null,
@@ -25105,7 +24683,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase132_valuation_hardening_pipeline.py",
         "08_scripts/reporting/build_phase132_signal_effectiveness_valuation_update_report.py"
       ],
       "runtime_evidence": null,
@@ -25121,7 +24698,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase132_valuation_hardening_pipeline.py",
         "08_scripts/reporting/build_phase132_third_party_valuation_fallback_report.py"
       ],
       "runtime_evidence": null,
@@ -25137,7 +24713,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase132_valuation_hardening_pipeline.py",
         "08_scripts/lib/smr_phase132_valuation_integration_board.py",
         "08_scripts/reporting/build_phase132_valuation_coverage_classifier_report.py"
       ],
@@ -25159,7 +24734,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase132_valuation_hardening_pipeline.py",
         "08_scripts/lib/smr_phase132_valuation_integration_brief.py",
         "08_scripts/reporting/build_phase132_valuation_integration_board_report.py"
       ],
@@ -25180,7 +24754,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase132_valuation_hardening_pipeline.py",
         "08_scripts/reporting/build_phase132_valuation_integration_brief_report.py"
       ],
       "runtime_evidence": null,
@@ -25196,7 +24769,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase132_valuation_hardening_pipeline.py",
         "08_scripts/jobs/write_phase132_valuation_memory.py",
         "08_scripts/reporting/build_phase132_valuation_memory_report.py"
       ],
@@ -25213,7 +24785,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase132_valuation_hardening_pipeline.py",
         "08_scripts/reporting/build_phase132_valuation_quality_gate_report.py"
       ],
       "runtime_evidence": null,
@@ -25229,7 +24800,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase132_valuation_hardening_pipeline.py",
         "08_scripts/reporting/build_phase132_valuation_source_normalizer_report.py"
       ],
       "runtime_evidence": null,
@@ -25245,7 +24815,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase132_valuation_hardening_pipeline.py",
         "08_scripts/reporting/build_phase132_valuation_source_registry_report.py"
       ],
       "runtime_evidence": null,
@@ -25261,7 +24830,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase132_valuation_hardening_pipeline.py",
         "08_scripts/lib/smr_phase133_phase132_coverage_loader.py",
         "08_scripts/reporting/build_phase132_watchlist_valuation_update_report.py"
       ],
@@ -25278,7 +24846,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase133_seasonal_analytics_pipeline.py",
         "08_scripts/reporting/build_phase133_backlog_update_report.py",
         "08_scripts/reporting/build_phase133_dashboard.py"
       ],
@@ -25295,7 +24862,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase133_seasonal_analytics_pipeline.py",
         "08_scripts/reporting/build_phase133_cannot_conclude_guard_report.py",
         "08_scripts/reporting/build_phase133_dashboard.py"
       ],
@@ -25317,7 +24883,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase133_seasonal_analytics_pipeline.py",
         "08_scripts/reporting/build_phase133_config_report.py"
       ],
       "runtime_evidence": null,
@@ -25333,7 +24898,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase133_seasonal_analytics_pipeline.py",
         "08_scripts/lib/smr_phase133_seasonal_analytics_board.py",
         "08_scripts/reporting/build_phase133_cross_market_comparison_builder_report.py"
       ],
@@ -25350,7 +24914,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase133_seasonal_analytics_pipeline.py",
         "08_scripts/reporting/build_phase133_domain_registry_report.py"
       ],
       "runtime_evidence": null,
@@ -25366,7 +24929,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase133_seasonal_analytics_pipeline.py",
         "08_scripts/lib/smr_phase133_seasonal_analytics_board.py",
         "08_scripts/reporting/build_phase133_financial_trend_panel_builder_report.py"
       ],
@@ -25383,7 +24945,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase133_seasonal_analytics_pipeline.py",
         "08_scripts/reporting/build_phase133_gap_risk_panel_builder_report.py"
       ],
       "runtime_evidence": null,
@@ -25399,7 +24960,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase133_seasonal_analytics_pipeline.py",
         "08_scripts/reporting/build_phase133_opportunity_catalyst_panel_builder_report.py"
       ],
       "runtime_evidence": null,
@@ -25415,7 +24975,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase133_seasonal_analytics_pipeline.py",
         "08_scripts/reporting/build_phase133_owner_action_queue_builder_report.py"
       ],
       "runtime_evidence": null,
@@ -25436,7 +24995,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase133_seasonal_analytics_pipeline.py",
         "08_scripts/reporting/build_phase133_phase132_coverage_loader_report.py"
       ],
       "runtime_evidence": null,
@@ -25458,7 +25016,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase133_seasonal_analytics_pipeline.py",
         "08_scripts/lib/smr_phase133_seasonal_dashboard_exporter.py",
         "08_scripts/reporting/build_phase133_dashboard.py",
         "08_scripts/reporting/build_phase133_seasonal_analytics_board_report.py"
@@ -25478,7 +25035,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase133_seasonal_analytics_pipeline.py",
         "08_scripts/lib/smr_phase133_seasonal_dashboard_exporter.py",
         "08_scripts/reporting/build_phase133_seasonal_analytics_brief_report.py"
       ],
@@ -25500,7 +25056,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase133_seasonal_analytics_pipeline.py",
         "08_scripts/reporting/build_phase133_seasonal_dashboard_exporter_report.py"
       ],
       "runtime_evidence": null,
@@ -25516,7 +25071,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase133_seasonal_analytics_pipeline.py",
         "08_scripts/jobs/write_phase133_seasonal_memory.py",
         "08_scripts/reporting/build_phase133_seasonal_memory_report.py"
       ],
@@ -25533,7 +25087,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase133_seasonal_analytics_pipeline.py",
         "08_scripts/reporting/build_phase133_seasonal_period_registry_report.py"
       ],
       "runtime_evidence": null,
@@ -25549,7 +25102,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase133_seasonal_analytics_pipeline.py",
         "08_scripts/reporting/build_phase133_signal_effectiveness_panel_builder_report.py"
       ],
       "runtime_evidence": null,
@@ -25565,7 +25117,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase133_seasonal_analytics_pipeline.py",
         "08_scripts/reporting/build_phase133_source_coverage_panel_builder_report.py"
       ],
       "runtime_evidence": null,
@@ -25581,7 +25132,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase133_seasonal_analytics_pipeline.py",
         "08_scripts/lib/smr_phase133_ticker_seasonal_profile_builder.py",
         "08_scripts/reporting/build_phase133_ticker_financial_valuation_loader_report.py"
       ],
@@ -25602,7 +25152,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase133_seasonal_analytics_pipeline.py",
         "08_scripts/reporting/build_phase133_ticker_seasonal_profile_builder_report.py"
       ],
       "runtime_evidence": null,
@@ -25618,7 +25167,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase133_seasonal_analytics_pipeline.py",
         "08_scripts/lib/smr_phase133_seasonal_analytics_board.py",
         "08_scripts/reporting/build_phase133_valuation_trend_panel_builder_report.py"
       ],
@@ -25635,7 +25183,6 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase133_seasonal_analytics_pipeline.py",
         "08_scripts/reporting/build_phase133_watchlist_status_panel_builder_report.py"
       ],
       "runtime_evidence": null,
@@ -25660,10 +25207,8 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase134_personal_research_console_pipeline.py",
         "08_scripts/reporting/build_phase134_artifact_link_index_report.py",
-        "08_scripts/reporting/build_phase134_console_json_export.py",
-        "tests/test_phase134_all.py"
+        "08_scripts/reporting/build_phase134_console_json_export.py"
       ],
       "runtime_evidence": null,
       "size": 1360,
@@ -25678,10 +25223,8 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase134_personal_research_console_pipeline.py",
         "08_scripts/reporting/build_phase134_backlog_update_report.py",
-        "08_scripts/reporting/build_phase134_dashboard.py",
-        "tests/test_phase134_all.py"
+        "08_scripts/reporting/build_phase134_dashboard.py"
       ],
       "runtime_evidence": null,
       "size": 535,
@@ -25696,11 +25239,9 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase134_personal_research_console_pipeline.py",
         "08_scripts/reporting/build_phase134_cannot_conclude_guard_report.py",
         "08_scripts/reporting/build_phase134_console_json_export.py",
-        "08_scripts/reporting/build_phase134_dashboard.py",
-        "tests/test_phase134_all.py"
+        "08_scripts/reporting/build_phase134_dashboard.py"
       ],
       "runtime_evidence": null,
       "size": 1594,
@@ -25717,9 +25258,7 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase134_personal_research_console_pipeline.py",
-        "08_scripts/reporting/build_phase134_config_report.py",
-        "tests/test_phase134_all.py"
+        "08_scripts/reporting/build_phase134_config_report.py"
       ],
       "runtime_evidence": null,
       "size": 230,
@@ -25734,11 +25273,9 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase134_personal_research_console_pipeline.py",
         "08_scripts/reporting/build_phase134_console_data_aggregator_report.py",
         "08_scripts/reporting/build_phase134_console_json_export.py",
-        "08_scripts/reporting/build_phase134_dashboard.py",
-        "tests/test_phase134_all.py"
+        "08_scripts/reporting/build_phase134_dashboard.py"
       ],
       "runtime_evidence": null,
       "size": 784,
@@ -25753,10 +25290,8 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase134_personal_research_console_pipeline.py",
         "08_scripts/jobs/write_phase134_console_memory.py",
-        "08_scripts/reporting/build_phase134_console_memory_report.py",
-        "tests/test_phase134_all.py"
+        "08_scripts/reporting/build_phase134_console_memory_report.py"
       ],
       "runtime_evidence": null,
       "size": 762,
@@ -25771,13 +25306,11 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase134_personal_research_console_pipeline.py",
         "08_scripts/reporting/build_phase134_console_html_skeleton.py",
         "08_scripts/reporting/build_phase134_console_json_export.py",
         "08_scripts/reporting/build_phase134_console_markdown_report.py",
         "08_scripts/reporting/build_phase134_console_quality_gate_report.py",
-        "08_scripts/reporting/build_phase134_dashboard.py",
-        "tests/test_phase134_all.py"
+        "08_scripts/reporting/build_phase134_dashboard.py"
       ],
       "runtime_evidence": null,
       "size": 1740,
@@ -25792,10 +25325,8 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase134_personal_research_console_pipeline.py",
         "08_scripts/reporting/build_phase134_console_json_export.py",
-        "08_scripts/reporting/build_phase134_daily_brief_preview_report.py",
-        "tests/test_phase134_all.py"
+        "08_scripts/reporting/build_phase134_daily_brief_preview_report.py"
       ],
       "runtime_evidence": null,
       "size": 691,
@@ -25810,9 +25341,7 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase134_personal_research_console_pipeline.py",
-        "08_scripts/reporting/build_phase134_domain_registry_report.py",
-        "tests/test_phase134_all.py"
+        "08_scripts/reporting/build_phase134_domain_registry_report.py"
       ],
       "runtime_evidence": null,
       "size": 1880,
@@ -25827,10 +25356,8 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase134_personal_research_console_pipeline.py",
         "08_scripts/reporting/build_phase134_console_json_export.py",
-        "08_scripts/reporting/build_phase134_gap_risk_center_report.py",
-        "tests/test_phase134_all.py"
+        "08_scripts/reporting/build_phase134_gap_risk_center_report.py"
       ],
       "runtime_evidence": null,
       "size": 1038,
@@ -25845,11 +25372,9 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase134_personal_research_console_pipeline.py",
         "08_scripts/reporting/build_phase134_console_json_export.py",
         "08_scripts/reporting/build_phase134_console_markdown_report.py",
-        "08_scripts/reporting/build_phase134_market_section_builder_report.py",
-        "tests/test_phase134_all.py"
+        "08_scripts/reporting/build_phase134_market_section_builder_report.py"
       ],
       "runtime_evidence": null,
       "size": 729,
@@ -25864,10 +25389,8 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase134_personal_research_console_pipeline.py",
         "08_scripts/reporting/build_phase134_console_json_export.py",
-        "08_scripts/reporting/build_phase134_memory_feedback_center_report.py",
-        "tests/test_phase134_all.py"
+        "08_scripts/reporting/build_phase134_memory_feedback_center_report.py"
       ],
       "runtime_evidence": null,
       "size": 830,
@@ -25882,10 +25405,8 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase134_personal_research_console_pipeline.py",
         "08_scripts/reporting/build_phase134_console_json_export.py",
-        "08_scripts/reporting/build_phase134_opportunity_catalyst_center_report.py",
-        "tests/test_phase134_all.py"
+        "08_scripts/reporting/build_phase134_opportunity_catalyst_center_report.py"
       ],
       "runtime_evidence": null,
       "size": 1158,
@@ -25900,11 +25421,9 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase134_personal_research_console_pipeline.py",
         "08_scripts/reporting/build_phase134_console_json_export.py",
         "08_scripts/reporting/build_phase134_console_markdown_report.py",
-        "08_scripts/reporting/build_phase134_owner_action_center_report.py",
-        "tests/test_phase134_all.py"
+        "08_scripts/reporting/build_phase134_owner_action_center_report.py"
       ],
       "runtime_evidence": null,
       "size": 1195,
@@ -25919,10 +25438,8 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase134_personal_research_console_pipeline.py",
         "08_scripts/reporting/build_phase134_dashboard.py",
-        "08_scripts/reporting/build_phase134_phase133_dashboard_loader_report.py",
-        "tests/test_phase134_all.py"
+        "08_scripts/reporting/build_phase134_phase133_dashboard_loader_report.py"
       ],
       "runtime_evidence": null,
       "size": 364,
@@ -25937,11 +25454,9 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase134_personal_research_console_pipeline.py",
         "08_scripts/reporting/build_phase134_console_json_export.py",
         "08_scripts/reporting/build_phase134_console_markdown_report.py",
-        "08_scripts/reporting/build_phase134_research_priority_builder_report.py",
-        "tests/test_phase134_all.py"
+        "08_scripts/reporting/build_phase134_research_priority_builder_report.py"
       ],
       "runtime_evidence": null,
       "size": 1518,
@@ -25956,10 +25471,8 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase134_personal_research_console_pipeline.py",
         "08_scripts/reporting/build_phase134_console_json_export.py",
-        "08_scripts/reporting/build_phase134_seasonal_insight_center_report.py",
-        "tests/test_phase134_all.py"
+        "08_scripts/reporting/build_phase134_seasonal_insight_center_report.py"
       ],
       "runtime_evidence": null,
       "size": 996,
@@ -25974,10 +25487,8 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase134_personal_research_console_pipeline.py",
         "08_scripts/reporting/build_phase134_console_json_export.py",
-        "08_scripts/reporting/build_phase134_source_signal_quality_center_report.py",
-        "tests/test_phase134_all.py"
+        "08_scripts/reporting/build_phase134_source_signal_quality_center_report.py"
       ],
       "runtime_evidence": null,
       "size": 1421,
@@ -25992,11 +25503,9 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase134_personal_research_console_pipeline.py",
         "08_scripts/reporting/build_phase134_console_json_export.py",
         "08_scripts/reporting/build_phase134_console_markdown_report.py",
-        "08_scripts/reporting/build_phase134_system_health_snapshot_report.py",
-        "tests/test_phase134_all.py"
+        "08_scripts/reporting/build_phase134_system_health_snapshot_report.py"
       ],
       "runtime_evidence": null,
       "size": 740,
@@ -26011,12 +25520,10 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase134_personal_research_console_pipeline.py",
         "08_scripts/reporting/build_phase134_console_html_skeleton.py",
         "08_scripts/reporting/build_phase134_console_json_export.py",
         "08_scripts/reporting/build_phase134_console_markdown_report.py",
-        "08_scripts/reporting/build_phase134_ticker_card_builder_report.py",
-        "tests/test_phase134_all.py"
+        "08_scripts/reporting/build_phase134_ticker_card_builder_report.py"
       ],
       "runtime_evidence": null,
       "size": 3177,
@@ -26031,10 +25538,8 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase134_personal_research_console_pipeline.py",
         "08_scripts/reporting/build_phase134_console_json_export.py",
-        "08_scripts/reporting/build_phase134_watchlist_status_center_report.py",
-        "tests/test_phase134_all.py"
+        "08_scripts/reporting/build_phase134_watchlist_status_center_report.py"
       ],
       "runtime_evidence": null,
       "size": 1525,
@@ -26049,10 +25554,8 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase135_owner_feedback_integration.py",
         "08_scripts/reporting/build_phase135_backlog_update_report.py",
-        "08_scripts/reporting/build_phase135_dashboard.py",
-        "tests/test_phase135_all.py"
+        "08_scripts/reporting/build_phase135_dashboard.py"
       ],
       "runtime_evidence": null,
       "size": 569,
@@ -26067,9 +25570,7 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase135_owner_feedback_integration.py",
-        "08_scripts/reporting/build_phase135_brief_layout_feedback_adapter_report.py",
-        "tests/test_phase135_all.py"
+        "08_scripts/reporting/build_phase135_brief_layout_feedback_adapter_report.py"
       ],
       "runtime_evidence": null,
       "size": 695,
@@ -26084,10 +25585,8 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase135_owner_feedback_integration.py",
         "08_scripts/reporting/build_phase135_cannot_conclude_guard_report.py",
-        "08_scripts/reporting/build_phase135_dashboard.py",
-        "tests/test_phase135_all.py"
+        "08_scripts/reporting/build_phase135_dashboard.py"
       ],
       "runtime_evidence": null,
       "size": 1518,
@@ -26107,9 +25606,7 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase135_owner_feedback_integration.py",
-        "08_scripts/reporting/build_phase135_config_report.py",
-        "tests/test_phase135_all.py"
+        "08_scripts/reporting/build_phase135_config_report.py"
       ],
       "runtime_evidence": null,
       "size": 228,
@@ -26124,9 +25621,7 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase135_owner_feedback_integration.py",
-        "08_scripts/reporting/build_phase135_console_feedback_schema_report.py",
-        "tests/test_phase135_all.py"
+        "08_scripts/reporting/build_phase135_console_feedback_schema_report.py"
       ],
       "runtime_evidence": null,
       "size": 1230,
@@ -26141,8 +25636,7 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/reporting/build_phase135_console_feedback_template_report.py",
-        "tests/test_phase135_all.py"
+        "08_scripts/reporting/build_phase135_console_feedback_template_report.py"
       ],
       "runtime_evidence": null,
       "size": 1244,
@@ -26157,10 +25651,8 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase135_owner_feedback_integration.py",
         "08_scripts/lib/smr_phase135_feedback_validator.py",
-        "08_scripts/reporting/build_phase135_daily_brief_feedback_intake_report.py",
-        "tests/test_phase135_all.py"
+        "08_scripts/reporting/build_phase135_daily_brief_feedback_intake_report.py"
       ],
       "runtime_evidence": null,
       "size": 601,
@@ -26175,9 +25667,7 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase135_owner_feedback_integration.py",
-        "08_scripts/reporting/build_phase135_deep_dive_task_feedback_adapter_report.py",
-        "tests/test_phase135_all.py"
+        "08_scripts/reporting/build_phase135_deep_dive_task_feedback_adapter_report.py"
       ],
       "runtime_evidence": null,
       "size": 453,
@@ -26192,9 +25682,7 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase135_owner_feedback_integration.py",
-        "08_scripts/reporting/build_phase135_domain_registry_report.py",
-        "tests/test_phase135_all.py"
+        "08_scripts/reporting/build_phase135_domain_registry_report.py"
       ],
       "runtime_evidence": null,
       "size": 2308,
@@ -26209,9 +25697,7 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase135_owner_feedback_integration.py",
-        "08_scripts/reporting/build_phase135_feedback_entity_linker_report.py",
-        "tests/test_phase135_all.py"
+        "08_scripts/reporting/build_phase135_feedback_entity_linker_report.py"
       ],
       "runtime_evidence": null,
       "size": 1513,
@@ -26226,9 +25712,7 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase135_owner_feedback_integration.py",
-        "08_scripts/reporting/build_phase135_feedback_impact_board_report.py",
-        "tests/test_phase135_all.py"
+        "08_scripts/reporting/build_phase135_feedback_impact_board_report.py"
       ],
       "runtime_evidence": null,
       "size": 1366,
@@ -26259,8 +25743,7 @@
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
         "08_scripts/jobs/write_phase135_feedback_integration_memory.py",
-        "08_scripts/reporting/build_phase135_feedback_integration_memory_report.py",
-        "tests/test_phase135_all.py"
+        "08_scripts/reporting/build_phase135_feedback_integration_memory_report.py"
       ],
       "runtime_evidence": null,
       "size": 926,
@@ -26282,10 +25765,8 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase135_owner_feedback_integration.py",
         "08_scripts/reporting/build_phase135_dashboard.py",
-        "08_scripts/reporting/build_phase135_feedback_validator_report.py",
-        "tests/test_phase135_all.py"
+        "08_scripts/reporting/build_phase135_feedback_validator_report.py"
       ],
       "runtime_evidence": null,
       "size": 2419,
@@ -26300,10 +25781,8 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase135_owner_feedback_integration.py",
         "08_scripts/lib/smr_phase135_feedback_validator.py",
-        "08_scripts/reporting/build_phase135_gap_risk_feedback_intake_report.py",
-        "tests/test_phase135_all.py"
+        "08_scripts/reporting/build_phase135_gap_risk_feedback_intake_report.py"
       ],
       "runtime_evidence": null,
       "size": 609,
@@ -26318,10 +25797,8 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase135_owner_feedback_integration.py",
         "08_scripts/lib/smr_phase135_feedback_validator.py",
-        "08_scripts/reporting/build_phase135_owner_action_feedback_intake_report.py",
-        "tests/test_phase135_all.py"
+        "08_scripts/reporting/build_phase135_owner_action_feedback_intake_report.py"
       ],
       "runtime_evidence": null,
       "size": 598,
@@ -26336,10 +25813,8 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase135_owner_feedback_integration.py",
         "08_scripts/reporting/build_phase135_dashboard.py",
-        "08_scripts/reporting/build_phase135_phase134_console_loader_report.py",
-        "tests/test_phase135_all.py"
+        "08_scripts/reporting/build_phase135_phase134_console_loader_report.py"
       ],
       "runtime_evidence": null,
       "size": 422,
@@ -26354,9 +25829,7 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase135_owner_feedback_integration.py",
-        "08_scripts/reporting/build_phase135_research_loop_tuning_recommendation_report.py",
-        "tests/test_phase135_all.py"
+        "08_scripts/reporting/build_phase135_research_loop_tuning_recommendation_report.py"
       ],
       "runtime_evidence": null,
       "size": 1191,
@@ -26371,9 +25844,7 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase135_owner_feedback_integration.py",
-        "08_scripts/reporting/build_phase135_research_priority_feedback_adapter_report.py",
-        "tests/test_phase135_all.py"
+        "08_scripts/reporting/build_phase135_research_priority_feedback_adapter_report.py"
       ],
       "runtime_evidence": null,
       "size": 840,
@@ -26388,10 +25859,8 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase135_owner_feedback_integration.py",
         "08_scripts/lib/smr_phase135_feedback_validator.py",
-        "08_scripts/reporting/build_phase135_seasonal_insight_feedback_intake_report.py",
-        "tests/test_phase135_all.py"
+        "08_scripts/reporting/build_phase135_seasonal_insight_feedback_intake_report.py"
       ],
       "runtime_evidence": null,
       "size": 634,
@@ -26406,10 +25875,8 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase135_owner_feedback_integration.py",
         "08_scripts/lib/smr_phase135_feedback_validator.py",
-        "08_scripts/reporting/build_phase135_source_signal_feedback_intake_report.py",
-        "tests/test_phase135_all.py"
+        "08_scripts/reporting/build_phase135_source_signal_feedback_intake_report.py"
       ],
       "runtime_evidence": null,
       "size": 1006,
@@ -26424,9 +25891,7 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase135_owner_feedback_integration.py",
-        "08_scripts/reporting/build_phase135_source_signal_weight_feedback_adapter_report.py",
-        "tests/test_phase135_all.py"
+        "08_scripts/reporting/build_phase135_source_signal_weight_feedback_adapter_report.py"
       ],
       "runtime_evidence": null,
       "size": 624,
@@ -26441,10 +25906,8 @@
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
       "referenced_by": [
-        "08_scripts/jobs/run_phase135_owner_feedback_integration.py",
         "08_scripts/lib/smr_phase135_feedback_validator.py",
-        "08_scripts/reporting/build_phase135_ticker_card_feedback_intake_report.py",
-        "tests/test_phase135_all.py"
+        "08_scripts/reporting/build_phase135_ticker_card_feedback_intake_report.py"
       ],
       "runtime_evidence": null,
       "size": 985,
@@ -88923,6 +88386,329 @@
       "category": "FREEZE",
       "imports": [
         "json",
+        "os",
+        "pathlib",
+        "smr_phase127_acceptance",
+        "smr_phase127_artifact_index",
+        "smr_phase127_backlog",
+        "smr_phase127_blocker_register",
+        "smr_phase127_board",
+        "smr_phase127_brief",
+        "smr_phase127_capability_map",
+        "smr_phase127_command_index",
+        "smr_phase127_config",
+        "smr_phase127_domain",
+        "smr_phase127_gap_register",
+        "smr_phase127_guard",
+        "smr_phase127_maintenance",
+        "smr_phase127_memory",
+        "smr_phase127_phase_summary",
+        "smr_phase127_research_closeout",
+        "smr_phase127_roadmap",
+        "smr_phase127_runbook",
+        "smr_phase127_safety_closeout",
+        "smr_phase127_signal_closeout",
+        "smr_phase127_workflow_map",
+        "sys"
+      ],
+      "last_git_change": null,
+      "path": "legacy/phase_contracts/runners/run_phase127_mainline_closeout.py",
+      "present": true,
+      "rationale": "unreferenced Phase-era asset; remove from default runtime before deletion",
+      "referenced_by": [],
+      "runtime_evidence": null,
+      "size": 3226,
+      "tracked": true
+    },
+    {
+      "approved": true,
+      "category": "FREEZE",
+      "imports": [
+        "json",
+        "os",
+        "pathlib",
+        "smr_phase129_access_route_planner",
+        "smr_phase129_api_key_classifier",
+        "smr_phase129_backlog_update",
+        "smr_phase129_blocked_source_loader",
+        "smr_phase129_cannot_conclude_guard",
+        "smr_phase129_config",
+        "smr_phase129_coverage_update_builder",
+        "smr_phase129_domain_registry",
+        "smr_phase129_equivalence_scorer",
+        "smr_phase129_fallback_board",
+        "smr_phase129_fallback_brief",
+        "smr_phase129_fallback_memory",
+        "smr_phase129_fallback_probe_executor",
+        "smr_phase129_fallback_probe_policy",
+        "smr_phase129_gap_register",
+        "smr_phase129_hkex_fallback",
+        "smr_phase129_integration_update",
+        "smr_phase129_manual_workflow_builder",
+        "smr_phase129_mirror_registry",
+        "smr_phase129_official_source_identity_map",
+        "smr_phase129_proxy_classifier",
+        "smr_phase129_sec_edgar_fallback",
+        "smr_phase129_third_party_equivalent_registry",
+        "smr_phase129_transcript_fallback",
+        "sys"
+      ],
+      "last_git_change": null,
+      "path": "legacy/phase_contracts/runners/run_phase129_official_source_fallback_pipeline.py",
+      "present": true,
+      "rationale": "unreferenced Phase-era asset; remove from default runtime before deletion",
+      "referenced_by": [],
+      "runtime_evidence": null,
+      "size": 2959,
+      "tracked": true
+    },
+    {
+      "approved": true,
+      "category": "FREEZE",
+      "imports": [
+        "json",
+        "os",
+        "pathlib",
+        "smr_phase130_alternative_disclosure_registry",
+        "smr_phase130_backlog_update",
+        "smr_phase130_cannot_conclude_guard",
+        "smr_phase130_cninfo_candidate_registry",
+        "smr_phase130_cninfo_verification_runner",
+        "smr_phase130_company_ir_loader",
+        "smr_phase130_config",
+        "smr_phase130_disclosure_coverage_classifier",
+        "smr_phase130_domain_registry",
+        "smr_phase130_gap_closeout_report",
+        "smr_phase130_hard_data_readiness",
+        "smr_phase130_historical_blocker_loader",
+        "smr_phase130_identity_evidence_pack",
+        "smr_phase130_integration_update",
+        "smr_phase130_irm_interaction_fallback",
+        "smr_phase130_known_url_validator",
+        "smr_phase130_manual_action_template",
+        "smr_phase130_manual_url_template",
+        "smr_phase130_resolution_board",
+        "smr_phase130_resolution_brief",
+        "smr_phase130_resolution_decision_report",
+        "smr_phase130_resolution_memory",
+        "smr_phase130_source_equivalence_scorer",
+        "smr_phase130_szse_disclosure_fallback",
+        "smr_phase130_watchlist_status_update",
+        "sys"
+      ],
+      "last_git_change": null,
+      "path": "legacy/phase_contracts/runners/run_phase130_cninfo_resolution_pipeline.py",
+      "present": true,
+      "rationale": "unreferenced Phase-era asset; remove from default runtime before deletion",
+      "referenced_by": [],
+      "runtime_evidence": null,
+      "size": 3099,
+      "tracked": true
+    },
+    {
+      "approved": true,
+      "category": "FREEZE",
+      "imports": [
+        "json",
+        "os",
+        "pathlib",
+        "smr_phase131_alternative_source_normalizer",
+        "smr_phase131_alternative_source_quality_gate",
+        "smr_phase131_alternative_source_registry_loader",
+        "smr_phase131_backlog_update",
+        "smr_phase131_cannot_conclude_guard",
+        "smr_phase131_company_ir_adapter",
+        "smr_phase131_config",
+        "smr_phase131_daily_brief_integration_update",
+        "smr_phase131_domain_registry",
+        "smr_phase131_eastmoney_financial_adapter",
+        "smr_phase131_hard_data_integration_update",
+        "smr_phase131_health_gap_register_update",
+        "smr_phase131_integration_board",
+        "smr_phase131_integration_brief",
+        "smr_phase131_integration_decision_builder",
+        "smr_phase131_integration_memory",
+        "smr_phase131_irm_interaction_adapter",
+        "smr_phase131_known_url_integration_loader",
+        "smr_phase131_phase130_resolution_loader",
+        "smr_phase131_signal_effectiveness_update",
+        "smr_phase131_szse_disclosure_adapter",
+        "smr_phase131_watchlist_coverage_update",
+        "sys"
+      ],
+      "last_git_change": null,
+      "path": "legacy/phase_contracts/runners/run_phase131_alternative_source_integration_pipeline.py",
+      "present": true,
+      "rationale": "unreferenced Phase-era asset; remove from default runtime before deletion",
+      "referenced_by": [],
+      "runtime_evidence": null,
+      "size": 3001,
+      "tracked": true
+    },
+    {
+      "approved": true,
+      "category": "FREEZE",
+      "imports": [
+        "json",
+        "os",
+        "pathlib",
+        "smr_phase132_akshare_star_valuation_adapter",
+        "smr_phase132_alternative_valuation_metric_builder",
+        "smr_phase132_backlog_update",
+        "smr_phase132_cannot_conclude_guard",
+        "smr_phase132_config",
+        "smr_phase132_daily_brief_valuation_update",
+        "smr_phase132_domain_registry",
+        "smr_phase132_eastmoney_valuation_adapter",
+        "smr_phase132_ev_ebitda_input_builder",
+        "smr_phase132_financial_metric_dependency_resolver",
+        "smr_phase132_gap_closeout_report",
+        "smr_phase132_hard_data_valuation_update",
+        "smr_phase132_historical_valuation_gap_loader",
+        "smr_phase132_phase131_coverage_loader",
+        "smr_phase132_ps_ratio_input_builder",
+        "smr_phase132_signal_effectiveness_valuation_update",
+        "smr_phase132_third_party_valuation_fallback",
+        "smr_phase132_valuation_coverage_classifier",
+        "smr_phase132_valuation_integration_board",
+        "smr_phase132_valuation_integration_brief",
+        "smr_phase132_valuation_memory",
+        "smr_phase132_valuation_quality_gate",
+        "smr_phase132_valuation_source_normalizer",
+        "smr_phase132_valuation_source_registry",
+        "smr_phase132_watchlist_valuation_update",
+        "sys"
+      ],
+      "last_git_change": null,
+      "path": "legacy/phase_contracts/runners/run_phase132_valuation_hardening_pipeline.py",
+      "present": true,
+      "rationale": "unreferenced Phase-era asset; remove from default runtime before deletion",
+      "referenced_by": [],
+      "runtime_evidence": null,
+      "size": 3252,
+      "tracked": true
+    },
+    {
+      "approved": true,
+      "category": "FREEZE",
+      "imports": [
+        "json",
+        "os",
+        "pathlib",
+        "smr_phase133_backlog_update",
+        "smr_phase133_cannot_conclude_guard",
+        "smr_phase133_config",
+        "smr_phase133_cross_market_comparison_builder",
+        "smr_phase133_domain_registry",
+        "smr_phase133_financial_trend_panel_builder",
+        "smr_phase133_gap_risk_panel_builder",
+        "smr_phase133_opportunity_catalyst_panel_builder",
+        "smr_phase133_owner_action_queue_builder",
+        "smr_phase133_phase132_coverage_loader",
+        "smr_phase133_seasonal_analytics_board",
+        "smr_phase133_seasonal_analytics_brief",
+        "smr_phase133_seasonal_dashboard_exporter",
+        "smr_phase133_seasonal_memory",
+        "smr_phase133_seasonal_period_registry",
+        "smr_phase133_signal_effectiveness_panel_builder",
+        "smr_phase133_source_coverage_panel_builder",
+        "smr_phase133_ticker_financial_valuation_loader",
+        "smr_phase133_ticker_seasonal_profile_builder",
+        "smr_phase133_valuation_trend_panel_builder",
+        "smr_phase133_watchlist_status_panel_builder",
+        "sys"
+      ],
+      "last_git_change": null,
+      "path": "legacy/phase_contracts/runners/run_phase133_seasonal_analytics_pipeline.py",
+      "present": true,
+      "rationale": "unreferenced Phase-era asset; remove from default runtime before deletion",
+      "referenced_by": [],
+      "runtime_evidence": null,
+      "size": 2612,
+      "tracked": true
+    },
+    {
+      "approved": true,
+      "category": "FREEZE",
+      "imports": [
+        "json",
+        "os",
+        "pathlib",
+        "smr_phase134_artifact_link_index",
+        "smr_phase134_backlog_update",
+        "smr_phase134_cannot_conclude_guard",
+        "smr_phase134_config",
+        "smr_phase134_console_data_aggregator",
+        "smr_phase134_console_memory",
+        "smr_phase134_console_quality_gate",
+        "smr_phase134_daily_brief_preview",
+        "smr_phase134_domain_registry",
+        "smr_phase134_gap_risk_center",
+        "smr_phase134_market_section_builder",
+        "smr_phase134_memory_feedback_center",
+        "smr_phase134_opportunity_catalyst_center",
+        "smr_phase134_owner_action_center",
+        "smr_phase134_phase133_dashboard_loader",
+        "smr_phase134_research_priority_builder",
+        "smr_phase134_seasonal_insight_center",
+        "smr_phase134_source_signal_quality_center",
+        "smr_phase134_system_health_snapshot",
+        "smr_phase134_ticker_card_builder",
+        "smr_phase134_watchlist_status_center",
+        "sys"
+      ],
+      "last_git_change": null,
+      "path": "legacy/phase_contracts/runners/run_phase134_personal_research_console_pipeline.py",
+      "present": true,
+      "rationale": "unreferenced Phase-era asset; remove from default runtime before deletion",
+      "referenced_by": [],
+      "runtime_evidence": null,
+      "size": 2568,
+      "tracked": true
+    },
+    {
+      "approved": true,
+      "category": "FREEZE",
+      "imports": [
+        "json",
+        "os",
+        "pathlib",
+        "smr_phase135_backlog_update",
+        "smr_phase135_brief_layout_feedback_adapter",
+        "smr_phase135_cannot_conclude_guard",
+        "smr_phase135_config",
+        "smr_phase135_console_feedback_schema",
+        "smr_phase135_daily_brief_feedback_intake",
+        "smr_phase135_deep_dive_task_feedback_adapter",
+        "smr_phase135_domain_registry",
+        "smr_phase135_feedback_entity_linker",
+        "smr_phase135_feedback_impact_board",
+        "smr_phase135_feedback_validator",
+        "smr_phase135_gap_risk_feedback_intake",
+        "smr_phase135_owner_action_feedback_intake",
+        "smr_phase135_phase134_console_loader",
+        "smr_phase135_research_loop_tuning_recommendation",
+        "smr_phase135_research_priority_feedback_adapter",
+        "smr_phase135_seasonal_insight_feedback_intake",
+        "smr_phase135_source_signal_feedback_intake",
+        "smr_phase135_source_signal_weight_feedback_adapter",
+        "smr_phase135_ticker_card_feedback_intake",
+        "sys"
+      ],
+      "last_git_change": null,
+      "path": "legacy/phase_contracts/runners/run_phase135_owner_feedback_integration.py",
+      "present": true,
+      "rationale": "unreferenced Phase-era asset; remove from default runtime before deletion",
+      "referenced_by": [],
+      "runtime_evidence": null,
+      "size": 2895,
+      "tracked": true
+    },
+    {
+      "approved": true,
+      "category": "FREEZE",
+      "imports": [
+        "json",
         "pathlib",
         "smr_phase136_backlog_update",
         "smr_phase136_cannot_conclude_guard",
@@ -89028,6 +88814,165 @@
       "referenced_by": [],
       "runtime_evidence": null,
       "size": 1375,
+      "tracked": true
+    },
+    {
+      "approved": true,
+      "category": "FREEZE",
+      "imports": [],
+      "last_git_change": null,
+      "path": "legacy/phase_contracts/tests/test_phase127_all.py",
+      "present": true,
+      "rationale": "unreferenced Phase-era asset; remove from default runtime before deletion",
+      "referenced_by": [],
+      "runtime_evidence": null,
+      "size": 8603,
+      "tracked": true
+    },
+    {
+      "approved": true,
+      "category": "FREEZE",
+      "imports": [],
+      "last_git_change": null,
+      "path": "legacy/phase_contracts/tests/test_phase129_all.py",
+      "present": true,
+      "rationale": "unreferenced Phase-era asset; remove from default runtime before deletion",
+      "referenced_by": [],
+      "runtime_evidence": null,
+      "size": 7792,
+      "tracked": true
+    },
+    {
+      "approved": true,
+      "category": "FREEZE",
+      "imports": [],
+      "last_git_change": null,
+      "path": "legacy/phase_contracts/tests/test_phase130_all.py",
+      "present": true,
+      "rationale": "unreferenced Phase-era asset; remove from default runtime before deletion",
+      "referenced_by": [],
+      "runtime_evidence": null,
+      "size": 9256,
+      "tracked": true
+    },
+    {
+      "approved": true,
+      "category": "FREEZE",
+      "imports": [],
+      "last_git_change": null,
+      "path": "legacy/phase_contracts/tests/test_phase131_all.py",
+      "present": true,
+      "rationale": "unreferenced Phase-era asset; remove from default runtime before deletion",
+      "referenced_by": [],
+      "runtime_evidence": null,
+      "size": 8003,
+      "tracked": true
+    },
+    {
+      "approved": true,
+      "category": "FREEZE",
+      "imports": [],
+      "last_git_change": null,
+      "path": "legacy/phase_contracts/tests/test_phase132_all.py",
+      "present": true,
+      "rationale": "unreferenced Phase-era asset; remove from default runtime before deletion",
+      "referenced_by": [],
+      "runtime_evidence": null,
+      "size": 8441,
+      "tracked": true
+    },
+    {
+      "approved": true,
+      "category": "FREEZE",
+      "imports": [],
+      "last_git_change": null,
+      "path": "legacy/phase_contracts/tests/test_phase133_all.py",
+      "present": true,
+      "rationale": "unreferenced Phase-era asset; remove from default runtime before deletion",
+      "referenced_by": [],
+      "runtime_evidence": null,
+      "size": 7004,
+      "tracked": true
+    },
+    {
+      "approved": true,
+      "category": "FREEZE",
+      "imports": [
+        "json",
+        "os",
+        "pathlib",
+        "smr_phase134_artifact_link_index",
+        "smr_phase134_backlog_update",
+        "smr_phase134_cannot_conclude_guard",
+        "smr_phase134_config",
+        "smr_phase134_console_data_aggregator",
+        "smr_phase134_console_memory",
+        "smr_phase134_console_quality_gate",
+        "smr_phase134_daily_brief_preview",
+        "smr_phase134_domain_registry",
+        "smr_phase134_gap_risk_center",
+        "smr_phase134_market_section_builder",
+        "smr_phase134_memory_feedback_center",
+        "smr_phase134_opportunity_catalyst_center",
+        "smr_phase134_owner_action_center",
+        "smr_phase134_phase133_dashboard_loader",
+        "smr_phase134_research_priority_builder",
+        "smr_phase134_seasonal_insight_center",
+        "smr_phase134_source_signal_quality_center",
+        "smr_phase134_system_health_snapshot",
+        "smr_phase134_ticker_card_builder",
+        "smr_phase134_watchlist_status_center",
+        "sys",
+        "unittest"
+      ],
+      "last_git_change": null,
+      "path": "legacy/phase_contracts/tests/test_phase134_all.py",
+      "present": true,
+      "rationale": "unreferenced Phase-era asset; remove from default runtime before deletion",
+      "referenced_by": [],
+      "runtime_evidence": null,
+      "size": 9875,
+      "tracked": true
+    },
+    {
+      "approved": true,
+      "category": "FREEZE",
+      "imports": [
+        "json",
+        "os",
+        "pathlib",
+        "smr_phase135_backlog_update",
+        "smr_phase135_brief_layout_feedback_adapter",
+        "smr_phase135_cannot_conclude_guard",
+        "smr_phase135_config",
+        "smr_phase135_console_feedback_schema",
+        "smr_phase135_console_feedback_template",
+        "smr_phase135_daily_brief_feedback_intake",
+        "smr_phase135_deep_dive_task_feedback_adapter",
+        "smr_phase135_domain_registry",
+        "smr_phase135_feedback_entity_linker",
+        "smr_phase135_feedback_impact_board",
+        "smr_phase135_feedback_integration_memory",
+        "smr_phase135_feedback_validator",
+        "smr_phase135_gap_risk_feedback_intake",
+        "smr_phase135_owner_action_feedback_intake",
+        "smr_phase135_phase134_console_loader",
+        "smr_phase135_research_loop_tuning_recommendation",
+        "smr_phase135_research_priority_feedback_adapter",
+        "smr_phase135_seasonal_insight_feedback_intake",
+        "smr_phase135_source_signal_feedback_intake",
+        "smr_phase135_source_signal_weight_feedback_adapter",
+        "smr_phase135_ticker_card_feedback_intake",
+        "sys",
+        "unittest"
+      ],
+      "last_git_change": null,
+      "path": "legacy/phase_contracts/tests/test_phase135_all.py",
+      "present": true,
+      "rationale": "unreferenced Phase-era asset; remove from default runtime before deletion",
+      "referenced_by": [],
+      "runtime_evidence": null,
+      "size": 8923,
       "tracked": true
     },
     {
@@ -89259,6 +89204,15 @@
         "deploy_phase2.py",
         "deploy_phase34.py",
         "deploy_phase5.py",
+        "run_phase127_mainline_closeout.py",
+        "run_phase128_external_source_probe_pipeline.py",
+        "run_phase129_official_source_fallback_pipeline.py",
+        "run_phase130_cninfo_resolution_pipeline.py",
+        "run_phase131_alternative_source_integration_pipeline.py",
+        "run_phase132_valuation_hardening_pipeline.py",
+        "run_phase133_seasonal_analytics_pipeline.py",
+        "run_phase134_personal_research_console_pipeline.py",
+        "run_phase135_owner_feedback_integration.py",
         "run_phase136_deep_dive_workflow_pipeline.py",
         "run_phase137_deep_dive_execution_pipeline.py",
         "run_phase138_thesis_library_pipeline.py",
@@ -89269,6 +89223,16 @@
         "smr_phase0_verify.py",
         "smr_phase0_verify2.py",
         "smr_phase0_workspaces.py",
+        "src/app/ResearchWorkbench.tsx",
+        "test_phase127_all.py",
+        "test_phase128_all.py",
+        "test_phase129_all.py",
+        "test_phase130_all.py",
+        "test_phase131_all.py",
+        "test_phase132_all.py",
+        "test_phase133_all.py",
+        "test_phase134_all.py",
+        "test_phase135_all.py",
         "test_phase136_all.py",
         "test_phase137_all.py",
         "test_phase138_all.py",
@@ -89283,7 +89247,7 @@
         "docs/plans/2026-07-13-personal-research-workbench-mvp.md"
       ],
       "runtime_evidence": null,
-      "size": 3007,
+      "size": 4899,
       "tracked": true
     },
     {
@@ -93055,19 +93019,6 @@
       "approved": false,
       "category": "FREEZE",
       "imports": [],
-      "last_git_change": "2026-06-02T11:24:45+08:00",
-      "path": "tests/test_phase127_all.py",
-      "present": true,
-      "rationale": "unreferenced Phase-era asset; remove from default runtime before deletion",
-      "referenced_by": [],
-      "runtime_evidence": null,
-      "size": 8578,
-      "tracked": true
-    },
-    {
-      "approved": false,
-      "category": "FREEZE",
-      "imports": [],
       "last_git_change": "2026-06-03T08:46:44+08:00",
       "path": "tests/test_phase128_all.py",
       "present": true,
@@ -93075,19 +93026,6 @@
       "referenced_by": [],
       "runtime_evidence": null,
       "size": 10897,
-      "tracked": true
-    },
-    {
-      "approved": false,
-      "category": "FREEZE",
-      "imports": [],
-      "last_git_change": "2026-06-03T08:57:00+08:00",
-      "path": "tests/test_phase129_all.py",
-      "present": true,
-      "rationale": "unreferenced Phase-era asset; remove from default runtime before deletion",
-      "referenced_by": [],
-      "runtime_evidence": null,
-      "size": 7766,
       "tracked": true
     },
     {
@@ -93215,137 +93153,6 @@
       "referenced_by": [],
       "runtime_evidence": null,
       "size": 1765,
-      "tracked": true
-    },
-    {
-      "approved": false,
-      "category": "FREEZE",
-      "imports": [],
-      "last_git_change": "2026-06-03T09:19:55+08:00",
-      "path": "tests/test_phase130_all.py",
-      "present": true,
-      "rationale": "unreferenced Phase-era asset; remove from default runtime before deletion",
-      "referenced_by": [],
-      "runtime_evidence": null,
-      "size": 9230,
-      "tracked": true
-    },
-    {
-      "approved": false,
-      "category": "FREEZE",
-      "imports": [],
-      "last_git_change": "2026-06-03T09:36:57+08:00",
-      "path": "tests/test_phase131_all.py",
-      "present": true,
-      "rationale": "unreferenced Phase-era asset; remove from default runtime before deletion",
-      "referenced_by": [],
-      "runtime_evidence": null,
-      "size": 7978,
-      "tracked": true
-    },
-    {
-      "approved": false,
-      "category": "FREEZE",
-      "imports": [],
-      "last_git_change": "2026-06-03T10:09:56+08:00",
-      "path": "tests/test_phase132_all.py",
-      "present": true,
-      "rationale": "unreferenced Phase-era asset; remove from default runtime before deletion",
-      "referenced_by": [],
-      "runtime_evidence": null,
-      "size": 8415,
-      "tracked": true
-    },
-    {
-      "approved": false,
-      "category": "FREEZE",
-      "imports": [],
-      "last_git_change": "2026-06-03T10:19:59+08:00",
-      "path": "tests/test_phase133_all.py",
-      "present": true,
-      "rationale": "unreferenced Phase-era asset; remove from default runtime before deletion",
-      "referenced_by": [],
-      "runtime_evidence": null,
-      "size": 6978,
-      "tracked": true
-    },
-    {
-      "approved": false,
-      "category": "FREEZE",
-      "imports": [
-        "json",
-        "os",
-        "smr_phase134_artifact_link_index",
-        "smr_phase134_backlog_update",
-        "smr_phase134_cannot_conclude_guard",
-        "smr_phase134_config",
-        "smr_phase134_console_data_aggregator",
-        "smr_phase134_console_memory",
-        "smr_phase134_console_quality_gate",
-        "smr_phase134_daily_brief_preview",
-        "smr_phase134_domain_registry",
-        "smr_phase134_gap_risk_center",
-        "smr_phase134_market_section_builder",
-        "smr_phase134_memory_feedback_center",
-        "smr_phase134_opportunity_catalyst_center",
-        "smr_phase134_owner_action_center",
-        "smr_phase134_phase133_dashboard_loader",
-        "smr_phase134_research_priority_builder",
-        "smr_phase134_seasonal_insight_center",
-        "smr_phase134_source_signal_quality_center",
-        "smr_phase134_system_health_snapshot",
-        "smr_phase134_ticker_card_builder",
-        "smr_phase134_watchlist_status_center",
-        "sys",
-        "unittest"
-      ],
-      "last_git_change": "2026-06-03T10:33:25+08:00",
-      "path": "tests/test_phase134_all.py",
-      "present": true,
-      "rationale": "unreferenced Phase-era asset; remove from default runtime before deletion",
-      "referenced_by": [],
-      "runtime_evidence": null,
-      "size": 9850,
-      "tracked": true
-    },
-    {
-      "approved": false,
-      "category": "FREEZE",
-      "imports": [
-        "json",
-        "os",
-        "smr_phase135_backlog_update",
-        "smr_phase135_brief_layout_feedback_adapter",
-        "smr_phase135_cannot_conclude_guard",
-        "smr_phase135_config",
-        "smr_phase135_console_feedback_schema",
-        "smr_phase135_console_feedback_template",
-        "smr_phase135_daily_brief_feedback_intake",
-        "smr_phase135_deep_dive_task_feedback_adapter",
-        "smr_phase135_domain_registry",
-        "smr_phase135_feedback_entity_linker",
-        "smr_phase135_feedback_impact_board",
-        "smr_phase135_feedback_integration_memory",
-        "smr_phase135_feedback_validator",
-        "smr_phase135_gap_risk_feedback_intake",
-        "smr_phase135_owner_action_feedback_intake",
-        "smr_phase135_phase134_console_loader",
-        "smr_phase135_research_loop_tuning_recommendation",
-        "smr_phase135_research_priority_feedback_adapter",
-        "smr_phase135_seasonal_insight_feedback_intake",
-        "smr_phase135_source_signal_feedback_intake",
-        "smr_phase135_source_signal_weight_feedback_adapter",
-        "smr_phase135_ticker_card_feedback_intake",
-        "sys",
-        "unittest"
-      ],
-      "last_git_change": "2026-06-03T10:42:20+08:00",
-      "path": "tests/test_phase135_all.py",
-      "present": true,
-      "rationale": "unreferenced Phase-era asset; remove from default runtime before deletion",
-      "referenced_by": [],
-      "runtime_evidence": null,
-      "size": 8898,
       "tracked": true
     },
     {
@@ -111380,7 +111187,7 @@
       "tracked": true
     }
   ],
-  "generated_at": "2026-07-13T16:30:53.875123+00:00",
+  "generated_at": "2026-07-14T00:07:45.282440+00:00",
   "project_root": ".",
   "schema_version": 1,
   "summary": {

@@ -1,5 +1,6 @@
 ﻿import unittest,json,sys,os
-sys.path.insert(0,os.path.join(os.path.dirname(__file__),"..","08_scripts","lib"))
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "08_scripts" / "lib"))
 
 from smr_phase127_config import load_config
 from smr_phase127_domain import build_domain
@@ -183,7 +184,7 @@ class TestPhase127DashboardIntegration(unittest.TestCase):
 
 class TestPhase127RegressionGate(unittest.TestCase):
     def test_phase126_dashboard_still_works(self):
-        sys.path.insert(0,os.path.join(os.path.dirname(__file__),"..","08_scripts","reporting"))
+        sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "08_scripts" / "reporting"))
         try:
             import build_phase126_dashboard
         except ImportError:

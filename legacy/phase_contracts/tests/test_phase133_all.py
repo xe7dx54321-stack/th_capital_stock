@@ -1,5 +1,6 @@
 ﻿import unittest,json,sys,os
-sys.path.insert(0,os.path.join(os.path.dirname(__file__),"..","08_scripts","lib"))
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "08_scripts" / "lib"))
 
 from smr_phase133_config import load_config
 from smr_phase133_domain_registry import build_domain_registry
