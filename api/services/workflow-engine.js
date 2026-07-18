@@ -2662,127 +2662,223 @@ export class WorkflowEngine {
   }
 
   /**
-   * 从分析报告中自动提取结构化记忆
-   * 
+   * 从分析报告中提取结构化记忆
+   *
+   * 功能：把大段的分析报告拆分成一条条有分类的记忆卡片，
+   *       方便后续搜索和复用。
+   *
    * 参数：
-   *   analysis: LLM 生成的分析报告文本
-   * 
+   *   analysis: 完整的分析报告文本（Markdown 格式）
+   *
    * 返回：
-   *   结构化记忆数组，每条包含 title 和 content
-   * 
+   *   记忆数组，每条包含 title / content / category / confidence
+   *
    * 小白讲解：
-   *   这个函数就像一个"自动摘要机"，从长长的分析报告中找出最重要的结论。
-   *   它会寻找报告中的关键段落，比如投资建议、风险提示、估值判断等，
-   *   然后把这些结论整理成一条条独立的"记忆卡片"。
+   *   这个方法就像一个"图书管理员"，把一整篇报告
+   *   按照不同的主题（市场分析、机会发现、风险提示、投资建议等）
+   *   拆分成一张张卡片，分门别类地放好。
+   *
+   *   之前的版本有两个大问题：
+   *   1. 前面的精确匹配规则太严格（要求"投资建议："这种格式），
+   *      实际报告里几乎碰不到，导致全走 fallback
+   *   2. fallback 只匹配5种固定标题，其他的全归为"分析结论"，
+   *      所以用户看到的记忆全是"分析结论"分类
+   *
+   *   现在的改进：
+   *   1. 先按 Markdown 标题（## ###）把报告切成章节
+   *   2. 用一张"分类关键词表"智能判断每个章节属于哪一类
+   *   3. 分类覆盖更广（14 种分类），不再只有 5 种
+   *   4. 每个章节里的要点还可以进一步拆分成多条记忆
+   *   5. 内容太短的（<30字）不提取，避免噪声
    */
   extractStructuredMemories(analysis) {
     if (!analysis || typeof analysis !== "string") return [];
-    
-    const memories = [];
-    const lines = analysis.split("\n");
-    
-    // 提取投资摘要/核心结论
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i].trim();
-      
-      // 匹配投资建议行
-      if (/^(当前建议|投资建议|操作建议)[:：]/.test(line) && line.length > 5) {
-        memories.push({
-          title: line.split(/[:：]/)[0].trim(),
-          content: line.split(/[:：]/).slice(1).join(":").trim(),
-          category: "投资建议",
-          confidence: 0.9,
-        });
-      }
-      
-      // 匹配加仓/减仓触发条件
-      if (/^(加仓触发条件|减仓触发条件|关键观察指标)[:：]/.test(line) && line.length > 8) {
-        memories.push({
-          title: line.split(/[:：]/)[0].trim(),
-          content: line.split(/[:：]/).slice(1).join(":").trim(),
-          category: "操作建议",
-          confidence: 0.85,
-        });
-      }
-      
-      // 匹配风险提示
-      if (/^(风险提示|主要风险|风险概览)[:：]/.test(line) && line.length > 5) {
-        memories.push({
-          title: line.split(/[:：]/)[0].trim(),
-          content: line.split(/[:：]/).slice(1).join(":").trim(),
-          category: "风险",
-          confidence: 0.8,
-        });
-      }
-      
-      // 匹配估值锚定分析
-      if (/^(估值锚定|映射分析|映射逻辑|映射强度)[:：]/.test(line) && line.length > 5) {
-        memories.push({
-          title: line.split(/[:：]/)[0].trim(),
-          content: line.split(/[:：]/).slice(1).join(":").trim(),
-          category: "估值分析",
-          confidence: 0.75,
-        });
-      }
-      
-      // 匹配核心观点/核心结论（带有 - 或 * 开头的行）
-      if (/^[-*]\s*(核心观点|核心结论|投资摘要)/.test(line) && line.length > 10) {
-        memories.push({
-          title: "核心观点",
-          content: line.replace(/^[-*]\s*/, "").trim(),
-          category: "核心观点",
-          confidence: 0.9,
-        });
-      }
-    }
-    
-    // 修复：fallback 模式更智能地提取关键段落，而不是随便取前5个段落
-    // 小白讲解：之前的fallback会把所有段落都当成"分析结论"，导致重复和质量低
-    // 现在改为：优先提取有标题的章节内容，按重要性排序
-    if (memories.length === 0) {
-      // 按重要性顺序搜索的章节标题
-      const importantSections = [
-        { pattern: /^#{1,3}\s*(投资摘要|核心观点|核心结论)/, category: "核心观点" },
-        { pattern: /^#{1,3}\s*(投资建议|操作建议)/, category: "投资建议" },
-        { pattern: /^#{1,3}\s*(风险提示|风险分析)/, category: "风险" },
-        { pattern: /^#{1,3}\s*(市场概览|大盘分析)/, category: "市场分析" },
-        { pattern: /^#{1,3}\s*(机会清单|机会扫描)/, category: "机会" },
-      ];
 
-      const sections = analysis.split(/\n(?=#{1,3}\s)/);
-      
-      for (const section of sections) {
-        const firstLine = section.split("\n")[0].trim();
-        const title = firstLine.replace(/^#{1,3}\s*/, "").trim();
-        
-        if (!title || title.length < 2 || title.length > 50) continue;
-        if (title.includes("数据截至") || title.includes("报告期") || title.includes("观点有效期")) continue;
-        
-        // 找匹配的类别
-        let category = "分析结论";
-        for (const sec of importantSections) {
-          if (sec.pattern.test(firstLine)) {
-            category = sec.category;
-            break;
+    const memories = [];
+
+    // ========== 分类关键词表 ==========
+    // 小白讲解：这张表告诉程序，看到什么关键词就归到哪一类。
+    // 匹配顺序很重要，越靠前的优先级越高（比如"核心结论"比"市场分析"优先级高）
+    const categoryRules = [
+      {
+        category: "核心观点",
+        keywords: ["核心观点", "核心结论", "投资摘要", "核心判断", "主要结论", "总结", "结论与建议"],
+        confidence: 0.9,
+      },
+      {
+        category: "投资建议",
+        keywords: ["投资建议", "操作建议", "配置建议", "当前建议", "交易策略", "操作策略", "仓位建议"],
+        confidence: 0.9,
+      },
+      {
+        category: "风险提示",
+        keywords: ["风险提示", "风险分析", "主要风险", "风险概览", "风险因素", "潜在风险", "风险点"],
+        confidence: 0.85,
+      },
+      {
+        category: "机会发现",
+        keywords: ["机会清单", "机会扫描", "投资机会", "机会雷达", "重点关注", "潜力标的", "机会分析"],
+        confidence: 0.85,
+      },
+      {
+        category: "涨跌幅分析",
+        keywords: ["涨幅榜", "跌幅榜", "涨跌幅", "领涨", "领跌", "涨停", "跌停"],
+        confidence: 0.8,
+      },
+      {
+        category: "估值分析",
+        keywords: ["估值", "估值分析", "估值极端", "估值锚定", "估值判断", "PE", "PB", "历史分位", "估值水平"],
+        confidence: 0.8,
+      },
+      {
+        category: "量价分析",
+        keywords: ["放量", "成交量", "成交额", "量价", "量比", "换手率", "资金流向"],
+        confidence: 0.8,
+      },
+      {
+        category: "市场分析",
+        keywords: ["市场概览", "大盘分析", "市场分析", "市场综述", "盘面分析", "大盘综述", "行情综述", "今日市场"],
+        confidence: 0.75,
+      },
+      {
+        category: "板块分析",
+        keywords: ["板块", "行业分析", "板块分析", "行业轮动", "板块轮动", "赛道", "产业链"],
+        confidence: 0.75,
+      },
+      {
+        category: "映射分析",
+        keywords: ["映射", "映射分析", "映射逻辑", "映射强度", "对标", "美股映射"],
+        confidence: 0.75,
+      },
+      {
+        category: "操作建议",
+        keywords: ["加仓", "减仓", "止损", "止盈", "触发条件", "关键观察", "观察指标"],
+        confidence: 0.8,
+      },
+      {
+        category: "新闻事件",
+        keywords: ["新闻", "消息", "事件", "公告", "政策", "要闻", "资讯"],
+        confidence: 0.7,
+      },
+      {
+        category: "个股分析",
+        keywords: ["个股", "公司分析", "基本面", "财务分析", "业绩分析"],
+        confidence: 0.7,
+      },
+    ];
+
+    /**
+     * 根据标题和内容判断分类
+     *
+     * @param {string} title - 章节标题
+     * @param {string} content - 章节内容
+     * @returns {{category: string, confidence: number}} 分类和置信度
+     */
+    function classifySection(title, content) {
+      const text = (title + " " + content).toLowerCase();
+
+      for (const rule of categoryRules) {
+        for (const kw of rule.keywords) {
+          if (text.includes(kw.toLowerCase())) {
+            return { category: rule.category, confidence: rule.confidence };
           }
         }
-        
-        // 只提取内容比较充实的段落（至少30字）
-        const content = section.trim();
-        if (content.length >= 30) {
+      }
+
+      // 如果标题里包含"执行信息"、"可沉淀记忆"等技术性标题，跳过
+      if (title.includes("执行信息") || title.includes("可沉淀记忆") ||
+          title.includes("数据截至") || title.includes("观点有效期")) {
+        return { category: null, confidence: 0 };
+      }
+
+      return { category: "分析结论", confidence: 0.6 };
+    }
+
+    // ========== 第一步：按 Markdown 标题切分章节 ==========
+    // 匹配 ## 或 ### 开头的标题行
+    const sectionRegex = /\n(?=#{1,3}\s+)/g;
+    const sections = analysis.split(sectionRegex);
+
+    for (const section of sections) {
+      const trimmed = section.trim();
+      if (!trimmed) continue;
+
+      // 提取标题行
+      const firstLineMatch = trimmed.match(/^(#{1,3})\s+(.+)/);
+      if (!firstLineMatch) continue;
+
+      const title = firstLineMatch[2].trim();
+      const content = trimmed.substring(firstLineMatch[0].length).trim();
+
+      // 跳过太短或明显是技术性的标题
+      if (title.length < 2 || title.length > 50) continue;
+      if (title.includes("执行信息") || title.includes("可沉淀记忆") ||
+          title.includes("数据截至") || title.includes("报告期") ||
+          title.includes("观点有效期") || title.includes("📋") || title.includes("🧠")) {
+        continue;
+      }
+
+      // 内容太短的跳过（没信息量）
+      if (content.length < 30) continue;
+
+      // 智能分类
+      const { category, confidence } = classifySection(title, content);
+      if (!category) continue;
+
+      // ========== 第二步：从章节中提取多条要点 ==========
+      // 小白讲解：一个章节里可能有好几个要点，
+      // 比如"风险提示"里可能有3条不同的风险，
+      // 我们把它们拆成独立的记忆卡片，方便后续检索
+      const bulletPoints = content
+        .split(/\n/)
+        .map(l => l.trim())
+        .filter(l => /^[-*]\s+/.test(l) || /^\d+\.\s+/.test(l)) // - xxx 或 1. xxx
+        .map(l => l.replace(/^[-*]\s+/, "").replace(/^\d+\.\s+/, "").trim())
+        .filter(l => l.length >= 20 && l.length <= 300); // 每条 20-300 字比较合适
+
+      if (bulletPoints.length >= 2) {
+        // 如果有多个要点，拆分成多条记忆
+        for (let i = 0; i < bulletPoints.length && memories.length < 5; i++) {
+          const point = bulletPoints[i];
+          // 要点的标题用"分类: 要点摘要"形式
+          const shortTitle = point.length > 30 ? point.substring(0, 30) + "..." : point;
           memories.push({
-            title,
-            content,
+            title: shortTitle,
+            content: point,
             category,
-            confidence: 0.7,
+            confidence: Math.round((confidence - 0.05) * 100) / 100,
           });
         }
-        
-        if (memories.length >= 5) break;
+      } else {
+        // 只有一个段落或没有要点，整段作为一条记忆
+        // 但内容太长的话截取前200字作为摘要
+        const shortTitle = title.length > 30 ? title.substring(0, 30) + "..." : title;
+        memories.push({
+          title: shortTitle,
+          content: content.length > 500 ? content.substring(0, 500) + "..." : content,
+          category,
+          confidence: Math.round(confidence * 100) / 100,
+        });
+      }
+
+      if (memories.length >= 5) break; // 最多5条
+    }
+
+    // ========== 第三步：兜底（如果上面啥也没提取到）==========
+    if (memories.length === 0) {
+      // 取报告前300字作为一条整体记忆
+      const snippet = analysis.substring(0, 300).trim();
+      if (snippet.length >= 50) {
+        memories.push({
+          title: "分析摘要",
+          content: snippet + (analysis.length > 300 ? "..." : ""),
+          category: "分析结论",
+          confidence: 0.5,
+        });
       }
     }
-    
-    return memories.slice(0, 5); // 最多返回5条记忆
+
+    return memories.slice(0, 5);
   }
 
   generateWorkflowSummary() {

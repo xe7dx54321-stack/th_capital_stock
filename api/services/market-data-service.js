@@ -43,11 +43,31 @@ const DEFAULT_BIG_DB_PATH = path.resolve(
 export class MarketDataService {
   /**
    * 构造函数：打开数据库连接
+   *
+   * 功能：打开指定的 SQLite 数据库，并检查表是否存在
+   *
+   * 参数：
+   *   dbPath: 数据库文件路径，不传则用默认的大数据库
+   *
+   * 小白讲解：
+   *   打开数据库的时候，顺便"侦察"一下里面有哪些表。
+   *   如果 daily_bar 表不存在（比如 MVP 数据库里就没有），
+   *   后面查这个表的方法就直接返回空，不会报错。
+   *
    * @param {string} dbPath - 数据库文件路径，不传则用默认的大数据库
    */
   constructor(dbPath = DEFAULT_BIG_DB_PATH) {
     this.dbPath = dbPath;
     this.db = new Database(dbPath, { readonly: true });
+
+    // 检查 daily_bar 表是否存在，不存在则标记为 false
+    // 后面所有查 daily_bar 的方法都会先检查这个标记，避免 SQL 报错
+    const tableCheck = this.db
+      .prepare(
+        `SELECT name FROM sqlite_master WHERE type='table' AND name='daily_bar'`
+      )
+      .get();
+    this.hasDailyBar = !!tableCheck;
   }
 
   /**
@@ -97,11 +117,16 @@ export class MarketDataService {
     }
 
     // 从日线表推断市场类型（A股/H股/美股）
-    const barRow = this.db
-      .prepare(
-        `SELECT market FROM daily_bar WHERE ts_code LIKE ? OR ts_code LIKE ? LIMIT 1`
-      )
-      .get(`%${normalized}%`, `${normalized}.%`);
+    // 修复：daily_bar 表可能不存在（MVP 数据库），先检查再查询，避免报错
+    let market = null;
+    if (this.hasDailyBar) {
+      const barRow = this.db
+        .prepare(
+          `SELECT market FROM daily_bar WHERE ts_code LIKE ? OR ts_code LIKE ? LIMIT 1`
+        )
+        .get(`%${normalized}%`, `${normalized}.%`);
+      market = barRow?.market || null;
+    }
 
     // 推断股票名称（从新闻或事件中提取）
     let name = ticker;
@@ -121,7 +146,7 @@ export class MarketDataService {
       name,
       sector: sectorName,
       sectorKey,
-      market: barRow?.market || null,
+      market: market,
       poolType: poolRow?.pool_type || null,
       poolStatus: poolRow?.status || null,
       peers,
@@ -135,11 +160,15 @@ export class MarketDataService {
    * 功能：查询最近 N 天的开盘价、收盘价、最高价、最低价、成交量、涨跌幅
    * 查的表：daily_bar
    *
+   * 注意：如果数据库里没有 daily_bar 表（比如 MVP 数据库），直接返回空数组
+   *
    * @param {string} ticker - 股票代码
    * @param {number} limit - 获取最近几天的数据，默认 5 天
    * @returns {Array} 日线数组，按日期倒序排列
    */
   getDailyBars(ticker, limit = 5) {
+    if (!this.hasDailyBar) return [];
+
     return this.db
       .prepare(
         `SELECT ts_code, trade_date, open, close, high, low, vol, amount, pct_chg, turnover, market
@@ -366,9 +395,13 @@ export class MarketDataService {
    * 功能：查询数据库中有日线数据的所有股票代码
    * 查的表：daily_bar
    *
+   * 注意：如果数据库里没有 daily_bar 表，直接返回空数组
+   *
    * @returns {Array} 股票代码数组
    */
   getAllStocksWithData() {
+    if (!this.hasDailyBar) return [];
+
     return this.db
       .prepare(
         `SELECT DISTINCT ts_code, market FROM daily_bar ORDER BY ts_code`
@@ -382,9 +415,13 @@ export class MarketDataService {
    * 功能：找到最新的交易日，然后获取当天所有股票的行情数据
    * 查的表：daily_bar
    *
+   * 注意：如果数据库里没有 daily_bar 表，直接返回空数组
+   *
    * @returns {Array} 最新交易日的行情数组
    */
   getLatestMarketSnapshot() {
+    if (!this.hasDailyBar) return [];
+
     const latestDate = this.db
       .prepare(`SELECT MAX(trade_date) as date FROM daily_bar`)
       .get();
@@ -405,11 +442,16 @@ export class MarketDataService {
    * 获取今日涨幅榜
    *
    * 功能：获取最新交易日涨幅最大的股票列表
+   * 查的表：daily_bar
+   *
+   * 注意：如果数据库里没有 daily_bar 表，直接返回空数组
    *
    * @param {number} limit - 获取几只，默认 10 只
    * @returns {Array} 涨幅榜数组，按涨幅从高到低排列
    */
   getTopGainers(limit = 10) {
+    if (!this.hasDailyBar) return [];
+
     const latestDate = this.db
       .prepare(`SELECT MAX(trade_date) as date FROM daily_bar`)
       .get();
@@ -432,11 +474,16 @@ export class MarketDataService {
    * 获取今日跌幅榜
    *
    * 功能：获取最新交易日跌幅最大的股票列表
+   * 查的表：daily_bar
+   *
+   * 注意：如果数据库里没有 daily_bar 表，直接返回空数组
    *
    * @param {number} limit - 获取几只，默认 10 只
    * @returns {Array} 跌幅榜数组，按跌幅从低到高排列
    */
   getTopLosers(limit = 10) {
+    if (!this.hasDailyBar) return [];
+
     const latestDate = this.db
       .prepare(`SELECT MAX(trade_date) as date FROM daily_bar`)
       .get();
@@ -461,11 +508,15 @@ export class MarketDataService {
    * 功能：获取最新交易日成交量相比前几天明显放大的股票
    * 查的表：daily_bar
    *
+   * 注意：如果数据库里没有 daily_bar 表，直接返回空数组
+   *
    * @param {number} limit - 获取几只，默认 10 只
    * @param {number} volumeRatioThreshold - 放量倍数阈值，默认 2 倍
    * @returns {Array} 放量股票数组
    */
   getVolumeSurge(limit = 10, volumeRatioThreshold = 2) {
+    if (!this.hasDailyBar) return [];
+
     const latestDate = this.db
       .prepare(`SELECT MAX(trade_date) as date FROM daily_bar`)
       .get();
@@ -526,11 +577,15 @@ export class MarketDataService {
    * 功能：获取最新交易日涨跌幅超过指定阈值的股票
    * 查的表：daily_bar
    *
+   * 注意：如果数据库里没有 daily_bar 表，直接返回空数组
+   *
    * @param {number} threshold - 涨跌幅阈值（百分比），默认 5%
    * @param {number} limit - 获取几只，默认 10 只
    * @returns {Array} 异动股票数组
    */
   getPriceMovement(threshold = 5, limit = 10) {
+    if (!this.hasDailyBar) return [];
+
     const latestDate = this.db
       .prepare(`SELECT MAX(trade_date) as date FROM daily_bar`)
       .get();
@@ -555,9 +610,20 @@ export class MarketDataService {
    * 功能：获取股票池中所有标的在最新交易日的行情数据
    * 查的表：stock_pool + daily_bar
    *
+   * 注意：如果数据库里没有 daily_bar 表，只返回股票池基本信息，不关联行情
+   *
    * @returns {Array} 股票池标的行情数组
    */
   getPoolSnapshot() {
+    if (!this.hasDailyBar) {
+      // 没有 daily_bar 表时，只从 stock_pool 拿基本信息
+      return this.db
+        .prepare(
+          `SELECT ts_code, sector, pool_type, status FROM stock_pool ORDER BY ts_code`
+        )
+        .all();
+    }
+
     const latestDate = this.db
       .prepare(`SELECT MAX(trade_date) as date FROM daily_bar`)
       .get();
