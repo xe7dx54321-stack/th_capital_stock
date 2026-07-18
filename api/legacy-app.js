@@ -10,6 +10,13 @@ import { fileURLToPath } from "url";
 import { loadAllPhaseConfigs, getSchedulerPhaseRuns } from "../08_scripts/lib/phase_status_loader.js";
 import { ResearchRepository } from "./repositories/research-repository.js";
 import { createResearchRouter } from "./routes/research.js";
+import { createChatRouter } from "./services/chat-service.js";
+import { createEnhancedChatRouter } from "./services/chat-enhanced-service.js";
+import { createAgentRouter } from "./services/agent-orchestrator.js";
+import { createResearchWorkflowRouter } from "./services/research-workflow.js";
+import { createVectorRouter } from "./services/vector-memory.js";
+import { createGrowthRouter } from "./services/growth-service.js";
+import { createSessionRouter } from "./services/session-service.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DB_PATH = process.env.SMR_DB_PATH
@@ -23,6 +30,13 @@ app.use(express.json());
 
 const researchRepository = new ResearchRepository(DB_PATH);
 app.use(createResearchRouter({ repository: researchRepository }));
+app.use(createChatRouter({ repository: researchRepository }));
+app.use(createEnhancedChatRouter({ repository: researchRepository }));
+app.use(createAgentRouter());
+app.use(createResearchWorkflowRouter());
+app.use(createVectorRouter());
+app.use(createGrowthRouter());
+app.use(createSessionRouter());
 
 // ============================================================
 // 缓存

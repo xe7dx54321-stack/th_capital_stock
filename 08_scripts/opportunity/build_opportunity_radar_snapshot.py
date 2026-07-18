@@ -214,6 +214,106 @@ def load_latest_events(conn):
     return result
 
 
+def load_discovery_candidates(conn, batch_date: str):
+    """
+    从 discovery_candidate 表读取本周新发现候选。
+
+    小白讲解：这个函数读"候选区"表，把最近发现的、还没入池的新标的拉出来，
+    让机会雷达能展示"本周新发现候选"区块。
+
+    参数：
+        conn: 数据库连接
+        batch_date: 批次日期（YYYY-MM-DD），用于筛选本周候选
+
+    返回：
+        list：候选列表，每条包含 ticker/name/market/sector/methods/hit_methods
+    """
+    if not relation_exists(conn, "discovery_candidate"):
+        return []
+
+    # 读取最近 7 天的候选（按 ticker 聚合去重）
+    rows = conn.execute(
+        """
+        SELECT ticker, name, market, sector,
+               GROUP_CONCAT(DISTINCT discovery_method) AS methods,
+               SUM(hit_methods) AS total_hits,
+               MAX(discovery_date) AS latest_date
+        FROM discovery_candidate
+        WHERE discovery_date >= date(?, '-7 days')
+        GROUP BY ticker, name, market, sector
+        ORDER BY total_hits DESC, latest_date DESC
+        LIMIT 20
+        """,
+        (batch_date,),
+    ).fetchall()
+
+    return [
+        {
+            "ticker": row[0],
+            "name": row[1] or row[0],
+            "market": row[2] or "",
+            "sector": row[3] or "",
+            "methods": [m for m in (row[4] or "").split(",") if m],
+            "hit_methods": row[5] or 0,
+            "latest_date": row[6],
+        }
+        for row in rows
+        if row[0]
+    ]
+
+
+def render_discovery_section(candidates):
+    """
+    渲染"本周新发现候选"区块为 Markdown。
+
+    小白讲解：把新发现的候选标的列成一个表格，展示代码、名称、市场、
+    主题、命中方法数等信息。
+
+    参数：
+        candidates: load_discovery_candidates 返回的候选列表
+
+    返回：
+        list：Markdown 文本行列表
+    """
+    lines = ["\n## 本周新发现候选", ""]
+
+    if not candidates:
+        lines.extend([
+            "- 当前没有新发现候选。",
+            "- 可运行 `scan_theme_extension.py` / `scan_supply_chain_extension.py` / "
+            "`scan_us_benchmark_extension.py` 触发自主发现管线。",
+            "",
+        ])
+        return lines
+
+    lines.extend([
+        "_自主发现管线产出的候选标的，需通过 VFM 评分和 3 道门筛选后才能提案入池。_",
+        "",
+        "| 标的 | 名称 | 市场 | 主题 | 命中方法 | 命中次数 | 最近发现日期 |",
+        "| --- | --- | --- | --- | --- | ---: | --- |",
+    ])
+
+    method_labels = {
+        "theme_extension": "主题扩展",
+        "supply_chain": "供应链",
+        "us_benchmark": "美股对标",
+        "manual": "人工",
+    }
+
+    for c in candidates:
+        methods_str = ", ".join(
+            method_labels.get(m, m) for m in c["methods"]
+        )
+        lines.append(
+            f"| {c['ticker']} | {c['name']} | {c['market']} | "
+            f"{c['sector']} | {methods_str} | {c['hit_methods']} | "
+            f"{c['latest_date']} |"
+        )
+
+    lines.append("")
+    return lines
+
+
 def load_history(conn, ts_code, market, limit=90):
     if market == "US":
         rows = conn.execute(
@@ -669,6 +769,12 @@ def write_markdown(path, payload):
     )
     lines.extend(value_section.split("\n"))
 
+    # 本周新发现候选区块（SPEC 2 区块 C）
+    discovery_lines = render_discovery_section(
+        payload.get("discovery_candidates") or []
+    )
+    lines.extend(discovery_lines)
+
     for market in MARKET_ORDER:
         lines.extend(render_market_section(market, payload["markets"].get(market) or []))
     path.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
@@ -714,6 +820,7 @@ def main():
                     "top_candidates": [],
                     "sector_heatmap": [],
                     "policy_rel_path": relative_to_project(POLICY_PATH),
+                    "discovery_candidates": [],
                 }
             )
             write_markdown(output_path, payload)
@@ -830,6 +937,10 @@ def main():
                 item["value_red_flags"] = vc.get("red_flags") or []
         payload["value_score_cards"] = value_cards
         payload["value_score_top"] = [card for card in value_cards if card.get("composite_score")][:15]
+
+        # 本周新发现候选（SPEC 2 区块 C）：从 discovery_candidate 表读取
+        discovery_candidates = load_discovery_candidates(conn, batch_date)
+        payload["discovery_candidates"] = discovery_candidates
 
         write_markdown(output_path, payload)
 

@@ -49,6 +49,15 @@ class Guard:
         "mock_not_used": True,
         "fixture_not_used": True,
         "research_only": False,
+        # ===== SPEC 2 新增：自主发现管线门禁开关 =====
+        # self_discovery_enabled: 是否启用自主发现管线（开发模式默认 False）
+        # 小白讲解：这个开关控制"星探"能不能出去找新股票。
+        # 开发模式下默认关闭，防止自动扫描产生意外候选。
+        "self_discovery_enabled": False,
+        # auto_proposal_enabled: 是否允许评分通过后自动提案入候选池（开发模式默认 False）
+        # 小白讲解：这个开关控制"通过考试的候选能不能自动提交提案"。
+        # 开发模式下默认关闭，所有提案都需要手动触发。
+        "auto_proposal_enabled": False,
     }
     
     # Phase-specific 规则

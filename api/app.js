@@ -7,6 +7,8 @@ import { createArtifactRouter } from "./routes/artifacts.js";
 import { createDecisionRouter } from "./routes/decisions.js";
 import { createMemoryRouter } from "./routes/memories.js";
 import { createWorkflowRouter } from "./routes/workflows.js";
+import { createRealtimeNewsRouter } from "./routes/realtime-news.js";
+import { createMappingRouter } from "./routes/mapping.js";
 import { WorkflowProcessService } from "./services/workflow-process.js";
 
 
@@ -33,6 +35,8 @@ export function createApp({
   legacyApp.use(createArtifactRouter({ repository, allowedRoots: artifactRoots }));
   legacyApp.use(createMemoryRouter({ database: repository.db }));
   legacyApp.use(createDecisionRouter({ database: repository.db }));
+  legacyApp.use(createRealtimeNewsRouter());
+  legacyApp.use(createMappingRouter());
   legacyApp.locals.workflowRuntimeMounted = true;
   legacyApp.locals.workflowRepository = repository;
   return legacyApp;

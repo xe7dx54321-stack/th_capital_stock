@@ -1,9 +1,8 @@
-import { CircleDot, Clock3, FileSearch, LockKeyhole } from "lucide-react";
+import { CircleDot, Clock3 } from "lucide-react";
 
-import type { WorkflowDefinition, WorkflowRun } from "../../lib/api";
+import type { WorkflowRun } from "../../lib/api";
 
 interface Props {
-  workflows: WorkflowDefinition[];
   runs: WorkflowRun[];
   selectedRunId: string | null;
   onSelectRun: (runId: string) => void;
@@ -25,25 +24,9 @@ const statusLabels: Record<string, string> = {
   cancelled: "已取消",
 };
 
-const workflowOrder = ["stock_deep_dive", "daily_brief", "portfolio_review", "thesis_update"];
-
-export default function WorkflowSidebar({ workflows, runs, selectedRunId, onSelectRun }: Props) {
-  const orderedWorkflows = [...workflows].sort((left, right) => workflowOrder.indexOf(left.workflow_id) - workflowOrder.indexOf(right.workflow_id));
+export default function WorkflowSidebar({ runs, selectedRunId, onSelectRun }: Props) {
   return (
-    <aside className="workbench-sidebar" aria-label="工作流和历史记录">
-      <section>
-        <p className="eyebrow">研究导航</p>
-        <h2>研究流程</h2>
-        <div className="protocol-list">
-          {orderedWorkflows.map((workflow) => (
-            <div className={`protocol ${workflow.enabled ? "is-ready" : "is-locked"} ${workflow.workflow_id === "stock_deep_dive" ? "is-active" : ""}`} key={workflow.workflow_id}>
-              {workflow.enabled ? <FileSearch size={17} /> : <LockKeyhole size={16} />}
-              <span><strong>{labels[workflow.workflow_id] || workflow.title}</strong><small>{workflow.enabled ? "可运行" : "即将接入"}</small></span>
-            </div>
-          ))}
-        </div>
-      </section>
-
+    <aside className="workbench-sidebar" aria-label="运行历史记录">
       <section className="run-history">
         <div className="section-heading"><h2>运行档案</h2><span>{runs.length}</span></div>
         {runs.length === 0 ? <p className="quiet">尚无研究记录。</p> : (

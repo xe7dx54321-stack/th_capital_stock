@@ -2,7 +2,8 @@ export function getDeepReport(
   tsCode, name, market, sector, latestPrice,
   valuationData, fundamentalsData, technicalData,
   moatReport, peerComparisonReport, catalystsReport,
-  enhancedRecommendation
+  enhancedRecommendation,
+  newsData = [], marketContext = {}, aiAnalysis = ""
 ) {
   // --- 工具：根据数值和阈值生成定性描述
   function describe(v, thresholds, labels) {
@@ -225,7 +226,65 @@ export function getDeepReport(
     : "暂无催化因素相关的显著数据。";
 
   // ============================================================
-  // 8. 风险提示 (Risks)
+  // 9. 近期新闻与市场动态 (Recent News & Market Dynamics)
+  // ============================================================
+  const newsSection = {
+    title: "近期新闻与市场动态 (Recent News & Market Dynamics)",
+    bullets: [],
+    narrative: "",
+  };
+  if (newsData.length > 0) {
+    newsData.slice(0, 5).forEach((n, i) => {
+      const sentimentLabel = n.sentiment === "positive" ? "🟢" : n.sentiment === "negative" ? "🔴" : "⚪";
+      newsSection.bullets.push(`${sentimentLabel} ${n.title}（来源：${n.source}）`);
+    });
+    const positiveCount = newsData.filter(n => n.sentiment === "positive").length;
+    const negativeCount = newsData.filter(n => n.sentiment === "negative").length;
+    newsSection.narrative = `近期共获取 ${newsData.length} 条新闻，其中正面 ${positiveCount} 条、负面 ${negativeCount} 条。${positiveCount > negativeCount ? "市场情绪整体偏积极。" : negativeCount > positiveCount ? "市场情绪整体偏谨慎。" : "市场情绪中性。"}`;
+  } else {
+    newsSection.bullets.push("暂无近期新闻数据。");
+    newsSection.narrative = "建议关注公司公告和行业动态。";
+  }
+
+  // ============================================================
+  // 10. 市场环境与同业对比 (Market Context & Peer Comparison)
+  // ============================================================
+  const marketSection = {
+    title: "市场环境与同业对比 (Market Context & Peer Comparison)",
+    bullets: [],
+    narrative: "",
+  };
+  if (marketContext.peers && marketContext.peers.length > 0) {
+    marketSection.bullets.push(`所属行业：${sector || marketContext.sector || "未知"}`);
+    marketSection.bullets.push(`主要同业：${marketContext.peers.join("、")}`);
+  }
+  if (marketContext.keyEvents && marketContext.keyEvents.length > 0) {
+    marketSection.bullets.push(`关键事件：${marketContext.keyEvents.slice(0, 3).join("；")}`);
+  }
+  if (peerComparisonReport?.industryPosition) {
+    marketSection.bullets.push(`行业地位：${peerComparisonReport.industryPosition}`);
+  }
+  marketSection.narrative = marketSection.bullets.length
+    ? `${name} 在行业中${(peerComparisonReport?.industryPosition?.includes("领先") || peerComparisonReport?.industryPosition?.includes("龙头")) ? "处于领先地位" : "具有一定竞争优势"}。建议结合同业动态综合判断。`
+    : "暂无市场环境详细数据。";
+
+  // ============================================================
+  // 11. AI 深度分析 (AI Deep Analysis)
+  // ============================================================
+  const aiAnalysisSection = {
+    title: "AI 深度分析 (AI Deep Analysis)",
+    bullets: [],
+    narrative: "",
+  };
+  if (aiAnalysis) {
+    aiAnalysisSection.narrative = aiAnalysis;
+  } else {
+    aiAnalysisSection.bullets.push("AI 分析未启用或模型不可用。");
+    aiAnalysisSection.narrative = "如需 AI 深度分析，请确保已配置有效的 LLM API Key。";
+  }
+
+  // ============================================================
+  // 12. 风险提示 (Risks)
   // ============================================================
   const riskSection = {
     title: "风险提示 (Key Risks)",
@@ -290,6 +349,9 @@ export function getDeepReport(
     moat: moatSection,
     technical: technicalSection,
     catalysts: catalystsSection,
+    news: newsSection,
+    marketContext: marketSection,
+    aiAnalysis: aiAnalysisSection,
     risks: riskSection,
     conclusion: conclusionSection,
   };

@@ -1,0 +1,132 @@
+{
+  "version": "1.0",
+  "description": "A股-美股行业映射配置文件",
+  "sectors": [
+    {
+      "sectorKey": "semiconductor_compute",
+      "sectorName": "半导体/算力芯片",
+      "description": "GPU、CPU、AI芯片、服务器芯片",
+      "usBenchmarks": ["NVDA", "AMD", "INTC", "AVGO", "MU", "QCOM"],
+      "mappingType": "demand",
+      "mappingDescription": "需求景气映射：海外AI芯片需求 → A股国产替代受益",
+      "aShareSectors": ["半导体", "人工智能", "国产芯片"],
+      "coreTargets": ["688041.SH", "688256.SH", "002371.SZ", "300671.SZ", "688008.SH"],
+      "impactLevel": "high",
+      "correlation": 0.85,
+      "notes": "NVDA/AMD的财报和评级对A股算力板块影响最大"
+    },
+    {
+      "sectorKey": "semiconductor_photonics",
+      "sectorName": "光模块/CPO",
+      "description": "光通信、CPO、光芯片、光引擎",
+      "usBenchmarks": ["NVDA", "LITE", "MRVL", "COHR", "FTNT", "SWKS"],
+      "mappingType": "supply",
+      "mappingDescription": "供应链映射：海外客户需求 → A股光模块供应商受益",
+      "aShareSectors": ["光通信", "CPO概念", "数据中心"],
+      "coreTargets": ["300308.SZ", "002281.SZ", "300502.SZ", "603083.SH", "300375.SZ"],
+      "impactLevel": "high",
+      "correlation": 0.82,
+      "notes": "NVDA的光模块需求指引直接影响A股光模块龙头"
+    },
+    {
+      "sectorKey": "embodied_ai",
+      "sectorName": "具身智能/机器人",
+      "description": "机器人整机、伺服电机、减速器、传感器",
+      "usBenchmarks": ["TSLA", "NVDA", "ROBO", "IRBT", "AGCO", "DE"],
+      "mappingType": "technology",
+      "mappingDescription": "技术路线映射：海外技术突破 → A股产业链跟随",
+      "aShareSectors": ["机器人", "工业自动化", "传感器"],
+      "coreTargets": ["300024.SZ", "002796.SZ", "603283.SH", "300124.SZ", "300222.SZ"],
+      "impactLevel": "medium",
+      "correlation": 0.65,
+      "notes": "TSLA Optimus进展和NVDA机器人芯片对板块影响较大"
+    },
+    {
+      "sectorKey": "ai_agent",
+      "sectorName": "AI Agent/应用",
+      "description": "AI应用、办公软件、自动化平台",
+      "usBenchmarks": ["MSFT", "CRM", "NOW", "SNOW", "PANW", "ZS"],
+      "mappingType": "demand",
+      "mappingDescription": "需求景气映射：海外AI应用渗透 → A股应用厂商受益",
+      "aShareSectors": ["人工智能", "软件服务", "云计算"],
+      "coreTargets": ["000977.SZ", "688111.SH", "300369.SZ", "002230.SZ", "600588.SH"],
+      "impactLevel": "medium",
+      "correlation": 0.60,
+      "notes": "MSFT/CRM的AI功能发布对A股AI应用板块有情绪传导"
+    },
+    {
+      "sectorKey": "quantum",
+      "sectorName": "量子/前沿科技",
+      "description": "量子通信、量子计算、量子传感",
+      "usBenchmarks": ["IONQ", "RGTI", "QBTS", "NVDA", "GOOG"],
+      "mappingType": "valuation",
+      "mappingDescription": "估值锚映射：海外量子标的估值 → A股量子标的估值参考",
+      "aShareSectors": ["量子通信", "量子科技", "通信设备"],
+      "coreTargets": ["600105.SH", "002115.SZ", "300520.SZ", "688027.SH", "300025.SZ"],
+      "impactLevel": "low",
+      "correlation": 0.40,
+      "notes": "目前市场处于早期阶段，估值波动较大"
+    },
+    {
+      "sectorKey": "battery_tech",
+      "sectorName": "电池/新能源",
+      "description": "动力电池、储能、电池材料",
+      "usBenchmarks": ["TSLA", "LCID", "PLUG", "BE", "ENPH", "SEDG"],
+      "mappingType": "demand",
+      "mappingDescription": "需求景气映射：海外新能源需求 → A股产业链受益",
+      "aShareSectors": ["动力电池", "储能", "新能源"],
+      "coreTargets": ["300750.SZ", "002460.SZ", "600438.SH", "300014.SZ", "600884.SH"],
+      "impactLevel": "medium",
+      "correlation": 0.70,
+      "notes": "TSLA销量和电池技术路线对A股电池板块影响较大"
+    },
+    {
+      "sectorKey": "biotech",
+      "sectorName": "生物科技/创新药",
+      "description": "创新药、CXO、医疗器械",
+      "usBenchmarks": ["JNJ", "PFE", "MRK", "AZN", "NVO", "REGN"],
+      "mappingType": "valuation",
+      "mappingDescription": "估值锚映射：海外药企估值 → A股创新药估值参考",
+      "aShareSectors": ["创新药", "CXO", "医疗器械"],
+      "coreTargets": ["600276.SH", "002275.SZ", "300760.SZ", "688363.SH", "300347.SZ"],
+      "impactLevel": "medium",
+      "correlation": 0.65,
+      "notes": "FDA审批结果和海外药企财报对A股CXO板块有影响"
+    },
+    {
+      "sectorKey": "cloud_computing",
+      "sectorName": "云计算/数据中心",
+      "description": "云服务、IDC、服务器",
+      "usBenchmarks": ["AMZN", "MSFT", "GOOG", "NVDA", "AMD", "DELL"],
+      "mappingType": "demand",
+      "mappingDescription": "需求景气映射：海外云资本开支 → A股IDC和服务器受益",
+      "aShareSectors": ["云计算", "IDC", "服务器"],
+      "coreTargets": ["000977.SZ", "603881.SH", "002929.SZ", "300379.SZ", "600845.SH"],
+      "impactLevel": "high",
+      "correlation": 0.75,
+      "notes": "云厂商资本开支指引对A股IDC板块影响显著"
+    }
+  ],
+  "mappingTypes": {
+    "supply": {
+      "name": "供应链映射",
+      "description": "A股公司是美股公司的供应商，美股需求直接影响A股营收",
+      "impactPattern": "美股财报超预期 → A股供应商股价上涨"
+    },
+    "demand": {
+      "name": "需求景气映射",
+      "description": "美股公司的需求反映行业景气度，A股公司受益于同样的行业趋势",
+      "impactPattern": "美股公司上调指引 → A股同行业公司受益"
+    },
+    "technology": {
+      "name": "技术路线映射",
+      "description": "美股公司的技术突破引领行业方向，A股公司跟随技术路线",
+      "impactPattern": "美股技术突破 → A股相关技术标的上涨"
+    },
+    "valuation": {
+      "name": "估值锚映射",
+      "description": "美股公司的估值水平作为A股公司的估值参考",
+      "impactPattern": "美股估值提升 → A股同类标的估值跟随"
+    }
+  }
+}

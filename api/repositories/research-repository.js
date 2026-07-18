@@ -164,11 +164,12 @@ export class ResearchRepository {
         priceHistMap.get(row.ts_code).push({ close: row.close, date: row.trade_date });
       }
 
-      return poolRows.map(({ ts_code: tsCode, sector }) => {
+      return poolRows.map(({ ts_code: tsCode, sector, pool_type: poolType }) => {
         const factorMap = factorsMap.get(tsCode) || {};
         return {
           tsCode,
           sector,
+          poolType,
           factorMap,
           priceHistory: priceHistMap.get(tsCode) || [],
           latestPrice: pricesMap.has(tsCode) ? Number(pricesMap.get(tsCode)) : null,

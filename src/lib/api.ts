@@ -217,6 +217,21 @@ export interface StockReport {
     netDirection: string;          // bullish / bearish / neutral
     summary: string;
   };
+
+  // --- 新增：VFM 价值评分卡（5 维度）---
+  vfmScoreCard: {
+    fundamentalQuality: number | null;
+    valuationPosition: number | null;
+    technicalMomentum: number | null;
+    themeRelevance: number | null;
+    industryPosition: number | null;
+    compositeScore: number | null;
+    redFlags: string[];
+    dataAvailableLevel: string;
+    momentum5d: number | null;
+    momentum20d: number | null;
+    pePercentile: number | null;
+  };
 }
 
 export interface StockDetail {
@@ -524,4 +539,268 @@ export function recordDecisionOutcome(
     method: "POST",
     body: JSON.stringify(input),
   });
+}
+
+// ---------- A股-美股映射分析 API ----------
+
+export interface SectorMapping {
+  sectorKey: string;
+  sectorName: string;
+  mappingType: string;
+  mappingTypeName: string;
+  aShareSectors: string[];
+  coreTargets: string[];
+  usBenchmarks: string[];
+  impactLevel: string;
+  correlation: number;
+  description: string;
+  mappingDescription: string;
+}
+
+export interface UsBenchmarkRating {
+  symbol: string;
+  source: string;
+  totalAnalysts: number;
+  buy: number;
+  hold: number;
+  sell: number;
+  buyRatio: number;
+  sellRatio: number;
+  targetMeanPrice?: number;
+  currentPrice?: number;
+  upside?: number;
+  signal: string;
+  news?: Array<{ date: string; headline: string; source: string }>;
+}
+
+export interface AShareImpact {
+  ticker: string;
+  impactDirection: string;
+  impactLevel: string;
+  reasoning: string;
+  correlation: number;
+}
+
+export interface SectorImpactAnalysis {
+  sectorKey: string;
+  sectorName: string;
+  mappingType: string;
+  mappingDescription: string;
+  impactLevel: string;
+  correlation: number;
+  usBenchmarks: UsBenchmarkRating[];
+  aShareImpact: AShareImpact[];
+  overallSignal: string;
+  overallConfidence: number;
+}
+
+export interface MappingMatrixResponse {
+  success: boolean;
+  data: SectorMapping[];
+  sectorCount: number;
+}
+
+export interface ImpactAnalysisResponse {
+  success: boolean;
+  data: SectorImpactAnalysis[];
+  sectorCount: number;
+}
+
+export interface TargetImpactResponse {
+  success: boolean;
+  ticker?: string;
+  sector?: SectorMapping;
+  overallSignal?: string;
+  overallConfidence?: number;
+  targetImpact?: AShareImpact;
+  usBenchmarks?: UsBenchmarkRating[];
+  report?: string;
+  message?: string;
+}
+
+export interface MappingReportResponse {
+  success: boolean;
+  report: string;
+  sectorCount: number;
+}
+
+export function fetchMappingMatrix(): Promise<MappingMatrixResponse> {
+  return apiRequest("/api/mapping/matrix");
+}
+
+export function fetchMappingSectors(): Promise<{ success: boolean; data: SectorMapping[] }> {
+  return apiRequest("/api/mapping/sectors");
+}
+
+export function fetchMappingImpact(sectorKey?: string): Promise<ImpactAnalysisResponse> {
+  const query = sectorKey ? `?sectorKey=${encodeURIComponent(sectorKey)}` : "";
+  return apiRequest(`/api/mapping/impact${query}`);
+}
+
+export function fetchTargetImpact(ticker: string): Promise<TargetImpactResponse> {
+  return apiRequest(`/api/mapping/target/${encodeURIComponent(ticker)}`);
+}
+
+export function fetchMappingReport(sectorKey?: string): Promise<MappingReportResponse> {
+  const query = sectorKey ? `?sectorKey=${encodeURIComponent(sectorKey)}` : "";
+  return apiRequest(`/api/mapping/report${query}`);
+}
+
+// ---------- 聊天历史 API ----------
+
+/**
+ * 单条对话历史记录（后端返回格式）
+ *
+ * 每条记录包含用户的提问和 AI 的回复，
+ * 用来在刷新页面后恢复之前的对话内容。
+ */
+export interface ChatHistoryItem {
+  id: number;
+  message: string;       // 用户发送的消息
+  response: string;      // AI 的回复内容
+  intent: string | null;  // 意图类型
+  createdAt: string;     // 创建时间
+}
+
+/**
+ * 获取聊天历史记录
+ *
+ * 从后端数据库加载之前保存的对话记录，
+ * 这样刷新页面后还能看到之前的聊天内容。
+ *
+ * @param limit - 最多获取几条，默认 50
+ * @returns 按时间正序排列的对话历史（最早的在最前面）
+ */
+export function fetchChatHistory(limit = 50): Promise<{ success: boolean; history: ChatHistoryItem[] }> {
+  return apiRequest(`/api/vector/chat/history?limit=${limit}`);
+}
+
+/**
+ * 清空所有聊天历史
+ *
+ * 删除后端数据库中的所有对话记录。
+ */
+export function clearChatHistory(): Promise<{ success: boolean; deleted: number }> {
+  return apiRequest("/api/vector/chat/history", { method: "DELETE" });
+}
+
+
+// ---------- Session 管理 API ----------
+// 1:1 复现 Codex 的 session 管理方案
+// 每个 session 有唯一 ID、标题、状态、置顶标记
+// 支持：新建、列表、切换、置顶、归档、删除
+
+/**
+ * 会话对象（对应后端 chat_sessions 表）
+ *
+ * 类似 Codex 的 threads 表中的每条记录
+ */
+export interface ChatSession {
+  id: string;              // 唯一会话 ID (UUID)
+  title: string;           // 会话标题
+  status: "active" | "archived";  // 状态
+  is_pinned: number;       // 是否置顶 (0/1)
+  pinned_at: string | null;      // 置顶时间
+  message_count: number;   // 消息数量
+  last_message_at: string | null; // 最后消息时间
+  created_at: string;      // 创建时间
+  updated_at: string;      // 更新时间
+}
+
+/**
+ * 会话消息对象（对应后端 chat_messages 表）
+ *
+ * 类似 Codex 的 sessions/*.jsonl 中的每条消息记录
+ */
+export interface SessionMessage {
+  id: number;
+  session_id: string;
+  role: "user" | "assistant";
+  content: string;
+  intent: string | null;
+  created_at: string;
+}
+
+/**
+ * 获取会话列表
+ *
+ * 对应 Codex 的 thread list 命令
+ *
+ * @param status - 筛选状态：active(默认) / archived / all
+ * @param search - 按标题搜索（可选）
+ * @returns 会话列表，置顶在前，然后按最后消息时间倒序
+ */
+export function fetchSessions(status: "active" | "archived" | "all" = "active", search?: string): Promise<{ success: boolean; sessions: ChatSession[] }> {
+  const params = new URLSearchParams({ status });
+  if (search) params.set("search", search);
+  return apiRequest(`/api/sessions?${params.toString()}`);
+}
+
+/**
+ * 创建新会话
+ *
+ * 对应 Codex 中开启一个新线程
+ *
+ * @param title - 会话标题（可选，默认"新对话"，首条消息后自动更新）
+ * @returns 新创建的会话对象
+ */
+export function createSession(title?: string): Promise<{ success: boolean; session: ChatSession }> {
+  return apiRequest("/api/sessions", {
+    method: "POST",
+    body: JSON.stringify({ title }),
+  });
+}
+
+/**
+ * 获取会话的消息列表
+ *
+ * 对应 Codex 从 sessions/*.jsonl 读取 rollout
+ *
+ * @param sessionId - 会话 ID
+ * @returns 消息列表（按时间正序）
+ */
+export function fetchSessionMessages(sessionId: string): Promise<{ success: boolean; messages: SessionMessage[] }> {
+  return apiRequest(`/api/sessions/${sessionId}/messages`);
+}
+
+/**
+ * 更新会话（置顶/归档/重命名）
+ *
+ * 对应 Codex 的 pinned threads 和 archive 功能
+ *
+ * @param sessionId - 会话 ID
+ * @param options - 更新选项
+ *   - title: 新标题
+ *   - isPinned: true=置顶, false=取消置顶
+ *   - isArchived: true=归档, false=取消归档
+ * @returns 更新后的会话对象
+ */
+export function updateSession(
+  sessionId: string,
+  options: { title?: string; isPinned?: boolean; isArchived?: boolean }
+): Promise<{ success: boolean; session: ChatSession }> {
+  return apiRequest(`/api/sessions/${sessionId}`, {
+    method: "PATCH",
+    body: JSON.stringify(options),
+  });
+}
+
+/**
+ * 删除会话
+ *
+ * 对应 Codex 的 purge 命令（不可恢复）
+ *
+ * @param sessionId - 会话 ID
+ */
+export function deleteSession(sessionId: string): Promise<{ success: boolean; deleted: boolean }> {
+  return apiRequest(`/api/sessions/${sessionId}`, { method: "DELETE" });
+}
+
+/**
+ * 获取会话统计信息
+ *
+ * @returns 统计数据（活跃数、归档数、置顶数、总消息数）
+ */
+export function fetchSessionStats(): Promise<{ success: boolean; stats: { activeSessions: number; archivedSessions: number; pinnedSessions: number; totalMessages: number } }> {
+  return apiRequest("/api/sessions/stats");
 }

@@ -73,6 +73,290 @@ function scoreColor(score: number): string {
   return "#f87171"; // red
 }
 
+// ============================================================
+// VFM 价值评分卡组件
+//
+// 小白讲解：这个组件展示 5 维价值评分，
+// 左边是雷达图（5 个维度一目了然），
+// 右边是 5 个维度的详细分数条，
+// 下面是警示信号。
+// ============================================================
+
+interface VfmDimension {
+  key: string;
+  label: string;
+  score: number | null;
+  desc: string;
+  color: string;
+}
+
+const VFM_DIMENSIONS: VfmDimension[] = [
+  { key: "fundamentalQuality", label: "基本面质量", score: null, desc: "盈利能力 / ROE / 营收增速", color: "#34d399" },
+  { key: "valuationPosition", label: "估值位置", score: null, desc: "PE / PB / 历史分位", color: "#60a5fa" },
+  { key: "technicalMomentum", label: "技术动量", score: null, desc: "趋势 / RSI / MACD / 动量", color: "#fbbf24" },
+  { key: "themeRelevance", label: "主题相关性", score: null, desc: "赛道 / 概念 / 池子层级", color: "#a78bfa" },
+  { key: "industryPosition", label: "产业位置", score: null, desc: "市值 / 行业排名 / 龙头地位", color: "#f472b6" },
+];
+
+/**
+ * VFM 雷达图组件（纯 SVG 实现）。
+ *
+ * 小白讲解：用 SVG 画一个五边形雷达图，
+ * 每个顶点代表一个维度，
+ * 填充的区域就是这只股票的得分轮廓，
+ * 越大表示越值得关注。
+ *
+ * @param {object} props - 组件属性
+ * @param {object} props.scores - 5 个维度的得分
+ * @param {number} props.size - 图表尺寸（像素）
+ * @returns {JSX.Element} 雷达图 JSX
+ */
+function VfmRadarChart({ scores, size = 220 }: { scores: Record<string, number | null>; size?: number }) {
+  const cx = size / 2;
+  const cy = size / 2;
+  const radius = size * 0.35;
+
+  // 5 个维度的角度（从正上方开始，顺时针）
+  const angles = [-90, -18, 54, 126, 198].map(a => (a * Math.PI) / 180);
+
+  // 计算每个维度的坐标点
+  const getPoint = (angle: number, value: number) => {
+    const r = (value / 10) * radius;
+    return {
+      x: cx + r * Math.cos(angle),
+      y: cy + r * Math.sin(angle),
+    };
+  };
+
+  // 绘制背景网格（4 层五边形）
+  const gridLevels = [0.25, 0.5, 0.75, 1.0];
+  const gridPolygons = gridLevels.map((level, idx) => {
+    const points = angles.map(a => {
+      const p = getPoint(a, level * 10);
+      return `${p.x},${p.y}`;
+    }).join(" ");
+    return (
+      <polygon
+        key={idx}
+        points={points}
+        fill="none"
+        stroke="#2f2f2f"
+        strokeWidth={1}
+      />
+    );
+  });
+
+  // 绘制坐标轴（从中心到每个顶点）
+  const axisLines = angles.map((a, idx) => {
+    const outer = getPoint(a, 10);
+    return (
+      <line
+        key={idx}
+        x1={cx}
+        y1={cy}
+        x2={outer.x}
+        y2={outer.y}
+        stroke="#2f2f2f"
+        strokeWidth={1}
+      />
+    );
+  });
+
+  // 绘制得分区域
+  const scorePoints = VFM_DIMENSIONS.map((dim, idx) => {
+    const s = scores[dim.key];
+    const val = s != null ? s : 0;
+    return getPoint(angles[idx], val);
+  });
+  const scorePolygon = scorePoints.map(p => `${p.x},${p.y}`).join(" ");
+
+  // 绘制维度标签
+  const labels = VFM_DIMENSIONS.map((dim, idx) => {
+    const outer = getPoint(angles[idx], 11.5);
+    const s = scores[dim.key];
+    return (
+      <g key={idx}>
+        <text
+          x={outer.x}
+          y={outer.y}
+          textAnchor="middle"
+          dominantBaseline="middle"
+          fill="#a0a0a0"
+          fontSize={11}
+          fontWeight={500}
+        >
+          {dim.label}
+        </text>
+        {s != null && (
+          <text
+            x={outer.x}
+            y={outer.y + 14}
+            textAnchor="middle"
+            dominantBaseline="middle"
+            fill={scoreColor(s)}
+            fontSize={12}
+            fontWeight={600}
+          >
+            {s.toFixed(1)}
+          </text>
+        )}
+      </g>
+    );
+  });
+
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+      {gridPolygons}
+      {axisLines}
+      <polygon
+        points={scorePolygon}
+        fill="rgba(212, 163, 115, 0.25)"
+        stroke="#d4a373"
+        strokeWidth={2}
+      />
+      {scorePoints.map((p, idx) => (
+        <circle key={idx} cx={p.x} cy={p.y} r={3.5} fill="#d4a373" />
+      ))}
+      {labels}
+    </svg>
+  );
+}
+
+/**
+ * 单个维度的评分条组件。
+ *
+ * 小白讲解：显示一个维度的名称、分数和进度条，
+ * 颜色根据分数变化（绿色=好，红色=差）。
+ *
+ * @param {object} props - 组件属性
+ * @param {string} props.label - 维度名称
+ * @param {number|null} props.score - 得分（0-10）
+ * @param {string} props.desc - 维度说明
+ * @param {string} props.color - 颜色
+ * @returns {JSX.Element} 评分条 JSX
+ */
+function VfmScoreBar({ label, score, desc, color }: { label: string; score: number | null; desc: string; color: string }) {
+  const pct = score != null ? (score / 10) * 100 : 0;
+  const barColor = score != null ? scoreColor(score) : "#3f3f3f";
+
+  return (
+    <div className="space-y-1.5">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className="w-2 h-2 rounded-full" style={{ backgroundColor: color }} />
+          <span className="text-xs font-medium text-text">{label}</span>
+        </div>
+        <span className="text-sm font-mono font-semibold tabular-nums" style={{ color: barColor }}>
+          {score != null ? score.toFixed(1) : "—"}
+        </span>
+      </div>
+      <div className="w-full h-1.5 bg-surface-4 rounded-full overflow-hidden">
+        <div
+          className="h-full rounded-full transition-all duration-500"
+          style={{ width: `${pct}%`, backgroundColor: barColor }}
+        />
+      </div>
+      <div className="text-[10px] text-text-dim">{desc}</div>
+    </div>
+  );
+}
+
+/**
+ * VFM 价值评分卡主组件。
+ *
+ * 小白讲解：完整的 VFM 评分卡，
+ * 左边雷达图 + 右边 5 个维度进度条 + 下面警示信号。
+ *
+ * @param {object} props - 组件属性
+ * @param {object} props.vfm - VFM 评分卡数据
+ * @returns {JSX.Element} 评分卡 JSX
+ */
+function VfmScoreCard({ vfm }: { vfm: {
+  fundamentalQuality: number | null;
+  valuationPosition: number | null;
+  technicalMomentum: number | null;
+  themeRelevance: number | null;
+  industryPosition: number | null;
+  compositeScore: number | null;
+  redFlags: string[];
+} }) {
+  const scores = {
+    fundamentalQuality: vfm.fundamentalQuality,
+    valuationPosition: vfm.valuationPosition,
+    technicalMomentum: vfm.technicalMomentum,
+    themeRelevance: vfm.themeRelevance,
+    industryPosition: vfm.industryPosition,
+  };
+
+  return (
+    <div className="mt-4 bg-surface-2 rounded-lg border border-surface-4 p-4">
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <div className="w-6 h-6 rounded-md bg-amber-500/20 flex items-center justify-center">
+            <BarChart2 className="w-3.5 h-3.5 text-amber-400" />
+          </div>
+          <span className="text-sm font-medium text-text">价值评分卡（VFM）</span>
+        </div>
+        {vfm.compositeScore != null && (
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-text-dim">综合得分</span>
+            <span
+              className="inline-flex items-center justify-center rounded-full border-2 w-10 h-10 text-sm font-bold tabular-nums"
+              style={{
+                color: scoreColor(vfm.compositeScore),
+                borderColor: scoreColor(vfm.compositeScore) + "80",
+                backgroundColor: scoreColor(vfm.compositeScore) + "15",
+              }}
+            >
+              {vfm.compositeScore.toFixed(1)}
+            </span>
+          </div>
+        )}
+      </div>
+
+      <div className="flex flex-col md:flex-row items-center gap-4">
+        {/* 左：雷达图 */}
+        <div className="flex-shrink-0 flex items-center justify-center">
+          <VfmRadarChart scores={scores} size={240} />
+        </div>
+
+        {/* 右：5 个维度进度条 */}
+        <div className="flex-1 w-full space-y-3">
+          {VFM_DIMENSIONS.map((dim) => (
+            <VfmScoreBar
+              key={dim.key}
+              label={dim.label}
+              score={scores[dim.key as keyof typeof scores]}
+              desc={dim.desc}
+              color={dim.color}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* 警示信号 */}
+      {vfm.redFlags && vfm.redFlags.length > 0 && (
+        <div className="mt-4 pt-3 border-t border-surface-4">
+          <div className="flex items-center gap-1.5 text-xs text-text-dim mb-2">
+            <AlertTriangle className="w-3 h-3 text-rose-400" />
+            警示信号
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {vfm.redFlags.map((flag, idx) => (
+              <span
+                key={idx}
+                className="text-xs px-2 py-1 rounded-md border border-rose-500/30 bg-rose-500/10 text-rose-400"
+              >
+                {flag}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // 通用：指标列表组件（展示一组 ReportItem）
 function ReportItemList({ items, summary, emptyText }: { items: ReportItem[] | undefined; summary?: string; emptyText: string }) {
   if (!items || items.length === 0) {
@@ -233,6 +517,11 @@ export default function StockDetailPage() {
               </span>
               {recommendation.text}
             </div>
+          )}
+
+          {/* ===== VFM 价值评分卡（5 维度） ===== */}
+          {report.vfmScoreCard && (
+            <VfmScoreCard vfm={report.vfmScoreCard} />
           )}
 
           {/* ===== 决策参数卡片（Task 7 新增） ===== */}

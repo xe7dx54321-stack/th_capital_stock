@@ -3,7 +3,7 @@ import { getDeepReport } from "./deep-report-service.js";
 import { getEnhancedRecommendation } from "./recommendation-service.js";
 import { getMoatReport, getPeerComparisonReport } from "./research-analysis-service.js";
 import { getCatalystsReport } from "./report-service.js";
-import { computeUnifiedScore, getTechnicalData } from "./scoring-service.js";
+import { computeUnifiedScore, computeVfmScoreCard, getTechnicalData } from "./scoring-service.js";
 
 
 function marketForCode(code) {
@@ -167,6 +167,19 @@ export function buildStockDetail(code, input, now = new Date()) {
     recommendation,
   );
 
+  // === VFM 价值评分卡（5 维度）===
+  const vfmScoreCard = computeVfmScoreCard({
+    tsCode: code,
+    sector: poolInfo.sector || "",
+    poolType: poolInfo.pool_type || "",
+    factorMap,
+    priceHistory,
+    valuationData,
+    fundamentalsData,
+    peerGroupData: peerComparisonReport,
+    name,
+  });
+
   return {
     tsCode: code,
     name,
@@ -189,6 +202,7 @@ export function buildStockDetail(code, input, now = new Date()) {
       peerComparison: peerComparisonReport,
       catalysts: catalystsReport,
       deepReport,
+      vfmScoreCard,
     },
     updatedAt: now.toISOString(),
   };

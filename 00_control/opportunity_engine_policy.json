@@ -44,5 +44,12 @@
     "min_backtest_trades_for_ready": 8,
     "min_win_rate_for_ready": 0.48,
     "min_avg_return_for_ready": 0.0
+  },
+  "self_discovery_policy": {
+    "mode": "development",
+    "max_candidates_per_theme": 8,
+    "min_composite_score_for_proposal": 6.0,
+    "require_human_approval_before_pool": true,
+    "scan_schedule": "weekly"
   }
 }

@@ -117,3 +117,76 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\backup-local.ps1
 - 仓库资产清单：`legacy_manifest/`
 
 安全底线：真实研究数据不通过 Git 迁移；未跟踪文件先进入资产清单分类；高判断研究对象必须经过人工批准，才能进入正式记忆或决策层。
+
+## 六、当前功能状态（2026-07-18）
+
+本工作台已从"数据采集 + 静态看板"演进为"自然语言驱动的多轮投研 Agent"。下列能力均已落地并通过端到端测试。
+
+### 6.1 Agent 工作流引擎（核心）
+
+- **LLM 意图识别**：用户自然语言输入（如"扫描一下今天的投资机会"）经 `api/services/intent-engine.js` 解析为结构化任务，无需穷举命令。
+- **动态流程编排**：根据意图自动组装工具链，支持 9 类预设任务（机会扫描、每日简报、风险分析、深度分析、美股映射、组合回顾等）。
+- **多轮对话上下文**：前端 `chatHistory` 全链路传递至 LLM messages，支持"继续输出"、"接着说"等追问。
+- **工具集**：涨幅榜/跌幅榜/放量异动/价格异动/估值极端/最新新闻/股票池快照/美股数据/映射分析 等 20+ 工具。
+- **容错**：LLM 返回 JSON 含 markdown 标记时自动清洗；解析失败时按关键词回退匹配（扫描/复盘/简报/风险等）。
+
+### 6.2 会话管理（1:1 复现 Codex）
+
+- **三层存储**：`sessions/*.jsonl`（消息流）+ `state_5.sqlite` threads 表（索引）+ `session_index.jsonl`（轻量索引）。
+- **CRUD 操作**：创建（UUID）、列表（置顶优先→时间倒序）、切换（resume）、置顶（pinned）、归档（archived）、删除（purge）。
+- **持久化**：刷新页面后历史会话不丢失，自动恢复最近会话。
+- **实现**：`api/services/session-service.js` + `src/features/chat/SessionSidebar.tsx`。
+
+### 6.3 聊天界面（双状态）
+
+- **空状态欢迎页**：无对话时显示"今天想分析点什么？" + 4 个推荐任务卡片（今日复盘/涨跌幅归因/机会雷达/市场新闻）。
+- **工作状态聊天页**：有对话时切换为消息流 + 执行过程 + Markdown 报告渲染。
+- **侧边栏**：左侧会话列表（新建 + 历史 + 置顶 + 归档分组），中间工作区，已移除运行档案与研究产物面板。
+
+### 6.4 实时行情数据服务
+
+数据源优先级与覆盖范围：
+
+| 数据类型 | 主数据源 | 备用 | 缓存 |
+|---------|---------|------|------|
+| 大盘指数（上证/深证/创业板/科创50/沪深300等 8 只） | 新浪 `hq.sinajs.cn`（GBK 编码） | - | 5 分钟 |
+| 涨幅榜/跌幅榜 | 新浪 `vip.stock.finance.sina.com.cn` | 东方财富 `push2.eastmoney.com` | 2 分钟 |
+| 放量异动 | 基于涨幅榜筛选（量比 / 换手率） | - | - |
+| 单股实时行情 | 腾讯 `qt.gtimg.cn` | 东方财富 | 5 分钟 |
+| 估值极端标的 | 本地数据库 `valuation_snapshot` 表 | - | - |
+
+**已修复的关键 Bug**：
+- 新浪大盘指数返回 GBK 编码，用 `TextDecoder("gbk")` 解码（否则指数名称变乱码）。
+- 大盘指数成交额在 `parts[9]`（单位：元），不是 `parts[8]`（成交量手数）。
+- `valuation_snapshot` 表查询：字段重命名 `ticker → ts_code`、子查询去重（避免同一股票 66 条历史快照被当成 66 只）、过滤 null、`historical_percentile` 是 0-1 小数（阈值用 0.2/0.8 而非 20/80）。
+- 估值数据为 null 时明确告知 LLM "数据缺失，不得编造"，防止生成"腾讯 PE 17.9 分位 0.05%"等假数据。
+
+### 6.5 LLM 服务
+
+- **模型**：MiniMax-M2.7（`12_smr_agents/model_runtime/model_profiles.json` 配置），`anthropic_messages` 格式。
+- **maxTokens**：默认 16000（从 8000 提升，避免长报告截断）。
+- **system prompt 分任务类型**：daily_brief / opportunity_scan / risk_analysis / chat 等各有专用 prompt。
+- **可沉淀记忆提取**：报告生成后自动提取结构化记忆，按章节标题智能分类（不再全是"分析结论"）。
+
+### 6.6 已知遗留问题
+
+- 记忆提取分类精度仍有优化空间（部分章节标题被统一归为"分析结论"）。
+- `daily_bar` 表在 MVP 数据库中不存在，本地 fallback 路径仅在实时 API 失败时触发报错（不影响主流程）。
+- 部分调试脚本（`api/debug_sources*.js`、`api/test_*.js`）尚未清理，后续可在下一次整理时删除。
+
+## 七、快速验证
+
+启动后端后，可运行端到端测试脚本验证主流程：
+
+```powershell
+# 启动服务
+npm run start
+
+# 另开终端，运行扫描测试
+node scripts/test-e2e-scan.js
+
+# 验证涨跌幅数据源
+node scripts/test-rank-data.js
+```
+
+预期结果：`taskType = opportunity_scan`，9/9 步骤全部执行，报告包含正确的中文指数名称、合理成交额（亿元）、未编造的估值数据。
