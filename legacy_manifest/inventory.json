@@ -1,5 +1,5 @@
 {
-  "content_fingerprint": "bb43433c2f6de34e697a8a2c46445041b7f180a1403c1f3099eecf9029326a89",
+  "content_fingerprint": "0b9c50f7ba95ed3fd124c0e014849933d8289bd6a8b3690eba0c243878a4d6a1",
   "files": [
     {
       "approved": false,
@@ -18,7 +18,7 @@
       "approved": false,
       "category": "SECRET",
       "imports": [],
-      "last_git_change": "2026-07-18T23:57:28+08:00",
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": ".env.example",
       "present": true,
       "rationale": "credential-like path; keep outside Git and runtime logs",
@@ -31,7 +31,7 @@
       "approved": false,
       "category": "KEEP",
       "imports": [],
-      "last_git_change": "2026-07-13T15:32:14+08:00",
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": ".gitignore",
       "present": true,
       "rationale": "belongs to a current application, domain, configuration or documentation path",
@@ -3283,7 +3283,7 @@
       "approved": false,
       "category": "KEEP",
       "imports": [],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "00_control/web_source_registry.json",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -7787,6 +7787,37 @@
       ],
       "runtime_evidence": null,
       "size": 19593,
+      "tracked": false
+    },
+    {
+      "approved": false,
+      "category": "GENERATED",
+      "imports": [],
+      "last_git_change": null,
+      "path": "06_outputs/workflows/run_13b658ca0bca41c98848976789537e14/correction_diff.json",
+      "present": true,
+      "rationale": "runtime/build output governed by retention and ignore rules",
+      "referenced_by": [
+        "smr_app/workflows/claim_correction.py",
+        "tests/workflows/test_claim_correction_workflow.py"
+      ],
+      "runtime_evidence": null,
+      "size": 1161,
+      "tracked": false
+    },
+    {
+      "approved": false,
+      "category": "GENERATED",
+      "imports": [],
+      "last_git_change": null,
+      "path": "06_outputs/workflows/run_13b658ca0bca41c98848976789537e14/correction_memo.md",
+      "present": true,
+      "rationale": "runtime/build output governed by retention and ignore rules",
+      "referenced_by": [
+        "smr_app/workflows/claim_correction.py"
+      ],
+      "runtime_evidence": null,
+      "size": 812,
       "tracked": false
     },
     {
@@ -13035,7 +13066,7 @@
         "traceback",
         "typing"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "08_scripts/dev/evaluate_pair_switch_decision.py",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -15577,7 +15608,7 @@
         "smr_pipeline_runner",
         "sys"
       ],
-      "last_git_change": "2026-06-18T19:14:59+08:00",
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "08_scripts/jobs/run_phase143_cross_link_pipeline.py",
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
@@ -15596,7 +15627,7 @@
         "smr_pipeline_runner",
         "sys"
       ],
-      "last_git_change": "2026-06-18T19:14:59+08:00",
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "08_scripts/jobs/run_phase144_feedback_pipeline.py",
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
@@ -15730,7 +15761,7 @@
         "smr_pipeline_runner",
         "sys"
       ],
-      "last_git_change": "2026-06-18T19:14:59+08:00",
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "08_scripts/jobs/run_phase150_tiering_pipeline.py",
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
@@ -15750,7 +15781,7 @@
         "smr_pipeline_runner",
         "sys"
       ],
-      "last_git_change": "2026-06-18T19:14:59+08:00",
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "08_scripts/jobs/run_phase151_discovery_pipeline.py",
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
@@ -15770,7 +15801,7 @@
         "smr_pipeline_runner",
         "sys"
       ],
-      "last_git_change": "2026-06-18T19:14:59+08:00",
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "08_scripts/jobs/run_phase152_admission_scoring_pipeline.py",
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
@@ -50662,7 +50693,7 @@
         "sys",
         "typing"
       ],
-      "last_git_change": "2026-06-18T19:14:59+08:00",
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "08_scripts/lib/smr_pipeline_runner.py",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -67299,7 +67330,7 @@
         "smr_phase151_quality_gate",
         "sys"
       ],
-      "last_git_change": "2026-07-13T14:40:56+08:00",
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "08_scripts/reporting/build_phase151_discovery_dashboard.py",
       "present": true,
       "rationale": "unreferenced Phase-era asset; remove from default runtime before deletion",
@@ -95450,7 +95481,7 @@
         "package*.json",
         "tests/test_phase*.py"
       ],
-      "last_git_change": "2026-07-14T16:03:26+08:00",
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "09_runbooks/smr-local-operations.md",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -96703,7 +96734,7 @@
       "approved": false,
       "category": "KEEP",
       "imports": [],
-      "last_git_change": "2026-05-19T00:22:05+08:00",
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "12_smr_agents/model_runtime/model_profiles.json",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -97042,7 +97073,7 @@
         "api/test_*.js",
         "src/features/chat/SessionSidebar.tsx"
       ],
-      "last_git_change": "2026-07-18T23:57:28+08:00",
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "README.md",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -97548,7 +97579,7 @@
         "path",
         "url"
       ],
-      "last_git_change": "2026-07-18T23:57:28+08:00",
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "api/app.js",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -97661,7 +97692,7 @@
       "imports": [
         "better-sqlite3"
       ],
-      "last_git_change": "2026-07-13T15:43:38+08:00",
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "api/repositories/workflow-repository.js",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -97800,7 +97831,7 @@
         "crypto",
         "express"
       ],
-      "last_git_change": "2026-07-13T16:15:14+08:00",
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "api/routes/workflows.js",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -97844,7 +97875,7 @@
         "./workflow-engine.js",
         "express"
       ],
-      "last_git_change": "2026-07-18T23:57:28+08:00",
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "api/services/agent-orchestrator.js",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -97887,7 +97918,7 @@
         "path",
         "url"
       ],
-      "last_git_change": "2026-07-18T23:57:28+08:00",
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "api/services/chat-enhanced-service.js",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -97928,7 +97959,7 @@
       "approved": false,
       "category": "KEEP",
       "imports": [],
-      "last_git_change": "2026-07-18T23:57:28+08:00",
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "api/services/chinese-news-service.js",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -97944,7 +97975,7 @@
       "approved": false,
       "category": "KEEP",
       "imports": [],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "api/services/citation-validator.js",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -97964,7 +97995,7 @@
         "./research-task-contracts.js",
         "./security-aliases.js"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "api/services/conversation-task-router-v2.js",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -97984,7 +98015,7 @@
         "./market-calendar.js",
         "node:crypto"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "api/services/data-envelope.js",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -98089,7 +98120,7 @@
         "node:crypto",
         "node:fs"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "api/services/governed-workflow-runner.js",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -98132,7 +98163,7 @@
         "./security-aliases.js",
         "./workflow-engine.js"
       ],
-      "last_git_change": "2026-07-18T23:57:28+08:00",
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "api/services/intent-engine.js",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -98155,7 +98186,7 @@
         "path",
         "url"
       ],
-      "last_git_change": "2026-07-18T23:57:28+08:00",
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "api/services/llm-service.js",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -98201,7 +98232,7 @@
       "approved": false,
       "category": "KEEP",
       "imports": [],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "api/services/market-calendar.js",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -98245,7 +98276,7 @@
         "path",
         "url"
       ],
-      "last_git_change": "2026-07-18T23:57:28+08:00",
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "api/services/memory-service.js",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -98265,7 +98296,7 @@
       "imports": [
         "./market-calendar.js"
       ],
-      "last_git_change": "2026-07-18T23:57:28+08:00",
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "api/services/realtime-data-service.js",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -98347,7 +98378,7 @@
       "approved": false,
       "category": "KEEP",
       "imports": [],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "api/services/research-execution-summary.js",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -98363,7 +98394,7 @@
       "approved": false,
       "category": "KEEP",
       "imports": [],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "api/services/research-session-state.js",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -98381,7 +98412,7 @@
       "approved": false,
       "category": "KEEP",
       "imports": [],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "api/services/research-task-contracts.js",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -98442,7 +98473,7 @@
       "approved": false,
       "category": "KEEP",
       "imports": [],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "api/services/security-aliases.js",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -98508,7 +98539,7 @@
       "imports": [
         "./llm-service.js"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "api/services/stock-research-v3-service.js",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -98525,7 +98556,7 @@
       "approved": false,
       "category": "KEEP",
       "imports": [],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "api/services/task-graph-registry.js",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -98591,7 +98622,7 @@
         "path",
         "report.md"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "api/services/workflow-audit-service.js",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -98628,7 +98659,7 @@
         "./vector-memory.js",
         "./wallstreet-data-service.js"
       ],
-      "last_git_change": "2026-07-19T00:12:20+08:00",
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "api/services/workflow-engine.js",
       "present": true,
       "rationale": "large source module should be split behind stable contracts",
@@ -98669,7 +98700,7 @@
       "approved": false,
       "category": "KEEP",
       "imports": [],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "artifacts_golden/comparison_matrix.json",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -98686,7 +98717,7 @@
       "approved": false,
       "category": "KEEP",
       "imports": [],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "artifacts_golden/decision_memo.md",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -98702,7 +98733,7 @@
       "approved": false,
       "category": "KEEP",
       "imports": [],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "artifacts_golden/decision_scenarios.json",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -98718,7 +98749,7 @@
       "approved": false,
       "category": "KEEP",
       "imports": [],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "artifacts_golden/monitoring_list.csv",
       "present": true,
       "rationale": "tracked asset retained by default until a stronger removal signal exists",
@@ -98825,7 +98856,7 @@
       "approved": false,
       "category": "KEEP",
       "imports": [],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "config/cninfo_identities.json",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -98881,7 +98912,7 @@
         "src/features/artifacts/ValuationModelView.tsx",
         "src/features/memory/MemoryCandidatePanel.tsx"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "config/conversation_replay_eval.json",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -98993,7 +99024,7 @@
       "approved": false,
       "category": "KEEP",
       "imports": [],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "config/industry_graph_schema.json",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -99026,7 +99057,7 @@
       "approved": false,
       "category": "KEEP",
       "imports": [],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "config/peer_sets.json",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -101493,7 +101524,7 @@
       "approved": false,
       "category": "KEEP",
       "imports": [],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "config/stock_deep_dive_v2_eval.json",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -101508,7 +101539,7 @@
       "approved": false,
       "category": "KEEP",
       "imports": [],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "config/stock_deep_dive_v3_eval.json",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -101524,7 +101555,7 @@
       "approved": false,
       "category": "KEEP",
       "imports": [],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "config/valuation_model_templates.json",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -101543,7 +101574,7 @@
       "imports": [
         "research-workflow.js"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "docs/adr/0003-stock-deep-dive-v3-staged-governed-synthesis.md",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -101558,7 +101589,7 @@
       "approved": false,
       "category": "KEEP",
       "imports": [],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "docs/adr/0004-natural-language-intent-routing.md",
       "present": true,
       "rationale": "belongs to a current application, domain, configuration or documentation path",
@@ -101571,7 +101602,7 @@
       "approved": false,
       "category": "KEEP",
       "imports": [],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "docs/adr/0005-stock-v3-stage-observability.md",
       "present": true,
       "rationale": "belongs to a current application, domain, configuration or documentation path",
@@ -101584,7 +101615,7 @@
       "approved": false,
       "category": "KEEP",
       "imports": [],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "docs/adr/0006-on-demand-write-through-acquisition.md",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -101599,7 +101630,7 @@
       "approved": false,
       "category": "KEEP",
       "imports": [],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "docs/adr/0007-task-shaped-conversational-research-graphs.md",
       "present": true,
       "rationale": "belongs to a current application, domain, configuration or documentation path",
@@ -101612,7 +101643,7 @@
       "approved": false,
       "category": "KEEP",
       "imports": [],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "docs/adr/0008-memory-and-context-foundation-before-more-workflows.md",
       "present": true,
       "rationale": "belongs to a current application, domain, configuration or documentation path",
@@ -103102,7 +103133,7 @@
       "imports": [
         "evidence.json"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "docs/plans/2026-07-19-data-ingestion-trust-layer.md",
       "present": true,
       "rationale": "belongs to a current application, domain, configuration or documentation path",
@@ -103115,7 +103146,7 @@
       "approved": false,
       "category": "KEEP",
       "imports": [],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "docs/plans/2026-07-20-stock-deep-dive-v2-design.md",
       "present": true,
       "rationale": "belongs to a current application, domain, configuration or documentation path",
@@ -103137,7 +103168,7 @@
         "tests/api/governed-stock-chat.test.js",
         "tests/workflows/test_stock_claim_compiler_v2.py"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "docs/plans/2026-07-20-stock-deep-dive-v2-implementation.md",
       "present": true,
       "rationale": "belongs to a current application, domain, configuration or documentation path",
@@ -103169,7 +103200,7 @@
         "tests/workflows/test_stock_deep_dive_v3.py",
         "tools/evaluate_stock_deep_dive_v3.py"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "docs/plans/2026-07-21-stock-deep-dive-v3-implementation.md",
       "present": true,
       "rationale": "belongs to a current application, domain, configuration or documentation path",
@@ -103182,7 +103213,7 @@
       "approved": false,
       "category": "KEEP",
       "imports": [],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "docs/plans/2026-07-21-stock-deep-dive-v3-spec.md",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -103199,7 +103230,7 @@
       "imports": [
         "workflow-engine.js"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "docs/plans/2026-07-22-knevo-session-workflow-gap-and-roadmap.md",
       "present": true,
       "rationale": "belongs to a current application, domain, configuration or documentation path",
@@ -103212,7 +103243,7 @@
       "approved": false,
       "category": "KEEP",
       "imports": [],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "docs/plans/2026-07-22-next-coding-agent-handoff-prompt.md",
       "present": true,
       "rationale": "belongs to a current application, domain, configuration or documentation path",
@@ -103225,7 +103256,7 @@
       "approved": false,
       "category": "KEEP",
       "imports": [],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "docs/plans/2026-07-22-on-demand-acquisition-implementation.md",
       "present": true,
       "rationale": "belongs to a current application, domain, configuration or documentation path",
@@ -103359,7 +103390,7 @@
         "tools/smoke_firecrawl_acquisition.py",
         "workflow-engine.js"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "docs/plans/2026-07-22-research-agent-system-master-plan.md",
       "present": true,
       "rationale": "belongs to a current application, domain, configuration or documentation path",
@@ -103372,7 +103403,7 @@
       "approved": false,
       "category": "KEEP",
       "imports": [],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "docs/plans/2026-07-28-live-research-progress-sse-design.md",
       "present": true,
       "rationale": "belongs to a current application, domain, configuration or documentation path",
@@ -103425,7 +103456,7 @@
         "tests/workflows/test_thesis_update.py",
         "tools/evaluate_conversation_workflows.py"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "docs/plans/2026-07-28-memory-context-foundation-v1.md",
       "present": true,
       "rationale": "belongs to a current application, domain, configuration or documentation path",
@@ -103438,7 +103469,7 @@
       "approved": false,
       "category": "KEEP",
       "imports": [],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "docs/runbooks/research-workflow-quality.md",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -104712,7 +104743,7 @@
       "approved": false,
       "category": "KEEP",
       "imports": [],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "migrations/0007_acquisition_kernel.sql",
       "present": true,
       "rationale": "tracked asset retained by default until a stronger removal signal exists",
@@ -104725,7 +104756,7 @@
       "approved": false,
       "category": "KEEP",
       "imports": [],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "migrations/0008_research_session_state.sql",
       "present": true,
       "rationale": "tracked asset retained by default until a stronger removal signal exists",
@@ -104738,7 +104769,7 @@
       "approved": false,
       "category": "KEEP",
       "imports": [],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "migrations/0009_research_graph.sql",
       "present": true,
       "rationale": "tracked asset retained by default until a stronger removal signal exists",
@@ -104751,7 +104782,7 @@
       "approved": false,
       "category": "KEEP",
       "imports": [],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "migrations/0010_research_signals.sql",
       "present": true,
       "rationale": "tracked asset retained by default until a stronger removal signal exists",
@@ -104764,7 +104795,7 @@
       "approved": false,
       "category": "KEEP",
       "imports": [],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "migrations/0011_claim_dependencies.sql",
       "present": true,
       "rationale": "tracked asset retained by default until a stronger removal signal exists",
@@ -104777,7 +104808,7 @@
       "approved": false,
       "category": "KEEP",
       "imports": [],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "migrations/0012_unified_memory.sql",
       "present": true,
       "rationale": "tracked asset retained by default until a stronger removal signal exists",
@@ -104838,7 +104869,7 @@
         "node --test --test-concurrency=1 tests/api/*.test.js",
         "node api/server.js"
       ],
-      "last_git_change": "2026-07-18T23:57:28+08:00",
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "package.json",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -104894,7 +104925,7 @@
       "approved": false,
       "category": "KEEP",
       "imports": [],
-      "last_git_change": "2026-07-13T14:59:08+08:00",
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "requirements-dev.txt",
       "present": true,
       "rationale": "tracked asset retained by default until a stronger removal signal exists",
@@ -104941,7 +104972,7 @@
         "tests/test_unified_memory_phase12.py",
         "tools/inventory_repository.py"
       ],
-      "last_git_change": "2026-07-14T00:21:44+08:00",
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "scripts/check.ps1",
       "present": true,
       "rationale": "tracked asset retained by default until a stronger removal signal exists",
@@ -104972,7 +105003,7 @@
       "imports": [
         "runtime-$ApiPort-$UiPort.json"
       ],
-      "last_git_change": "2026-07-14T16:03:26+08:00",
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "scripts/local-common.ps1",
       "present": true,
       "rationale": "tracked asset retained by default until a stronger removal signal exists",
@@ -105015,7 +105046,7 @@
         "node_modules\\vite\\bin\\vite.js",
         "vite\\bin\\vite.js"
       ],
-      "last_git_change": "2026-07-14T16:03:26+08:00",
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "scripts/start-local.ps1",
       "present": true,
       "rationale": "tracked asset retained by default until a stronger removal signal exists",
@@ -105133,7 +105164,7 @@
         "kernel",
         "store"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "smr_app/acquisition/__init__.py",
       "present": true,
       "rationale": "belongs to a current application, domain, configuration or documentation path",
@@ -105155,7 +105186,7 @@
         "typing",
         "uuid"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "smr_app/acquisition/contracts.py",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -105188,7 +105219,7 @@
         "store",
         "typing"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "smr_app/acquisition/kernel.py",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -105210,7 +105241,7 @@
         "market",
         "szse"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "smr_app/acquisition/providers/__init__.py",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -105244,7 +105275,7 @@
         "urllib.request",
         "zoneinfo"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "smr_app/acquisition/providers/cninfo.py",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -105269,7 +105300,7 @@
         "smr_app.acquisition.contracts",
         "szse"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "smr_app/acquisition/providers/factory.py",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -105300,7 +105331,7 @@
         "urllib.parse",
         "{safe}_{h}.json"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "smr_app/acquisition/providers/firecrawl.py",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -105334,7 +105365,7 @@
         "urllib.request",
         "zoneinfo"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "smr_app/acquisition/providers/market.py",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -105366,7 +105397,7 @@
         "typing",
         "urllib.request"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "smr_app/acquisition/providers/szse.py",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -105394,7 +105425,7 @@
         "typing",
         "uuid"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "smr_app/acquisition/store.py",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -105571,7 +105602,7 @@
         "typing",
         "uuid"
       ],
-      "last_git_change": "2026-07-13T16:15:14+08:00",
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "smr_app/adapters/memory.py",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -105599,7 +105630,7 @@
         "sqlite3",
         "typing"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "smr_app/adapters/research_context_v3.py",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -105721,7 +105752,7 @@
         "normalization",
         "stock_packet"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "smr_app/research/__init__.py",
       "present": true,
       "rationale": "belongs to a current application, domain, configuration or documentation path",
@@ -105740,7 +105771,7 @@
         "smr_app.research.analysis_v3",
         "typing"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "smr_app/research/acquisition_materializer_v3.py",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -105760,7 +105791,7 @@
         "re",
         "typing"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "smr_app/research/analysis_v3.py",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -105782,7 +105813,7 @@
         "pathlib",
         "typing"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "smr_app/research/causal_chain.py",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -105802,7 +105833,7 @@
         "re",
         "typing"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "smr_app/research/claim_compiler.py",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -105826,7 +105857,7 @@
         "smr_app.research.claim_dependency",
         "typing"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "smr_app/research/claim_correction.py",
       "present": true,
       "rationale": "belongs to a current application, domain, configuration or documentation path",
@@ -105845,7 +105876,7 @@
         "datetime",
         "typing"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "smr_app/research/claim_dependency.py",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -105865,7 +105896,7 @@
         "datetime",
         "typing"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "smr_app/research/comparison_matrix.py",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -105891,7 +105922,7 @@
         "typing",
         "uuid"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "smr_app/research/daily_signal_integration.py",
       "present": true,
       "rationale": "belongs to a current application, domain, configuration or documentation path",
@@ -105914,7 +105945,7 @@
         "smr_app.acquisition.store",
         "typing"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "smr_app/research/data_requirements_v3.py",
       "present": true,
       "rationale": "belongs to a current application, domain, configuration or documentation path",
@@ -105932,7 +105963,7 @@
         "dataclasses",
         "typing"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "smr_app/research/decision_scenarios.py",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -105954,7 +105985,7 @@
         "re",
         "typing"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "smr_app/research/evaluation.py",
       "present": true,
       "rationale": "belongs to a current application, domain, configuration or documentation path",
@@ -105972,7 +106003,7 @@
         "datetime",
         "typing"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "smr_app/research/expectation_gap_score.py",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -105995,7 +106026,7 @@
         "pathlib",
         "typing"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "smr_app/research/graph_evidence.py",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -106018,7 +106049,7 @@
         "peer_sets.json",
         "typing"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "smr_app/research/industry_graph.py",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -106038,7 +106069,7 @@
         "math",
         "typing"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "smr_app/research/normalization.py",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -106064,7 +106095,7 @@
         "typing",
         "web_source_registry.json"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "smr_app/research/open_research_plan.py",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -106083,7 +106114,7 @@
         "claim_compiler",
         "typing"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "smr_app/research/quality_gate.py",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -106104,7 +106135,7 @@
         "re",
         "typing"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "smr_app/research/report_compiler.py",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -106124,7 +106155,7 @@
         "statistics",
         "typing"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "smr_app/research/report_v3.py",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -106151,7 +106182,7 @@
         "summary.md",
         "typing"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "smr_app/research/research_memory.py",
       "present": true,
       "rationale": "belongs to a current application, domain, configuration or documentation path",
@@ -106167,7 +106198,7 @@
         "__future__",
         "typing"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "smr_app/research/research_plan_v3.py",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -106187,7 +106218,7 @@
         "datetime",
         "typing"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "smr_app/research/signal_registry.py",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -106206,7 +106237,7 @@
         "datetime",
         "typing"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "smr_app/research/stock_packet.py",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -106225,7 +106256,7 @@
         "dataclasses",
         "typing"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "smr_app/research/task_requirements.py",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -106246,7 +106277,7 @@
         "re",
         "typing"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "smr_app/research/theme_universe.py",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -106265,7 +106296,7 @@
       "imports": [
         "json"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "smr_app/research/tool_result.py",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -106285,7 +106316,7 @@
         "smr_app.research.signal_registry",
         "typing"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "smr_app/research/transmission_timeline.py",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -106312,7 +106343,7 @@
         "urllib.parse",
         "web_source_registry.json"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "smr_app/research/web_document_extractor.py",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -106337,7 +106368,7 @@
         "typing",
         "uuid"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "smr_app/research/weekly_compression.py",
       "present": true,
       "rationale": "belongs to a current application, domain, configuration or documentation path",
@@ -106361,7 +106392,7 @@
         "typing",
         "uuid"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "smr_app/research/wiki_knowledge_base.py",
       "present": true,
       "rationale": "belongs to a current application, domain, configuration or documentation path",
@@ -106527,7 +106558,7 @@
         "smr_app.workflows.theme_expectation_gap",
         "smr_app.workflows.thesis_update"
       ],
-      "last_git_change": "2026-07-13T16:15:14+08:00",
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "smr_app/runtime/registry.py",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -106555,7 +106586,7 @@
         "typing",
         "uuid"
       ],
-      "last_git_change": "2026-07-13T15:43:38+08:00",
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "smr_app/runtime/runner.py",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -106574,7 +106605,7 @@
       "imports": [
         "research_data"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "smr_app/tools/__init__.py",
       "present": true,
       "rationale": "belongs to a current application, domain, configuration or documentation path",
@@ -106600,7 +106631,7 @@
         "typing",
         "urllib.parse"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "smr_app/tools/research_data.py",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -106615,7 +106646,7 @@
       "approved": false,
       "category": "KEEP",
       "imports": [],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "smr_app/valuation/__init__.py",
       "present": true,
       "rationale": "belongs to a current application, domain, configuration or documentation path",
@@ -106634,7 +106665,7 @@
         "{base_name}.json",
         "{base_name}.md"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "smr_app/valuation/artifacts.py",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -106653,7 +106684,7 @@
         "dataclasses",
         "typing"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "smr_app/valuation/contracts.py",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -106683,7 +106714,7 @@
         "math",
         "smr_app.valuation.contracts"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "smr_app/valuation/engine.py",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -106700,7 +106731,7 @@
       "imports": [
         "math"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "smr_app/valuation/reverse_implied.py",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -106718,7 +106749,7 @@
         "smr_app.valuation.contracts",
         "smr_app.valuation.engine"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "smr_app/valuation/scenarios.py",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -106760,7 +106791,7 @@
         "sqlite3",
         "typing"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "smr_app/workflows/claim_correction.py",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -106795,7 +106826,7 @@
         "timelines.json",
         "typing"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "smr_app/workflows/company_signal_plan.py",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -106854,7 +106885,7 @@
         "sqlite3",
         "typing"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "smr_app/workflows/industry_causal_explainer.py",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -106891,7 +106922,7 @@
         "valuation_model_templates.json",
         "valuation_report.md"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "smr_app/workflows/operating_driver_valuation.py",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -106925,7 +106956,7 @@
         "sqlite3",
         "typing"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "smr_app/workflows/pair_switch_decision.py",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -107004,7 +107035,7 @@
         "stock_deep_dive.md",
         "typing"
       ],
-      "last_git_change": "2026-07-13T23:00:34+08:00",
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "smr_app/workflows/stock_deep_dive.py",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -107047,7 +107078,7 @@
         "theme_universe.json",
         "typing"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "smr_app/workflows/theme_expectation_gap.py",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -107148,7 +107179,7 @@
       "approved": false,
       "category": "KEEP",
       "imports": [],
-      "last_git_change": "2026-07-18T23:57:28+08:00",
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "src/app/workbench.css",
       "present": true,
       "rationale": "belongs to a current application, domain, configuration or documentation path",
@@ -107250,7 +107281,7 @@
       "imports": [
         "react"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "src/features/artifacts/CausalChainView.tsx",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -107268,7 +107299,7 @@
       "imports": [
         "react"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "src/features/artifacts/ComparisonMatrixView.tsx",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -107286,7 +107317,7 @@
       "imports": [
         "react"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "src/features/artifacts/CorrectionDiffView.tsx",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -107304,7 +107335,7 @@
       "imports": [
         "react"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "src/features/artifacts/SignalPlanView.tsx",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -107322,7 +107353,7 @@
       "imports": [
         "react"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "src/features/artifacts/ValuationModelView.tsx",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -107347,7 +107378,7 @@
         "@testing-library/react",
         "vitest"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "src/features/artifacts/__tests__/PolymorphicArtifactViews.test.tsx",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -107370,7 +107401,7 @@
         "react-markdown",
         "remark-gfm"
       ],
-      "last_git_change": "2026-07-18T23:57:28+08:00",
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "src/features/chat/ChatPanel.tsx",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -107392,7 +107423,7 @@
         "lucide-react",
         "react"
       ],
-      "last_git_change": "2026-07-18T23:57:28+08:00",
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "src/features/chat/SessionSidebar.tsx",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -107412,7 +107443,7 @@
         "../ChatPanel",
         "vitest"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "src/features/chat/__tests__/ChatPanelStream.test.ts",
       "present": true,
       "rationale": "belongs to a current application, domain, configuration or documentation path",
@@ -107517,7 +107548,7 @@
       "imports": [
         "react"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "src/features/memory/MemoryCandidatePanel.tsx",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -107562,7 +107593,7 @@
         "lucide-react",
         "react"
       ],
-      "last_git_change": "2026-07-13T16:53:25+08:00",
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "src/features/workflows/ArtifactViewer.tsx",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -107639,7 +107670,7 @@
         "react-router-dom",
         "vitest"
       ],
-      "last_git_change": "2026-07-13T23:00:34+08:00",
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "src/features/workflows/__tests__/ResearchWorkbench.test.tsx",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -107673,7 +107704,7 @@
         "../datetime",
         "vitest"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "src/lib/__tests__/datetime.test.ts",
       "present": true,
       "rationale": "belongs to a current application, domain, configuration or documentation path",
@@ -107701,7 +107732,7 @@
       "approved": false,
       "category": "KEEP",
       "imports": [],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "src/lib/datetime.ts",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -108213,7 +108244,7 @@
       "approved": false,
       "category": "KEEP",
       "imports": [],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "tests/acquisition/__init__.py",
       "present": true,
       "rationale": "tracked asset retained by default until a stronger removal signal exists",
@@ -108240,7 +108271,7 @@
         "tempfile",
         "unittest"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "tests/acquisition/test_cninfo_provider.py",
       "present": true,
       "rationale": "tracked asset retained by default until a stronger removal signal exists",
@@ -108264,7 +108295,7 @@
         "typing",
         "unittest"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "tests/acquisition/test_firecrawl_provider.py",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -108291,7 +108322,7 @@
         "tempfile",
         "unittest"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "tests/acquisition/test_kernel.py",
       "present": true,
       "rationale": "tracked asset retained by default until a stronger removal signal exists",
@@ -108318,7 +108349,7 @@
         "tempfile",
         "unittest"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "tests/acquisition/test_market_providers.py",
       "present": true,
       "rationale": "tracked asset retained by default until a stronger removal signal exists",
@@ -108342,7 +108373,7 @@
         "smr_app.tools.research_data",
         "tempfile"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "tests/acquisition/test_research_data_tools.py",
       "present": true,
       "rationale": "tracked asset retained by default until a stronger removal signal exists",
@@ -108367,7 +108398,7 @@
         "tests.acquisition.test_cninfo_provider",
         "unittest"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "tests/acquisition/test_szse_provider.py",
       "present": true,
       "rationale": "tracked asset retained by default until a stronger removal signal exists",
@@ -108427,7 +108458,7 @@
         "node:path",
         "node:test"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "tests/api/chat-api-session-integration.test.js",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -108471,7 +108502,7 @@
         "node:assert/strict",
         "node:test"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "tests/api/chat-workflow-stream.test.js",
       "present": true,
       "rationale": "tracked asset retained by default until a stronger removal signal exists",
@@ -108488,7 +108519,7 @@
         "node:assert/strict",
         "node:test"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "tests/api/citation-validator.test.js",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -108503,13 +108534,70 @@
       "approved": false,
       "category": "KEEP",
       "imports": [
+        "../../api/services/context-assembler.js",
+        "node:assert/strict",
+        "node:test"
+      ],
+      "last_git_change": null,
+      "path": "tests/api/context-assembler.test.js",
+      "present": true,
+      "rationale": "has a code/config reference or recent runtime evidence",
+      "referenced_by": [
+        "docs/plans/2026-07-28-memory-context-foundation-v1.md"
+      ],
+      "runtime_evidence": null,
+      "size": 5578,
+      "tracked": true
+    },
+    {
+      "approved": false,
+      "category": "KEEP",
+      "imports": [
+        "../../api/services/context-budget.js",
+        "node:assert/strict",
+        "node:test"
+      ],
+      "last_git_change": null,
+      "path": "tests/api/context-budget.test.js",
+      "present": true,
+      "rationale": "has a code/config reference or recent runtime evidence",
+      "referenced_by": [
+        "docs/plans/2026-07-28-memory-context-foundation-v1.md"
+      ],
+      "runtime_evidence": null,
+      "size": 3082,
+      "tracked": true
+    },
+    {
+      "approved": false,
+      "category": "KEEP",
+      "imports": [
+        "../../api/services/conversation-compactor.js",
+        "node:assert/strict",
+        "node:test"
+      ],
+      "last_git_change": null,
+      "path": "tests/api/conversation-compactor.test.js",
+      "present": true,
+      "rationale": "has a code/config reference or recent runtime evidence",
+      "referenced_by": [
+        "docs/plans/2026-07-28-memory-context-foundation-v1.md"
+      ],
+      "runtime_evidence": null,
+      "size": 3646,
+      "tracked": true
+    },
+    {
+      "approved": false,
+      "category": "KEEP",
+      "imports": [
         "../../api/services/conversation-task-router-v2.js",
         "../../api/services/task-graph-registry.js",
         "../../api/services/workflow-engine.js",
         "node:assert/strict",
         "node:test"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "tests/api/conversation-task-router-v2.test.js",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -108530,7 +108618,7 @@
         "node:assert/strict",
         "node:test"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "tests/api/data-envelope.test.js",
       "present": true,
       "rationale": "tracked asset retained by default until a stronger removal signal exists",
@@ -108576,7 +108664,7 @@
         "research_packet.json",
         "stock_deep_dive.md"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "tests/api/governed-stock-chat.test.js",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -108639,7 +108727,7 @@
         "node:assert/strict",
         "node:test"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "tests/api/market-calendar.test.js",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -108648,6 +108736,25 @@
       ],
       "runtime_evidence": null,
       "size": 1592,
+      "tracked": true
+    },
+    {
+      "approved": false,
+      "category": "KEEP",
+      "imports": [
+        "../../api/services/memory-retrieval-policy.js",
+        "node:assert/strict",
+        "node:test"
+      ],
+      "last_git_change": null,
+      "path": "tests/api/memory-retrieval-policy.test.js",
+      "present": true,
+      "rationale": "has a code/config reference or recent runtime evidence",
+      "referenced_by": [
+        "docs/plans/2026-07-28-memory-context-foundation-v1.md"
+      ],
+      "runtime_evidence": null,
+      "size": 4060,
       "tracked": true
     },
     {
@@ -108680,7 +108787,7 @@
         "node:assert/strict",
         "node:test"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "tests/api/realtime-source-metadata.test.js",
       "present": true,
       "rationale": "tracked asset retained by default until a stronger removal signal exists",
@@ -108700,7 +108807,7 @@
         "node:path",
         "node:test"
       ],
-      "last_git_change": "2026-07-13T23:44:16+08:00",
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "tests/api/research-contracts.test.js",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -108719,7 +108826,7 @@
         "node:assert/strict",
         "node:test"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "tests/api/research-execution-summary.test.js",
       "present": true,
       "rationale": "tracked asset retained by default until a stronger removal signal exists",
@@ -108743,7 +108850,7 @@
         "path",
         "url"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "tests/api/research-session-e2e.test.js",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -108764,7 +108871,7 @@
         "node:assert/strict",
         "node:test"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "tests/api/research-task-envelope.test.js",
       "present": true,
       "rationale": "tracked asset retained by default until a stronger removal signal exists",
@@ -108782,7 +108889,7 @@
         "node:assert/strict",
         "node:test"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "tests/api/security-aliases.test.js",
       "present": true,
       "rationale": "tracked asset retained by default until a stronger removal signal exists",
@@ -108799,7 +108906,7 @@
         "node:assert/strict",
         "node:test"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "tests/api/stock-research-v3.test.js",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -108819,7 +108926,7 @@
         "node:assert/strict",
         "node:test"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "tests/api/task-graph-registry.test.js",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -108844,7 +108951,7 @@
         "node:path",
         "node:test"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "tests/api/workflow-audit.test.js",
       "present": true,
       "rationale": "tracked asset retained by default until a stronger removal signal exists",
@@ -108863,7 +108970,7 @@
         "node:assert/strict",
         "node:test"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "tests/api/workflow-guardrails.test.js",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -108882,7 +108989,7 @@
         "node:assert/strict",
         "node:test"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "tests/api/workflow-input-adapters.test.js",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -108904,7 +109011,7 @@
         "node:test",
         "node:url"
       ],
-      "last_git_change": "2026-07-13T23:00:34+08:00",
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "tests/api/workflow-routes.test.js",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -108929,7 +109036,7 @@
         "pytest",
         "sys"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "tests/e2e/test_knevo_six_turn_replay.py",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -108939,6 +109046,31 @@
       ],
       "runtime_evidence": null,
       "size": 4142,
+      "tracked": true
+    },
+    {
+      "approved": false,
+      "category": "KEEP",
+      "imports": [
+        "__future__",
+        "api/services/context-assembler.js",
+        "api/services/context-budget.js",
+        "api/services/conversation-compactor.js",
+        "api/services/memory-retrieval-policy.js",
+        "json",
+        "memory-context-e2e.mjs",
+        "pathlib",
+        "subprocess"
+      ],
+      "last_git_change": null,
+      "path": "tests/e2e/test_memory_context_long_conversation.py",
+      "present": true,
+      "rationale": "has a code/config reference or recent runtime evidence",
+      "referenced_by": [
+        "docs/plans/2026-07-28-memory-context-foundation-v1.md"
+      ],
+      "runtime_evidence": null,
+      "size": 6082,
       "tracked": true
     },
     {
@@ -109543,7 +109675,7 @@
         "smr_app.research.claim_dependency",
         "sys"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "tests/research/test_claim_dependency_and_correction.py",
       "present": true,
       "rationale": "tracked asset retained by default until a stronger removal signal exists",
@@ -109573,7 +109705,7 @@
         "timelines.json",
         "unittest"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "tests/research/test_company_signal_plan.py",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -109600,7 +109732,7 @@
         "sys",
         "tempfile"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "tests/research/test_industry_graph.py",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -109626,7 +109758,7 @@
         "smr_app.research.wiki_knowledge_base",
         "sys"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "tests/research/test_p8_daily_and_p10_wiki.py",
       "present": true,
       "rationale": "tracked asset retained by default until a stronger removal signal exists",
@@ -109642,7 +109774,7 @@
         "pytest",
         "smr_app.research.task_requirements"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "tests/research/test_task_requirements.py",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -109675,7 +109807,7 @@
         "缺 expectation_scores.json",
         "缺 theme_universe.json"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "tests/research/test_theme_expectation_gap.py",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -109696,7 +109828,7 @@
         "pytest",
         "smr_app.research.tool_result"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "tests/research/test_tool_result.py",
       "present": true,
       "rationale": "tracked asset retained by default until a stronger removal signal exists",
@@ -109717,7 +109849,7 @@
         "tempfile",
         "unittest"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "tests/research/test_web_document_extractor.py",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -109876,7 +110008,7 @@
         "tempfile",
         "unittest"
       ],
-      "last_git_change": "2026-07-13T23:00:34+08:00",
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "tests/runtime/test_migrations.py",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -109925,7 +110057,7 @@
         "tempfile",
         "unittest"
       ],
-      "last_git_change": "2026-07-13T15:43:38+08:00",
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "tests/runtime/test_runner.py",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -110125,7 +110257,7 @@
         "vite.config.ts",
         "vite\\\\bin\\\\vite.js"
       ],
-      "last_git_change": "2026-07-14T16:03:26+08:00",
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "tests/smoke/test_local_operations_contract.py",
       "present": true,
       "rationale": "tracked asset retained by default until a stronger removal signal exists",
@@ -110165,7 +110297,7 @@
         "tools.inventory_repository",
         "unittest"
       ],
-      "last_git_change": "2026-07-14T08:18:17+08:00",
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "tests/smoke/test_repository_inventory.py",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -131792,7 +131924,7 @@
         "tempfile",
         "unittest"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "tests/test_unified_memory_phase12.py",
       "present": true,
       "rationale": "legacy Phase asset still has a reference or recent runtime evidence",
@@ -131815,7 +131947,7 @@
         "smr_app.valuation.contracts",
         "smr_app.valuation.engine"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "tests/valuation/test_engine.py",
       "present": true,
       "rationale": "tracked asset retained by default until a stronger removal signal exists",
@@ -131832,7 +131964,7 @@
         "smr_app.valuation.contracts",
         "smr_app.valuation.reverse_implied"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "tests/valuation/test_reverse_implied.py",
       "present": true,
       "rationale": "tracked asset retained by default until a stronger removal signal exists",
@@ -131854,7 +131986,7 @@
         "smr_app.valuation.scenarios",
         "tempfile"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "tests/valuation/test_scenarios_artifacts.py",
       "present": true,
       "rationale": "tracked asset retained by default until a stronger removal signal exists",
@@ -131889,7 +132021,7 @@
         "sqlite3",
         "tempfile"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "tests/workflows/test_claim_correction_workflow.py",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -131938,7 +132070,7 @@
         "smr_app.research.research_plan_v3",
         "unittest"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "tests/workflows/test_data_requirements_v3.py",
       "present": true,
       "rationale": "tracked asset retained by default until a stronger removal signal exists",
@@ -131963,7 +132095,7 @@
         "sys",
         "tempfile"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "tests/workflows/test_industry_causal_explainer.py",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -131993,7 +132125,7 @@
         "valuation_model.json",
         "valuation_report.md"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "tests/workflows/test_operating_driver_valuation.py",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -132021,7 +132153,7 @@
         "tempfile",
         "unittest"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "tests/workflows/test_pair_switch_decision.py",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -132072,7 +132204,7 @@
         "smr_app.research.stock_packet",
         "unittest"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "tests/workflows/test_stock_claim_compiler_v2.py",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -132108,7 +132240,7 @@
         "unittest.mock",
         "us_share.json"
       ],
-      "last_git_change": "2026-07-13T23:00:34+08:00",
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "tests/workflows/test_stock_deep_dive.py",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -132127,7 +132259,7 @@
         "smr_app.research.evaluation",
         "unittest"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "tests/workflows/test_stock_deep_dive_v2_evaluation.py",
       "present": true,
       "rationale": "tracked asset retained by default until a stronger removal signal exists",
@@ -132149,7 +132281,7 @@
         "sqlite3",
         "unittest"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "tests/workflows/test_stock_deep_dive_v3.py",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -132169,7 +132301,7 @@
         "smr_app.research.stock_packet",
         "unittest"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "tests/workflows/test_stock_research_packet_v2.py",
       "present": true,
       "rationale": "tracked asset retained by default until a stronger removal signal exists",
@@ -132253,7 +132385,7 @@
         "tools/evaluate_conversation_workflows.py",
         "typing"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "tools/evaluate_conversation_workflows.py",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -132288,7 +132420,7 @@
         "valuation_model_templates.json",
         "valuation_report.md"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "tools/evaluate_operating_driver_valuation.py",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -132320,7 +132452,7 @@
         "sys",
         "typing"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "tools/evaluate_stock_deep_dive_v2.py",
       "present": true,
       "rationale": "belongs to a current application, domain, configuration or documentation path",
@@ -132350,7 +132482,7 @@
         "sys",
         "typing"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "tools/evaluate_stock_deep_dive_v3.py",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -132388,7 +132520,7 @@
         "sys",
         "typing"
       ],
-      "last_git_change": "2026-07-14T08:18:17+08:00",
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "tools/inventory_repository.py",
       "present": true,
       "rationale": "has a code/config reference or recent runtime evidence",
@@ -132417,7 +132549,7 @@
         "smr_app.tools.research_data",
         "sys"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "tools/run_live_data_acceptance.py",
       "present": true,
       "rationale": "belongs to a current application, domain, configuration or documentation path",
@@ -132439,7 +132571,7 @@
         "node:process",
         "node:url"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "tools/run_live_model_acceptance.js",
       "present": true,
       "rationale": "belongs to a current application, domain, configuration or documentation path",
@@ -132468,7 +132600,7 @@
         "smr_app.runtime.runner",
         "smr_app.workflows.stock_deep_dive"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "tools/smoke_cninfo_acquisition.py",
       "present": true,
       "rationale": "belongs to a current application, domain, configuration or documentation path",
@@ -132496,7 +132628,7 @@
         "smr_app.runtime.runner",
         "smr_app.workflows.stock_deep_dive"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "tools/smoke_market_acquisition.py",
       "present": true,
       "rationale": "belongs to a current application, domain, configuration or documentation path",
@@ -132519,7 +132651,7 @@
         "stock_deep_dive_model.md",
         "synthesis-result.json"
       ],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "tools/synthesize_stock_deep_dive_v3.js",
       "present": true,
       "rationale": "belongs to a current application, domain, configuration or documentation path",
@@ -132532,7 +132664,7 @@
       "approved": false,
       "category": "KEEP",
       "imports": [],
-      "last_git_change": null,
+      "last_git_change": "2026-07-28T16:56:34+08:00",
       "path": "tools/verify_chat_stream.js",
       "present": true,
       "rationale": "belongs to a current application, domain, configuration or documentation path",
@@ -132591,7 +132723,7 @@
       "tracked": true
     }
   ],
-  "generated_at": "2026-07-28T08:50:14.357410+00:00",
+  "generated_at": "2026-07-28T09:40:31.562430+00:00",
   "project_root": ".",
   "schema_version": 1,
   "summary": {
@@ -132599,13 +132731,13 @@
       "CONSOLIDATE": 3,
       "DELETE_CANDIDATE": 71,
       "FREEZE": 2216,
-      "GENERATED": 558,
-      "KEEP": 3952,
+      "GENERATED": 560,
+      "KEEP": 3957,
       "SECRET": 3
     },
     "delete_approved_count": 0,
-    "file_count": 6803,
-    "present_count": 6745,
-    "tracked_count": 6067
+    "file_count": 6810,
+    "present_count": 6752,
+    "tracked_count": 6072
   }
 }
