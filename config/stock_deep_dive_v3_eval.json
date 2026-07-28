@@ -1,0 +1,23 @@
+{
+  "suite_id": "stock-deep-dive-v3-real-cross-sector",
+  "cases": [
+    {
+      "ticker": "300308.SZ",
+      "role": "光通信高覆盖主样本",
+      "expected_terms": ["中际旭创", "财务深度分析", "三种情景"],
+      "forbidden_terms": []
+    },
+    {
+      "ticker": "002230.SZ",
+      "role": "AI 软件跨行业样本",
+      "expected_terms": ["财务深度分析", "风险、反面证据与证伪条件"],
+      "forbidden_terms": ["中际旭创的历史证据", "800G 与 1.6T 产品收入"]
+    },
+    {
+      "ticker": "688041.SH",
+      "role": "半导体跨行业稀疏样本",
+      "expected_terms": ["财务深度分析", "证据索引"],
+      "forbidden_terms": ["中际旭创的历史证据", "光通信模块业务披露"]
+    }
+  ]
+}

@@ -15,6 +15,20 @@ from smr_phase151_financial_change import build_financial_change_result
 from smr_phase151_external_list import build_external_list_result
 
 
+def _optional_result(builder, key):
+    """Keep the legacy dashboard usable when an optional live-data table is absent."""
+    try:
+        return builder()[key]
+    except Exception as exc:
+        return {
+            "status": "unavailable",
+            "reason": str(exc),
+            "error_type": type(exc).__name__,
+            "mock_used": False,
+            "fixture_used": False,
+        }
+
+
 def build():
     """构建 Phase 151 发现管线仪表板。
 
@@ -30,11 +44,11 @@ def build():
         "config": load_phase151_config(),
         "discovery_sources": build_discovery_sources()["phase151_discovery_sources"],
         # BL-151-01: 新闻扫描器（真实数据）
-        "news_scanner": build_news_scanner_result()["phase151_news_scanner"],
+        "news_scanner": _optional_result(build_news_scanner_result, "phase151_news_scanner"),
         # BL-151-02: 财务变化检测（真实数据）
-        "financial_change_detector": build_financial_change_result()["phase151_financial_change_detector"],
+        "financial_change_detector": _optional_result(build_financial_change_result, "phase151_financial_change_detector"),
         # BL-151-03: 外部列表导入（真实数据）
-        "external_list_importer": build_external_list_result()["phase151_external_list_importer"],
+        "external_list_importer": _optional_result(build_external_list_result, "phase151_external_list_importer"),
         "discovery_queue": build_discovery_queue()["phase151_discovery_queue"],
         "quality_gate": run_phase151_quality_gate()["phase151_quality_gate"],
         "guard": run_phase151_guard()["phase151_cannot_conclude_guard"],

@@ -140,6 +140,16 @@ class WorkflowRunnerTests(unittest.TestCase):
         finally:
             conn.close()
 
+    def test_inline_agent_run_does_not_block_governed_workflow(self) -> None:
+        conn = sqlite3.connect(self.db_path)
+        EventStore(conn).create_run("run_agent", "agent_chat", {"message": "fixture"})
+        EventStore(conn).update_run("run_agent", status="running")
+        conn.close()
+
+        run = self.runner.run(workflow(), {}, run_id="run_governed")
+
+        self.assertEqual("completed", run["status"])
+
     def test_existing_queued_run_resumes_without_duplicate_queue_event(self) -> None:
         conn = sqlite3.connect(self.db_path)
         store = EventStore(conn)

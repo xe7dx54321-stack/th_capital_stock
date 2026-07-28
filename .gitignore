@@ -113,4 +113,6 @@ financial_statement_reports/
 _debug_*.py
 _inspect_*.py
 .tmp/
-06_outputs/workflows/
+# Runtime workflow and evaluation outputs are reproducible local artifacts.
+# Curated, redacted regression fixtures belong in artifacts_golden/ instead.
+06_outputs/

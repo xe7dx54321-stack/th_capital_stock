@@ -1,0 +1,389 @@
+{
+  "a_ticker": "300274.SZ",
+  "b_ticker": "688041.SH",
+  "a_name": "阳光电源",
+  "b_name": "海光信息",
+  "rows": {
+    "lifecycle": {
+      "dimension_id": "lifecycle",
+      "dimension_label": "生命周期",
+      "a": {
+        "value": "成熟期",
+        "unit": "文本",
+        "authority_tier": 4,
+        "degraded": false,
+        "degradation_reason": "",
+        "source": "industry_tag"
+      },
+      "b": {
+        "value": "成长期",
+        "unit": "文本",
+        "authority_tier": 4,
+        "degraded": false,
+        "degradation_reason": "",
+        "source": "industry_tag"
+      },
+      "delta": null,
+      "relative_description": "阳光电源 处于 成熟期；海光信息 处于 成长期",
+      "note": "公司处于导入期/成长期/成熟期/衰退期，决定增长天花板与波动特征",
+      "data_conflict": false,
+      "conflict_detail": ""
+    },
+    "revenue_quality": {
+      "dimension_id": "revenue_quality",
+      "dimension_label": "收入/利润质量",
+      "a": {
+        "value": {
+          "revenue": 620.0,
+          "net_margin": 0.116,
+          "gross_margin": 0.25
+        },
+        "unit": "亿元/%",
+        "authority_tier": 3,
+        "degraded": false,
+        "degradation_reason": "",
+        "source": "fundamentals_snapshot"
+      },
+      "b": {
+        "value": {
+          "revenue": 188.0,
+          "net_margin": 0.277,
+          "gross_margin": 0.48
+        },
+        "unit": "亿元/%",
+        "authority_tier": 3,
+        "degraded": false,
+        "degradation_reason": "",
+        "source": "fundamentals_snapshot"
+      },
+      "delta": 16.1,
+      "relative_description": "净利率：海光信息 比 阳光电源 高 16.10 个百分点",
+      "note": "收入增速、利润率结构、主营占比，反映盈利持续性",
+      "data_conflict": false,
+      "conflict_detail": ""
+    },
+    "cash_flow": {
+      "dimension_id": "cash_flow",
+      "dimension_label": "现金流",
+      "a": {
+        "value": {
+          "operating_cf": 85.0,
+          "free_cf": 38.0,
+          "cf_to_ni": 1.1805555555555556
+        },
+        "unit": "亿元/倍",
+        "authority_tier": 3,
+        "degraded": false,
+        "degradation_reason": "",
+        "source": "fundamentals_snapshot"
+      },
+      "b": {
+        "value": {
+          "operating_cf": 35.0,
+          "free_cf": 12.0,
+          "cf_to_ni": 0.6730769230769231
+        },
+        "unit": "亿元/倍",
+        "authority_tier": 3,
+        "degraded": false,
+        "degradation_reason": "",
+        "source": "fundamentals_snapshot"
+      },
+      "delta": -0.507,
+      "relative_description": "现金含量（经营CF/净利）：海光信息 比 阳光电源 低 0.507 倍",
+      "note": "经营现金流/自由现金流 vs 净利润，验证盈利真实性和造血能力",
+      "data_conflict": false,
+      "conflict_detail": ""
+    },
+    "roe": {
+      "dimension_id": "roe",
+      "dimension_label": "ROE",
+      "a": {
+        "value": 0.18,
+        "unit": "%",
+        "authority_tier": 2,
+        "degraded": false,
+        "degradation_reason": "",
+        "source": "fundamentals_snapshot"
+      },
+      "b": {
+        "value": 0.22,
+        "unit": "%",
+        "authority_tier": 2,
+        "degraded": false,
+        "degradation_reason": "",
+        "source": "fundamentals_snapshot"
+      },
+      "delta": 4.0,
+      "relative_description": "ROE：海光信息 比 阳光电源 高 4.00 个百分点",
+      "note": "净资产收益率，衡量资本使用效率",
+      "data_conflict": false,
+      "conflict_detail": ""
+    },
+    "valuation": {
+      "dimension_id": "valuation",
+      "dimension_label": "估值",
+      "a": {
+        "value": {
+          "pe_ttm": 22.0,
+          "pb": 3.6,
+          "market_cap": 2050.0,
+          "target_price": 82.0,
+          "upside_potential": 0.197080291970803
+        },
+        "unit": "倍/亿元/元",
+        "authority_tier": 2,
+        "degraded": false,
+        "degradation_reason": "",
+        "source": "valuation_snapshot + phase4_valuation"
+      },
+      "b": {
+        "value": {
+          "pe_ttm": 75.0,
+          "pb": 12.8,
+          "market_cap": 4100.0,
+          "target_price": 185.0,
+          "upside_potential": 0.4453125
+        },
+        "unit": "倍/亿元/元",
+        "authority_tier": 2,
+        "degraded": false,
+        "degradation_reason": "",
+        "source": "valuation_snapshot + phase4_valuation"
+      },
+      "delta": null,
+      "relative_description": "当前 PE：海光信息（75.0倍）高于 阳光电源（22.0倍）；阶段4 上行空间：海光信息（44.5%） 高于 阳光电源（19.7%）",
+      "note": "当前 PE、PB vs 阶段 4 目标估值，评估昂贵/便宜程度（中性描述） 【注意】估值高低不直接等同于买入/卖出信号，需结合生命周期、产业位置、催化与风险综合判断。",
+      "data_conflict": false,
+      "conflict_detail": ""
+    },
+    "implied_growth": {
+      "dimension_id": "implied_growth",
+      "dimension_label": "隐含增长",
+      "a": {
+        "value": {
+          "implied_cagr": 0.1,
+          "implied_net_margin": 0.115
+        },
+        "unit": "%",
+        "authority_tier": 3,
+        "degraded": false,
+        "degradation_reason": "",
+        "source": "phase4_reverse_implied"
+      },
+      "b": {
+        "value": {
+          "implied_cagr": 0.28,
+          "implied_net_margin": 0.28
+        },
+        "unit": "%",
+        "authority_tier": 3,
+        "degraded": false,
+        "degradation_reason": "",
+        "source": "phase4_reverse_implied"
+      },
+      "delta": 18.0,
+      "relative_description": "当前价格隐含 CAGR：海光信息 比 阳光电源 高 18.00 个百分点（差值越大表示市场对 B 的增长预期更高）",
+      "note": "当前价格反解的隐含 CAGR / 净利率，衡量市场预期高低",
+      "data_conflict": false,
+      "conflict_detail": ""
+    },
+    "industry_position": {
+      "dimension_id": "industry_position",
+      "dimension_label": "产业位置",
+      "a": {
+        "value": {
+          "industry": "光伏储能",
+          "position": "全球逆变器龙头"
+        },
+        "unit": "文本",
+        "authority_tier": 4,
+        "degraded": false,
+        "degradation_reason": "",
+        "source": "industry_tag"
+      },
+      "b": {
+        "value": {
+          "industry": "半导体算力",
+          "position": "国产 x86 CPU + DCU 龙头"
+        },
+        "unit": "文本",
+        "authority_tier": 4,
+        "degraded": false,
+        "degradation_reason": "",
+        "source": "industry_tag"
+      },
+      "delta": null,
+      "relative_description": "阳光电源（光伏储能 - 全球逆变器龙头）vs 海光信息（半导体算力 - 国产 x86 CPU + DCU 龙头）",
+      "note": "产业链位置：上游/中游/下游、龙头/跟随者、议价能力",
+      "data_conflict": false,
+      "conflict_detail": ""
+    },
+    "catalysts": {
+      "dimension_id": "catalysts",
+      "dimension_label": "催化",
+      "a": {
+        "value": [
+          "2026Q1 海外储能订单同比+40%",
+          "美国 30% ITC 补贴延续至 2030 年",
+          "1500V 组串逆变器全球份额提升至 32%"
+        ],
+        "unit": "文本列表",
+        "authority_tier": 4,
+        "degraded": false,
+        "degradation_reason": "",
+        "source": "user_input_or_research"
+      },
+      "b": {
+        "value": [
+          "2026Q2 DCU 3 号量产，FP8 算力对标 A100",
+          "三大运营商智算集采海光份额 45%",
+          "深算四号完成生态适配，金融/政务客户放量"
+        ],
+        "unit": "文本列表",
+        "authority_tier": 4,
+        "degraded": false,
+        "degradation_reason": "",
+        "source": "user_input_or_research"
+      },
+      "delta": null,
+      "relative_description": "催化数量：阳光电源 3 项 vs 海光信息 3 项",
+      "note": "近期可验证的催化事件（产品、订单、政策、产能等）",
+      "data_conflict": false,
+      "conflict_detail": ""
+    },
+    "risks": {
+      "dimension_id": "risks",
+      "dimension_label": "风险",
+      "a": {
+        "value": [
+          "海外贸易壁垒（欧盟 CBAM、美国关税）",
+          "硅料价格反弹导致毛利压缩",
+          "储能项目坏账率上升 0.8pp"
+        ],
+        "unit": "文本列表",
+        "authority_tier": 4,
+        "degraded": false,
+        "degradation_reason": "",
+        "source": "user_input_or_research"
+      },
+      "b": {
+        "value": [
+          "制程工艺受限（先进封装产能不足）",
+          "国际竞品降价（NVIDIA H20 对华特供）",
+          "大客户应收账款周转率下降"
+        ],
+        "unit": "文本列表",
+        "authority_tier": 4,
+        "degraded": false,
+        "degradation_reason": "",
+        "source": "user_input_or_research"
+      },
+      "delta": null,
+      "relative_description": "风险数量：阳光电源 3 项 vs 海光信息 3 项",
+      "note": "核心风险点（竞争、技术、客户、监管、周期等）",
+      "data_conflict": false,
+      "conflict_detail": ""
+    },
+    "crowding": {
+      "dimension_id": "crowding",
+      "dimension_label": "拥挤度",
+      "a": {
+        "value": {
+          "turnover_20d": 0.025
+        },
+        "unit": "%",
+        "authority_tier": 2,
+        "degraded": false,
+        "degradation_reason": "",
+        "source": "market_data"
+      },
+      "b": {
+        "value": {
+          "turnover_20d": 0.045
+        },
+        "unit": "%",
+        "authority_tier": 2,
+        "degraded": false,
+        "degradation_reason": "",
+        "source": "market_data"
+      },
+      "delta": 2.0,
+      "relative_description": "20日换手率：海光信息 比 阳光电源 高 2.00 个百分点 （高换手率可能暗示交易更拥挤）",
+      "note": "换手率、机构持仓集中度，衡量交易拥挤风险",
+      "data_conflict": false,
+      "conflict_detail": ""
+    },
+    "price_action": {
+      "dimension_id": "price_action",
+      "dimension_label": "近期价格状态",
+      "a": {
+        "value": {
+          "return_1m": -0.08,
+          "return_3m": -0.15,
+          "relative_strength": -0.05
+        },
+        "unit": "%",
+        "authority_tier": 2,
+        "degraded": false,
+        "degradation_reason": "",
+        "source": "market_price_history"
+      },
+      "b": {
+        "value": {
+          "return_1m": 0.12,
+          "return_3m": 0.28,
+          "relative_strength": 0.22
+        },
+        "unit": "%",
+        "authority_tier": 2,
+        "degraded": false,
+        "degradation_reason": "",
+        "source": "market_price_history"
+      },
+      "delta": 20.0,
+      "relative_description": "近 1 月涨跌幅：海光信息 相对 阳光电源 强 20.00 个百分点",
+      "note": "近 1/3 月涨跌、相对强弱、动量或反转信号",
+      "data_conflict": false,
+      "conflict_detail": ""
+    },
+    "holding_constraints": {
+      "dimension_id": "holding_constraints",
+      "dimension_label": "持仓约束",
+      "a": {
+        "value": {
+          "shares_wan": 3.0,
+          "cost_per_share": 5.5e-07,
+          "position_pct": 0.2,
+          "loss_tolerance": 0.15,
+          "short_term_tax": 0.005
+        },
+        "unit": "万股/元/%",
+        "authority_tier": 1,
+        "degraded": false,
+        "degradation_reason": "",
+        "source": "user_holding"
+      },
+      "b": {
+        "value": null,
+        "unit": "N/A",
+        "authority_tier": 4,
+        "degraded": false,
+        "degradation_reason": "B 标的为候选方，不适用持仓约束",
+        "source": "not_applicable"
+      },
+      "delta": null,
+      "relative_description": "仅适用于 阳光电源（当前持仓）：持仓占比 20.0%，成本 0.00元/股",
+      "note": "持仓占比、成本、亏损容忍、短期税费，仅用于 A 标的",
+      "data_conflict": false,
+      "conflict_detail": ""
+    }
+  },
+  "units_consistent": true,
+  "temporal_alignment_hours": 0.0,
+  "temporal_alignment_pass": true,
+  "overall_completeness": 0.9583333333333334,
+  "degraded_dimension_count": 0,
+  "data_gaps": [],
+  "warnings": []
+}

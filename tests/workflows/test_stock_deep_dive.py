@@ -5,6 +5,7 @@ import sqlite3
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from smr_app.adapters.fundamentals import FundamentalsRequest, load_fundamentals
 from smr_app.adapters.risk import RiskContextRequest, load_risk_context
@@ -115,6 +116,50 @@ def prepare_database(db_path: Path, fixture: dict | None) -> None:
 
 
 class StockDeepDiveWorkflowTests(unittest.TestCase):
+    def test_refresh_mode_runs_acquisition_preflight_without_aborting_research(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            db_path = root / "runtime.db"
+            artifact_root = root / "artifacts"
+            fixture = load_fixture("a_share.json")
+            prepare_database(db_path, fixture)
+
+            run = WorkflowRunner(db_path).run(
+                stock_deep_dive_definition(artifact_root=artifact_root),
+                {"ticker": fixture["ticker"], "allow_network": True},
+                run_id="run_refresh_preflight",
+            )
+
+            self.assertEqual("completed", run["status"])
+            packet = json.loads((artifact_root / run["run_id"] / "research_packet.json").read_text(encoding="utf-8"))
+            acquisition = packet["research_v3"]["acquisition"]
+            self.assertEqual("refresh_if_stale", acquisition["mode"])
+            self.assertEqual(7, len(acquisition["manifest"]["requirements"]))
+            self.assertEqual(7, acquisition["validation"]["total_requirements"])
+            self.assertGreater(acquisition["validation"]["unresolved_requirements"], 0)
+
+    def test_environment_source_database_is_separate_from_control_database(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            control_db_path = root / "control.db"
+            source_db_path = root / "source.db"
+            artifact_root = root / "artifacts"
+            fixture = load_fixture("a_share.json")
+            apply_migrations(control_db_path)
+            prepare_database(source_db_path, fixture)
+
+            with patch.dict("os.environ", {"SMR_SOURCE_DB_PATH": str(source_db_path)}):
+                definition = stock_deep_dive_definition(artifact_root=artifact_root)
+            run = WorkflowRunner(control_db_path).run(
+                definition,
+                {"ticker": fixture["ticker"], "allow_network": False},
+                run_id="run_separate_source",
+            )
+
+            self.assertEqual("completed", run["status"])
+            self.assertEqual("supported", run["summary"]["conclusion_status"])
+            self.assertGreater(run["summary"]["evidence_count"], 0)
+
     def test_a_h_and_us_fixtures_create_cited_report_and_candidate_memory(self) -> None:
         for fixture_name in ("a_share.json", "hong_kong.json", "us_share.json"):
             with self.subTest(fixture=fixture_name), tempfile.TemporaryDirectory() as temp_dir:
@@ -132,9 +177,14 @@ class StockDeepDiveWorkflowTests(unittest.TestCase):
 
                 self.assertEqual("completed", run["status"])
                 self.assertEqual("supported", run["summary"]["conclusion_status"])
+                self.assertEqual("research_ready", run["summary"]["research_readiness"])
                 self.assertEqual(3, len(run["summary"]["scenarios"]))
                 self.assertTrue(run["summary"]["claims"])
                 self.assertTrue(all(claim["evidence_ids"] for claim in run["summary"]["claims"]))
+                self.assertTrue(all(claim["source_paths"] for claim in run["summary"]["claims"]))
+                self.assertTrue(all(scenario["conditions"] for scenario in run["summary"]["scenarios"]))
+                self.assertTrue(all(scenario["invalidation"] for scenario in run["summary"]["scenarios"]))
+                self.assertEqual(2, len(run["summary"]["artifact_ids"]))
                 conn = sqlite3.connect(db_path)
                 try:
                     memory = conn.execute(
@@ -148,13 +198,30 @@ class StockDeepDiveWorkflowTests(unittest.TestCase):
                     report = artifact_path.read_text(encoding="utf-8")
                     self.assertIn(fixture["evidence_id"], report)
                     self.assertIn("乐观情景", report)
+                    self.assertIn("成立条件", report)
+                    self.assertIn("失效条件", report)
+                    self.assertIn("数据质量与隔离", report)
                     self.assertIn("本报告仅用于本地研究辅助", report)
+                    packet_path = ArtifactStore(conn, [artifact_root]).resolve_artifact(
+                        run["summary"]["artifact_ids"][1]
+                    )
+                    packet = json.loads(packet_path.read_text(encoding="utf-8"))
+                    self.assertEqual("2.0", packet["schema_version"])
+                    self.assertEqual("research_ready", packet["quality"]["readiness"])
+                    self.assertEqual("research_ready", packet["quality"]["report_gate"]["report_status"])
+                    self.assertEqual(1.0, packet["quality"]["report_gate"]["citation_coverage"])
+                    self.assertEqual(fixture["evidence_id"], packet["quality"]["usable_evidence_ids"][0])
+                    self.assertIn("valuation.current_price", packet["quality"]["quarantined_fields"])
+                    self.assertTrue(all(
+                        not set(claim["source_paths"]) & set(packet["quality"]["quarantined_fields"])
+                        for claim in packet["claims"]
+                    ))
                     event_types = [event["event_type"] for event in EventStore(conn).list_events(run["run_id"])]
                     self.assertIn("artifact.created", event_types)
                 finally:
                     conn.close()
 
-    def test_missing_evidence_returns_cannot_conclude(self) -> None:
+    def test_missing_evidence_fails_without_generating_a_fake_report(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)
             db_path = root / "runtime.db"
@@ -166,9 +233,10 @@ class StockDeepDiveWorkflowTests(unittest.TestCase):
                 run_id="run_missing",
             )
 
-            self.assertEqual("completed", run["status"])
-            self.assertEqual("cannot_conclude", run["summary"]["conclusion_status"])
-            self.assertEqual([], run["summary"]["claims"])
+            self.assertEqual("failed", run["status"])
+            self.assertEqual("RuntimeError", run["error_code"])
+            self.assertIn("evidence floor not met", run["error_message"])
+            self.assertEqual([], list((root / "artifacts").glob("**/stock_deep_dive.md")))
 
     def test_invalid_ticker_is_persisted_as_failed_run(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:

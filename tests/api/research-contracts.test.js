@@ -116,9 +116,10 @@ test("research endpoints retain their golden response contracts", async (t) => {
   assert.deepEqual(Object.keys(scores).sort(), ["scores", "updatedAt"]);
   assert.equal(scores.scores[0].tsCode, "300308.SZ");
   assert.deepEqual(Object.keys(scores.scores[0]).sort(), [
-    "compositeScore", "fundamentalQuality", "industryPosition", "latestClose",
+    "compositeScore", "dataAvailableLevel", "fundamentalQuality", "industryPosition", "latestClose",
     "macdSignal", "market", "momentum20d", "momentum5d", "name", "pePercentile",
-    "sector", "technicalMomentum", "themeRelevance", "tsCode", "valuationPosition", "verdict",
+    "poolType", "redFlags", "sector", "technicalMomentum", "themeRelevance", "tsCode",
+    "valuationPosition", "verdict",
   ]);
 
   const stock = await get("/api/stock/300308.SZ");
@@ -129,7 +130,7 @@ test("research endpoints retain their golden response contracts", async (t) => {
   ]);
   assert.deepEqual(Object.keys(stock.report).sort(), [
     "catalysts", "claims", "deepReport", "fundamentals", "moat",
-    "overallRecommendation", "peerComparison", "riskAlerts", "technical", "valuation",
+    "overallRecommendation", "peerComparison", "riskAlerts", "technical", "valuation", "vfmScoreCard",
   ]);
   assert.ok(stock.report.deepReport);
   assert.ok(Array.isArray(stock.priceHistory));

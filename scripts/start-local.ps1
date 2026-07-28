@@ -4,6 +4,7 @@ param(
     [int]$ApiPort = 3000,
     [int]$UiPort = 5173,
     [string]$DatabasePath = "01_data/db/smr.db",
+    [string]$SourceDatabasePath = "../th_capital_stock/01_data/db/smr.db",
     [switch]$SkipDoctor,
     [switch]$OpenBrowser
 )
@@ -13,6 +14,7 @@ $ErrorActionPreference = "Stop"
 
 $ProjectRoot = Get-SmrProjectRoot
 $databaseFullPath = Resolve-SmrPath -ProjectRoot $ProjectRoot -Path $DatabasePath
+$sourceDatabaseFullPath = Resolve-SmrPath -ProjectRoot $ProjectRoot -Path $SourceDatabasePath
 $statePath = Get-SmrRuntimeStatePath -ProjectRoot $ProjectRoot -ApiPort $ApiPort -UiPort $UiPort
 $stateDirectory = Split-Path -Parent $statePath
 $logDirectory = Join-Path $ProjectRoot "10_logs\dev"
@@ -63,6 +65,9 @@ if (Test-SmrPort -HostAddress $HostAddress -Port $UiPort) {
 if (-not (Test-Path -LiteralPath $databaseFullPath -PathType Leaf)) {
     throw "Database does not exist: $databaseFullPath"
 }
+if (-not (Test-Path -LiteralPath $sourceDatabaseFullPath -PathType Leaf)) {
+    throw "Research source database does not exist: $sourceDatabaseFullPath"
+}
 if (-not (Test-Path -LiteralPath $viteEntry -PathType Leaf)) {
     throw "Vite is not installed. Run npm ci first."
 }
@@ -88,6 +93,7 @@ $uiStderr = Join-Path $logDirectory "local-$UiPort-ui.stderr.log"
 $previousHost = $env:HOST
 $previousPort = $env:PORT
 $previousDatabase = $env:SMR_DB_PATH
+$previousSourceDatabase = $env:SMR_SOURCE_DB_PATH
 $previousPython = $env:SMR_PYTHON
 $previousApiOrigin = $env:SMR_API_ORIGIN
 $apiProcess = $null
@@ -116,6 +122,7 @@ try {
     $env:HOST = $HostAddress
     $env:PORT = [string]$ApiPort
     $env:SMR_DB_PATH = $databaseFullPath
+    $env:SMR_SOURCE_DB_PATH = $sourceDatabaseFullPath
     $env:SMR_PYTHON = $python.Executable
     $env:SMR_API_ORIGIN = "http://$HostAddress`:$ApiPort"
 
@@ -148,6 +155,7 @@ finally {
     $env:HOST = $previousHost
     $env:PORT = $previousPort
     $env:SMR_DB_PATH = $previousDatabase
+    $env:SMR_SOURCE_DB_PATH = $previousSourceDatabase
     $env:SMR_PYTHON = $previousPython
     $env:SMR_API_ORIGIN = $previousApiOrigin
 }
@@ -158,6 +166,7 @@ $state = [ordered]@{
     api_port = $ApiPort
     ui_port = $UiPort
     database_path = $databaseFullPath
+    source_database_path = $sourceDatabaseFullPath
     node_path = $node
     api_pid = $apiProcess.Id
     ui_pid = $uiProcess.Id

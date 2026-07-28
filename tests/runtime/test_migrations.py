@@ -16,15 +16,42 @@ class MigrationTests(unittest.TestCase):
             first = apply_migrations(db_path)
             second = apply_migrations(db_path)
 
-            self.assertEqual(["0000", "0001", "0002", "0003", "0004", "0005"], first.applied_versions)
+            expected_versions = [
+                "0000", "0001", "0002", "0003", "0004", "0005", "0006",
+                "0007", "0008", "0009", "0010", "0011", "0012",
+            ]
+            self.assertEqual(expected_versions, first.applied_versions)
             self.assertEqual([], second.applied_versions)
             conn = sqlite3.connect(db_path)
             try:
                 versions = [row[0] for row in conn.execute("SELECT version FROM schema_migrations ORDER BY version")]
-                self.assertEqual(["0000", "0001", "0002", "0003", "0004", "0005"], versions)
+                self.assertEqual(expected_versions, versions)
                 decision_columns = {row[1] for row in conn.execute("PRAGMA table_info(decision_ledger)")}
                 self.assertTrue({"source_run_id", "source_memory_id", "review_due_at", "outcome_summary"} <= decision_columns)
                 self.assertIsNotNone(conn.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='decision_outcome_log'").fetchone())
+                memory_columns = {row[1] for row in conn.execute("PRAGMA table_info(memory_items)")}
+                self.assertTrue({
+                    "tags_json", "project_id", "hit_count", "last_hit_at", "session_id",
+                    "preference_source", "preference_explicit_ref", "conflict_flag",
+                } <= memory_columns)
+                for table in (
+                    "research_graph_nodes",
+                    "research_graph_edges",
+                    "research_signal_plans",
+                    "research_signals",
+                    "research_signal_observations",
+                    "research_claim_versions",
+                    "research_claim_dependencies",
+                    "research_claim_corrections",
+                    "memory_retrieval_log",
+                ):
+                    self.assertIsNotNone(
+                        conn.execute(
+                            "SELECT name FROM sqlite_master WHERE type='table' AND name=?",
+                            (table,),
+                        ).fetchone(),
+                        table,
+                    )
                 self.assertEqual("ok", conn.execute("PRAGMA integrity_check").fetchone()[0])
             finally:
                 conn.close()
@@ -48,7 +75,13 @@ class MigrationTests(unittest.TestCase):
 
             result = apply_migrations(db_path)
 
-            self.assertEqual(["0000", "0001", "0002", "0003", "0004", "0005"], result.applied_versions)
+            self.assertEqual(
+                [
+                    "0000", "0001", "0002", "0003", "0004", "0005", "0006",
+                    "0007", "0008", "0009", "0010", "0011", "0012",
+                ],
+                result.applied_versions,
+            )
 
     def test_changed_applied_migration_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:

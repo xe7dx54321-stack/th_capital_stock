@@ -233,6 +233,40 @@ class RepositoryInventoryTests(unittest.TestCase):
             self.assertNotIn("legacy_manifest/inventory.json", paths)
             self.assertNotIn("legacy_manifest/classifications.csv", paths)
 
+    def test_runtime_generated_outputs_do_not_invalidate_repository_fingerprint(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            (root / "api").mkdir()
+            (root / "api" / "server.js").write_text("export const ok = true;\n", encoding="utf-8")
+            output_dir = root / "06_outputs" / "workflows" / "run_1"
+            output_dir.mkdir(parents=True)
+            artifact = output_dir / "report.md"
+            artifact.write_text("first runtime report\n", encoding="utf-8")
+
+            before = build_inventory(
+                root,
+                tracked_paths={"api/server.js"},
+                git_changes={},
+                runtime_evidence={},
+                baseline_untracked=[],
+            )
+            artifact.write_text("a much longer regenerated runtime report\n", encoding="utf-8")
+            (output_dir / "evidence.json").write_text("{}\n", encoding="utf-8")
+            after = build_inventory(
+                root,
+                tracked_paths={"api/server.js"},
+                git_changes={},
+                runtime_evidence={},
+                baseline_untracked=[],
+            )
+
+            self.assertEqual(before["content_fingerprint"], after["content_fingerprint"])
+            generated_rows = [
+                row for row in after["files"] if row["path"].startswith("06_outputs/")
+            ]
+            self.assertTrue(generated_rows)
+            self.assertTrue(all(row["category"] == Classification.GENERATED.value for row in generated_rows))
+
     def test_manifest_output_is_deterministic_except_generated_at(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)

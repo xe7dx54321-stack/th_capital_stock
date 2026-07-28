@@ -16,6 +16,7 @@ class LocalOperationsContractTests(unittest.TestCase):
 
         self.assertIn('ValidateSet("127.0.0.1")', start)
         self.assertIn("SMR_DB_PATH", start)
+        self.assertIn("SMR_SOURCE_DB_PATH", start)
         self.assertIn("SMR_API_ORIGIN", start)
         self.assertIn("api\\server.js", start)
         self.assertIn("vite\\bin\\vite.js", start)
@@ -31,6 +32,7 @@ class LocalOperationsContractTests(unittest.TestCase):
         self.assertNotIn("taskkill", stop.lower())
         common = (ROOT / "scripts" / "local-common.ps1").read_text(encoding="utf-8")
         self.assertIn("Get-CimInstance Win32_Process", common)
+        self.assertNotIn(".Contains($ProjectRoot, [StringComparison]::OrdinalIgnoreCase)", common)
         self.assertIn("$sameExecutable -and $sameStartTime", common)
         self.assertIn("query_only", (ROOT / "scripts" / "local_db_ops.py").read_text(encoding="utf-8"))
         self.assertNotIn("IFIND_REFRESH_TOKEN=", doctor)

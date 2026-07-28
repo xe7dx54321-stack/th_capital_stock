@@ -2,3 +2,6 @@
 # Install this file in a fresh virtual environment to obtain runtime dependencies
 # without maintaining a second, divergent dependency list.
 -r requirements.txt
+
+# Self-discovery tests use pytest fixtures and assertions.
+pytest>=8.0,<9.0

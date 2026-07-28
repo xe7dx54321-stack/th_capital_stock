@@ -1,0 +1,17 @@
+{
+  "schema_version": "1.0",
+  "suite_id": "stock_deep_dive_v2_fixed_10",
+  "description": "固定十股跨市场真实性、证据闭环、降级安全与中文可读性回归集。",
+  "cases": [
+    {"ticker": "300308.SZ", "market": "A", "role": "有效财务字段与异常字段并存", "expected_statuses": ["evidence_limited"], "minimum_approved_claims": 2},
+    {"ticker": "688041.SH", "market": "A", "role": "财务冲突隔离", "expected_statuses": ["evidence_limited"], "minimum_approved_claims": 1, "required_blockers": ["net_income_revenue_conflict"]},
+    {"ticker": "002230.SZ", "market": "A", "role": "报告期缺失降级", "expected_statuses": ["evidence_limited"], "minimum_approved_claims": 1, "required_blockers": ["missing_report_period"]},
+    {"ticker": "300394.SZ", "market": "A", "role": "无基本面数据安全拒答", "expected_statuses": ["cannot_conclude"], "minimum_approved_claims": 0, "maximum_approved_claims": 0, "required_blockers": ["fundamentals_missing", "no_usable_evidence"]},
+    {"ticker": "09988.HK", "market": "H", "role": "港股多来源证据", "expected_statuses": ["evidence_limited"], "minimum_approved_claims": 2},
+    {"ticker": "00700.HK", "market": "H", "role": "港股证据闭环失败降级", "expected_statuses": ["evidence_limited"], "minimum_approved_claims": 1},
+    {"ticker": "NVDA", "market": "US", "role": "美股正式申报证据", "expected_statuses": ["evidence_limited"], "minimum_approved_claims": 2},
+    {"ticker": "AVGO", "market": "US", "role": "美股二手噪声隔离", "expected_statuses": ["evidence_limited"], "minimum_approved_claims": 1},
+    {"ticker": "MSFT", "market": "US", "role": "美股多份正式材料", "expected_statuses": ["evidence_limited"], "minimum_approved_claims": 2},
+    {"ticker": "AMZN", "market": "US", "role": "异常财务字段与有效字段并存", "expected_statuses": ["evidence_limited"], "minimum_approved_claims": 2}
+  ]
+}

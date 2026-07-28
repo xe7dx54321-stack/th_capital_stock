@@ -37,6 +37,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\start-local.ps1
 - API 健康检查：`http://127.0.0.1:3000/api/health`
 - 开发日志：`10_logs/dev/`
 
+默认使用 `01_data/db/smr.db` 保存工作流、会话和审计状态，并以 `../th_capital_stock/01_data/db/smr.db` 作为只读真实研究数据源。若研究库位于其他位置，启动时通过 `-SourceDatabasePath` 显式指定。
+
 停止本项目启动的服务：
 
 ```powershell

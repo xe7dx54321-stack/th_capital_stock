@@ -9,106 +9,143 @@ vi.mock("../../../lib/api", async () => {
   const actual = await vi.importActual<typeof import("../../../lib/api")>("../../../lib/api");
   return {
     ...actual,
-    fetchWorkflows: vi.fn(),
     fetchWorkflowRuns: vi.fn(),
-    fetchWorkflowRun: vi.fn(),
-    fetchWorkflowEvents: vi.fn(),
-    createWorkflowRun: vi.fn(),
-    subscribeWorkflowEvents: vi.fn(),
-    fetchDecisions: vi.fn(),
+    fetchSessions: vi.fn(),
+    fetchSessionMessages: vi.fn(),
+    createSession: vi.fn(),
+    deleteSession: vi.fn(),
+    updateSession: vi.fn(),
   };
 });
 
-const workflow = {
-  workflow_id: "stock_deep_dive",
-  title: "Stock deep dive",
-  description: "Build an evidence-backed local company research report.",
-  enabled: true,
-  input_schema: { type: "object" },
-};
-
-const completedRun = {
-  run_id: "run_previous",
-  workflow_id: "stock_deep_dive",
-  status: "completed",
-  input: { ticker: "300308.SZ", allow_network: false },
-  summary: { conclusion_status: "cannot_conclude", evidence_ids: ["ev-1"] },
-  created_at: "2026-07-13T01:00:00Z",
-  artifacts: [],
+const session = {
+  id: "session-test",
+  title: "新对话",
+  status: "active" as const,
+  is_pinned: 0,
+  pinned_at: null,
+  message_count: 0,
+  last_message_at: null,
+  created_at: "2026-07-19T01:00:00Z",
+  updated_at: "2026-07-19T01:00:00Z",
 };
 
 describe("ResearchWorkbench", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
-    vi.mocked(api.fetchWorkflows).mockResolvedValue({ workflows: [workflow] });
-    vi.mocked(api.fetchWorkflowRuns).mockResolvedValue({ runs: [completedRun] });
-    vi.mocked(api.fetchWorkflowRun).mockResolvedValue(completedRun);
-    vi.mocked(api.fetchWorkflowEvents).mockResolvedValue({ events: [] });
-    vi.mocked(api.subscribeWorkflowEvents).mockReturnValue(() => undefined);
-    vi.mocked(api.fetchDecisions).mockResolvedValue({ decisions: [] });
+    Element.prototype.scrollIntoView = vi.fn();
+
+    vi.mocked(api.fetchWorkflowRuns).mockResolvedValue({
+      runs: [
+        { run_id: "run-1", workflow_id: "daily_brief", status: "completed", input: {}, summary: {}, created_at: "2026-07-19T01:00:00Z", artifacts: [] },
+        { run_id: "run-2", workflow_id: "stock_deep_dive", status: "waiting_review", input: {}, summary: {}, created_at: "2026-07-19T02:00:00Z", artifacts: [] },
+      ],
+    });
+    vi.mocked(api.fetchSessions).mockResolvedValue({ success: true, sessions: [] });
+    vi.mocked(api.fetchSessionMessages).mockResolvedValue({ success: true, messages: [] });
+    vi.mocked(api.createSession).mockResolvedValue({ success: true, session });
+    vi.mocked(api.deleteSession).mockResolvedValue({ success: true, deleted: true });
   });
 
-  it("launches a ticker workflow and renders streamed progress", async () => {
-    vi.mocked(api.createWorkflowRun).mockResolvedValue({
-      ...completedRun,
-      run_id: "run_new",
-      status: "queued",
-      input: { ticker: "600519.SH", allow_network: false },
-    });
-    vi.mocked(api.subscribeWorkflowEvents).mockImplementation((_id, _after, onEvent) => {
-      onEvent({
-        event_id: 1,
-        run_id: "run_new",
-        sequence: 1,
-        event_type: "stage.progress",
-        payload: { stage: "evidence", message: "正在核验关键证据" },
-        created_at: "2026-07-13T02:00:00Z",
-      });
-      return () => undefined;
-    });
-
+  it("renders the current chat workbench and audited run summary", async () => {
     render(<MemoryRouter><ResearchWorkbench /></MemoryRouter>);
-    fireEvent.change(await screen.findByLabelText("研究标的"), { target: { value: "600519.SH" } });
-    fireEvent.click(screen.getByRole("button", { name: "开始深挖" }));
 
-    await waitFor(() => expect(api.createWorkflowRun).toHaveBeenCalledWith(
-      "stock_deep_dive",
-      { ticker: "600519.SH", allow_network: false },
-      expect.any(String),
-    ));
-    expect(await screen.findByText("正在核验关键证据")).toBeInTheDocument();
+    expect(await screen.findByText("今天想分析点什么？")).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "研究概览" })).toHaveTextContent("研究总数2");
+    expect(screen.getByRole("region", { name: "研究概览" })).toHaveTextContent("待审核1");
+    expect(screen.getByRole("region", { name: "研究概览" })).toHaveTextContent("已完成1");
   });
 
-  it("falls back to event polling when the live stream disconnects", async () => {
-    vi.mocked(api.subscribeWorkflowEvents).mockImplementation((_id, _after, _onEvent, onError) => {
-      onError();
-      return () => undefined;
-    });
-    vi.mocked(api.fetchWorkflowEvents).mockResolvedValue({
-      events: [{
-        event_id: 2,
-        run_id: "run_previous",
-        sequence: 2,
-        event_type: "stage.warning",
-        payload: { message: "行情时间戳已过期" },
-        created_at: "2026-07-13T02:10:00Z",
-      }],
-    });
+  it("creates a session and sends a workflow chat request", async () => {
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(JSON.stringify({
+      run_id: "run_agent_fixture",
+      taskType: "opportunity_scan",
+      status: "completed",
+      response: "已生成带证据的机会扫描。",
+      data: {
+        dataHealth: {
+          status: "warning",
+          can_claim_current: true,
+          total_evidence: 3,
+          fresh_current_evidence: 2,
+        },
+        citationValidation: {
+          status: "passed",
+          coverage: 1,
+          unknown_citation_ids: [],
+          missing_citation_claims: [],
+          current_claim_violations: [],
+        },
+      },
+      executionHistory: [],
+      workflowSummary: { totalSteps: 3, completedSteps: 3 },
+    }), { status: 200, headers: { "Content-Type": "application/json" } }));
 
     render(<MemoryRouter><ResearchWorkbench /></MemoryRouter>);
+    const input = await screen.findByPlaceholderText("输入你的问题，例如：帮我分析中际旭创...");
+    fireEvent.change(input, { target: { value: "扫描今天的投资机会" } });
+    fireEvent.keyDown(input, { key: "Enter", code: "Enter" });
 
-    expect(await screen.findByText("轮询恢复")).toBeInTheDocument();
-    expect(await screen.findByText("行情时间戳已过期")).toBeInTheDocument();
+    expect(await screen.findByText("已生成带证据的机会扫描。")).toBeInTheDocument();
+    expect(screen.getAllByText("机会扫描").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText(/run_agent_fixture/)).toBeInTheDocument();
+    expect(screen.getByText("部分数据受限")).toBeInTheDocument();
+    expect(screen.getByText("引用与结构通过")).toBeInTheDocument();
+    expect(api.createSession).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith("/api/chat/workflow/stream", expect.objectContaining({ method: "POST" })));
+    const request = JSON.parse(String(fetchMock.mock.calls[0][1]?.body));
+    expect(request).toMatchObject({ message: "扫描今天的投资机会", sessionId: "session-test" });
   });
 
-  it("keeps launch failures visible and actionable", async () => {
-    vi.mocked(api.createWorkflowRun).mockRejectedValue(new Error("本地工作进程不可用"));
+  it("keeps workflow request failures visible and actionable", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response("unavailable", { status: 503 }));
+
     render(<MemoryRouter><ResearchWorkbench /></MemoryRouter>);
+    const input = await screen.findByPlaceholderText("输入你的问题，例如：帮我分析中际旭创...");
+    fireEvent.change(input, { target: { value: "分析 300308.SZ" } });
+    fireEvent.keyDown(input, { key: "Enter", code: "Enter" });
 
-    fireEvent.change(await screen.findByLabelText("研究标的"), { target: { value: "300308.SZ" } });
-    fireEvent.click(screen.getByRole("button", { name: "开始深挖" }));
+    expect(await screen.findByText("抱歉，发生了错误：聊天服务请求失败")).toBeInTheDocument();
+  });
 
-    expect(await screen.findByRole("alert")).toHaveTextContent("本地工作进程不可用");
+  it("shows governed V3 stages separately from the two-step chat orchestration", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(JSON.stringify({
+      run_id: "run_agent_v3",
+      governed_run_id: "run_research_v3",
+      taskType: "stock_deep_analysis",
+      status: "completed",
+      response: "# 个股深度研究 V3\n\n正文",
+      data: {
+        dataHealth: { status: "healthy", can_claim_current: true, total_evidence: 12, fresh_current_evidence: 8 },
+        citationValidation: { status: "passed", coverage: 1, unknown_citation_ids: [], missing_citation_claims: [], current_claim_violations: [] },
+        researchExecution: {
+          status: "completed", completedStages: 3, totalStages: 3, warningStages: 0, failedStages: 0,
+          groups: [{
+            id: "preparation", label: "研究准备", completedStages: 3, totalStages: 3,
+            stages: [
+              { id: "validate_input", label: "校验研究标的", status: "completed", message: "完成" },
+              { id: "build_research_plan", label: "生成研究计划与章节矩阵", status: "completed", message: "完成" },
+              { id: "check_provider_health", label: "检查数据源健康状态", status: "completed", message: "完成" },
+            ],
+          }],
+        },
+      },
+      executionHistory: [],
+      workflowSummary: { totalSteps: 2, completedSteps: 2 },
+      artifacts: [],
+    }), { status: 200, headers: { "Content-Type": "application/json" } }));
+
+    render(<MemoryRouter><ResearchWorkbench /></MemoryRouter>);
+    const input = await screen.findByPlaceholderText("输入你的问题，例如：帮我分析中际旭创...");
+    fireEvent.change(input, { target: { value: "请深度分析中际旭创" } });
+    fireEvent.keyDown(input, { key: "Enter", code: "Enter" });
+
+    expect((await screen.findAllByText("3/3 阶段完成")).length).toBeGreaterThanOrEqual(1);
+    fireEvent.click(screen.getByText("研究运行与产物"));
+    expect(screen.getByText("研究主流程")).toBeInTheDocument();
+    expect(screen.getByText("研究准备")).toBeInTheDocument();
+    expect(screen.getByText("生成研究计划与章节矩阵")).toBeInTheDocument();
+    expect(screen.getByText("2/2 步完成")).toBeInTheDocument();
   });
 });

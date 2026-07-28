@@ -71,6 +71,7 @@ export class MemoryService {
    *   1. 用 LLM 从分析报告中提取关键事实（如估值、增长、风险等）
    *   2. 每个事实存为一条 candidate 状态的记忆
    *   3. 同时写入向量数据库，支持语义检索
+   *   4. 【阶段 12 新增】同步 tags / project_id / session_id 等字段到 SQLite
    *
    * 小白讲解：
    *   研究完一只股票后，让 AI 读一遍自己写的报告，
@@ -79,7 +80,7 @@ export class MemoryService {
    *
    * @param {string} ticker - 股票代码
    * @param {string} aiAnalysis - LLM 生成的分析报告全文
-   * @param {object} context - 工作流上下文（含结构化数据）
+   * @param {object} context - 工作流上下文（含结构化数据 + 阶段 12 字段：tags、projectId、sessionId 等）
    * @param {string} runId - 工作流运行ID
    * @returns {Array} 创建的记忆列表
    */
@@ -92,6 +93,9 @@ export class MemoryService {
       memories = this._ruleExtractMemories(ticker, aiAnalysis, context);
     }
 
+    // 阶段 12：从上下文读 tags/project_id/session_id
+    const { tags = [], projectId = null, sessionId = null } = context;
+
     // 写入数据库
     const savedMemories = [];
     const now = new Date().toISOString();
@@ -101,23 +105,37 @@ export class MemoryService {
         .prepare(
           `INSERT INTO memory_items 
            (memory_id, entity_type, entity_id, memory_type, content, status, confidence, 
-            source_run_id, valid_from, created_at, updated_at, version)
-           VALUES (?, ?, ?, ?, ?, 'candidate', ?, ?, ?, ?, ?, 1)`
+            source_run_id, valid_from, created_at, updated_at, version,
+            tags_json, project_id, hit_count, last_hit_at, session_id, conflict_flag)
+           VALUES (?, ?, ?, ?, ?, 'candidate', ?, ?, ?, ?, ?, 1,
+                   ?, ?, 0, NULL, ?, 0)`
         )
         .run(
           memoryId,
           "stock",
           ticker,
           mem.memory_type,
-          mem.content,
+          typeof mem.content === "string" ? mem.content : JSON.stringify(mem.content),
           mem.confidence || 0.7,
           runId,
           now,
           now,
-          now
+          now,
+          JSON.stringify(tags || []),
+          projectId,
+          sessionId,
         );
 
-      savedMemories.push({ memory_id: memoryId, ...mem });
+      savedMemories.push({
+        memory_id: memoryId,
+        tags: tags || [],
+        project_id: projectId,
+        session_id: sessionId,
+        hit_count: 0,
+        last_hit_at: null,
+        conflict_flag: false,
+        ...mem,
+      });
     }
 
     // 同步到向量数据库
@@ -489,5 +507,186 @@ ${aiAnalysis}
       this.db.close();
       this.db = null;
     }
+  }
+
+  // ========================================================
+  //  阶段 12 新增：与 Python smr_app/adapters/memory.py 功能对称
+  //  - editCandidate：编辑候选记忆
+  //  - recordRetrieval：记录检索命中（为什么命中 + 如何使用）
+  //  - deleteSessionMemories：安全删除会话记忆（不误删正式研究记忆）
+  //  - listConflictingCandidates：列出冲突并存待审核的候选
+  // ========================================================
+
+  /**
+   * 编辑 candidate 状态的记忆（用户 approve 前可以修改内容）
+   * 【验收 2 - edit】
+   *
+   * @param {string} memoryId - 记忆ID（必须是 candidate 状态）
+   * @param {object} patch    - 新内容：{ content, tags, projectId, evidenceLinks }
+   * @param {string} editor   - 编辑人
+   * @param {string} reason   - 编辑理由
+   * @returns {object} 更新后的记忆
+   */
+  editCandidate(memoryId, patch = {}, editor = "user", reason = "") {
+    const cur = this.db.prepare(`SELECT * FROM memory_items WHERE memory_id = ?`).get(memoryId);
+    if (!cur) throw new Error(`记忆 ${memoryId} 不存在`);
+    if (cur.status !== "candidate")
+      throw new Error(`只有 candidate 状态可以编辑，当前状态=${cur.status}`);
+    if (!editor || !reason) throw new Error("editCandidate: editor 和 reason 都不能为空");
+
+    const now = new Date().toISOString();
+    const newContent = patch.content != null
+      ? (typeof patch.content === "string" ? patch.content : JSON.stringify(patch.content))
+      : cur.content;
+    const newTags = patch.tags ? JSON.stringify(patch.tags) : cur.tags_json;
+    const newProject = patch.projectId ?? cur.project_id;
+
+    this.db
+      .prepare(
+        `UPDATE memory_items SET content=?, tags_json=?, project_id=?, updated_at=?, conflict_flag=0 WHERE memory_id=?`
+      )
+      .run(newContent, newTags, newProject, now, memoryId);
+
+    // 写审核日志
+    const reviewId = generateId("rev");
+    this.db
+      .prepare(
+        `INSERT INTO memory_review_log
+         (review_id, memory_id, action, previous_status, new_status, reviewer, reason, reviewed_at)
+         VALUES (?, ?, 'edit', 'candidate', 'candidate', ?, ?, ?)`
+      )
+      .run(reviewId, memoryId, editor, reason, now);
+
+    return this.db.prepare(`SELECT * FROM memory_items WHERE memory_id = ?`).get(memoryId);
+  }
+
+  /**
+   * 记录一次检索命中（为什么命中 + 如何使用），并 +1 hit_count
+   * 【验收 3 + 验收 4 核心】
+   *
+   * @param {string} memoryId         - 被命中的记忆 ID
+   * @param {string} retrievalReason  - 为什么命中（必填，例如"300474 与 688256 同属 GPU 赛道"）
+   * @param {object} options          - { retrievalUsage, retrievalContext, consumer }
+   * @returns {string} retrieval_id
+   */
+  recordRetrieval(memoryId, retrievalReason, options = {}) {
+    const mem = this.db.prepare(`SELECT * FROM memory_items WHERE memory_id = ?`).get(memoryId);
+    if (!mem) throw new Error(`recordRetrieval: 记忆 ${memoryId} 不存在`);
+    if (!retrievalReason?.trim())
+      throw new Error("recordRetrieval: retrievalReason 不能为空（要说明『为什么命中』）");
+
+    const { retrievalUsage = "", retrievalContext = {}, consumer = "" } = options;
+    const retrievalId = generateId("ret");
+    const now = new Date().toISOString();
+    const newHits = Number(mem.hit_count || 0) + 1;
+
+    const tx = this.db.transaction(() => {
+      // 1) 更新主表计数
+      this.db
+        .prepare(`UPDATE memory_items SET hit_count=?, last_hit_at=?, updated_at=? WHERE memory_id=?`)
+        .run(newHits, now, now, memoryId);
+      // 2) 写检索日志
+      this.db
+        .prepare(
+          `INSERT INTO memory_retrieval_log
+           (retrieval_id, memory_id, retrieved_at, retrieval_reason, retrieval_usage,
+            retrieval_context_json, consumer, hit_count_snapshot)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+        )
+        .run(
+          retrievalId, memoryId, now, retrievalReason.trim(),
+          retrievalUsage?.trim() || null,
+          JSON.stringify(retrievalContext || {}),
+          consumer?.trim() || null,
+          newHits,
+        );
+    });
+    tx();
+    return retrievalId;
+  }
+
+  /**
+   * 安全删除会话记忆：只删 memory_type='session_working' 且 session_id=指定 的记录。
+   * 正式研究记忆（thesis/valuation/user_preference/analysis_framework 等）绝对不会被碰。
+   * 【验收 6 核心】
+   *
+   * @param {string} sessionId - 要销毁的会话 ID
+   * @returns {number} 实际删除的记忆条数
+   */
+  deleteSessionMemories(sessionId) {
+    if (!sessionId?.trim()) throw new Error("deleteSessionMemories: sessionId 不能为空");
+    const rows = this.db
+      .prepare(
+        `SELECT memory_id FROM memory_items WHERE session_id=? AND memory_type='session_working'`
+      )
+      .all(sessionId);
+    if (!rows.length) return 0;
+
+    const ids = rows.map((r) => r.memory_id);
+    const ph = ids.map(() => "?").join(",");
+    const tx = this.db.transaction(() => {
+      this.db.prepare(`DELETE FROM memory_evidence_links WHERE memory_id IN (${ph})`).run(...ids);
+      this.db.prepare(`DELETE FROM memory_review_log WHERE memory_id IN (${ph})`).run(...ids);
+      this.db.prepare(`DELETE FROM memory_retrieval_log WHERE memory_id IN (${ph})`).run(...ids);
+      this.db.prepare(`DELETE FROM memory_items WHERE memory_id IN (${ph})`).run(...ids);
+    });
+    tx();
+    return ids.length;
+  }
+
+  /**
+   * 列出所有 conflict_flag=1 的候选记忆（并存的矛盾记忆，等待人工审核）
+   * 【验收 5】
+   *
+   * @param {number} limit - 最多返回多少条
+   * @returns {Array} 冲突候选记忆列表
+   */
+  listConflictingCandidates(limit = 100) {
+    return this.db
+      .prepare(
+        `SELECT * FROM memory_items
+         WHERE status='candidate' AND conflict_flag=1
+         ORDER BY updated_at DESC LIMIT ?`
+      )
+      .all(limit);
+  }
+
+  /**
+   * 标记"同三元组下候选数量 >= 2"的所有 candidate 为冲突待审核
+   * 【验收 5 - flag_conflicting_memories 的 Node 版】
+   *
+   * @param {string} entityType
+   * @param {string} entityId
+   * @param {string} memoryType
+   * @returns {string[]} 被打上冲突标记的 memory_id
+   */
+  flagConflictingMemories(entityType, entityId, memoryType) {
+    const rows = this.db
+      .prepare(
+        `SELECT memory_id, status FROM memory_items
+         WHERE entity_type=? AND entity_id=? AND memory_type=?
+         ORDER BY created_at DESC`
+      )
+      .all(entityType, entityId, memoryType);
+
+    const candidates = rows.filter((r) => r.status === "candidate").map((r) => r.memory_id);
+    if (candidates.length < 2) return [];
+
+    const now = new Date().toISOString();
+    const tx = this.db.transaction(() => {
+      for (const mid of candidates) {
+        this.db.prepare(`UPDATE memory_items SET conflict_flag=1, updated_at=? WHERE memory_id=?`).run(now, mid);
+        const revId = generateId("rev");
+        this.db
+          .prepare(
+            `INSERT INTO memory_review_log
+             (review_id, memory_id, action, previous_status, new_status, reviewer, reason, reviewed_at)
+             VALUES (?, ?, 'flag_conflict', 'candidate', 'candidate', 'system_auto', '同类型多条候选并存，进入审核', ?)`
+          )
+          .run(revId, mid, now);
+      }
+    });
+    tx();
+    return candidates;
   }
 }

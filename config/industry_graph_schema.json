@@ -1,0 +1,143 @@
+{
+  "schema_version": "1.0",
+  "description": "产业图谱 Schema 定义（阶段 7）。工作流在 upsert 节点/边时可对照本 Schema 做字段级检查。",
+  "generated_for": "th_capital_stock_mvp - 阶段 7 产业图谱与前瞻数据增强",
+  "node_types": {
+    "company": {
+      "label": "公司",
+      "required_properties": [],
+      "recommended_properties": ["ticker", "market", "short_name", "sector", "market_cap", "pe_ttm", "shares_outstanding"],
+      "primary_id_hint": "推荐使用 ticker（如 '688041.SH'）作为 node_id"
+    },
+    "product": {
+      "label": "产品",
+      "required_properties": [],
+      "recommended_properties": ["category", "spec", "generation", "launch_date", "vendor"]
+    },
+    "tech": {
+      "label": "技术",
+      "required_properties": [],
+      "recommended_properties": ["maturity", "owner", "patent_count"]
+    },
+    "customer": {
+      "label": "客户",
+      "required_properties": [],
+      "recommended_properties": ["industry", "tier", "region"]
+    },
+    "supplier": {
+      "label": "供应商",
+      "required_properties": [],
+      "recommended_properties": ["component", "capacity", "region"]
+    },
+    "si": {
+      "label": "系统商",
+      "required_properties": [],
+      "recommended_properties": ["industry", "product_line", "region"]
+    },
+    "demand": {
+      "label": "终端需求",
+      "required_properties": [],
+      "recommended_properties": ["scale", "growth_rate", "driver"]
+    },
+    "factory": {
+      "label": "工厂",
+      "required_properties": [],
+      "recommended_properties": ["location", "capacity_per_month", "ramp_date", "utilization"]
+    },
+    "cert": {
+      "label": "认证",
+      "required_properties": [],
+      "recommended_properties": ["authority", "cert_date", "expire_date", "product_name"]
+    },
+    "order": {
+      "label": "订单",
+      "required_properties": [],
+      "recommended_properties": ["customer", "amount", "delivery_start", "delivery_end"]
+    },
+    "theme": {
+      "label": "行业主题",
+      "required_properties": [],
+      "recommended_properties": ["summary", "time_window", "policy_driver"]
+    }
+  },
+  "edge_types": {
+    "produces": {
+      "label": "生产",
+      "direction": "source(company) -> target(product)",
+      "required_evidence_for_fact": true,
+      "recommended_properties": ["production_volume", "share_of_revenue"]
+    },
+    "supplies": {
+      "label": "供应",
+      "direction": "source(supplier) -> target(company)",
+      "required_evidence_for_fact": true,
+      "auto_reverse": "purchases",
+      "recommended_properties": ["component", "contract_value", "contract_period"]
+    },
+    "purchases": {
+      "label": "采购",
+      "direction": "source(company) -> target(supplier)",
+      "required_evidence_for_fact": true,
+      "auto_reverse": "supplies",
+      "recommended_properties": ["component", "contract_value", "contract_period"]
+    },
+    "holds": {
+      "label": "持股",
+      "direction": "source(company) -> target(company)",
+      "required_evidence_for_fact": true,
+      "recommended_properties": ["holding_ratio", "cost_basis", "is_controlling"]
+    },
+    "competes": {
+      "label": "竞争",
+      "direction": "bidirectional",
+      "required_evidence_for_fact": false,
+      "recommended_properties": ["overlap_ratio", "reason", "overlap_segment"]
+    },
+    "certified": {
+      "label": "认证通过",
+      "direction": "source(product) -> target(cert)",
+      "required_evidence_for_fact": true,
+      "recommended_properties": ["cert_number", "issue_date"]
+    },
+    "substitutes": {
+      "label": "替代",
+      "direction": "bidirectional",
+      "required_evidence_for_fact": false,
+      "recommended_properties": ["substitutability_score", "reason"]
+    },
+    "benefits": {
+      "label": "受益于",
+      "direction": "source(theme) -> target(company)",
+      "required_evidence_for_fact": false,
+      "recommended_properties": ["revenue_exposure", "reason"]
+    },
+    "constrains": {
+      "label": "受约束于",
+      "direction": "source(entity) -> target(company)",
+      "required_evidence_for_fact": true,
+      "recommended_properties": ["severity", "lifted_date", "description"]
+    },
+    "leads": {
+      "label": "领先指标",
+      "direction": "source(indicator) -> target(metric)",
+      "required_evidence_for_fact": false,
+      "recommended_properties": ["lead_months", "historical_hit_rate"]
+    }
+  },
+  "validation_rules": {
+    "fact_edge_require_evidence_id": true,
+    "confidence_range": [0, 1],
+    "valid_from_valid_until_chronology": true,
+    "expired_edges_skipped_in_current_queries": true,
+    "static_peer_sets_json_fallback_enabled": true
+  },
+  "forward_looking_priorities": [
+    {"category": "一致预期/盈利预测", "tier": 1, "description": "万得/朝阳永续一致预期、每季度 EPS 修正"},
+    {"category": "融资余额", "tier": 2, "description": "每日两融余额变动"},
+    {"category": "机构调研", "tier": 2, "description": "调研机构家数、问题关键词"},
+    {"category": "认证进度", "tier": 1, "description": "产品认证/供应商代码"},
+    {"category": "海外客户/系统商订单", "tier": 1, "description": "海外头部客户 PO/LOI"},
+    {"category": "工厂投产/利用率", "tier": 1, "description": "工厂爬产、良率、稼动率"},
+    {"category": "客户资本开支", "tier": 2, "description": "下游客户 Capex 指引修正"}
+  ]
+}

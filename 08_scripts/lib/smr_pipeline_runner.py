@@ -200,6 +200,7 @@ class PipelineRunner:
             print(json.dumps(result, indent=2, ensure_ascii=False, default=str))
         else:
             print(json.dumps(result, ensure_ascii=False, default=str))
+        return result
 
 
 # ====================
@@ -248,7 +249,7 @@ def create_pipeline(
     )
     
     def run_pipeline(args: Optional[List[str]] = None):
-        runner.main(args)
+        return runner.main(args)
     
     run_pipeline.__name__ = f"run_phase{phase_num}_pipeline"
     run_pipeline.__qualname__ = f"smr_pipeline_runner.run_phase{phase_num}_pipeline"

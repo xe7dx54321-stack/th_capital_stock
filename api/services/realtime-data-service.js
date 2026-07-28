@@ -17,6 +17,8 @@
  *   它比数据库里的数据更实时，因为数据库可能几天才更新一次。
  */
 
+import { marketSessionState } from "./market-calendar.js";
+
 /**
  * 全局缓存（避免短时间内重复请求）
  */
@@ -56,6 +58,8 @@ function toTencentCode(ticker) {
 function parseTencentResponse(rawText) {
   const result = {};
   const lines = rawText.split(";");
+  const fetchedAt = new Date();
+  const session = marketSessionState("A", fetchedAt);
 
   for (const line of lines) {
     const trimmed = line.trim();
@@ -77,19 +81,26 @@ function parseTencentResponse(rawText) {
       // 腾讯财经返回的名称是 GBK 编码，这里不解析名称（用 STOCK_NAME_MAP）
       latest_price: parseFloat(parts[3]) || null,
       change_percent: parseFloat(parts[32]) || null,
+      // 39 与公开的 TTM 历史序列按股价同比例变动；52 是预测/动态口径。
       pe_ttm: parseFloat(parts[39]) || null,
+      pe_forward: parseFloat(parts[52]) || null,
+      pe_lyr: parseFloat(parts[53]) || null,
       pb: parseFloat(parts[46]) || null,
-      ps_ttm: parseFloat(parts[47]) || null,
+      // 47 是涨停价，并非市销率；该接口没有稳定的 PS(TTM) 字段。
+      ps_ttm: null,
       turnover_rate: parseFloat(parts[38]) || null,
-      market_cap: parseFloat(parts[44]) || null,     // 总市值（亿）
-      float_market_cap: parseFloat(parts[45]) || null, // 流通市值（亿）
+      market_cap: parseFloat(parts[45]) || null,       // 总市值（亿）
+      float_market_cap: parseFloat(parts[44]) || null, // 流通市值（亿）
       total_shares: parseFloat(parts[13]) || null,    // 总股本
       high: parseFloat(parts[33]) || null,
       low: parseFloat(parts[34]) || null,
       volume: parseFloat(parts[36]) || null,          // 成交量（手）
       amount: parseFloat(parts[37]) || null,          // 成交额（万）
       source: "tencent_api",
-      fetched_at: new Date().toISOString(),
+      source_url: "http://qt.gtimg.cn/",
+      fetched_at: fetchedAt.toISOString(),
+      trade_date: session.observation_date,
+      market_session_status: session.status,
     };
   }
 
@@ -221,7 +232,7 @@ async function fetchWithTimeout(url, timeoutMs = 10000) {
  *   翻译成我们系统能听懂的"话"。
  *   这样不管用哪个数据源，后面的代码都不用改。
  */
-function parseSinaRankItem(item) {
+function parseSinaRankItem(item, metadata = {}) {
   // symbol 格式如 sz300795, sh600519, bj920305
   const symbol = item.symbol || "";
   let market = "SZ";
@@ -242,7 +253,7 @@ function parseSinaRankItem(item) {
   return {
     ts_code: tsCode,
     name: item.name,
-    trade_date: new Date().toISOString().split("T")[0],
+    trade_date: metadata.tradeDate || null,
     open: item.open ? parseFloat(item.open) : null,
     close: item.trade ? parseFloat(item.trade) : null,
     high: item.high ? parseFloat(item.high) : null,
@@ -257,6 +268,9 @@ function parseSinaRankItem(item) {
     total_mv: totalMv,
     float_mv: floatMv,
     source: "sina_realtime",
+    source_url: metadata.sourceUrl || "https://vip.stock.finance.sina.com.cn/",
+    fetched_at: metadata.fetchedAt || null,
+    market_session_status: metadata.sessionStatus || null,
   };
 }
 
@@ -285,8 +299,36 @@ async function fetchSinaRank(limit, asc) {
 
   const data = await resp.json();
   if (!Array.isArray(data)) throw new Error("返回数据格式错误");
+  const fetchedAt = new Date();
+  const session = marketSessionState("A", fetchedAt);
+  const metadata = { tradeDate: session.observation_date, sessionStatus: session.status, fetchedAt: fetchedAt.toISOString(), sourceUrl: url };
+  return data.map((item) => parseSinaRankItem(item, metadata)).filter(item => item.pct_chg !== null && item.close !== null);
+}
 
-  return data.map(parseSinaRankItem).filter(item => item.pct_chg !== null && item.close !== null);
+function parseEastmoneyRankItem(item, metadata = {}) {
+  const tsCode = item.f12 + "." + (item.f12?.startsWith("6") || item.f12?.startsWith("688") ? "SH" : "SZ");
+  return {
+    ts_code: tsCode,
+    name: item.f14,
+    trade_date: metadata.tradeDate || null,
+    open: item.f17 !== "-" ? item.f17 : null,
+    close: item.f2 !== "-" ? item.f2 : null,
+    high: item.f15 !== "-" ? item.f15 : null,
+    low: item.f16 !== "-" ? item.f16 : null,
+    vol: item.f5 !== "-" ? Math.round(item.f5 / 100) : null,
+    amount: item.f6 !== "-" ? item.f6 / 10000 : null,
+    pct_chg: item.f3 !== "-" ? item.f3 : null,
+    turnover: item.f8 !== "-" ? item.f8 : null,
+    market: "A",
+    volume_ratio: item.f10 !== "-" ? item.f10 : null,
+    pe_ttm: item.f9 !== "-" ? item.f9 : null,
+    total_mv: item.f20 !== "-" ? item.f20 : null,
+    float_mv: item.f21 !== "-" ? item.f21 : null,
+    source: "eastmoney_realtime",
+    source_url: metadata.sourceUrl || "https://push2.eastmoney.com/",
+    fetched_at: metadata.fetchedAt || null,
+    market_session_status: metadata.sessionStatus || null,
+  };
 }
 
 /**
@@ -307,29 +349,10 @@ async function fetchEastmoneyRank(limit, po) {
 
   const data = await resp.json();
   const diff = data?.data?.diff || [];
-
-  return diff.map(item => {
-    const tsCode = item.f12 + "." + (item.f12?.startsWith("6") || item.f12?.startsWith("688") ? "SH" : "SZ");
-    return {
-      ts_code: tsCode,
-      name: item.f14,
-      trade_date: new Date().toISOString().split("T")[0],
-      open: item.f17 !== "-" ? item.f17 : null,
-      close: item.f2 !== "-" ? item.f2 : null,
-      high: item.f15 !== "-" ? item.f15 : null,
-      low: item.f16 !== "-" ? item.f16 : null,
-      vol: item.f5 !== "-" ? Math.round(item.f5 / 100) : null,
-      amount: item.f6 !== "-" ? item.f6 / 10000 : null,
-      pct_chg: item.f3 !== "-" ? item.f3 : null,
-      turnover: item.f8 !== "-" ? item.f8 : null,
-      market: "A",
-      volume_ratio: item.f10 !== "-" ? item.f10 : null,
-      pe_ttm: item.f9 !== "-" ? item.f9 : null,
-      total_mv: item.f20 !== "-" ? item.f20 : null,
-      float_mv: item.f21 !== "-" ? item.f21 : null,
-      source: "eastmoney_realtime",
-    };
-  }).filter(item => item.pct_chg !== null && item.close !== null);
+  const fetchedAt = new Date();
+  const session = marketSessionState("A", fetchedAt);
+  const metadata = { tradeDate: session.observation_date, sessionStatus: session.status, fetchedAt: fetchedAt.toISOString(), sourceUrl: url };
+  return diff.map((item) => parseEastmoneyRankItem(item, metadata)).filter(item => item.pct_chg !== null && item.close !== null);
 }
 
 /**
@@ -447,10 +470,10 @@ export async function fetchTopLosers(limit = 20) {
 }
 
 /**
- * 获取实时放量异动股票（基于涨幅榜数据筛选）
+ * 获取实时成交活跃异动股票（基于涨幅榜数据筛选）
  *
  * 功能：从实时涨幅榜中筛选出成交量异常放大的股票
- * 优先使用量比指标，没有量比时用换手率作为替代
+ * 优先使用量比指标；没有量比时明确降级为“高换手异动”，不冒充放量。
  *
  * @param {number} limit - 获取几只，默认 10 只
  * @param {number} volumeRatioThreshold - 量比阈值，默认 1.5
@@ -471,19 +494,27 @@ export async function fetchVolumeSurge(limit = 10, volumeRatioThreshold = 1.5) {
   const withVolumeRatio = gainers.filter(item => item.volume_ratio && item.volume_ratio >= volumeRatioThreshold);
   if (withVolumeRatio.length > 0) {
     withVolumeRatio.sort((a, b) => (b.volume_ratio || 0) - (a.volume_ratio || 0));
-    return withVolumeRatio.slice(0, limit);
+    return withVolumeRatio.slice(0, limit).map((item) => ({
+      ...item,
+      activity_signal: "volume_ratio",
+      activity_label: "放量异动",
+    }));
   }
   
   // 没有量比数据时，用换手率作为替代指标（换手率高也算放量）
-  console.log("[RealtimeDataService] 无量比数据，使用换手率作为放量替代指标");
+  console.log("[RealtimeDataService] 无量比数据，明确降级为高换手异动");
   const withTurnover = gainers.filter(item => item.turnover && item.turnover > 5); // 换手率>5%算活跃
   if (withTurnover.length > 0) {
     withTurnover.sort((a, b) => (b.turnover || 0) - (a.turnover || 0));
-    return withTurnover.slice(0, limit);
+    return withTurnover.slice(0, limit).map((item) => ({
+      ...item,
+      activity_signal: "turnover",
+      activity_label: "高换手异动",
+    }));
   }
   
-  // 实在不行就返回涨幅榜前几名
-  return gainers.slice(0, limit);
+  // 没有任何成交活跃指标时返回空数组，禁止把涨幅榜冒充放量榜。
+  return [];
 }
 
 /**
@@ -519,6 +550,8 @@ export function clearRealtimeDataCache() {
   _cachedAt = 0;
   _rankCache = { gainers: null, losers: null, fetchedAt: 0 };
 }
+
+export { parseEastmoneyRankItem, parseSinaRankItem, parseTencentResponse };
 
 
 /**
@@ -570,6 +603,8 @@ export async function fetchMarketIndices() {
     // 如果直接用resp.text()会用UTF-8解码，中文会变成乱码。
     // 解决方法：用TextDecoder指定GBK编码来正确读取中文。
     const buffer = await resp.arrayBuffer();
+    const fetchedAt = new Date();
+    const session = marketSessionState("A", fetchedAt);
     let text;
     try {
       // 尝试用GBK解码
@@ -613,6 +648,10 @@ export async function fetchMarketIndices() {
           pct_chg: parseFloat(pctChg.toFixed(2)),
           amount: amountYi,
           source: "sina_realtime",
+          source_url: url,
+          fetched_at: fetchedAt.toISOString(),
+          trade_date: session.observation_date,
+          market_session_status: session.status,
         });
       }
     }

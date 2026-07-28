@@ -114,12 +114,10 @@ function Test-SmrOwnedProcess {
     $cimProcess = Get-CimInstance Win32_Process `
         -Filter "ProcessId = $ProcessId" `
         -ErrorAction SilentlyContinue
-    if ($cimProcess) {
-        $commandLine = [string]$cimProcess.CommandLine
-        if ($commandLine.Contains($ProjectRoot, [StringComparison]::OrdinalIgnoreCase) -and
-            $commandLine.Contains($ExpectedMarker, [StringComparison]::OrdinalIgnoreCase)) {
-            return $true
-        }
+    # Windows PowerShell 5.1 lacks the String.Contains comparison overload.
+    # Ownership is verified below using executable path and exact start time.
+    if (-not $cimProcess) {
+        return $false
     }
 
     if (-not $ExpectedExecutable -or -not $ExpectedStartTimeUtc) {

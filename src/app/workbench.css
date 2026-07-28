@@ -15,7 +15,9 @@
   --amber: #ee9b25;
   --amber-soft: #fff4df;
   --danger: #d84f52;
-  min-height: 100vh;
+  height: 100vh;
+  min-height: 0;
+  overflow: hidden;
   color: var(--ink);
   font-family: "PingFang SC", "Microsoft YaHei UI", "Noto Sans CJK SC", sans-serif;
   background: var(--canvas);
@@ -106,7 +108,9 @@
 .workbench-masthead nav button:disabled { cursor: wait; opacity: .7; }
 
 .workbench-grid {
-  min-height: calc(100vh - 64px);
+  height: calc(100vh - 64px);
+  min-height: 0;
+  overflow: hidden;
   display: grid;
   grid-template-columns: 1fr;
 }
@@ -204,7 +208,10 @@
 .workbench-main {
   display: flex;
   flex-direction: column;
+  width: 100%;
+  height: 100%;
   min-height: 0;
+  overflow: hidden;
 }
 
 .workbench-main-header {
@@ -286,7 +293,7 @@
 .launch-error,
 .run-error { margin: 8px 0 0 !important; color: var(--danger) !important; font-size: 10px !important; }
 
-.overview-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 16px 0 0; }
+.overview-strip { flex: 0 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 16px 16px 12px; }
 .overview-strip article {
   min-width: 0;
   display: flex;
@@ -453,11 +460,11 @@
 @keyframes wb-spin { to { transform: rotate(360deg); } }
 
 @media (max-width: 1280px) {
-  .workbench-grid { grid-template-columns: 220px 1fr 320px; }
+  .workbench-grid { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 1100px) {
-  .workbench-grid { grid-template-columns: 220px 1fr; }
+  .workbench-grid { grid-template-columns: 1fr; }
   .workbench-right { grid-column: 1 / -1; }
   .workbench-right { 
     display: grid; 
@@ -505,3 +512,152 @@
   .workbench-masthead nav a,
   .workbench-masthead nav button { transition: none; }
 }
+
+/* ==========================================================================
+   阶段 13：多态研究产物视图（Polymorphic Artifact Views）
+   浅色中文风格 · 信息密度高但不拥挤 · 先结论后证据
+   配色沿用 workbench 已有的 CSS 变量（--blue / --green / --amber / --danger 等）
+   ========================================================================== */
+
+/* ---- 1) ValuationModelView 估值模型 ---- */
+.valuation-view { padding: 18px 22px; background: var(--paper); border: 1px solid var(--line); border-radius: 10px; }
+.valuation-header { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; margin-bottom: 14px; }
+.valuation-header h3 { font-size: 18px; margin: 0; color: var(--ink); }
+.valuation-ticker { font-weight: 600; color: var(--blue); font-size: 15px; }
+.valuation-verdict { display: inline-flex; align-items: center; padding: 4px 12px; border-radius: 999px; font-size: 13px; font-weight: 600; background: var(--blue-soft); color: var(--blue-dark); }
+.valuation-verdict.verdict-bull  { background: var(--green-soft); color: #0f7c50; }
+.valuation-verdict.verdict-bear  { background: #fde8e8; color: #b33135; }
+.valuation-verdict.verdict-neutral { background: var(--amber-soft); color: #a96510; }
+.valuation-summary { font-size: 14px; color: var(--muted); margin: 0 0 16px 0; line-height: 1.7; }
+.valuation-fair-block { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px; padding: 12px; background: var(--paper-blue); border: 1px solid #e5ecff; border-radius: 8px; margin-bottom: 16px; }
+.valuation-fair-block p { margin: 0; font-size: 13px; }
+.valuation-fair-block strong { color: var(--ink); font-size: 15px; margin-left: 6px; }
+.valuation-section { margin-bottom: 16px; }
+.valuation-section h4 { margin: 0 0 10px 0; font-size: 14px; color: var(--ink); border-left: 3px solid var(--blue); padding-left: 8px; }
+.valuation-assumptions, .valuation-caveats { padding: 0; margin: 0; list-style: none; display: grid; gap: 6px; }
+.valuation-assumptions li, .valuation-caveats li { padding: 6px 10px; background: #fafbfd; border: 1px solid var(--line); border-radius: 6px; font-size: 13px; color: var(--ink); line-height: 1.6; }
+.valuation-models { display: grid; gap: 10px; }
+.valuation-model-card { padding: 10px 12px; background: var(--paper); border: 1px solid var(--line); border-radius: 8px; }
+.valuation-model-card h5 { margin: 0 0 6px 0; font-size: 13px; color: var(--ink); display: flex; align-items: center; gap: 6px; }
+.valuation-model-card .weight-chip { font-size: 11px; color: var(--blue-dark); background: var(--blue-soft); padding: 2px 7px; border-radius: 999px; }
+.valuation-model-fair { font-size: 14px; font-weight: 600; color: var(--ink); }
+.valuation-model-fair .up { color: #0f7c50; margin-left: 6px; font-size: 12px; }
+.valuation-model-fair .down { color: #b33135; margin-left: 6px; font-size: 12px; }
+.valuation-placeholder { padding: 20px; text-align: center; color: var(--muted); font-size: 13px; background: #fafbfd; border: 1px dashed var(--line); border-radius: 8px; }
+
+/* ---- 2) ComparisonMatrixView 对标矩阵 ---- */
+.matrix-view { padding: 18px 22px; background: var(--paper); border: 1px solid var(--line); border-radius: 10px; }
+.matrix-view h3 { font-size: 18px; margin: 0 0 4px 0; color: var(--ink); }
+.matrix-meta { font-size: 13px; color: var(--muted); margin-bottom: 12px; line-height: 1.7; }
+.matrix-scroll-wrap { overflow-x: auto; overflow-y: visible; border: 1px solid var(--line); border-radius: 8px; background: var(--paper); max-width: 100%; }
+.matrix-scroll-wrap table { width: max-content; min-width: 100%; border-collapse: collapse; font-size: 13px; }
+.matrix-scroll-wrap th, .matrix-scroll-wrap td { padding: 8px 12px; border-bottom: 1px solid var(--line); border-right: 1px solid #eef1f6; text-align: left; white-space: nowrap; }
+.matrix-scroll-wrap th { background: var(--paper-blue); font-weight: 600; color: var(--ink); position: sticky; top: 0; z-index: 1; }
+.matrix-scroll-wrap td:first-child, .matrix-scroll-wrap th:first-child { position: sticky; left: 0; background: var(--paper); z-index: 2; font-weight: 600; border-right: 2px solid #d7dfea; }
+.matrix-scroll-wrap th:first-child { background: #eef4ff; z-index: 3; }
+.matrix-scroll-wrap tr:last-child td { border-bottom: 0; }
+.matrix-scroll-wrap td:nth-child(even) { background: #fafbfd; }
+.matrix-footnote { margin-top: 10px; font-size: 12px; color: var(--subtle); line-height: 1.6; }
+
+/* ---- 3) CausalChainView 因果链分析 ---- */
+.causal-chain-view { padding: 18px 22px; background: var(--paper); border: 1px solid var(--line); border-radius: 10px; }
+.causal-chain-view h3 { font-size: 18px; margin: 0 0 10px 0; color: var(--ink); }
+.causal-thesis { padding: 10px 12px; background: #fffaf0; border: 1px solid #f0d7a0; border-radius: 8px; font-size: 13px; line-height: 1.7; color: #7a4f08; margin-bottom: 14px; }
+.chain-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 0; }
+.chain-node { padding: 10px 12px; background: var(--paper); border: 1px solid var(--line); border-radius: 8px; }
+.chain-node.dir-up { border-left: 4px solid #18a66a; }
+.chain-node.dir-down { border-left: 4px solid #d84f52; }
+.chain-node.dir-flat { border-left: 4px solid var(--subtle); }
+.node-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.node-index { font-size: 11px; color: var(--muted); background: #f1f3f8; padding: 2px 6px; border-radius: 4px; }
+.node-title { font-weight: 600; color: var(--ink); font-size: 14px; }
+.node-direction { font-size: 12px; padding: 2px 7px; border-radius: 999px; }
+.node-direction.dir-up   { color: #0f7c50; background: var(--green-soft); }
+.node-direction.dir-down { color: #b33135; background: #fde8e8; }
+.node-direction.dir-flat { color: var(--muted); background: #f1f3f8; }
+.magnitude-bar { width: 110px; height: 8px; border-radius: 999px; background: #eef1f6; overflow: hidden; display: inline-block; }
+.magnitude-bar > span { display: block; height: 100%; background: linear-gradient(90deg, #4a88ff, #18a66a); border-radius: 999px; }
+.evidence-list { padding: 8px 0 0 22px; margin: 0; font-size: 12px; color: var(--muted); line-height: 1.7; }
+.chain-arrow { text-align: center; color: var(--subtle); font-size: 16px; line-height: 1; padding: 4px 0; }
+.chain-footnote { margin-top: 14px; font-size: 12px; color: var(--subtle); line-height: 1.6; }
+
+/* ---- 4) SignalPlanView 监测信号计划 ---- */
+.signal-plan-view { padding: 18px 22px; background: var(--paper); border: 1px solid var(--line); border-radius: 10px; }
+.signal-plan-view h3 { font-size: 18px; margin: 0 0 4px 0; color: var(--ink); }
+.signal-plan-meta { font-size: 13px; color: var(--muted); margin-bottom: 12px; line-height: 1.7; }
+.catalyst-theme { padding: 10px 12px; background: var(--paper-blue); border: 1px solid #dbe7ff; border-radius: 8px; margin-bottom: 14px; }
+.catalyst-theme h4 { margin: 0 0 4px 0; font-size: 14px; color: var(--blue-dark); }
+.catalyst-theme > div { font-size: 13px; color: var(--ink); line-height: 1.7; }
+.kpis-section, .kill-section { margin-bottom: 14px; }
+.kpis-section h4, .kill-section h4 { margin: 0 0 8px 0; font-size: 14px; color: var(--ink); border-left: 3px solid var(--blue); padding-left: 8px; }
+.kpi-list, .kill-list { padding: 0; margin: 0; list-style: none; display: grid; gap: 8px; }
+.kpi-item { padding: 8px 10px; background: #fafbfd; border: 1px solid var(--line); border-radius: 6px; display: grid; grid-template-columns: 1fr auto; gap: 6px; align-items: start; }
+.kpi-name { font-weight: 600; color: var(--ink); font-size: 13px; }
+.kpi-threshold { font-size: 12px; color: var(--muted); }
+.kpi-meta { grid-column: 1 / -1; display: flex; gap: 6px; flex-wrap: wrap; font-size: 11px; color: var(--subtle); }
+.kill-item { padding: 8px 10px; background: #fff3f3; border: 1px solid #f6c8c9; border-radius: 6px; font-size: 13px; color: #8b282c; line-height: 1.6; }
+.signal-frequency { font-size: 12px; color: var(--muted); margin-top: 8px; }
+.signal-frequency strong { color: var(--ink); }
+
+/* ---- 5) CorrectionDiffView 纠错差异对比 ---- */
+.correction-view { padding: 18px 22px; background: var(--paper); border: 1px solid var(--line); border-radius: 10px; }
+.correction-view h3 { font-size: 18px; margin: 0 0 4px 0; color: var(--ink); }
+.correction-view p { font-size: 13px; color: var(--muted); margin: 0 0 10px 0; line-height: 1.7; }
+.correction-banner { padding: 10px 12px; border-radius: 8px; margin-bottom: 14px; font-size: 13px; line-height: 1.7; }
+.correction-banner.banner-ok  { background: var(--green-soft); color: #0f7c50; border: 1px solid #bfe6d1; }
+.correction-banner.banner-warn{ background: #fff4df; color: #8a5908; border: 1px solid #f0d7a0; }
+.correction-banner.banner-fail{ background: #fff3f3; color: #8b282c; border: 1px solid #f6c8c9; }
+.correction-fields { display: grid; gap: 10px; }
+.correction-field { padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: #fafbfd; display: grid; grid-template-columns: 1fr; gap: 6px; }
+.correction-field-name { font-weight: 600; font-size: 13px; color: var(--ink); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.impact-chip, .downstream-chip { font-size: 11px; padding: 2px 8px; border-radius: 999px; font-weight: 600; }
+.impact-chip.impact-high   { background: #fff3f3; color: #8b282c; }
+.impact-chip.impact-medium { background: #fff4df; color: #8a5908; }
+.impact-chip.impact-low    { background: var(--green-soft); color: #0f7c50; }
+.downstream-chip.ds-ok   { background: var(--green-soft); color: #0f7c50; }
+.downstream-chip.ds-warn { background: #fff4df; color: #8a5908; }
+.downstream-chip.ds-fail { background: #fff3f3; color: #8b282c; }
+.correction-field-values { display: grid; grid-template-columns: 1fr 24px 1fr; gap: 8px; align-items: start; font-size: 13px; }
+.correction-before { background: #fff3f3; padding: 6px 8px; border-radius: 6px; color: #8b282c; word-break: break-all; }
+.correction-arrow  { text-align: center; color: var(--subtle); }
+.correction-after  { background: var(--green-soft); padding: 6px 8px; border-radius: 6px; color: #0f7c50; word-break: break-all; }
+
+/* ---- 6) MemoryCandidatePanel 候选记忆待批 ---- */
+.memory-candidate-panel { padding: 18px 22px; background: var(--paper); border: 1px solid var(--line); border-radius: 10px; }
+.memory-candidate-panel h3 { font-size: 18px; margin: 0 0 4px 0; color: var(--ink); }
+.memory-candidate-panel p { font-size: 13px; color: var(--muted); margin: 0 0 10px 0; line-height: 1.7; }
+.memory-header-meta { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+.warn-chip { background: #fff4df; color: #8a5908; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; }
+.info-chip { background: var(--blue-soft); color: var(--blue-dark); padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; }
+.candidate-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
+.candidate-item { padding: 10px 12px; background: #fafbfd; border: 1px solid var(--line); border-radius: 8px; }
+.candidate-item.has-conflict { border: 1px solid #f0d7a0; background: #fffaf0; }
+.candidate-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; }
+.candidate-type { font-weight: 600; color: var(--ink); font-size: 13px; }
+.mem-chip { font-size: 11px; padding: 1px 6px; border-radius: 4px; }
+.mem-chip.mem-type { background: #eef4ff; color: var(--blue-dark); }
+.mem-chip.mem-stock { background: var(--green-soft); color: #0f7c50; }
+.conflict-flag { font-size: 12px; color: #8a5908; background: #fff4df; padding: 2px 7px; border-radius: 999px; font-weight: 600; }
+.conf-chip { background: #fff3f3; color: #8b282c; padding: 2px 7px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+.proj-chip { background: #f1f3f8; color: var(--muted); padding: 2px 7px; border-radius: 4px; font-size: 11px; }
+.cand-content { font-family: ui-monospace, "Cascadia Mono", "SF Mono", Consolas, monospace; font-size: 12px; background: var(--paper); border: 1px solid var(--line); padding: 6px 8px; border-radius: 6px; color: var(--ink); line-height: 1.6; word-break: break-all; }
+.cand-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+.tag-chip { font-size: 11px; background: var(--paper-blue); color: var(--blue-dark); padding: 2px 7px; border-radius: 999px; }
+.hit-chip { font-size: 11px; color: var(--muted); padding: 2px 6px; }
+.cand-evidence { margin-top: 6px; font-size: 12px; color: var(--muted); }
+.cand-evidence summary { cursor: pointer; color: var(--muted); }
+.cand-evidence ul { padding-left: 20px; margin: 6px 0 0; }
+.cand-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; gap: 8px; flex-wrap: wrap; }
+.cand-time { font-size: 11px; color: var(--subtle); }
+.cand-actions { display: flex; gap: 6px; }
+.cand-actions .btn { padding: 4px 10px; border: 1px solid var(--line-strong); background: var(--paper); color: var(--ink); border-radius: 6px; font-size: 12px; cursor: pointer; }
+.cand-actions .btn.approve { background: var(--green-soft); color: #0f7c50; border-color: #bfe6d1; }
+.cand-actions .btn.reject  { background: #fff3f3; color: #8b282c; border-color: #f6c8c9; }
+.cand-actions .btn.archive { background: #f1f3f8; color: var(--muted); border-color: var(--line-strong); }
+.cand-actions .btn:hover { filter: brightness(0.97); }
+.candidate-placeholder { padding: 20px; text-align: center; color: var(--muted); font-size: 13px; background: #fafbfd; border: 1px dashed var(--line); border-radius: 8px; }
+
+.error-viewer-fallback { padding: 12px; background: #fff3f3; border: 1px solid #f6c8c9; border-radius: 8px; color: #8b282c; }
+.error-viewer-fallback h4 { margin: 0 0 6px 0; font-size: 14px; }
+.error-viewer-fallback p  { margin: 0; font-size: 12px; line-height: 1.6; }
+.loading-hint { padding: 16px; text-align: center; color: var(--muted); font-size: 13px; }

@@ -5,7 +5,7 @@
 ## 1. 运行边界
 
 - 仅监听 `127.0.0.1`，不向局域网或公网开放。
-- 默认数据库为 `01_data/db/smr.db`。
+- 默认控制数据库为 `01_data/db/smr.db`；默认只读研究数据源为 `../th_capital_stock/01_data/db/smr.db`。
 - 默认 API 端口为 `3000`，前台端口为 `5173`。
 - 运行状态记录在 `.tmp/local-runtime/`，日志写入 `10_logs/dev/`。
 - 启停脚本只管理带有当前仓库路径和指定启动标记的进程。
@@ -53,6 +53,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\stop-local.ps1
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\start-local.ps1 `
   -DatabasePath .\01_data\backups\smr-backup-YYYYMMDD-HHMMSS.db `
+  -SourceDatabasePath ..\th_capital_stock\01_data\db\smr.db `
   -ApiPort 3100 `
   -UiPort 5273
 ```
@@ -198,3 +199,62 @@ npm run check:full
 ```
 
 运维脚本发生变化时，至少额外完成一次备用端口、临时数据库的启动—代理健康检查—备份—停止演练。
+
+## 11. 2026-07-23 阶段 0 基线冻结
+
+### 11.1 当前分支与基线
+- 分支：`refactor/personal-research-mvp`
+- 最近 1 次提交：`fc789c3 fix(memory+db): 优化记忆提取分类精度 + 修复daily_bar表缺失报错`
+- 日期：2026-07-23
+
+### 11.2 开发主线目录（新代码只能写进下面这 8 个目录/文件）
+1. `src/` — React 工作台（UI、聊天、制品、记忆）
+2. `api/` — Express API、Intent Engine、Workflow Engine、Agent Orchestrator
+3. `smr_app/` — Python 受治理运行时（Acquisition Kernel、研究包、V3 工作流）
+4. `migrations/` — SQLite 控制面迁移
+5. `config/` — 行业/同行/风格规则等 JSON 配置
+6. `tests/` — 全部测试（Python unittest/pytest、Node node --test、Vitest）
+7. `docs/` — ADR、spec、plans、runbook 等文档
+8. `scripts/` — doctor / start / stop / check 等运维入口脚本
+
+### 11.3 逻辑冻结的历史资产（FREEZE 分类，**物理不删除**）
+以下资产保留在仓库内用于历史回溯和真实数据审计，但不再作为新开发主线直接 import（新运行时已通过 legacy adapter 保证不直接 import）：
+- `08_scripts/lib/smr_phase*.py` — phase100~phase175 系列历史阶段脚本（约 160 个）
+- `tests/test_phase*.py` — phase8~phase175 系列历史测试（约 150+ 个）
+- `08_scripts/lib/phase_status_loader.js`
+- 任何不在 11.2 主线 8 个目录内、且未在 11.4 单独列白名单的 `phaseXX_*`、`smr_phase*` 文件
+
+### 11.4 保留为 KEEP/CONSOLIDATE 的非主线白名单
+- `00_control/` — 交易/风格/股票池等运行期控制文件（真实在用）
+- `01_data/` — 数据库 / 备份 / 正式研究语料
+- `06_reports/`、`07_artifacts/` — 运行产物目录（不进开发主线）
+- `08_scripts/jobs/` — 现网采集脚本
+- `08_scripts/agents/`、`backtest/`、`dev/`、`factor_engine/`、`jobs/`、`portfolio/`、`registry/`、`risk_engine/`、`wiki/`
+- `09_runbooks/` — 本文档所在目录
+- `11_smr_wiki/`、`12_agent_references/`、`12_smr_agents/`
+- `legacy_manifest/` — inventory_repository 的资产清单（本阶段核心输出）
+- `artifacts_golden/` — 金标准制品样本
+- `.env.example`、`.gitignore`、`README.md`、`package*.json`、`requirements*.txt`
+- `tools/` — inventory_repository 等运营工具
+
+### 11.5 阶段 0 验收快照
+本日期运行的完整检查结果：
+| 检查项 | 结果 | 备注 |
+|---|---|---|
+| TypeScript 类型 | 通过 | tsc -b --noEmit |
+| Express API 语法 | 通过 | node --check api/server.js |
+| Python smoke | 19/19 | unittest discover tests/smoke |
+| Python runtime | 33/33 | unittest discover tests/runtime |
+| Python workflow | 72/72 | unittest discover tests/workflows |
+| Python self-discovery | 132/132 | pytest tests/self_discovery -q |
+| Express API | 111 pass / 1 skipped / 0 fail | node --test tests/api/*.test.js |
+| React UI | 9/9 | vitest run |
+| 清单 verify-manifest | 通过 | tools/inventory_repository.py --verify-manifest，delete_approved_count=0 |
+| check:full 总入口 | 通过 | npm.cmd run check:full，exit 0 |
+
+### 11.6 DELETE_CANDIDATE 处理约定
+92 条 DELETE_CANDIDATE 在本轮阶段 0 **全部保持 approved=false**，未物理删除。后续如确需清理，必须走：
+1. 单独一个 PR 批次，只处理删除；
+2. 核对 README / runbook / 测试 / 数据库元数据是否引用；
+3. 先 FREEZE 一个月（在 legacy_manifest 改分类为 FREEZE 不改 DELETE）；
+4. 一轮完整 check:full 通过后再发起删除审核。

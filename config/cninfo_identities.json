@@ -1,0 +1,50 @@
+{
+  "schema_version": "1.0",
+  "identities": {
+    "300308.SZ": {
+      "security_code": "300308",
+      "security_name": "中际旭创",
+      "org_id": "9900022016",
+      "plate": "sz",
+      "column": "szse",
+      "official_research_urls": [
+        "https://www.zj-innolight.com/cn"
+      ],
+      "known_annual_report": {
+        "announcement_id": "1225056459",
+        "title": "2025年年度报告",
+        "published_at": "2026-03-31",
+        "adjunct_url": "finalpage/2026-03-31/1225056459.PDF"
+      }
+    },
+    "688041.SH": {
+      "security_code": "688041",
+      "security_name": "海光信息",
+      "org_id": "9900048365",
+      "plate": "sh",
+      "column": "sse",
+      "known_annual_report": {
+        "announcement_id": "1225083088",
+        "title": "2025年年度报告",
+        "published_at": "2026-04-08",
+        "adjunct_url": "finalpage/2026-04-08/1225083088.PDF"
+      }
+    },
+    "688205.SH": {
+      "security_code": "688205",
+      "security_name": "德科立",
+      "org_id": "9900051420",
+      "plate": "sh",
+      "column": "sse",
+      "official_research_urls": [
+        "https://www.taclink.com/"
+      ],
+      "known_annual_report": {
+        "announcement_id": "1225064041",
+        "title": "2025年年度报告",
+        "published_at": "2026-03-31",
+        "adjunct_url": "finalpage/2026-03-31/1225064041.PDF"
+      }
+    }
+  }
+}

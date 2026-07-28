@@ -44,6 +44,7 @@ class WorkflowRunner:
                 """
                 SELECT run_id FROM workflow_runs
                 WHERE status IN ('queued', 'running')
+                  AND workflow_id NOT LIKE 'agent_%'
                 ORDER BY created_at LIMIT 1
                 """
             ).fetchone()
@@ -101,6 +102,7 @@ class WorkflowRunner:
                     """
                     SELECT run_id FROM workflow_runs
                     WHERE run_id<>? AND status IN ('queued', 'running')
+                      AND workflow_id NOT LIKE 'agent_%'
                     ORDER BY created_at LIMIT 1
                     """,
                     (run_id,),
@@ -147,6 +149,7 @@ class WorkflowRunner:
                     "stage.started",
                     f"Started stage {stage.stage_id}",
                     stage_id=stage.stage_id,
+                    payload={"title": stage.title},
                 )
                 result = stage.handler(context)
                 if not isinstance(result, StageResult):
@@ -170,7 +173,7 @@ class WorkflowRunner:
                     "stage.completed",
                     result.message,
                     stage_id=stage.stage_id,
-                    payload={**result.payload, "summary": result.summary},
+                    payload={"title": stage.title, **result.payload, "summary": result.summary},
                 )
                 for artifact in result.artifacts:
                     store.append_event(

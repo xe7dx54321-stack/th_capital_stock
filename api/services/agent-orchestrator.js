@@ -28,6 +28,8 @@ export class ConversationManager {
   constructor() {
     this.conversations = new Map();
     this.cleanupInterval = setInterval(() => this.cleanupExpired(), 5 * 60 * 1000);
+    // 会话清理不应阻止测试、脚本或服务进程正常退出。
+    this.cleanupInterval.unref?.();
   }
 
   createConversation() {

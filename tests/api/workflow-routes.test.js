@@ -50,12 +50,24 @@ test("workflow API validates, queues, resumes, streams and serves a safe artifac
   const health = await jsonRequest("/api/health");
   assert.equal(health.response.status, 200);
   assert.equal(health.body.status, "ok");
+  assert.ok(app.locals.workflowAuditService);
 
   const workflows = await jsonRequest("/api/workflows");
   assert.equal(workflows.response.status, 200);
   assert.deepEqual(
     workflows.body.workflows.map((item) => item.workflow_id).sort(),
-    ["daily_brief", "portfolio_review", "stock_deep_dive", "thesis_update"],
+    [
+      "claim_correction",
+      "company_signal_plan",
+      "daily_brief",
+      "industry_causal_explainer",
+      "operating_driver_valuation",
+      "pair_switch_decision",
+      "portfolio_review",
+      "stock_deep_dive",
+      "theme_expectation_gap",
+      "thesis_update",
+    ],
   );
 
   const invalid = await jsonRequest("/api/workflow-runs", {
@@ -84,7 +96,11 @@ test("workflow API validates, queues, resumes, streams and serves a safe artifac
   assert.equal(run.status, "completed");
   assert.ok(Number.isInteger(run.process_id));
   assert.equal(run.summary.conclusion_status, "cannot_conclude");
-  assert.equal(run.artifacts.length, 1);
+  assert.equal(run.artifacts.length, 3);
+  assert.deepEqual(
+    new Set(run.artifacts.map((item) => item.artifact_type)),
+    new Set(["stock_deep_dive_report", "stock_research_packet_v2", "stock_deep_dive_audit"]),
+  );
 
   const events = await jsonRequest(`/api/workflow-runs/${run.run_id}/events?after=2`);
   assert.equal(events.response.status, 200);
@@ -96,10 +112,79 @@ test("workflow API validates, queues, resumes, streams and serves a safe artifac
   assert.match(stream.headers.get("content-type"), /text\/event-stream/);
   assert.match(streamText, /event: run\.completed/);
 
-  const artifact = await fetch(`${baseUrl}/api/artifacts/${run.artifacts[0].artifact_id}`);
+  const reportArtifact = run.artifacts.find((item) => item.artifact_type === "stock_deep_dive_report");
+  assert.ok(reportArtifact);
+  const artifact = await fetch(`${baseUrl}/api/artifacts/${reportArtifact.artifact_id}`);
   assert.equal(artifact.status, 200);
   assert.match(artifact.headers.get("content-type"), /text\/markdown/);
-  assert.match(await artifact.text(), /结论状态：\*\*暂无法判断\*\*/);
+  const reportText = await artifact.text();
+  assert.match(reportText, /投资摘要与核心判断/);
+  assert.match(reportText, /风险、反面证据与证伪条件/);
+  assert.doesNotMatch(reportText, /cannot_conclude|执行信息|任务编号：/);
+
+  const packetArtifact = run.artifacts.find((item) => item.artifact_type === "stock_research_packet_v2");
+  assert.ok(packetArtifact);
+  const packetResponse = await fetch(`${baseUrl}/api/artifacts/${packetArtifact.artifact_id}`);
+  assert.equal(packetResponse.status, 200);
+  assert.match(packetResponse.headers.get("content-type"), /application\/json/);
+  const packet = await packetResponse.json();
+  assert.equal(packet.schema_version, "2.0");
+  assert.equal(packet.workflow_version, "3.0");
+  assert.equal(packet.quality.report_validation.status, "passed");
+  assert.equal(packet.quality.readiness, "evidence_limited");
+
+  const correctionRequest = await jsonRequest("/api/workflow-runs", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "Idempotency-Key": "correction-fixture-1" },
+    body: JSON.stringify({
+      workflow_id: "claim_correction",
+      input: {
+        entity_key: "TEST.SZ",
+        allow_network: false,
+        claims: [
+          {
+            claim_id: "market_cap",
+            claim_type: "fact",
+            metric: "market_cap",
+            value: 199,
+            unit: "亿元",
+            evidence_id: "ev_old",
+          },
+          {
+            claim_id: "shares",
+            claim_type: "fact",
+            metric: "shares",
+            value: 10,
+            unit: "亿股",
+            evidence_id: "ev_shares",
+          },
+          {
+            claim_id: "price_from_market_cap",
+            claim_type: "output",
+            metric: "price_from_market_cap",
+            value: 19.9,
+            unit: "元",
+            upstream_claim_ids: ["market_cap", "shares"],
+            formula: "market_cap / shares",
+          },
+        ],
+        correction: {
+          claim_id: "market_cap",
+          new_value: 260,
+          source: "测试权威行情快照",
+          evidence_id: "ev_authoritative",
+        },
+      },
+    }),
+  });
+  assert.equal(correctionRequest.response.status, 202);
+  const correctionRun = await waitForRun(correctionRequest.body.run_id);
+  assert.equal(correctionRun.status, "completed");
+  assert.equal(correctionRun.summary.approved, true);
+  assert.deepEqual(
+    new Set(correctionRun.artifacts.map((item) => item.artifact_type)),
+    new Set(["correction_diff", "claim_correction_report"]),
+  );
 
   const cancelMissing = await jsonRequest("/api/workflow-runs/run_missing/cancel", { method: "POST" });
   assert.equal(cancelMissing.response.status, 404);

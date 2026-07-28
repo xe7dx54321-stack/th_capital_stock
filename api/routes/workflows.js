@@ -45,6 +45,138 @@ export const WORKFLOWS = [
       properties: {
         ticker: { type: "string" },
         allow_network: { type: "boolean", default: false },
+        acquisition_mode: {
+          type: "string",
+          enum: ["cache_only", "refresh_if_stale", "force_refresh"],
+          default: "refresh_if_stale",
+        },
+      },
+      additionalProperties: false,
+    },
+  },
+  {
+    workflow_id: "operating_driver_valuation",
+    title: "Operating driver valuation",
+    description: "Build a deterministic operating-driver valuation model.",
+    enabled: true,
+    input_schema: {
+      type: "object",
+      required: ["ticker"],
+      properties: {
+        ticker: { type: "string" },
+        model_template: { type: "string" },
+        forecast_years: { type: "array" },
+        drivers: { type: "array" },
+        revenue_formula: { type: "string" },
+        profit_formula: { type: "string" },
+        shares_outstanding: { type: "number" },
+        current_price: { type: "number" },
+        current_market_cap: { type: "number" },
+        terminal_pe: { type: "number" },
+        forecast_horizon_years: { type: "integer" },
+        scenarios: { type: "object" },
+        sensitivity: { type: "object" },
+        allow_network: { type: "boolean", default: false },
+      },
+      additionalProperties: false,
+    },
+  },
+  {
+    workflow_id: "pair_switch_decision",
+    title: "Pair switch decision",
+    description: "Compare two securities using a common data cut and deterministic scenarios.",
+    enabled: true,
+    input_schema: {
+      type: "object",
+      required: ["from_ticker", "to_ticker"],
+      properties: {
+        from_ticker: { type: "string" },
+        to_ticker: { type: "string" },
+        from_name: { type: "string" },
+        to_name: { type: "string" },
+        preference: { type: "object" },
+        temporal_threshold_hours: { type: "number" },
+        from_holding: { type: "object" },
+        phase4_from_json: {},
+        phase4_to_json: {},
+        allow_network: { type: "boolean", default: false },
+      },
+      additionalProperties: true,
+    },
+  },
+  {
+    workflow_id: "theme_expectation_gap",
+    title: "Theme expectation gap",
+    description: "Rank a transparent theme universe with deterministic expectation-gap dimensions.",
+    enabled: true,
+    input_schema: {
+      type: "object",
+      required: ["theme_name", "raw_candidates"],
+      properties: {
+        theme_name: { type: "string" },
+        theme_id: { type: "string" },
+        raw_candidates: { type: "array" },
+        keyword_hint_list: { type: "array" },
+        inclusion_overrides: { type: "object" },
+        market_overrides: { type: "object" },
+        evidence_overrides: { type: "object" },
+        allow_network: { type: "boolean", default: false },
+      },
+      additionalProperties: false,
+    },
+  },
+  {
+    workflow_id: "industry_causal_explainer",
+    title: "Industry causal explainer",
+    description: "Build an eight-step evidence-aware causal chain with alternatives.",
+    enabled: true,
+    input_schema: {
+      type: "object",
+      required: ["theme", "question", "causal_nodes_input", "causal_edges_input", "alternatives_input"],
+      properties: {
+        theme: { type: "string" },
+        question: { type: "string" },
+        entity_key: { type: "string" },
+        causal_nodes_input: { type: "object" },
+        causal_edges_input: { type: "array" },
+        alternatives_input: { type: "array" },
+        allow_network: { type: "boolean", default: false },
+      },
+      additionalProperties: false,
+    },
+  },
+  {
+    workflow_id: "company_signal_plan",
+    title: "Company signal plan",
+    description: "Create a governed four-state company monitoring plan.",
+    enabled: true,
+    input_schema: {
+      type: "object",
+      required: ["ticker", "raw_signals"],
+      properties: {
+        ticker: { type: "string" },
+        name: { type: "string" },
+        raw_signals: { type: "array" },
+        transition_requests: { type: "array" },
+        axes: { type: "array" },
+        allow_network: { type: "boolean", default: false },
+      },
+      additionalProperties: false,
+    },
+  },
+  {
+    workflow_id: "claim_correction",
+    title: "Claim correction",
+    description: "Correct an evidence-backed claim and recompute all dependent claims.",
+    enabled: true,
+    input_schema: {
+      type: "object",
+      required: ["entity_key", "claims", "correction"],
+      properties: {
+        entity_key: { type: "string" },
+        claims: { type: "array" },
+        correction: { type: "object" },
+        allow_network: { type: "boolean", default: false },
       },
       additionalProperties: false,
     },
@@ -92,7 +224,7 @@ function validateRunRequest(body) {
     throw new TypeError("input must be an object");
   }
   if (workflow.workflow_id === "stock_deep_dive") {
-    if (Object.keys(input).some((key) => !["ticker", "allow_network"].includes(key))) {
+    if (Object.keys(input).some((key) => !["ticker", "allow_network", "acquisition_mode"].includes(key))) {
       throw new TypeError("stock_deep_dive input contains unsupported fields");
     }
     const ticker = String(input.ticker || "").trim().toUpperCase();
@@ -100,8 +232,18 @@ function validateRunRequest(body) {
     if (input.allow_network !== undefined && typeof input.allow_network !== "boolean") {
       throw new TypeError("allow_network must be a boolean");
     }
-    if (input.allow_network === true) throw new TypeError("MVP only supports allow_network=false");
-    return { workflow, input: { ticker, allow_network: false } };
+    const allowedModes = new Set(["cache_only", "refresh_if_stale", "force_refresh"]);
+    const acquisitionMode = input.acquisition_mode
+      ?? (input.allow_network === false ? "cache_only" : "refresh_if_stale");
+    if (!allowedModes.has(acquisitionMode)) throw new TypeError("invalid acquisition_mode");
+    return {
+      workflow,
+      input: {
+        ticker,
+        allow_network: acquisitionMode !== "cache_only",
+        acquisition_mode: acquisitionMode,
+      },
+    };
   }
   if (["daily_brief", "portfolio_review"].includes(workflow.workflow_id)) {
     if (Object.keys(input).some((key) => !["allow_network", "run_refresh_job"].includes(key))) {
@@ -136,6 +278,37 @@ function validateRunRequest(body) {
       throw new TypeError("confidence must be between 0 and 1");
     }
     return { workflow, input: { ...input, ticker, allow_network: false } };
+  }
+  if ([
+    "operating_driver_valuation",
+    "pair_switch_decision",
+    "theme_expectation_gap",
+    "industry_causal_explainer",
+    "company_signal_plan",
+    "claim_correction",
+  ].includes(workflow.workflow_id)) {
+    const schema = workflow.input_schema || {};
+    const properties = schema.properties || {};
+    if (schema.additionalProperties === false
+        && Object.keys(input).some((key) => !Object.hasOwn(properties, key))) {
+      throw new TypeError(`${workflow.workflow_id} input contains unsupported fields`);
+    }
+    for (const required of schema.required || []) {
+      if (input[required] === undefined || input[required] === null || input[required] === "") {
+        throw new TypeError(`${required} is required`);
+      }
+    }
+    if (input.allow_network === true) {
+      throw new TypeError(`${workflow.workflow_id} only supports allow_network=false`);
+    }
+    const normalized = { ...input, allow_network: false };
+    for (const key of ["ticker", "from_ticker", "to_ticker"]) {
+      if (normalized[key] !== undefined) {
+        normalized[key] = String(normalized[key]).trim().toUpperCase();
+        if (!TICKER_PATTERN.test(normalized[key])) throw new TypeError(`invalid ${key}`);
+      }
+    }
+    return { workflow, input: normalized };
   }
   return { workflow, input };
 }

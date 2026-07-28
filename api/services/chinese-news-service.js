@@ -800,7 +800,7 @@ export class ChineseNewsService {
    *   如果 API key 缺失，返回空数组（不抛异常，避免影响其他源）
    *   如果请求失败，抛出带详细信息的错误
    */
-  async fetchTavilySearch(query, limit = 5) {
+  async fetchTavilySearch(query, limit = 5, options = {}) {
     const apiKey = process.env.TAVILY_API_KEY || "";
     if (!apiKey) {
       console.warn("[tavily_search] TAVILY_API_KEY 未配置，跳过 Tavily 搜索");
@@ -818,6 +818,9 @@ export class ChineseNewsService {
           query: query,
           max_results: limit,
           search_depth: "advanced", // 用 advanced 深度搜索，获取更完整的内容
+          topic: options.topic || "general",
+          ...(options.days ? { days: options.days } : {}),
+          ...(options.includeDomains?.length ? { include_domains: options.includeDomains } : {}),
         }),
       }, 15000);
 
@@ -834,6 +837,7 @@ export class ChineseNewsService {
         if (news.length >= limit) break;
         if (!item.title || !item.url) continue;
 
+        const fetchedAt = new Date().toISOString();
         news.push({
           source_name: "Tavily Search",
           source_id: "tavily_search",
@@ -841,7 +845,9 @@ export class ChineseNewsService {
           url: item.url,
           published_at: item.published_date
             ? new Date(item.published_date).toISOString()
-            : new Date().toISOString(),
+            : null,
+          fetched_at: fetchedAt,
+          date_precision: item.published_date ? "source" : "unknown",
           body: item.content || "",
           language: "mixed",
         });

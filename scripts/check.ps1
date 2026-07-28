@@ -103,9 +103,28 @@ try {
         )
         Invoke-Checked -Label "Python workflow tests" -Executable $python.Executable -Arguments $workflowArgs
 
-        Invoke-Checked -Label "Express API tests" -Executable $node -Arguments @(
-            "--test", "tests/api/*.test.js"
+        $researchArgs = @($python.Prefix) + @(
+            "-m", "pytest",
+            "tests/research",
+            "tests/valuation",
+            "tests/acquisition",
+            "tests/e2e",
+            "tests/test_unified_memory_phase12.py",
+            "-q"
         )
+        Invoke-Checked -Label "Python research and end-to-end tests" -Executable $python.Executable -Arguments $researchArgs
+
+        $selfDiscoveryArgs = @($python.Prefix) + @(
+            "-m", "pytest",
+            "tests/self_discovery",
+            "-q"
+        )
+        Invoke-Checked -Label "Python self-discovery tests" -Executable $python.Executable -Arguments $selfDiscoveryArgs
+
+        # Serial execution matches package.json test:api and avoids a Windows
+        # Node test-worker IPC deserialization race around shared SQLite/HTTP resources.
+        $apiTestArgs = @("--test", "--test-concurrency=1", "tests/api/*.test.js")
+        Invoke-Checked -Label "Express API tests" -Executable $node -Arguments $apiTestArgs
 
         $vitest = Join-Path $ProjectRoot "node_modules\.bin\vitest.cmd"
         if (-not (Test-Path -LiteralPath $vitest -PathType Leaf)) {

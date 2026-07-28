@@ -58,7 +58,7 @@
     },
     "long_context_secondary": {
       "provider": "minimax",
-      "model": "MiniMax-M2.7",
+      "model": "MiniMax-M2.7-highspeed",
       "reasoning_effort": "medium",
       "intended_use": [
         "超长研究包阅读",

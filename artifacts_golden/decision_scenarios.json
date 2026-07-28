@@ -1,0 +1,381 @@
+{
+  "a_ticker": "300274.SZ",
+  "b_ticker": "688041.SH",
+  "scenarios": {
+    "continue_hold": {
+      "scenario_id": "continue_hold",
+      "name": "继续持有",
+      "description": "保留当前 A 标的全部仓位，不换入 B",
+      "valid_conditions": [
+        {
+          "description": "A 标的阶段4上行空间 >= 10%（当前 19.7%）",
+          "indicator": "a_upside_potential",
+          "threshold": 0.1,
+          "current_value": 0.1971,
+          "unit": "小数",
+          "direction": "gte",
+          "met": true,
+          "source": "phase4_valuation"
+        },
+        {
+          "description": "A 标的已识别风险清单内没有已实质性爆发的事件",
+          "indicator": "a_risk_breakout",
+          "threshold": 0,
+          "current_value": 0,
+          "unit": "已爆发项数",
+          "direction": "lte",
+          "met": true,
+          "source": "user_input"
+        },
+        {
+          "description": "A 标的年化上行空间 6.2% 低于用户目标 25%，需接受低收益或主动下调目标",
+          "indicator": "a_upside_vs_target",
+          "threshold": 0.25,
+          "current_value": 0.0618,
+          "unit": "%/年",
+          "direction": "gte",
+          "met": false,
+          "source": "preference + phase4_valuation"
+        }
+      ],
+      "invalid_conditions": [
+        {
+          "description": "B 的上行空间（44.5%）比 A（19.7%）高 >= 20 个百分点",
+          "indicator": "b_minus_a_upside",
+          "threshold": 0.2,
+          "current_value": 0.2482,
+          "unit": "小数",
+          "direction": "gte",
+          "met": true,
+          "source": "phase4_valuation"
+        }
+      ],
+      "pacing": [
+        {
+          "step_index": 1,
+          "ratio": 0.0,
+          "trigger": "不操作；按监控清单每季度复盘",
+          "indicator": "quarterly_review",
+          "rationale": "不换仓但需要定期检查 A 和 B 的相对趋势是否反转"
+        }
+      ],
+      "score": 16,
+      "confidence": 0.3818181818181818,
+      "degraded": true,
+      "degradation_reasons": [
+        "A 的上行空间达不到用户收益目标"
+      ],
+      "expected_switch_ratio": 0.0,
+      "rationale": "A 相对占优维度 2 项，B 相对占优维度 4 项，持平 5 项。"
+    },
+    "partial_switch": {
+      "scenario_id": "partial_switch",
+      "name": "部分换仓",
+      "description": "将 A 的一部分仓位换成 B，保留部分 A 暴露",
+      "valid_conditions": [
+        {
+          "description": "计算换仓比例 57% 在用户约束范围内",
+          "indicator": "partial_ratio_within_bounds",
+          "threshold": "[0.1, 0.7]",
+          "current_value": 0.57,
+          "unit": "小数",
+          "direction": "eq",
+          "met": true,
+          "source": "scenario_planner"
+        }
+      ],
+      "invalid_conditions": [
+        {
+          "description": "用户要求规避短期税费，但部分换仓仍需卖出 A 的对应份额",
+          "indicator": "partial_still_taxable",
+          "threshold": true,
+          "current_value": true,
+          "unit": "bool",
+          "direction": "eq",
+          "met": true,
+          "source": "preference"
+        }
+      ],
+      "pacing": [
+        {
+          "step_index": 1,
+          "ratio": 0.3333333333333333,
+          "trigger": "首批立即 / 首个工作日",
+          "indicator": "execution_price",
+          "rationale": "先成交 1/3 × 57% = 19.0% 总仓位，降低择时风险"
+        },
+        {
+          "step_index": 2,
+          "ratio": 0.3333333333333333,
+          "trigger": "首批后 3~8 个交易日或季报公布后 1 日内",
+          "indicator": "after_event",
+          "rationale": "中段看 B 的催化落地节奏再执行"
+        },
+        {
+          "step_index": 3,
+          "ratio": 0.3333333333333333,
+          "trigger": "中段执行后再观察 10+ 交易日 / 或相对价差达到中性区间",
+          "indicator": "ab_spread_normalization",
+          "rationale": "尾段避免两头打脸——要么确认趋势再进，要么放弃"
+        }
+      ],
+      "score": 77,
+      "confidence": 0.42,
+      "degraded": true,
+      "degradation_reasons": [
+        "用户硬约束：最小换仓 10%",
+        "用户硬约束：最大换仓 70%"
+      ],
+      "expected_switch_ratio": 0.57,
+      "rationale": "A/B 各有优劣，部分换仓平衡风险与收益；计划换仓 57%。"
+    },
+    "full_switch": {
+      "scenario_id": "full_switch",
+      "name": "完全换仓",
+      "description": "A 标的全部卖出，换入等市值的 B 标的",
+      "valid_conditions": [
+        {
+          "description": "B 的上行空间 >= 20%（当前 44.5%）",
+          "indicator": "b_upside_20pct",
+          "threshold": 0.2,
+          "current_value": 0.4453,
+          "unit": "小数",
+          "direction": "gte",
+          "met": true,
+          "source": "phase4_valuation"
+        },
+        {
+          "description": "B 的已识别催化 >= 2 项（当前 3 项）",
+          "indicator": "b_catalysts_count",
+          "threshold": 2,
+          "current_value": 3,
+          "unit": "项",
+          "direction": "gte",
+          "met": true,
+          "source": "user_input_or_research"
+        }
+      ],
+      "invalid_conditions": [
+        {
+          "description": "B 相对于 A 的净优维度数由正转负（当前 +2），即相对优势已经反转，全换的大前提不成立",
+          "indicator": "b_net_advantage_reversal",
+          "threshold": 0,
+          "current_value": 2,
+          "unit": "个维度",
+          "direction": "lte",
+          "met": false,
+          "source": "comparison_matrix"
+        }
+      ],
+      "pacing": [
+        {
+          "step_index": 1,
+          "ratio": 0.5,
+          "trigger": "立即（或首个工作日）",
+          "indicator": "execution_price_vs_close",
+          "rationale": "首批成交 50%，预留回调空间"
+        },
+        {
+          "step_index": 2,
+          "ratio": 0.5,
+          "trigger": "首批成交后 5~10 个交易日或回调 >= 5%",
+          "indicator": "b_short_term_drawdown",
+          "rationale": "第二批看价格；避免追高、同时避免踏空"
+        }
+      ],
+      "score": 9,
+      "confidence": 0.45000000000000007,
+      "degraded": true,
+      "degradation_reasons": [
+        "用户明确最大换仓比例 70%，全换方案不满足硬约束"
+      ],
+      "expected_switch_ratio": 1.0,
+      "rationale": "B 占优维度 4 项，A 占优 2 项；需要确认成立条件全部满足。"
+    },
+    "hold_and_wait": {
+      "scenario_id": "hold_and_wait",
+      "name": "暂缓决策",
+      "description": "当前不操作，等待核心验证条件出现后再评估",
+      "valid_conditions": [
+        {
+          "description": "A/B 相对优势胶着（净差 2 个维度，完整度 96%），先观察再决策可避免误判",
+          "indicator": "ab_closely_matched",
+          "threshold": [
+            2,
+            0.68
+          ],
+          "current_value": [
+            2,
+            0.958
+          ],
+          "unit": "(维度,完整度)",
+          "direction": "lte",
+          "met": true,
+          "source": "comparison_matrix"
+        },
+        {
+          "description": "B 仍有 3 项待验证催化，等待其中至少 1 项落地可提高确定性",
+          "indicator": "b_upcoming_catalysts_count",
+          "threshold": 1,
+          "current_value": 3,
+          "unit": "项",
+          "direction": "gte",
+          "met": true,
+          "source": "catalysts"
+        },
+        {
+          "description": "B 短期过热（>=15%）或 A 短期超跌（<=-12%），等价格回落后换仓成本更优",
+          "indicator": "price_near_unfavorable_extreme",
+          "threshold": "极端价格区域",
+          "current_value": "等待价格回归中值",
+          "unit": "枚举",
+          "direction": "gte",
+          "met": false,
+          "source": "price_action"
+        }
+      ],
+      "invalid_conditions": [
+        {
+          "description": "B 已明显优于 A（净优 2 个维度，数据完整度 96%），继续等待会错过换仓窗口",
+          "indicator": "b_advantage_clearly_sufficient",
+          "threshold": [
+            3,
+            0.7
+          ],
+          "current_value": [
+            2,
+            0.958
+          ],
+          "unit": "(维度,完整度)",
+          "direction": "gte",
+          "met": false,
+          "source": "comparison_matrix"
+        },
+        {
+          "description": "A 近月相对强弱 <= 0.80（当前 -0.05），明显弱于市场，继续持有/等待会继续落后",
+          "indicator": "a_holding_hard_constraint",
+          "threshold": "硬约束未触发",
+          "current_value": "A 近月相对强弱 <= 0.80（当前 -0.05），明显弱于市场，继续持有/等待会继续落后",
+          "unit": "枚举",
+          "direction": "gte",
+          "met": true,
+          "source": "holding_constraints"
+        }
+      ],
+      "pacing": [
+        {
+          "step_index": 1,
+          "ratio": 0.0,
+          "trigger": "等待 1 项核心数据缺口补齐或最近催化落地",
+          "indicator": "wait_for_data_and_catalysts",
+          "rationale": "暂缓不是永久不操作，而是等信号更清晰"
+        }
+      ],
+      "score": 25,
+      "confidence": 0.6,
+      "degraded": false,
+      "degradation_reasons": [],
+      "expected_switch_ratio": 0.0,
+      "rationale": "当前存在 0 项数据缺口，暂缓可避免盲动。"
+    }
+  },
+  "recommended": "partial_switch",
+  "confidence_level": "中",
+  "monitoring_indicators": [
+    {
+      "indicator_id": "b_implied_cagr_vs_realized",
+      "name": "B：隐含 CAGR 是否被季度营收印证",
+      "why_it_matters": "当前价格隐含增长若不能兑现，估值将显著回调",
+      "frequency": "每季度财报后",
+      "current_value": 0.28,
+      "unit": "%/年 CAGR",
+      "warn_threshold": 0.168,
+      "direction": "below",
+      "applies_to_scenarios": [
+        "partial_switch",
+        "full_switch"
+      ]
+    },
+    {
+      "indicator_id": "b_20d_turnover_surge",
+      "name": "B：20 日换手率是否突然上冲",
+      "why_it_matters": "换手率翻 2 倍以上常伴随趋势反转或加速赶顶",
+      "frequency": "每周",
+      "current_value": 0.045,
+      "unit": "小数/天",
+      "warn_threshold": 0.09,
+      "direction": "above",
+      "applies_to_scenarios": [
+        "partial_switch",
+        "full_switch",
+        "hold_and_wait"
+      ]
+    },
+    {
+      "indicator_id": "a_net_margin_retention",
+      "name": "A：净利率是否维持在当前水平以上",
+      "why_it_matters": "若 A 净利率快速恶化，即使不换仓也需重新评估持仓",
+      "frequency": "每季度财报后",
+      "current_value": 0.116,
+      "unit": "小数",
+      "warn_threshold": 0.09860000000000001,
+      "direction": "below",
+      "applies_to_scenarios": [
+        "continue_hold",
+        "hold_and_wait",
+        "partial_switch"
+      ]
+    },
+    {
+      "indicator_id": "ab_pe_ratio_extremes",
+      "name": "A/B 估值（PE TTM）相对比值",
+      "why_it_matters": "比值 > 2x 或 < 0.5x 时，相对性价比显著偏移，需重估换仓必要性",
+      "frequency": "每周",
+      "current_value": 3.41,
+      "unit": "B_PE / A_PE",
+      "warn_threshold": [
+        0.5,
+        2.0
+      ],
+      "direction": "outside_range",
+      "applies_to_scenarios": [
+        "continue_hold",
+        "partial_switch",
+        "full_switch",
+        "hold_and_wait"
+      ]
+    },
+    {
+      "indicator_id": "b_top_risk_items_status",
+      "name": "B：已识别 3 项核心风险的进展",
+      "why_it_matters": "任何一项风险爆发都可能推翻成立条件",
+      "frequency": "每周",
+      "current_value": 3,
+      "unit": "已识别风险项数",
+      "warn_threshold": 1,
+      "direction": "above",
+      "applies_to_scenarios": [
+        "full_switch",
+        "partial_switch"
+      ]
+    }
+  ],
+  "preference_used": [
+    "计划持有期 = 36",
+    "年化收益目标 = 0.25",
+    "最大回撤容忍 = 0.3",
+    "是否接受亏损股 = False",
+    "是否接受高拥挤度 = False",
+    "是否规避短期税费 = True",
+    "最小换仓比例 = 0.1",
+    "最大换仓比例 = 0.7",
+    "是否允许跨行业 = True",
+    "是否偏好龙头 = True",
+    "是否拒绝负 ROE = True",
+    "最低日成交要求 = 3.0"
+  ],
+  "preference_skipped": [],
+  "execution_warning": "【重要】本备忘录仅为研究记录，不构成投资建议。系统明确不执行任何真实交易。所有决策需用户人工确认并自行承担后果。",
+  "warnings": [],
+  "data_gaps": []
+}

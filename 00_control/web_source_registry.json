@@ -1,0 +1,230 @@
+{
+  "$schema_comment": "网页来源注册表：用于 Firecrawl Research Provider 的来源等级治理、白名单、黑名单、抓取频率限制。",
+  "version": "1.0.0",
+  "updated_at": "2026-07-23",
+  "default_authority_tier": "reputable_secondary",
+  "maximum_authority_tier_for_unknown": "discovery",
+  "global_defaults": {
+    "timeout_seconds": 45,
+    "max_content_length_chars": 200000,
+    "retry_attempts": 2,
+    "crawl_delay_seconds": 2,
+    "user_agent": "TH-Capital-Research-Bot/1.0 (+https://th-capital.invalid/bot)",
+    "save_raw_html": true,
+    "save_markdown": true,
+    "allow_images": false,
+    "allow_javascript_render": true
+  },
+  "authority_tier_order": ["primary", "official", "reputable_secondary", "discovery"],
+  "authority_tier_explanations": {
+    "primary": "一手、不可替代的原始披露源（交易所、监管机构、公司官网IR）。用于确定性事实。",
+    "official": "官方可公开验证的来源（地方政府、协会官网、券商研报发布主页原文）。",
+    "reputable_secondary": "有编辑把关的知名财经/产业媒体（财新、36氪、界面、上证报、证券时报等）。",
+    "discovery": "开放式互联网，只能用于线索发现，不能直接作为事实；引用时必须二次核实。"
+  },
+  "allowed_sites": [
+    {
+      "hostname_pattern": "*.cninfo.com.cn",
+      "site_name": "巨潮资讯网（深交所信息披露）",
+      "authority_tier": "official",
+      "data_types": ["official_filings", "disclosures"],
+      "priority": 90,
+      "notes": "正式巨潮 Provider 走官方接口；Firecrawl 只在正文补证时启用。"
+    },
+    {
+      "hostname_pattern": "*.szse.cn",
+      "site_name": "深圳证券交易所",
+      "authority_tier": "official",
+      "data_types": ["official_filings", "rules"],
+      "priority": 95
+    },
+    {
+      "hostname_pattern": "*.sse.com.cn",
+      "site_name": "上海证券交易所",
+      "authority_tier": "official",
+      "data_types": ["official_filings", "rules"],
+      "priority": 95
+    },
+    {
+      "hostname_pattern": "*.csrc.gov.cn",
+      "site_name": "证监会",
+      "authority_tier": "primary",
+      "data_types": ["regulatory_policy"],
+      "priority": 98
+    },
+    {
+      "hostname_pattern": "*.miit.gov.cn",
+      "site_name": "工信部",
+      "authority_tier": "primary",
+      "data_types": ["industry_policy", "certifications"],
+      "priority": 97
+    },
+    {
+      "hostname_pattern": "ir.*.com",
+      "site_name": "公司IR页（通配）",
+      "authority_tier": "primary",
+      "data_types": ["official_filings", "transcript", "business_update"],
+      "priority": 92,
+      "notes": "必须是公司官方域名下的投资者关系子站，如 ir.sungrowpower.com。"
+    },
+    {
+      "hostname_pattern": "*.zj-innolight.com",
+      "site_name": "中际旭创官方网站与投资者关系站",
+      "authority_tier": "primary",
+      "data_types": ["company_web", "business_update", "news", "investor_relations"],
+      "priority": 94,
+      "notes": "实体配置确认的公司官方域名，可用于公司业务与官方动态的一手补证。"
+    },
+    {
+      "hostname_pattern": "*.taclink.com",
+      "site_name": "德科立官方网站",
+      "authority_tier": "primary",
+      "data_types": ["company_web", "business_update", "news", "investor_relations"],
+      "priority": 94,
+      "notes": "实体配置确认的公司官方域名，可用于公司业务、产品与官方动态的一手补证。"
+    },
+    {
+      "hostname_pattern": "www.caixin.com",
+      "site_name": "财新",
+      "authority_tier": "reputable_secondary",
+      "data_types": ["news", "industry"],
+      "priority": 70
+    },
+    {
+      "hostname_pattern": "*.36kr.com",
+      "site_name": "36氪",
+      "authority_tier": "reputable_secondary",
+      "data_types": ["industry", "startup", "competition"],
+      "priority": 65
+    },
+    {
+      "hostname_pattern": "*.jiemian.com",
+      "site_name": "界面新闻",
+      "authority_tier": "reputable_secondary",
+      "data_types": ["news", "industry"],
+      "priority": 65
+    },
+    {
+      "hostname_pattern": "*.cnstock.com",
+      "site_name": "上海证券报（中国证券网）",
+      "authority_tier": "reputable_secondary",
+      "data_types": ["news", "policy"],
+      "priority": 72
+    },
+    {
+      "hostname_pattern": "*.stcn.com",
+      "site_name": "证券时报网",
+      "authority_tier": "reputable_secondary",
+      "data_types": ["news", "policy"],
+      "priority": 72
+    },
+    {
+      "hostname_pattern": "*.yicai.com",
+      "site_name": "第一财经",
+      "authority_tier": "reputable_secondary",
+      "data_types": ["news", "industry"],
+      "priority": 70
+    },
+    {
+      "hostname_pattern": "*.cls.cn",
+      "site_name": "财联社",
+      "authority_tier": "reputable_secondary",
+      "data_types": ["news", "brief"],
+      "priority": 68
+    },
+    {
+      "hostname_pattern": "*.semi.org.cn",
+      "site_name": "中国半导体行业协会",
+      "authority_tier": "official",
+      "data_types": ["industry_data", "certifications"],
+      "priority": 82
+    },
+    {
+      "hostname_pattern": "*.cnea.com.cn",
+      "site_name": "中国新能源汽车产业联盟",
+      "authority_tier": "official",
+      "data_types": ["industry_data"],
+      "priority": 82
+    },
+    {
+      "hostname_pattern": "*.ccpia.com.cn",
+      "site_name": "中国光伏行业协会",
+      "authority_tier": "official",
+      "data_types": ["industry_data", "supply_chain"],
+      "priority": 82
+    }
+  ],
+  "blocked_sites": [
+    {
+      "hostname_pattern": "*guba.*",
+      "reason": "股吧：匿名帖子不可信，可能含操纵性内容。",
+      "block_type": "hard"
+    },
+    {
+      "hostname_pattern": "*xueqiu.com",
+      "reason": "社区UGC为主，权威等级不超过 discovery。默认软屏蔽，但允许在白名单覆盖下作为线索。",
+      "block_type": "soft_discovery_only"
+    },
+    {
+      "hostname_pattern": "*eastmoney.com",
+      "reason": "门户财经+股吧混合，权威等级不超过 reputable_secondary。仅保留其公开新闻。",
+      "block_type": "restrict_authority_to_reputable"
+    },
+    {
+      "hostname_pattern": "*zhihu.com",
+      "reason": "问答UGC，仅允许 discovery 级线索。",
+      "block_type": "soft_discovery_only"
+    },
+    {
+      "hostname_pattern": "*weibo.com",
+      "reason": "社交UGC，仅允许 discovery 级线索。",
+      "block_type": "soft_discovery_only"
+    },
+    {
+      "hostname_pattern": "*baidu.com",
+      "reason": "搜索引擎聚合页，不直接作为正文来源，仅用于发现 URL。",
+      "block_type": "search_result_only"
+    },
+    {
+      "hostname_pattern": "*pdf.dfcfw.com",
+      "reason": "转载门户PDF文档，需检查是否有原始发布者链接再复用。",
+      "block_type": "cross_verify_required"
+    },
+    {
+      "hostname_pattern": "*toutiao.com",
+      "reason": "自媒体/内容农场风险高，默认硬屏蔽。",
+      "block_type": "hard"
+    },
+    {
+      "hostname_pattern": "*163.com/dy/article/*",
+      "reason": "网易号自媒体聚合，默认硬屏蔽。",
+      "block_type": "hard"
+    }
+  ],
+  "reputation_checks": {
+    "minimum_text_length_chars": 400,
+    "minimum_paragraphs": 3,
+    "ads_to_content_ratio_threshold": 0.35,
+    "maximum_shared_links_on_page": 30,
+    "detect_paywall_via_keywords": ["订阅", "付费后可", "VIP专享", "解锁全文", "登录后继续阅读"]
+  },
+  "citation_rules": {
+    "require_source_link_in_candidate": true,
+    "evidence_minimum_authority_tier_for_normalized_fact": "official",
+    "discovery_tier_must_be_cross_validated": true,
+    "unknown_source_authority_override": "discovery"
+  },
+  "deduplication": {
+    "content_hash_algorithm": "sha256",
+    "url_canonicalization": [
+      {"name": "strip_utm_params", "apply": true},
+      {"name": "strip_fragment", "apply": true},
+      {"name": "force_https", "apply": true},
+      {"name": "strip_tracking_query_params", "apply": true}
+    ],
+    "reprint_cluster_threshold_jaccard": 0.85,
+    "prefer_source_hostname_patterns": [
+      "*.gov.cn", "*.cninfo.com.cn", "*.szse.cn", "*.sse.com.cn", "*ir.*.com", "*.caixin.com"
+    ]
+  }
+}

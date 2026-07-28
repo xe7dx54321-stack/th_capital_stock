@@ -11,6 +11,12 @@ PRODUCTION_WORKFLOW_IDS = frozenset(
         "stock_deep_dive",
         "thesis_update",
         "portfolio_review",
+        "operating_driver_valuation",
+        "pair_switch_decision",
+        "theme_expectation_gap",
+        "industry_causal_explainer",
+        "company_signal_plan",
+        "claim_correction",
     }
 )
 
@@ -38,6 +44,30 @@ def production_registry() -> WorkflowRegistry:
         "stock_deep_dive": ("Stock deep dive", "Build an evidence-backed company research report."),
         "thesis_update": ("Thesis update", "Propose a governed update to an investment thesis."),
         "portfolio_review": ("Portfolio review", "Review paper portfolio risk and decisions."),
+        "operating_driver_valuation": (
+            "Operating driver valuation",
+            "Build a deterministic valuation model from operating driver assumptions.",
+        ),
+        "pair_switch_decision": (
+            "Pair switch decision V1",
+            "Side-by-side comparison and four-scenario decision for switching a pair of tickers.",
+        ),
+        "theme_expectation_gap": (
+            "Theme expectation gap V1",
+            "8-dimension deterministic ranking of theme candidates with transparent universe.",
+        ),
+        "company_signal_plan": (
+            "Company signal plan V1",
+            "Signal registry (4-state) + 3 transmission timelines + position readiness gate.",
+        ),
+        "industry_causal_explainer": (
+            "Industry causal explainer V1",
+            "Evidence-aware eight-step causal chain with alternatives and falsification conditions.",
+        ),
+        "claim_correction": (
+            "Claim correction",
+            "Correct an evidence-backed claim and deterministically recompute every dependent claim.",
+        ),
     }
     definitions = []
     for workflow_id in sorted(PRODUCTION_WORKFLOW_IDS):
@@ -57,6 +87,40 @@ def production_registry() -> WorkflowRegistry:
             from smr_app.workflows.thesis_update import thesis_update_definition
 
             definitions.append(thesis_update_definition())
+        elif workflow_id == "operating_driver_valuation":
+            from smr_app.workflows.operating_driver_valuation import (
+                operating_driver_valuation_definition,
+            )
+
+            definitions.append(operating_driver_valuation_definition())
+        elif workflow_id == "pair_switch_decision":
+            from smr_app.workflows.pair_switch_decision import (
+                pair_switch_decision_definition,
+            )
+
+            definitions.append(pair_switch_decision_definition())
+        elif workflow_id == "theme_expectation_gap":
+            from smr_app.workflows.theme_expectation_gap import (
+                theme_expectation_gap_definition,
+            )
+
+            definitions.append(theme_expectation_gap_definition())
+        elif workflow_id == "company_signal_plan":
+            from smr_app.workflows.company_signal_plan import (
+                company_signal_plan_definition,
+            )
+
+            definitions.append(company_signal_plan_definition())
+        elif workflow_id == "industry_causal_explainer":
+            from smr_app.workflows.industry_causal_explainer import (
+                industry_causal_explainer_definition,
+            )
+
+            definitions.append(industry_causal_explainer_definition())
+        elif workflow_id == "claim_correction":
+            from smr_app.workflows.claim_correction import claim_correction_definition
+
+            definitions.append(claim_correction_definition())
         else:
             definitions.append(
                 WorkflowDefinition(

@@ -2,6 +2,7 @@ import Database from "better-sqlite3";
 
 
 const TERMINAL_STATUSES = new Set(["completed", "failed", "cancelled"]);
+const INLINE_WORKFLOW_PREFIX = "agent_";
 
 export class WorkflowConflictError extends Error {}
 
@@ -44,7 +45,9 @@ export class WorkflowRepository {
       }
 
       const active = this.db.prepare(
-        "SELECT run_id FROM workflow_runs WHERE status IN ('queued','running') ORDER BY created_at LIMIT 1"
+        `SELECT run_id FROM workflow_runs
+         WHERE status IN ('queued','running') AND workflow_id NOT LIKE '${INLINE_WORKFLOW_PREFIX}%'
+         ORDER BY created_at LIMIT 1`
       ).get();
       if (active) {
         throw new WorkflowConflictError(`Write workflow already active: ${active.run_id}`);
@@ -68,6 +71,121 @@ export class WorkflowRepository {
       return { run: this.getRun(runId), reused: false };
     });
     return transaction();
+  }
+
+  createInlineRun({ runId, workflowId, input }) {
+    if (!String(workflowId).startsWith(INLINE_WORKFLOW_PREFIX)) {
+      throw new TypeError(`Inline workflow_id must start with ${INLINE_WORKFLOW_PREFIX}`);
+    }
+    const createdAt = nowIso();
+    const transaction = this.db.transaction(() => {
+      this.db.prepare(
+        `INSERT INTO workflow_runs(
+           run_id, workflow_id, status, input_json, created_at, started_at, process_status
+         ) VALUES (?, ?, 'running', ?, ?, ?, 'inline')`
+      ).run(runId, workflowId, JSON.stringify(input || {}), createdAt, createdAt);
+      this.db.prepare(
+        `INSERT INTO workflow_events(
+           run_id, sequence, event_type, level, message, payload_json, created_at
+         ) VALUES (?, 1, 'run.started', 'info', ?, '{}', ?)`
+      ).run(runId, `Started ${workflowId}`, createdAt);
+      return this.getRun(runId);
+    });
+    return transaction();
+  }
+
+  appendEvent(runId, { eventType, stageId = null, level = "info", message, payload = {} }) {
+    const transaction = this.db.transaction(() => {
+      const sequence = this.db.prepare(
+        "SELECT COALESCE(MAX(sequence),0)+1 AS sequence FROM workflow_events WHERE run_id=?"
+      ).get(runId).sequence;
+      const createdAt = nowIso();
+      this.db.prepare(
+        `INSERT INTO workflow_events(
+           run_id, sequence, event_type, stage_id, level, message, payload_json, created_at
+         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+      ).run(
+        runId,
+        sequence,
+        eventType,
+        stageId,
+        level,
+        String(message || "").slice(0, 2000),
+        JSON.stringify(payload || {}),
+        createdAt,
+      );
+      return { run_id: runId, sequence, event_type: eventType, stage_id: stageId, level, message, payload, created_at: createdAt };
+    });
+    return transaction();
+  }
+
+  finalizeInlineRun(runId, {
+    status,
+    summary = {},
+    errorCode = null,
+    errorMessage = null,
+    eventType = `run.${status}`,
+    eventMessage = `Run ${status}`,
+    eventLevel = status === "failed" ? "error" : "info",
+    eventPayload = {},
+  }) {
+    const allowedStatuses = new Set(["completed", "failed", "waiting_review", "cancelled"]);
+    if (!allowedStatuses.has(status)) throw new TypeError(`Unsupported inline run status: ${status}`);
+    const completedAt = status === "waiting_review" ? null : nowIso();
+    const transaction = this.db.transaction(() => {
+      const updated = this.db.prepare(
+        `UPDATE workflow_runs
+         SET status=?, summary_json=?, error_code=?, error_message=?, completed_at=?, process_status=?
+         WHERE run_id=? AND workflow_id LIKE '${INLINE_WORKFLOW_PREFIX}%'`
+      ).run(
+        status,
+        JSON.stringify(summary || {}),
+        errorCode,
+        errorMessage ? String(errorMessage).slice(0, 2000) : null,
+        completedAt,
+        status,
+        runId,
+      );
+      if (updated.changes !== 1) throw new Error(`Inline workflow run not found: ${runId}`);
+      const sequence = this.db.prepare(
+        "SELECT COALESCE(MAX(sequence),0)+1 AS sequence FROM workflow_events WHERE run_id=?"
+      ).get(runId).sequence;
+      const eventCreatedAt = nowIso();
+      this.db.prepare(
+        `INSERT INTO workflow_events(
+           run_id, sequence, event_type, level, message, payload_json, created_at
+         ) VALUES (?, ?, ?, ?, ?, ?, ?)`
+      ).run(
+        runId,
+        sequence,
+        eventType,
+        eventLevel,
+        String(eventMessage).slice(0, 2000),
+        JSON.stringify(eventPayload || {}),
+        eventCreatedAt,
+      );
+      return this.getRun(runId);
+    });
+    return transaction();
+  }
+
+  registerArtifact({ artifactId, runId, artifactType, title, relativePath, mimeType, metadata = {} }) {
+    const createdAt = nowIso();
+    this.db.prepare(
+      `INSERT INTO workflow_artifacts(
+         artifact_id, run_id, artifact_type, title, relative_path, mime_type, metadata_json, created_at
+       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+    ).run(
+      artifactId,
+      runId,
+      artifactType,
+      title,
+      relativePath,
+      mimeType,
+      JSON.stringify(metadata || {}),
+      createdAt,
+    );
+    return this.getArtifact(artifactId);
   }
 
   getRun(runId) {

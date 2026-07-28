@@ -31,6 +31,18 @@ import { EastmoneyDataService } from "./eastmoney-data-service.js";
 import { WallstreetDataService } from "./wallstreet-data-service.js";
 import { MappingAnalysisService } from "./mapping-analysis-service.js";
 import { IntentEngine } from "./intent-engine.js";
+import { STOCK_NAME_MAP, resolveKnownTicker, resolveKnownTickers } from "./security-aliases.js";
+import { validateEvidenceCitations } from "./citation-validator.js";
+import { resolveTaskRelation, isFollowUpQuestion } from "./research-task-contracts.js";
+import { ResearchSessionState, SessionStateStore } from "./research-session-state.js";
+import { TaskGraphRegistry, createDefaultRegistry } from "./task-graph-registry.js";
+import { ConversationTaskRouterV2, createRegistryLlmRouter } from "./conversation-task-router-v2.js";
+import {
+  createEvidenceEnvelope,
+  createEvidenceSnapshot,
+  formatEvidenceCatalogForPrompt,
+  summarizeDataHealth,
+} from "./data-envelope.js";
 
 // 东方财富增强数据服务单例（资金流向+龙虎榜+多季度财务历史）
 // 全局复用，避免每个 SubAgent 重复创建实例
@@ -45,6 +57,16 @@ const mappingAnalysisService = new MappingAnalysisService();
 // 意图引擎单例（自然语言理解与任务拆解）
 const intentEngine = new IntentEngine();
 
+const WRITE_TOOL_IDS = new Set(["save_memory", "create_decision"]);
+
+function isWriteToolAuthorized(toolId, context) {
+  if (toolId === "save_memory") return context.input?.allowMemoryWrite === true;
+  if (toolId === "create_decision") {
+    return context.input?.allowDecisionWrite === true && context.input?.decisionReviewApproved === true;
+  }
+  return true;
+}
+
 let intentEngineInitialized = false;
 function initIntentEngine() {
   if (!intentEngineInitialized) {
@@ -53,23 +75,6 @@ function initIntentEngine() {
     intentEngineInitialized = true;
   }
 }
-
-const STOCK_NAME_MAP = {
-  "300308.SZ": "中际旭创", "000063.SZ": "中兴通讯", "688205.SH": "杰普特",
-  "688800.SH": "澜起科技", "002281.SZ": "光迅科技", "002837.SZ": "英维克",
-  "300394.SZ": "天孚通信", "300502.SZ": "新易盛", "300620.SZ": "光库科技",
-  "872808.BJ": "中讯四方", "09988.HK": "阿里巴巴", "301171.SZ": "华如科技",
-  "00020.HK": "蒙牛乳业", "002230.SZ": "科大讯飞", "603039.SH": "泛微网络",
-  "688111.SH": "金山办公", "002957.SZ": "科瑞技术", "002050.SZ": "三花智控",
-  "002600.SZ": "领益智造", "002796.SZ": "世运电路", "09980.HK": "网易",
-  "300124.SZ": "汇川技术", "301368.SZ": "丰立智能", "600580.SH": "卧龙电驱",
-  "601689.SH": "拓普集团", "603728.SH": "鸣志电器", "688017.SH": "绿的谐波",
-  "688322.SH": "奥比中光", "300593.SZ": "新雷能", "603986.SH": "兆易创新",
-  "688525.SH": "芯海科技", "00981.HK": "中芯国际", "01347.HK": "华虹半导体",
-  "301269.SZ": "华大九天", "688041.SH": "海光信息", "688256.SH": "寒武纪",
-  "688521.SH": "芯原股份", "688027.SH": "国盾量子", "300757.SZ": "罗博特科",
-  "688627.SH": "精智达",
-};
 
 /**
  * 合并两个新闻列表并去重
@@ -95,6 +100,14 @@ function mergeNewsDedup(primary, secondary, maxItems = 8) {
   return merged;
 }
 
+function isHighRiskTradingName(name = "") {
+  return /(?:^|\*)ST|退市|退$/i.test(String(name).trim());
+}
+
+function opportunityCandidate(item) {
+  return item && !isHighRiskTradingName(item.name) && Number.isFinite(Number(item.pct_chg));
+}
+
 /**
  * 解析单个股票代码/名称
  * 
@@ -104,16 +117,10 @@ function mergeNewsDedup(primary, secondary, maxItems = 8) {
  * 返回：
  *   标准化的股票代码（如 "300308.SZ"），如果没有匹配则返回原字符串
  */
-function resolveTicker(input) {
+export function resolveTicker(input) {
   if (!input) return null;
-  const normalized = input.trim().toUpperCase();
-  for (const [code, name] of Object.entries(STOCK_NAME_MAP)) {
-    if (code.toUpperCase() === normalized || 
-        code.replace(/\.(SZ|SH|BJ|HK)$/i, "") === normalized || 
-        name === input.trim()) {
-      return code;
-    }
-  }
+  const known = resolveKnownTicker(input);
+  if (known) return known;
   return input.trim();
 }
 
@@ -130,44 +137,9 @@ function resolveTicker(input) {
  *   这个函数就像一个"多股票探测器"，从用户的话里找出所有提到的股票。
  *   比如用户说"帮我对比中际旭创和精智达"，它会返回两个股票代码。
  */
-function resolveMultipleTickers(query) {
+export function resolveMultipleTickers(query) {
   if (!query) return [];
-  
-  const tickers = [];
-  const foundNames = new Set();
-  
-  // 1. 先匹配 STOCK_NAME_MAP 中的所有股票名称
-  for (const [code, name] of Object.entries(STOCK_NAME_MAP)) {
-    if (query.includes(name) && !foundNames.has(name)) {
-      tickers.push(code);
-      foundNames.add(name);
-    }
-  }
-  
-  // 2. 再匹配股票代码格式（如 300308.SZ, 688627.SH）
-  const codePattern = /\b(\d{6}\.(SZ|SH|BJ|HK))\b/gi;
-  let match;
-  while ((match = codePattern.exec(query)) !== null) {
-    const code = match[1].toUpperCase();
-    if (!tickers.includes(code)) {
-      tickers.push(code);
-    }
-  }
-  
-  // 3. 匹配6位数字（可能是股票代码）
-  const numPattern = /\b(\d{6})\b/g;
-  while ((match = numPattern.exec(query)) !== null) {
-    const num = match[1];
-    // 检查是否已经在 STOCK_NAME_MAP 中
-    for (const code of Object.keys(STOCK_NAME_MAP)) {
-      if (code.startsWith(num) && !tickers.includes(code)) {
-        tickers.push(code);
-        break;
-      }
-    }
-  }
-  
-  return tickers;
+  return resolveKnownTickers(query);
 }
 
 /**
@@ -767,7 +739,7 @@ class SubAgent {
 - 关键观察指标（需要持续跟踪的1-2个核心指标）
 
 【数据处理规则】
-1. 对于缺失的财务数据，可基于行业常识估算，标注"（估算）"
+1. 对于缺失的财务数据必须明确标注缺失，禁止估算或补造具体数值
 2. 异常数据（如PE>200倍、PE为负）需标注"⚠️"并说明原因
 3. 如果Tavily搜索返回了分析师目标价/评级，必须引用并在"市场共识"部分对比
 4. 绝对禁止脱离市场预期凭空给出目标价——必须基于市场一致预期+预期差分析
@@ -912,6 +884,352 @@ ${memoryContextText}`;
   }
 }
 
+function buildSignalPlanInput(context, ticker) {
+  const query = String(context.userQuery || "");
+  const signals = [];
+  const addSignal = (signalId, name, category, importance, note) => {
+    signals.push({
+      signal_id: signalId,
+      name,
+      category,
+      indicator_kind: "leading",
+      current_state: "observing",
+      importance,
+      note,
+      thresholds: {
+        trigger: { requirement: "至少一条可追溯正式或高质量独立证据" },
+        double_confirm_cond: { requirement: "第二条独立来源确认" },
+        invalidate: { requirement: "正式披露否定、计划取消或关键节点超期" },
+        frequency: "每周",
+        expire_after: "90天",
+      },
+    });
+  };
+  if (/认证|送样|客户/.test(query)) {
+    addSignal("customer_certification", "客户认证进度", "产品/认证", 0.95, "区分送样、测试、认证、供应商代码和批量订单");
+  }
+  if (/工厂|产线|产能|投产|爬坡/.test(query)) {
+    addSignal("factory_ramp", "新工厂投产与爬坡", "工厂/产能", 0.9, "区分开业、设备进场、试产、良率、利用率和利润贡献");
+  }
+  if (/出货|订单|收入|节奏/.test(query)) {
+    addSignal("shipment_cadence", "订单与出货节奏", "订单/出货", 0.95, "区分订单、排产、出货和收入确认");
+  }
+  if (signals.length === 0) {
+    addSignal("formal_disclosure_update", "正式披露进展", "公司披露", 0.8, "仅在正式公告或公司 IR 明确披露后升级状态");
+    addSignal("operating_leading_indicator", "经营领先指标", "经营指标", 0.75, "需在首次运行后按公司业务补齐具体指标");
+  }
+  return {
+    ticker,
+    name: context.data.stockEntity?.name || "",
+    raw_signals: signals,
+    axes: ["product", "factory", "upstream"],
+    allow_network: false,
+  };
+}
+
+const THEME_CANDIDATE_SEEDS = Object.freeze({
+  supernode: [
+    {
+      ticker: "002396.SZ", name: "星网锐捷", industry: "通信设备",
+      sub_sector: "企业网络与超节点映射", business_purity: 0.45,
+      revenue_sensitivity: 0.5, tags: ["AI算力", "超节点", "网络设备"],
+      note: "通过锐捷网络形成网络设备与算力基础设施映射；持股价值需单独复算",
+    },
+    {
+      ticker: "301165.SZ", name: "锐捷网络", industry: "通信设备",
+      sub_sector: "交换机与数据中心网络", business_purity: 0.8,
+      revenue_sensitivity: 0.75, tags: ["AI算力", "超节点", "交换机"],
+      note: "主题业务暴露较直接，仍需用正式披露核验 AI 相关收入占比",
+    },
+    {
+      ticker: "000938.SZ", name: "紫光股份", industry: "计算机设备",
+      sub_sector: "ICT基础设施与交换机", business_purity: 0.55,
+      revenue_sensitivity: 0.55, tags: ["AI算力", "超节点", "ICT基础设施"],
+      note: "业务覆盖面较广，主题纯度低于单一网络设备公司",
+    },
+    {
+      ticker: "688629.SH", name: "华丰科技", industry: "电子元件",
+      sub_sector: "高速连接器", business_purity: 0.5,
+      revenue_sensitivity: 0.7, tags: ["AI算力", "超节点", "高速互连"],
+      note: "位于高速互连环节，收入兑现依赖认证、订单与产能进度",
+    },
+  ],
+});
+
+function themeSeedCandidates(query) {
+  const text = String(query || "");
+  if (/超节点|AI\s*算力|算力基础设施/i.test(text)) {
+    return THEME_CANDIDATE_SEEDS.supernode.map((item) => ({ ...item }));
+  }
+  return [];
+}
+
+function buildCausalExplainerInput(context) {
+  const question = String(context.userQuery || "");
+  const theme = String(context.data.routingEnvelope?.topic || (/DCI|数通/i.test(question) ? "DCI 数通光模块" : "产业主题"));
+  const labels = {
+    1: "终端需求是否真实",
+    2: "需求位于产业链哪个节点",
+    3: "A股是否存在纯正资产映射",
+    4: "市场注意力是否被其他叙事占用",
+    5: "订单如何传导到收入和利润",
+    6: "传导需要多长时间",
+    7: "哪些催化会改变市场定价",
+    8: "哪些证据会证伪当前解释",
+  };
+  const conclusions = {
+    1: "需要用云厂商资本开支、设备采购或公司正式披露确认终端需求，单条新闻不足以定论。",
+    2: "先区分光芯片、光器件、模块、交换机与系统集成环节，需求不能跨节点直接映射到利润。",
+    3: "A股映射必须同时检查业务纯度、收入敏感度和可交易性，概念相关不等于利润相关。",
+    4: "估值与股价还受同期主线、拥挤度、业绩预期和资金偏好影响，产业需求不是唯一解释变量。",
+    5: "需求需依次经过认证、订单、排产、出货和收入确认，任一环节缺证都不能跳步。",
+    6: "兑现时滞取决于认证周期、交付节奏和收入确认口径，当前证据不足时只给观察区间，不给伪精确日期。",
+    7: "可验证催化包括正式认证、批量订单、产能爬坡和财务报表中的收入/利润兑现。",
+    8: "若资本开支、订单、出货或毛利率没有同向验证，或正式披露否定需求映射，则当前解释失效。",
+  };
+  const causalNodes = {};
+  for (let step = 1; step <= 8; step += 1) {
+    causalNodes[String(step)] = {
+      title: labels[step],
+      conclusion: conclusions[step],
+      detail: "该节点为研究框架结论；进入事实判断前必须补充可追溯证据。",
+      evidences: [],
+      confidence: 0.35,
+      alternative_findings: step === 4
+        ? ["基本面未变但估值压缩", "需求存在但A股资产映射不纯", "订单兑现时间晚于市场窗口"]
+        : [],
+    };
+  }
+  const edges = Array.from({ length: 7 }, (_, index) => ({
+    from_step: index + 1,
+    to_step: index + 2,
+    edge_kind: "inferred",
+    explanation: "待一手材料补证的研究推断，不作为已确认事实。",
+    evidence_id: "",
+  }));
+  return {
+    theme,
+    question,
+    causal_nodes_input: causalNodes,
+    causal_edges_input: edges,
+    alternatives_input: [
+      {
+        title: "估值压缩解释",
+        plausibility: 0.5,
+        how_to_falsify: "比较当前估值分位、盈利预测变化和行业相对收益。",
+        current_evidence_against: "当前未完成估值与盈利预测的同口径核验。",
+      },
+      {
+        title: "资产映射解释",
+        plausibility: 0.6,
+        how_to_falsify: "核验相关公司的主题收入占比、订单和毛利贡献。",
+        current_evidence_against: "当前缺少正式披露的主题收入拆分。",
+      },
+    ],
+    allow_network: false,
+  };
+}
+
+function buildClaimCorrectionInput(context, ticker) {
+  const envelope = context.data.routingEnvelope || {};
+  const target = envelope.correctionTarget || {};
+  const fieldAliases = {
+    "市值": "market_cap",
+    "收入": "revenue",
+    "营收": "revenue",
+    "利润": "net_income",
+    "净利润": "net_income",
+    "EPS": "eps",
+    "PE": "pe_ttm",
+    "PB": "pb",
+  };
+  const claimId = fieldAliases[target.field] || String(target.field || "").toLowerCase();
+  if (!claimId || claimId === "unknown") {
+    throw new TypeError("没有识别出需要纠正的指标，请明确说明市值、营收、净利润、EPS、PE 或 PB");
+  }
+
+  const instrument = context.data.instrumentData || {};
+  const authoritativeByField = {
+    market_cap: instrument.valuation?.marketCap,
+    revenue: instrument.fundamentals?.revenue,
+    net_income: instrument.fundamentals?.netIncome,
+    eps: instrument.fundamentals?.eps,
+    pe_ttm: instrument.valuation?.pe,
+    pb: instrument.valuation?.pb,
+  };
+  let authoritativeValue = Number(authoritativeByField[claimId]);
+  if (!Number.isFinite(authoritativeValue)) {
+    throw new TypeError(`重新取数后仍缺少 ${claimId} 的可验证数值，纠错保持 disputed，不覆盖旧事实`);
+  }
+
+  const previousFacts = [
+    ...(Array.isArray(envelope.confirmedFacts) ? envelope.confirmedFacts : []),
+    ...(Array.isArray(context.sessionState?.confirmedFacts) ? context.sessionState.confirmedFacts : []),
+  ];
+  const prior = previousFacts.find((fact) => {
+    const normalized = fieldAliases[fact?.field] || String(fact?.field || "").toLowerCase();
+    return normalized === claimId && (!fact?.ticker || fact.ticker === ticker);
+  });
+  let oldValue = Number(prior?.value ?? target.previousValue);
+  const priorUnit = String(prior?.unit || "");
+  const unitByField = {
+    market_cap: "人民币元",
+    revenue: "人民币元",
+    net_income: "人民币元",
+    eps: "元/股",
+    pe_ttm: "倍",
+    pb: "倍",
+  };
+  if (claimId === "market_cap" && /亿元/.test(priorUnit || String(context.userQuery || ""))) {
+    oldValue *= 100_000_000;
+  }
+  if (!Number.isFinite(oldValue)) {
+    throw new TypeError("会话中没有找到被争议指标的旧值，无法生成可审计的 before/after diff");
+  }
+
+  const evidence = [...(context.data.evidenceCatalog || [])]
+    .reverse()
+    .find((item) => item.tool_id === "get_stock_data");
+  if (!evidence?.evidence_id) {
+    throw new TypeError("重新取数没有形成证据快照，纠错保持 disputed");
+  }
+  const source = instrument.source_url
+    || instrument.source
+    || `本地行情与财务快照（${instrument.fetched_at || instrument.latestDate || "时点未标注"}）`;
+
+  const hasClaimedValue = target.claimedValue !== null
+    && target.claimedValue !== undefined
+    && String(target.claimedValue).trim() !== "";
+  const claimedValue = hasClaimedValue ? Number(target.claimedValue) : Number.NaN;
+  if (hasClaimedValue && Number.isFinite(claimedValue)) {
+    const normalizedClaimed = claimId === "market_cap" && /亿/.test(String(context.userQuery || ""))
+      ? claimedValue * 100_000_000
+      : claimedValue;
+    const tolerance = Math.max(1, Math.abs(authoritativeValue) * 0.02);
+    if (Math.abs(normalizedClaimed - authoritativeValue) > tolerance) {
+      throw new TypeError(
+        `用户声称值与重新取得的权威快照仍冲突（用户 ${normalizedClaimed}，快照 ${authoritativeValue}），`
+        + "纠错保持 disputed，不强行覆盖",
+      );
+    }
+  }
+
+  const claims = [{
+    claim_id: claimId,
+    claim_type: "fact",
+    metric: claimId,
+    value: oldValue,
+    unit: unitByField[claimId] || "",
+    evidence_id: prior?.evidenceId || prior?.evidence_id || "previous_session_fact",
+    upstream_claim_ids: [],
+  }];
+  if (claimId === "market_cap") {
+    const netIncome = Number(instrument.fundamentals?.netIncome);
+    if (Number.isFinite(netIncome) && netIncome > 0) {
+      claims.push(
+        {
+          claim_id: "net_income",
+          claim_type: "fact",
+          metric: "net_income",
+          value: netIncome,
+          unit: "人民币元",
+          evidence_id: evidence.evidence_id,
+          upstream_claim_ids: [],
+        },
+        {
+          claim_id: "pe_ttm_recomputed",
+          claim_type: "output",
+          metric: "pe_ttm",
+          value: oldValue / netIncome,
+          unit: "倍",
+          upstream_claim_ids: ["market_cap", "net_income"],
+          formula: "market_cap / net_income",
+        },
+      );
+    }
+  }
+  return {
+    entity_key: ticker,
+    allow_network: false,
+    claims,
+    correction: {
+      claim_id: claimId,
+      new_value: authoritativeValue,
+      source: String(source),
+      evidence_id: evidence.evidence_id,
+      user_claimed_value: hasClaimedValue && Number.isFinite(claimedValue) ? claimedValue : null,
+    },
+  };
+}
+
+export function buildGovernedWorkflowInput(taskType, context) {
+  const explicitInput = context.currentInput?.workflowInput || context.input?.workflowInput;
+  if (explicitInput && typeof explicitInput === "object" && !Array.isArray(explicitInput)) {
+    return { ...explicitInput };
+  }
+  const routedEntities = context.data.routingEnvelope?.entities || context.data.entities || [];
+  const routedTickers = routedEntities.map((item) => item?.ticker).filter(Boolean);
+  const tickers = context.data.multiStockTickers?.length
+    ? context.data.multiStockTickers
+    : (routedTickers.length ? routedTickers : resolveMultipleTickers(context.userQuery || ""));
+  const ticker = String(
+    context.data.currentTicker || context.data.stockEntity?.tsCode || tickers[0] || ""
+  ).trim().toUpperCase();
+
+  switch (taskType) {
+    case "operating_driver_valuation":
+      if (!ticker) throw new TypeError("经营驱动估值缺少股票代码");
+      return {
+        ticker,
+        model_template: ticker === "688041.SH"
+          ? "hygon_info_2026_2028"
+          : "generic_semiconductor_3yr",
+        allow_network: false,
+      };
+    case "pair_switch_decision":
+      if (tickers.length < 2) throw new TypeError("双标的换仓需要两个股票代码");
+      return {
+        from_ticker: tickers[0],
+        to_ticker: tickers[1],
+        from_name: routedEntities[0]?.name || "",
+        to_name: routedEntities[1]?.name || "",
+        allow_network: false,
+      };
+    case "company_signal_plan":
+      if (!ticker) throw new TypeError("公司信号计划缺少股票代码");
+      return buildSignalPlanInput(context, ticker);
+    case "theme_expectation_gap":
+      {
+        const seeded = routedEntities.length > 0
+          ? routedEntities.map((entity) => ({
+              ticker: entity.ticker,
+              name: entity.name || entity.ticker,
+              inclusion_reason: "用户在当前任务中明确指定",
+              business_purity: 0.2,
+              revenue_sensitivity: 0.2,
+              tags: ["用户指定"],
+            }))
+          : themeSeedCandidates(context.data.routingEnvelope?.topic || context.userQuery);
+        if (seeded.length === 0) {
+        throw new TypeError("主题筛选尚未获得候选全集，不能用空候选生成排名");
+        }
+        return {
+          theme_name: String(context.data.routingEnvelope?.topic || context.userQuery || "主题研究"),
+          raw_candidates: seeded,
+          keyword_hint_list: ["AI算力", "超节点", "高速互连"],
+          allow_network: false,
+        };
+      }
+    case "industry_causal_explainer":
+      return buildCausalExplainerInput(context);
+    case "claim_correction":
+      if (!ticker) throw new TypeError("事实纠错缺少股票代码");
+      return buildClaimCorrectionInput(context, ticker);
+    default:
+      throw new TypeError(`工作流 ${taskType} 尚未定义自然语言输入适配器`);
+  }
+}
+
 export const AGENT_TOOLS = {
   resolve_entity: {
     toolId: "resolve_entity",
@@ -974,6 +1292,219 @@ export const AGENT_TOOLS = {
     },
   },
 
+  run_governed_stock_deep_dive: {
+    toolId: "run_governed_stock_deep_dive",
+    name: "运行个股深度研究 V3",
+    description: "调用受治理研究内核，完成证据收集、确定性分析、长文综合与质量审查",
+    inputSchema: { type: "object", properties: { ticker: { type: "string" } } },
+    execute: async (context) => {
+      const runner = context.governedWorkflowRunner;
+      if (!runner || typeof runner.runStockDeepDive !== "function") {
+        return { success: false, message: "受治理个股深研运行器未配置", skipEvidenceCapture: true };
+      }
+      const ticker = String(
+        context.data.currentTicker || context.data.stockEntity?.tsCode || context.currentInput?.ticker || ""
+      ).trim().toUpperCase();
+      if (!ticker) {
+        return { success: false, message: "缺少已解析的股票代码", skipEvidenceCapture: true };
+      }
+      const governedInput = {
+        ticker,
+        acquisitionMode: "refresh_if_stale",
+      };
+      if (typeof context.onResearchProgress === "function") {
+        governedInput.onProgress = context.onResearchProgress;
+      }
+      const governed = await runner.runStockDeepDive(governedInput);
+      const packet = governed.packet || {};
+      const quality = packet.quality || {};
+      const evidenceItems = packet.datasets?.evidence?.items || [];
+      const usableIds = new Set(quality.usable_evidence_ids || []);
+      const evidenceCatalog = evidenceItems
+        .filter((item) => usableIds.has(item.evidence_id))
+        .map((item) => ({
+          evidence_id: item.evidence_id,
+          tool_id: "run_governed_stock_deep_dive",
+          source_name: item.source_key || item.source_type || "受治理研究证据",
+          source_urls: item.url_or_doc_id ? [item.url_or_doc_id] : [],
+          as_of: item.published_at || null,
+          freshness: item.status === "valid" ? "fresh" : "unknown",
+          item_count: 1,
+          quality_score: item.quality_score ?? null,
+        }));
+      const researchCorpus = packet.research_v3?.context?.corpus || {};
+      const catalogById = new Map(evidenceCatalog.map((item) => [item.evidence_id, item]));
+      for (const [collection, fallbackName] of [
+        [researchCorpus.chunks || [], "正式披露文档片段"],
+        [researchCorpus.news || [], "外部新闻背景"],
+        [researchCorpus.events || [], "市场事件记录"],
+        [researchCorpus.broker_reports || [], "券商二级研究"],
+      ]) {
+        for (const item of collection) {
+          if (!item?.evidence_id || catalogById.has(String(item.evidence_id))) continue;
+          catalogById.set(String(item.evidence_id), {
+            evidence_id: String(item.evidence_id),
+            tool_id: "run_governed_stock_deep_dive",
+            source_name: item.source_name || item.source_key || fallbackName,
+            source_urls: item.url ? [item.url] : [],
+            as_of: item.published_at || item.event_date || null,
+            freshness: ["context_only", "secondary_context_only"].includes(item.allowed_usage)
+              ? "context_only"
+              : "unknown",
+            item_count: 1,
+            quality_score: item.retrieval_score ?? null,
+          });
+        }
+      }
+      const completeEvidenceCatalog = [...catalogById.values()];
+      const reportGate = quality.report_gate || {};
+      const reportValidation = quality.report_validation || {};
+      const synthesisValidation = governed.synthesis?.validation || null;
+      const finalValidation = synthesisValidation || reportValidation;
+      const citationValidation = {
+        status: finalValidation.status === "passed" ? "passed" : "warning",
+        coverage: reportGate.citation_coverage ?? (completeEvidenceCatalog.length > 0 ? 1 : 0),
+        auditable_claim_count: packet.claims?.length || 0,
+        cited_claim_count: packet.claims?.length || 0,
+        cited_evidence_ids: finalValidation.cited_evidence_ids || quality.usable_evidence_ids || [],
+        unknown_citation_ids: finalValidation.unknown_citation_ids || [],
+        missing_citation_claims: [],
+        current_claim_violations: [],
+        authority: packet.workflow_version === "3.0" ? "stock_deep_dive_v3" : "stock_deep_dive_v2",
+      };
+      context.data.finalResponse = governed.report;
+      context.data.evidenceCatalog = completeEvidenceCatalog;
+      context.data.evidenceIds = completeEvidenceCatalog.map((item) => item.evidence_id);
+      const eligibility = finalValidation.eligibility
+        || packet.research_v3?.report_quality?.eligibility
+        || null;
+      const researchReportReady = finalValidation.status === "passed"
+        && eligibility?.eligible !== false
+        && (packet.claims?.length || 0) > 0;
+      const currentMarketReady = researchReportReady
+        && reportGate.report_status === "research_ready";
+      context.data.dataHealth = {
+        status: researchReportReady ? (currentMarketReady ? "healthy" : "warning") : "blocked",
+        can_claim_current: currentMarketReady,
+        research_report_ready: researchReportReady,
+        current_market_ready: currentMarketReady,
+        total_evidence: completeEvidenceCatalog.length,
+        fresh_current_evidence: completeEvidenceCatalog.filter((item) => item.freshness === "fresh").length,
+        authority: packet.workflow_version === "3.0" ? "stock_deep_dive_v3" : "stock_deep_dive_v2",
+      };
+      context.data.citationValidation = citationValidation;
+      context.data.reportQualityGate = {
+        passed: researchReportReady,
+        source: packet.workflow_version === "3.0" ? "stock_deep_dive_v3" : "stock_deep_dive_v2",
+        report_status: reportGate.report_status || "cannot_conclude",
+        eligibility,
+        citation_coverage: reportGate.citation_coverage ?? null,
+        synthesis_mode: governed.synthesis?.mode || "governed_draft",
+        characters: finalValidation.characters ?? governed.report.length,
+        section_count: finalValidation.section_count ?? null,
+      };
+      context.data.extractedMemories = [];
+      context.data.governedWorkflow = {
+        run_id: governed.run_id,
+        workflow_id: governed.workflow_id,
+        status: governed.status,
+        summary: governed.summary,
+        artifacts: governed.artifacts,
+        citationValidation,
+        synthesis: governed.synthesis || null,
+        events: governed.events || [],
+        researchExecution: governed.researchExecution || null,
+      };
+      context.data.researchExecution = governed.researchExecution || null;
+      return {
+        success: true,
+        data: {
+          run_id: governed.run_id,
+          report_status: reportGate.report_status || "cannot_conclude",
+          artifact_ids: governed.artifacts.map((item) => item.artifact_id),
+        },
+        message: `个股深度研究 ${packet.workflow_version === "3.0" ? "V3" : "V2"} 已完成：${governed.run_id}`,
+        skipEvidenceCapture: true,
+      };
+    },
+  },
+
+  run_governed_workflow: {
+    toolId: "run_governed_workflow",
+    name: "运行受治理研究工作流",
+    description: "把自然语言任务适配为已注册的 Python 工作流输入，并返回真实运行与制品",
+    inputSchema: { type: "object", properties: {} },
+    execute: async (context) => {
+      const runner = context.governedWorkflowRunner;
+      if (!runner || typeof runner.runWorkflow !== "function") {
+        return { success: false, message: "受治理工作流运行器未配置", skipEvidenceCapture: true };
+      }
+      const workflowId = String(context.currentTaskType || "").trim();
+      try {
+        const input = buildGovernedWorkflowInput(workflowId, context);
+        const governed = await runner.runWorkflow({ workflowId, input });
+        context.data.governedWorkflow = {
+          run_id: governed.run_id,
+          workflow_id: governed.workflow_id,
+          status: governed.status,
+          summary: governed.summary,
+          artifacts: governed.artifacts,
+          events: governed.events || [],
+          researchExecution: governed.researchExecution || null,
+        };
+        context.data.researchExecution = governed.researchExecution || null;
+        if (workflowId === "claim_correction" && governed.summary?.approved && context.sessionState) {
+          const correction = governed.summary.correction || input.correction || {};
+          const targetChange = (governed.summary.changes || [])
+            .find((change) => change.claim_id === correction.claim_id);
+          if (targetChange) {
+            context.sessionState.addConfirmedFact({
+              field: targetChange.metric || targetChange.claim_id,
+              value: targetChange.new_value,
+              unit: targetChange.unit || "",
+              ticker: input.entity_key || null,
+              source: correction.source,
+              evidenceId: correction.evidence_id,
+              asOf: new Date().toISOString(),
+            });
+            context.sessionState.addUserCorrection({
+              field: targetChange.metric || targetChange.claim_id,
+              oldValue: targetChange.old_value,
+              newValue: targetChange.new_value,
+              entity: input.entity_key || null,
+              reason: "权威数据重新取数与依赖重算已通过",
+              status: "revalidated",
+              evidenceId: correction.evidence_id,
+            });
+          }
+        }
+        if (governed.primaryArtifactContent) {
+          const mimeType = governed.primaryArtifact?.mime_type;
+          context.data.finalResponse = mimeType === "application/json"
+            ? `# ${governed.primaryArtifact?.title || "研究制品"}\n\n\`\`\`json\n${governed.primaryArtifactContent}\n\`\`\``
+            : governed.primaryArtifactContent;
+        }
+        return {
+          success: true,
+          data: {
+            run_id: governed.run_id,
+            workflow_id: governed.workflow_id,
+            status: governed.status,
+            artifact_ids: governed.artifacts.map((item) => item.artifact_id),
+          },
+          message: `${workflowId} 已完成：${governed.run_id}`,
+          skipEvidenceCapture: true,
+        };
+      } catch (error) {
+        return {
+          success: false,
+          message: error instanceof Error ? error.message : String(error),
+          skipEvidenceCapture: true,
+        };
+      }
+    },
+  },
+
   get_stock_data: {
     toolId: "get_stock_data",
     name: "获取股票全景数据",
@@ -1014,7 +1545,7 @@ export const AGENT_TOOLS = {
                 latestPrice: dailyBars[0]?.close || valuation?.current_price || null,
                 latestDate: dailyBars[0]?.trade_date || null,
                 valuation: valuation ? { pe: valuation.pe_ttm, pb: valuation.pb, ps: valuation.ps_ttm, marketCap: valuation.market_cap, historicalPercentile: valuation.historical_percentile } : null,
-                fundamentals: fundamentals ? { revenue: fundamentals.revenue, netIncome: fundamentals.net_income, roe: fundamentals.roe, grossMargin: fundamentals.gross_margin } : null,
+                fundamentals: fundamentals ? { period: fundamentals.period, createdAt: fundamentals.created_at, freshnessStatus: fundamentals.freshness_status, revenue: fundamentals.revenue, netIncome: fundamentals.net_income, roe: fundamentals.roe, grossMargin: fundamentals.gross_margin } : null,
                 technical: { rsi14: factors.rsi_14 ?? null, macdDif: factors.macd_dif ?? null, ma20: factors.ma_20 ?? null, tradeDate: factors._tradeDate ?? null },
                 momentum: { m5d: momentum5d, m20d: momentum20d },
                 riskAlerts: riskAlerts.map((a) => ({ time: a.alert_time, type: a.alert_type, severity: a.severity, message: a.message })),
@@ -1031,6 +1562,11 @@ export const AGENT_TOOLS = {
               const rt = realtimeDataMap[stock.ticker];
               if (rt) {
                 if (rt.latest_price != null) stock.latestPrice = rt.latest_price;
+                if (rt.trade_date) stock.latestDate = rt.trade_date;
+                stock.source = rt.source;
+                stock.source_url = rt.source_url;
+                stock.fetched_at = rt.fetched_at;
+                stock.marketSessionStatus = rt.market_session_status;
                 if (rt.change_percent != null) stock.changePercent = rt.change_percent;
                 if (!stock.valuation) stock.valuation = {};
                 if (rt.pe_ttm != null) stock.valuation.pe = rt.pe_ttm;
@@ -1080,7 +1616,7 @@ export const AGENT_TOOLS = {
           latestPrice: dailyBars[0]?.close || valuation?.current_price || null,
           latestDate: dailyBars[0]?.trade_date || null,
           valuation: valuation ? { pe: valuation.pe_ttm, pb: valuation.pb, ps: valuation.ps_ttm, marketCap: valuation.market_cap, historicalPercentile: valuation.historical_percentile } : null,
-          fundamentals: fundamentals ? { revenue: fundamentals.revenue, netIncome: fundamentals.net_income, roe: fundamentals.roe, grossMargin: fundamentals.gross_margin } : null,
+          fundamentals: fundamentals ? { period: fundamentals.period, createdAt: fundamentals.created_at, freshnessStatus: fundamentals.freshness_status, revenue: fundamentals.revenue, netIncome: fundamentals.net_income, roe: fundamentals.roe, grossMargin: fundamentals.gross_margin } : null,
           technical: { rsi14: factors.rsi_14 ?? null, macdDif: factors.macd_dif ?? null, ma20: factors.ma_20 ?? null, tradeDate: factors._tradeDate ?? null },
           momentum: { m5d: momentum5d, m20d: momentum20d },
           riskAlerts: riskAlerts.map((a) => ({ time: a.alert_time, type: a.alert_type, severity: a.severity, message: a.message })),
@@ -1091,6 +1627,11 @@ export const AGENT_TOOLS = {
           const rt = await fetchRealtimeData(ticker);
           if (rt) {
             if (rt.latest_price != null) instrumentData.latestPrice = rt.latest_price;
+            if (rt.trade_date) instrumentData.latestDate = rt.trade_date;
+            instrumentData.source = rt.source;
+            instrumentData.source_url = rt.source_url;
+            instrumentData.fetched_at = rt.fetched_at;
+            instrumentData.marketSessionStatus = rt.market_session_status;
             if (rt.change_percent != null) instrumentData.changePercent = rt.change_percent;
             if (!instrumentData.valuation) instrumentData.valuation = {};
             if (rt.pe_ttm != null) instrumentData.valuation.pe = rt.pe_ttm;
@@ -1117,7 +1658,11 @@ export const AGENT_TOOLS = {
 
         context.data.instrumentData = instrumentData;
         context.data.currentTicker = ticker;
-        return { success: true, data: instrumentData, message: `获取到 ${ticker} 的全景数据` };
+        return {
+          success: true,
+          data: { instrumentData, eastmoneyData: context.data.eastmoneyData || null },
+          message: `获取到 ${ticker} 的全景数据`,
+        };
       } finally { dataService.close(); }
     },
   },
@@ -1330,7 +1875,15 @@ export const AGENT_TOOLS = {
         const realtimeData = await fetchVolumeSurge(limit, volumeRatioThreshold);
         if (realtimeData.length > 0) {
           context.data.volumeSurge = realtimeData;
-          return { success: true, data: realtimeData, message: `获取到 ${realtimeData.length} 只实时放量异动股票（东方财富）` };
+          const isTrueVolumeRatio = realtimeData.some((item) => item.activity_signal === "volume_ratio");
+          context.data.volumeSurgeMode = isTrueVolumeRatio ? "volume_ratio" : "turnover";
+          return {
+            success: true,
+            data: realtimeData,
+            message: isTrueVolumeRatio
+              ? `获取到 ${realtimeData.length} 只实时放量异动股票`
+              : `量比不可用，降级获取到 ${realtimeData.length} 只高换手异动股票`,
+          };
         }
       } catch (err) {
         console.warn("[workflow] 实时放量异动获取失败，回退到本地数据库:", err.message);
@@ -1395,7 +1948,11 @@ export const AGENT_TOOLS = {
         const { fetchMarketIndices } = await import("./realtime-data-service.js");
         const indices = await fetchMarketIndices();
         context.data.marketIndices = indices;
-        return { success: true, data: indices, message: `获取到 ${indices.length} 个大盘指数` };
+        return {
+          success: indices.length > 0,
+          data: indices,
+          message: indices.length > 0 ? `获取到 ${indices.length} 个大盘指数` : "大盘指数源返回空结果",
+        };
       } catch (err) {
         console.warn("[workflow] 获取大盘指数失败:", err.message);
         context.data.marketIndices = [];
@@ -1412,9 +1969,125 @@ export const AGENT_TOOLS = {
     execute: async (context) => {
       const dataService = new MarketDataService();
       try {
-        context.data.latestNews = dataService.getLatestNews(context.currentInput?.limit || 15);
-        return { success: true, data: context.data.latestNews, message: `获取到 ${context.data.latestNews.length} 条最新新闻` };
+        const limit = context.currentInput?.limit || 15;
+        const localNews = dataService.getLatestNews(limit);
+        let liveNews = [];
+        try {
+          const cnService = new ChineseNewsService();
+          const searchOptions = {
+            topic: "news",
+            days: 7,
+            includeDomains: [
+              "cls.cn",
+              "stcn.com",
+              "cnstock.com",
+              "finance.sina.com.cn",
+              "eastmoney.com",
+            ],
+          };
+          const hotNameList = (context.data.topGainers || [])
+            .filter(opportunityCandidate)
+            .slice(0, 4)
+            .map((item) => item.name)
+            .filter(Boolean);
+          const hotNames = hotNameList.join(" ");
+          const searches = await Promise.allSettled([
+            cnService.fetchTavilySearch(
+              "A股 沪深股市 今日 最新 政策 行业 资金 市场",
+              limit,
+              searchOptions,
+            ),
+            hotNames
+              ? cnService.fetchTavilySearch(`${hotNames} 最新 公告 催化`, Math.max(5, Math.ceil(limit / 2)), searchOptions)
+              : Promise.resolve([]),
+          ]);
+          const genericNews = searches[0].status === "fulfilled"
+            ? searches[0].value.map((item) => ({ ...item, search_scope: "market" }))
+            : [];
+          const hotStockNews = searches[1].status === "fulfilled"
+            ? searches[1].value.map((item) => ({ ...item, search_scope: "hot_stock" }))
+            : [];
+          liveNews = [...hotStockNews, ...genericNews];
+          // 无源站发布日期的搜索结果只能作为待核验线索，不能伪装成当期新闻。
+          const newestAllowed = Date.now() + 6 * 60 * 60 * 1000;
+          const oldestAllowed = Date.now() - 8 * 24 * 60 * 60 * 1000;
+          liveNews = liveNews.filter((item) => {
+            if (!item.published_at) return false;
+            const publishedAt = new Date(item.published_at).getTime();
+            if (!Number.isFinite(publishedAt) || publishedAt < oldestAllowed || publishedAt > newestAllowed) return false;
+            if (/\/caifuhao\./i.test(item.url || "")) return false;
+            const text = `${item.title || ""} ${item.body || ""}`;
+            if (/股票行情|走势图|财经门户|机构调研详细|数据中心|行情中心|商业指数|上证\d+|首页/i.test(item.title || "")) return false;
+            if ((item.body || "").trim().length < 40) return false;
+            if (item.search_scope === "hot_stock" && !hotNameList.some((name) => text.includes(name))) return false;
+            return /A股|沪深|上证|深证|创业板|科创板|北交所|人民币|央行|证监会|股票|上市公司|板块|行业/i.test(text);
+          });
+        } catch (error) {
+          console.warn("[workflow] 实时市场新闻获取失败，回退本地新闻:", error.message);
+        }
+        const relevantLocalNews = localNews.filter((item) => {
+          const publishedAt = new Date(item.published_at || 0).getTime();
+          const text = `${item.title || ""} ${item.body || ""}`;
+          return Number.isFinite(publishedAt)
+            && publishedAt >= Date.now() - 8 * 24 * 60 * 60 * 1000
+            && /A股|沪深|上证|深证|创业板|科创板|北交所|人民币|央行|证监会|上市公司/i.test(text);
+        });
+        context.data.latestNews = mergeNewsDedup(liveNews, relevantLocalNews, limit)
+          .sort((a, b) => new Date(b.published_at || 0) - new Date(a.published_at || 0));
+        return {
+          success: context.data.latestNews.length > 0,
+          data: context.data.latestNews,
+          message: liveNews.length > 0
+            ? `获取到 ${context.data.latestNews.length} 条市场新闻，其中 ${liveNews.length} 条来自实时搜索`
+            : `实时新闻不可用，降级获取到 ${context.data.latestNews.length} 条本地新闻`,
+        };
       } finally { dataService.close(); }
+    },
+  },
+
+  get_movement_news: {
+    toolId: "get_movement_news",
+    name: "核对异动标的公告",
+    description: "逐一查询涨跌幅榜标的的巨潮资讯公告，用于建立可验证的事件关联",
+    inputSchema: { type: "object", properties: {} },
+    execute: async (context) => {
+      const stocks = [...(context.data.topGainers || []), ...(context.data.topLosers || [])]
+        .filter((item, index, items) => item?.ts_code && items.findIndex((candidate) => candidate.ts_code === item.ts_code) === index)
+        .slice(0, 20);
+      if (stocks.length === 0) {
+        context.data.movementNews = [];
+        return { success: false, data: [], message: "涨跌幅榜为空，无法核对个股公告" };
+      }
+
+      const cnService = new ChineseNewsService();
+      const collected = [];
+      let failedQueries = 0;
+      const batchSize = 5;
+      for (let offset = 0; offset < stocks.length; offset += batchSize) {
+        const batch = stocks.slice(offset, offset + batchSize);
+        const results = await Promise.allSettled(batch.map((stock) => {
+          const code = String(stock.ts_code).replace(/\.(SZ|SH|BJ)$/i, "");
+          return cnService.fetchCninfoAnnouncements(code, 3);
+        }));
+        results.forEach((result, index) => {
+          const stock = batch[index];
+          if (result.status !== "fulfilled") {
+            failedQueries += 1;
+            return;
+          }
+          collected.push(...result.value.map((item) => ({
+            ...item,
+            ticker: stock.ts_code,
+            stock_name: stock.name || STOCK_NAME_MAP[stock.ts_code] || stock.ts_code,
+          })));
+        });
+      }
+      context.data.movementNews = collected;
+      return {
+        success: collected.length > 0,
+        data: collected,
+        message: `核对 ${stocks.length} 只异动标的，取得 ${collected.length} 条巨潮公告，失败查询 ${failedQueries} 个`,
+      };
     },
   },
 
@@ -1465,6 +2138,9 @@ export const AGENT_TOOLS = {
     description: "将分析结果保存为候选记忆",
     inputSchema: { type: "object", required: ["ticker", "content"], properties: { ticker: { type: "string" }, content: { type: "string" }, memoryType: { type: "string", default: "analysis" } } },
     execute: async (context) => {
+      if (!isWriteToolAuthorized("save_memory", context)) {
+        return { success: false, message: "候选记忆写入需要显式授权" };
+      }
       const ticker = resolveTicker(context.currentInput?.ticker || context.data.currentTicker);
       if (!ticker) return { success: false, message: "缺少 ticker 参数" };
       
@@ -1515,19 +2191,30 @@ export const AGENT_TOOLS = {
     description: "基于分析结果创建投资决策",
     inputSchema: { type: "object", required: ["ticker", "action", "thesisSummary"], properties: { ticker: { type: "string" }, action: { type: "string" }, thesisSummary: { type: "string" }, bearCaseSummary: { type: "string" }, referencePrice: { type: "number" }, killConditions: { type: "array" }, suggestedPositionPct: { type: "number" } } },
     execute: async (context) => {
+      if (!isWriteToolAuthorized("create_decision", context)) {
+        return { success: false, message: "正式决策写入需要人工审核授权" };
+      }
       const ticker = resolveTicker(context.currentInput?.ticker || context.data.currentTicker);
       if (!ticker) return { success: false, message: "缺少 ticker 参数" };
+
+      const thesisSummary = context.currentInput?.thesisSummary?.trim() || "";
+      const bearCaseSummary = context.currentInput?.bearCaseSummary?.trim() || "";
+      const killConditions = context.currentInput?.killConditions || [];
+      const evidenceIds = context.currentInput?.evidenceIds || context.data.evidenceIds || [];
+      if (!thesisSummary || !bearCaseSummary || killConditions.length === 0 || evidenceIds.length === 0) {
+        return { success: false, message: "正式决策缺少论点、反方观点、失效条件或证据" };
+      }
       
       const decisionService = new DecisionService();
       try {
         const record = decisionService.createDecision({
           ticker, action: context.currentInput?.action || "hold",
-          thesisSummary: context.currentInput?.thesisSummary || "",
-          bearCaseSummary: context.currentInput?.bearCaseSummary || "",
+          thesisSummary,
+          bearCaseSummary,
           referencePrice: context.currentInput?.referencePrice || context.data.instrumentData?.latestPrice || null,
-          killConditions: context.currentInput?.killConditions || [],
+          killConditions,
           suggestedPositionPct: context.currentInput?.suggestedPositionPct || null,
-          evidenceIds: [], memoryIds: (context.data.savedMemories || []).map((m) => m.memory_id),
+          evidenceIds, memoryIds: (context.data.savedMemories || []).map((m) => m.memory_id),
         });
         context.data.decisionRecord = record;
         return { success: true, data: record, message: `投资决策已记录：${record.action.toUpperCase()}` };
@@ -1707,8 +2394,8 @@ export const TASK_TYPES = {
     name: "股票深度分析",
     description: "对指定股票进行全面深度研究分析",
     requiresEntity: true,
-    defaultFlow: ["resolve_entity", "query_memory", "get_stock_data", "get_news", "analyze_with_llm", "save_memory", "create_decision"],
-    tools: ["resolve_entity", "query_memory", "get_stock_data", "get_news", "get_value_score", "analyze_with_llm", "save_memory", "create_decision"],
+    defaultFlow: ["resolve_entity", "run_governed_stock_deep_dive"],
+    tools: ["resolve_entity", "run_governed_stock_deep_dive"],
   },
   VALUE_SCORE: {
     id: "value_score",
@@ -1739,8 +2426,16 @@ export const TASK_TYPES = {
     name: "市场新闻",
     description: "获取最新的市场新闻和公告",
     requiresEntity: false,
-    defaultFlow: ["get_latest_news", "analyze_with_llm"],
-    tools: ["get_latest_news", "get_news", "analyze_with_llm"],
+    defaultFlow: ["get_latest_news"],
+    tools: ["get_latest_news", "get_news"],
+  },
+  MARKET_ATTRIBUTION: {
+    id: "market_attribution",
+    name: "涨跌幅归因分析",
+    description: "核对涨跌幅榜与可验证新闻，只在存在同标的事件时给出关联线索",
+    requiresEntity: false,
+    defaultFlow: ["get_top_gainers", "get_top_losers", "get_movement_news"],
+    tools: ["get_top_gainers", "get_top_losers", "get_movement_news"],
   },
   PORTFOLIO_REVIEW: {
     id: "portfolio_review",
@@ -1763,8 +2458,8 @@ export const TASK_TYPES = {
     name: "投资论更新",
     description: "更新或验证投资论点",
     requiresEntity: true,
-    defaultFlow: ["resolve_entity", "query_memory", "get_news", "get_stock_data", "analyze_with_llm", "save_memory", "create_decision"],
-    tools: ["resolve_entity", "query_memory", "get_news", "get_stock_data", "analyze_with_llm", "save_memory", "create_decision"],
+    defaultFlow: ["resolve_entity", "query_memory", "get_news", "get_stock_data", "analyze_with_llm"],
+    tools: ["resolve_entity", "query_memory", "get_news", "get_stock_data", "analyze_with_llm"],
   },
   RISK_ANALYSIS: {
     id: "risk_analysis",
@@ -1795,8 +2490,8 @@ export const TASK_TYPES = {
     name: "多标对比",
     description: "对比分析多只股票，生成横向对比报告（使用子Agent并行分析）",
     requiresEntity: true,
-    defaultFlow: ["resolve_entity", "spawn_sub_agents", "analyze_with_llm", "save_memory"],
-    tools: ["resolve_entity", "spawn_sub_agents", "analyze_with_llm", "save_memory"],
+    defaultFlow: ["resolve_entity", "spawn_sub_agents", "analyze_with_llm"],
+    tools: ["resolve_entity", "spawn_sub_agents", "analyze_with_llm"],
   },
   CHAT: {
     id: "chat",
@@ -1814,7 +2509,7 @@ export const TASK_TYPES = {
     requiresEntity: true,
     isDynamic: true,
     defaultFlow: ["get_us_data", "find_us_mapping", "analyze_mapping_impact", "analyze_with_llm"],
-    tools: ["get_us_data", "find_us_mapping", "analyze_mapping_impact", "get_stock_data", "get_news", "analyze_with_llm", "save_memory", "create_decision"],
+    tools: ["get_us_data", "find_us_mapping", "analyze_mapping_impact", "get_stock_data", "get_news", "analyze_with_llm"],
   },
 };
 
@@ -1833,7 +2528,7 @@ function formatMultiStockWallstreetData(wallstreetData) {
 async function generateAIAnalysis(context, customPrompt = null) {
   const stock = context.data.stockEntity || {};
   const data = context.data.instrumentData || {};
-  const news = context.data.news || [];
+  const news = context.data.news || context.data.latestNews || [];
   const events = context.data.events || [];
   const memoryContextText = context.data.memoryContextText || "无历史记忆";
   const userQuery = context.userQuery || "";
@@ -1896,7 +2591,7 @@ async function generateAIAnalysis(context, customPrompt = null) {
 - 观点有效期：30个自然日（至 ${new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString("zh-CN")}）
 
 【数据处理规则】
-1. 对于缺失的财务数据，可基于行业常识估算，标注"（估算）"
+1. 对于缺失的财务数据必须明确标注缺失，禁止估算或补造具体数值
 2. 异常数据（如PE>200倍、PE为负）需标注"⚠️"并说明原因
 3. 如果子Agent分析中包含了Tavily搜索到的分析师目标价/评级，必须引用
 4. 绝对禁止脱离市场预期凭空给出目标价——必须基于市场一致预期+预期差分析
@@ -1982,7 +2677,7 @@ async function generateAIAnalysis(context, customPrompt = null) {
 - 观点有效期：30个自然日（至 ${new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString("zh-CN")}）
 
 【数据处理规则】
-1. 对于缺失的财务数据，可基于行业常识估算，标注"（估算）"
+1. 对于缺失的财务数据必须明确标注缺失，禁止估算或补造具体数值
 2. 异常数据（如PE>200倍、PE为负）需标注"⚠️"并说明原因
 3. 【东方财富数据使用规则】资金流向+龙虎榜+财务趋势+券商研报是核心硬证据，必须在分析中引用：
    - 资金流向反映"聪明钱"动向：主力净流入连续为正=机构建仓，连续为负=机构出货
@@ -2014,9 +2709,15 @@ async function generateAIAnalysis(context, customPrompt = null) {
 
 输出结构要求：
 - 市场概览（整体市场情绪）
-- 机会清单（按优先级排序）
+- 机会清单（最多5只，按优先级排序；每只写清信号、反证、观察条件，不把单日涨停直接等同于机会）
 - 风险提示
-- 操作建议`;
+- 操作建议
+
+【机会筛选硬约束】
+1. 名称含 ST、*ST、退市或以“退”结尾的标的，只能列入风险观察，严禁列入可操作机会。
+2. 量比缺失时，高换手只能描述为“成交活跃/高换手”，严禁表述为“放量”。
+3. 估值或新闻证据过期时，只能作为历史背景，不得支撑当前买卖建议。
+4. 对每个候选给出“为什么值得跟踪”和“什么条件下放弃”，不输出无依据的目标价。`;
       break;
     case "risk_analysis":
       systemPrompt = `你是专业风险分析师，请基于以下数据识别和评估风险。使用中文，结论先行。
@@ -2069,6 +2770,19 @@ async function generateAIAnalysis(context, customPrompt = null) {
   // 注入数据真实性警告（如果有）
   if (dataWarningText) {
     systemPrompt += dataWarningText;
+  }
+
+  const evidenceCatalog = context.data.evidenceCatalog || [];
+  const dataHealth = context.data.dataHealth || summarizeDataHealth(evidenceCatalog);
+  if (evidenceCatalog.length > 0) {
+    systemPrompt += `
+
+【证据引用规则（最高优先级）】
+1. 所有行情数字、涨跌幅、日期、新闻事实和估值判断，都必须在相关句末引用对应证据编号，例如 [E001]
+2. 只允许引用下方证据目录中真实存在的编号，禁止虚构证据
+3. freshness=stale、missing、undated 或 fetch_failed 的证据不得支撑“今天”“当前”“实时”等表述
+4. 如果“是否允许声称当前/今日”为否，必须把结论降级为历史数据回顾或待核验线索，不得给出基于当期行情的操作建议
+5. market_observation 代表盘中或收盘后的实时观察，不等于已完成日线；报告中要使用“抓取时观察到”措辞`;
   }
   
   let userPrompt = `## 用户问题
@@ -2188,9 +2902,15 @@ ${memoryContextText}`;
   }
   
   if (context.data.topGainers?.length) {
+    const investableGainers = context.data.topGainers.filter(opportunityCandidate);
     userPrompt += `
-### 涨幅榜（数据日期：${context.data.topGainers[0]?.trade_date || dataDate}）
+### 原始涨幅榜（仅用于市场观察，不等于投资建议；数据日期：${context.data.topGainers[0]?.trade_date || dataDate}）
 ${context.data.topGainers.slice(0, 10).map((s, i) => `${i+1}. ${s.name || STOCK_NAME_MAP[s.ts_code] || s.ts_code}(${s.ts_code}): ${s.pct_chg?.toFixed(2)}%${s.amount ? `，成交额${(s.amount/10000).toFixed(2)}亿` : ""}${s.turnover ? `，换手${s.turnover.toFixed(2)}%` : ""}`).join("\n")}`;
+    if (taskType === "opportunity_scan") {
+      userPrompt += `
+### 初筛可跟踪候选（已排除 ST/退市整理股，仍需结合证据二次判断）
+${investableGainers.slice(0, 8).map((s, i) => `${i+1}. ${s.name || s.ts_code}(${s.ts_code})：涨跌 ${s.pct_chg?.toFixed(2)}%，换手 ${s.turnover?.toFixed(2) || "N/A"}%`).join("\n") || "无"}`;
+    }
   } else if (taskType === "opportunity_scan" || taskType === "daily_brief") {
     userPrompt += `
 ### 涨幅榜
@@ -2238,9 +2958,10 @@ ${validValuations.slice(0, 5).map((s, i) => {
   }
   
   if (context.data.volumeSurge?.length) {
+    const activityTitle = context.data.volumeSurgeMode === "turnover" ? "高换手异动（量比不可用，非放量结论）" : "放量异动";
     userPrompt += `
-### 放量异动（数据日期：${context.data.volumeSurge[0]?.trade_date || dataDate}）
-${context.data.volumeSurge.slice(0, 5).map((s, i) => `${i+1}. ${s.name || STOCK_NAME_MAP[s.ts_code] || s.ts_code}(${s.ts_code}): 量比 ${s.volume_ratio?.toFixed(2) || "N/A"}, 涨跌 ${s.pct_chg?.toFixed(2)}%${s.turnover ? `，换手${s.turnover.toFixed(2)}%` : ""}`).join("\n")}`;
+### ${activityTitle}（数据日期：${context.data.volumeSurge[0]?.trade_date || dataDate}）
+${context.data.volumeSurge.slice(0, 5).map((s, i) => `${i+1}. ${s.name || STOCK_NAME_MAP[s.ts_code] || s.ts_code}(${s.ts_code}): ${s.activity_signal === "volume_ratio" ? `量比 ${s.volume_ratio?.toFixed(2)}` : `换手 ${s.turnover?.toFixed(2) || "N/A"}%`}，涨跌 ${s.pct_chg?.toFixed(2)}%`).join("\n")}`;
   }
 
   if (context.data.priceMovement?.length) {
@@ -2253,6 +2974,13 @@ ${context.data.priceMovement.slice(0, 5).map((s, i) => `${i+1}. ${s.name || STOC
     userPrompt += `
 ### 分析指引
 ${customPrompt}`;
+  }
+
+  if (evidenceCatalog.length > 0) {
+    userPrompt += `
+
+### 数据健康与证据目录
+${formatEvidenceCatalogForPrompt(evidenceCatalog, dataHealth)}`;
   }
   
   userPrompt += `
@@ -2286,7 +3014,7 @@ ${customPrompt}`;
 
   const result = await createChatCompletion(
     llmMessages,
-    { maxTokens: 16000, temperature: 0.7 }
+    { maxTokens: 16000, temperature: 0.7, timeoutMs: 240000 }
   );
   
   let content = result.content || "";
@@ -2343,7 +3071,15 @@ ${toolsList}
 }
 
 export class WorkflowEngine {
-  constructor() {
+  constructor({
+    onEvent = null,
+    runId = null,
+    governedWorkflowRunner = null,
+    onResearchProgress = null,
+    sessionId = null,
+    sessionStateStore = null,
+    taskRouterV2 = null,
+  } = {}) {
     this.context = {
       data: {},
       history: [],
@@ -2352,9 +3088,29 @@ export class WorkflowEngine {
       currentTaskType: null,
       input: {},
       currentInput: {},
+      governedWorkflowRunner,
+      onResearchProgress: typeof onResearchProgress === "function" ? onResearchProgress : null,
     };
     this.executionHistory = [];
     this.currentFlow = [];
+    this.executionStats = { totalSteps: 0, completedSteps: 0, failedSteps: 0, skippedSteps: 0 };
+    this.maxReplans = Math.max(0, Number.parseInt(process.env.WORKFLOW_MAX_REPLANS || "0", 10) || 0);
+    this.replanCount = 0;
+    this.onEvent = typeof onEvent === "function" ? onEvent : null;
+    this.runId = runId;
+    this.evidenceSequence = 0;
+    this.sessionId = sessionId;
+    this.sessionStateStore = sessionStateStore;
+    this.sessionState = null; // ResearchSessionState 实例，懒加载
+    // === 任务图注册表与 V2 路由器 ===
+    // 小白讲解：这是"菜单"和"翻译官"。
+    // 菜单上列出了系统支持的所有研究任务，
+    // 翻译官把用户说的话翻译成菜单上的一道菜。
+    this.taskGraphRegistry = createDefaultRegistry();
+    this.taskRouterV2 = taskRouterV2 || new ConversationTaskRouterV2({
+      registry: this.taskGraphRegistry,
+      llmRouter: createRegistryLlmRouter(this.taskGraphRegistry),
+    });
   }
 
   async processUserQuery(userQuery, chatHistory = []) {
@@ -2363,38 +3119,159 @@ export class WorkflowEngine {
     this.context.chatHistory = chatHistory; // 保存对话历史，供后续 LLM 调用使用
     this.executionHistory = [];
     this.currentFlow = [];
+    this.replanCount = 0;
+    this.evidenceSequence = 0;
+    this.context.data.evidenceCatalog = [];
+    this.context.data.evidenceIds = [];
+    // 没有执行数据工具的自由对话不应被误标为“数据不足”。首次形成证据时再生成健康结论。
+    this.context.data.dataHealth = null;
+    Object.defineProperty(this.context.data, "evidenceSnapshots", {
+      value: [], writable: true, configurable: true, enumerable: false,
+    });
     
+    // === 加载研究会话状态 ===
+    // 小白讲解：每次处理用户查询前，先从"记忆笔记本"恢复上一轮的状态。
+    // 这样"继续""那第二个呢"等追问才能继承上下文。
+    await this._loadSessionState();
+    this.context.sessionState = this.sessionState;
+
     this.addLog("system", `开始处理用户查询: "${userQuery}"`);
-    
+
     const analysisResult = await this.analyzeAndPlan(userQuery);
     if (!analysisResult) {
       this.addLog("system", "无法分析用户意图，使用默认流程");
-      return this.executeDefaultFlow(userQuery);
+      const result = await this.executeDefaultFlow(userQuery);
+      await this._saveSessionState(result);
+      return result;
     }
-    
+
     this.currentTaskType = analysisResult.taskType;
     this.context.currentTaskType = analysisResult.taskType;
-    this.currentFlow = analysisResult.flow;
-    
+    this.currentFlow = analysisResult.taskType === "stock_deep_analysis"
+      ? [...TASK_TYPES.STOCK_DEEP_ANALYSIS.defaultFlow]
+      : analysisResult.flow;
+
     this.addLog("system", `规划流程: ${this.currentFlow.join(" → ")}`);
     this.addLog("system", `规划理由: ${analysisResult.reasoning}`);
-    
-    return await this.executeFlow(this.currentFlow);
+
+    const result = await this.executeFlow(this.currentFlow);
+    await this._saveSessionState(result);
+    return result;
   }
 
   async analyzeAndPlan(userQuery) {
     this.addLog("system", "开始意图分析与流程规划...");
 
+    if (this.taskRouterV2) {
+      try {
+        const envelope = await this.taskRouterV2.route(userQuery, {
+          sessionState: this.sessionState,
+          chatHistory: this.context.chatHistory || [],
+        });
+        this.context.data.routingEnvelope = envelope;
+        this.context.data.entities = envelope.entities || [];
+        if (envelope.task_type !== "chat") {
+          this.context.data.intent = {
+            intent: envelope.task_type,
+            intentName: envelope.name,
+            entities: envelope.entities,
+            requiredTools: envelope.flow,
+            isDynamic: false,
+            confidence: envelope.confidence,
+            reasoning: envelope.reasoning,
+            routingSource: envelope.routingTrace?.step || "router_v2",
+          };
+          this.addLog("system", `Router V2 命中任务图: ${envelope.task_type}`);
+          return {
+            taskType: envelope.task_type,
+            flow: [...envelope.flow],
+            reasoning: envelope.reasoning,
+            intent: this.context.data.intent,
+            relation: envelope.relation_to_previous,
+            routingEnvelope: envelope,
+          };
+        }
+      } catch (error) {
+        this.addLog("system", `Router V2 失败，继续兼容路由: ${error.message}`);
+      }
+    }
+
     // === 关键修复：先检查是否是追问 ===
     // 小白讲解：如果用户说"继续"、"接着说"、"没输出完"等，
-    // 说明是在追问上一轮对话的结果，不需要重新走完整流程
+    // 说明是在追问上一轮对话的结果。
+    // 修复前：直接把追问降级为 chat -> analyze_with_llm，丢失所有研究上下文。
+    // 修复后：使用 resolveTaskRelation 解析追问关系，继承上一轮任务类型和实体。
     const chatHistory = this.context.chatHistory || [];
-    if (this.isFollowUpQuestion(userQuery, chatHistory)) {
-      this.addLog("system", "检测到追问，使用简化的追问流程（直接让LLM继续上轮对话）");
+    if (isFollowUpQuestion(userQuery)) {
+      this.addLog("system", "检测到追问，解析任务关系...");
+
+      // 从会话状态中获取上一轮任务
+      const previousTask = this.sessionState?.getCurrentTask() || null;
+
+      if (previousTask) {
+        const envelope = resolveTaskRelation(userQuery, previousTask);
+        this.addLog("system", `追问关系: ${envelope.relation_to_previous}, 任务: ${envelope.task_type}`);
+
+        // 根据关系类型决定流程
+        if (envelope.relation_to_previous === "continue") {
+          // 继续上一轮的研究任务
+          const taskConfig = TASK_TYPES[envelope.task_type.toUpperCase()] ||
+                           TASK_TYPES[envelope.task_type];
+          if (taskConfig) {
+            this.addLog("system", `继续研究任务: ${taskConfig.name}，继承实体: ${JSON.stringify(envelope.entities)}`);
+            return {
+              taskType: taskConfig.id,
+              flow: [...taskConfig.defaultFlow],
+              reasoning: envelope.reasoning || `继续上一轮${taskConfig.name}任务`,
+              relation: "continue",
+              previousTask,
+            };
+          }
+        } else if (envelope.relation_to_previous === "derive") {
+          // 从上一轮衍生出新任务
+          const taskConfig = TASK_TYPES[envelope.task_type.toUpperCase()] ||
+                           TASK_TYPES[envelope.task_type];
+          if (taskConfig) {
+            this.addLog("system", `派生新任务: ${taskConfig.name}，实体: ${JSON.stringify(envelope.entities)}`);
+            return {
+              taskType: taskConfig.id,
+              flow: [...taskConfig.defaultFlow],
+              reasoning: envelope.reasoning || `从上一轮任务派生`,
+              relation: "derive",
+              previousTask,
+            };
+          }
+        } else if (envelope.relation_to_previous === "correct") {
+          // 用户纠错，触发重新验证流程
+          this.addLog("system", `用户纠错: ${JSON.stringify(envelope.correctionTarget)}`);
+          return {
+            taskType: "claim_correction",
+            flow: ["resolve_entity", "get_stock_data", "run_governed_workflow"],
+            reasoning: envelope.reasoning || "用户纠正上一轮数据，触发重新验证",
+            relation: "correct",
+            correctionTarget: envelope.correctionTarget,
+            previousTask,
+          };
+        }
+      }
+
+      // 没有上轮任务或无法解析关系时，降级到通用聊天（但这是最后的回退）
+      this.addLog("system", "追问但无上轮任务状态，回退到通用对话");
       return {
         taskType: "chat",
         flow: ["analyze_with_llm"],
-        reasoning: "用户追问上一轮对话，直接让LLM基于上下文继续回答",
+        reasoning: "追问但无上轮任务上下文，回退到通用对话",
+      };
+    }
+
+    // 产品首页的“涨跌幅归因分析”是高确定性入口。先于模型路由，避免被“今天”误分到每日简报。
+    if (/(?:归因|原因)/.test(userQuery) && /涨/.test(userQuery) && /跌/.test(userQuery)) {
+      const taskConfig = TASK_TYPES.MARKET_ATTRIBUTION;
+      this.addLog("system", `高确定性规则匹配任务类型: ${taskConfig.name}`);
+      return {
+        taskType: taskConfig.id,
+        flow: taskConfig.defaultFlow,
+        reasoning: "用户明确要求涨跌榜归因，使用事实核对型确定性流程",
       };
     }
 
@@ -2406,6 +3283,24 @@ export class WorkflowEngine {
         const intentResult = await intentEngine.parseIntent(userQuery, this.context, chatHistory);
         
         if (intentResult) {
+          // The LLM is the semantic router, but it is not allowed to silently downgrade an
+          // explicit, high-confidence product request to free chat.  The deterministic
+          // detector acts as a route validator and availability fallback; this is internal
+          // plumbing, not a command table the user has to learn.
+          const validatedTaskKey = this.detectTaskType(userQuery);
+          const validatedTask = validatedTaskKey === "CHAT" ? null : TASK_TYPES[validatedTaskKey];
+          if (validatedTask && intentResult.intent !== validatedTask.id) {
+            this.addLog(
+              "system",
+              `路由校验已纠偏: ${intentResult.intent || "unknown"} → ${validatedTask.id}`,
+            );
+            intentResult.intent = validatedTask.id;
+            intentResult.intentName = validatedTask.name;
+            intentResult.requiredTools = [...validatedTask.defaultFlow];
+            intentResult.isDynamic = false;
+            intentResult.routingSource = "llm_validated_by_deterministic_guard";
+            intentResult.reasoning = `自然语言意图与高确定性入口校验后，匹配到任务类型: ${validatedTask.name}`;
+          }
           this.context.data.intent = intentResult;
           this.addLog("system", `意图识别结果: ${intentResult.intentName}`);
           this.addLog("system", `识别实体: ${JSON.stringify(intentResult.entities)}`);
@@ -2485,28 +3380,95 @@ export class WorkflowEngine {
    *   当成了全新的问题，重新走了完全不同的流程。
    */
   isFollowUpQuestion(userQuery, chatHistory) {
-    // 没有对话历史，不可能是追问
-    if (!chatHistory || chatHistory.length === 0) return false;
+    // 小白讲解：现在追问检测委托给 research-task-contracts.js 中的函数。
+    // 这个函数只判断"像不像追问"，不决定具体怎么处理。
+    // 具体怎么处理（continue/derive/correct）由 analyzeAndPlan 中的 resolveTaskRelation 决定。
+    // chatHistory 参数保留用于向后兼容，但不再作为必要条件
+    // （追问检测现在基于关键词模式，不依赖历史长度）。
+    return isFollowUpQuestion(userQuery);
+  }
 
-    // 追问关键词检测
-    const followUpPatterns = [
-      /继续/i, /接着/i, /没说完/i, /没输出完/i, /没讲完/i,
-      /补充/i, /展开/i, /详细/i, /接着说/i, /继续说/i,
-      /然后呢/i, /还有呢/i, /后面呢/i, /再说/i,
-      /上面/i, /刚才/i, /之前/i, /上一轮/i,
-      /你刚才说/i, /你之前说/i, /你上面说/i,
-    ];
+  // === 会话状态管理 ===
 
-    const isFollowUp = followUpPatterns.some(p => p.test(userQuery));
-    if (isFollowUp) return true;
-
-    // 短文本+有历史=可能是追问（如"嗯"、"好"、"继续"等短回复）
-    if (userQuery.trim().length <= 10 && chatHistory.length >= 2) {
-      const shortFollowUp = /^(继续|接着|嗯|好|然后|还有|补充|展开|详细|说明|解释|比如|例如)$/;
-      if (shortFollowUp.test(userQuery.trim())) return true;
+  /**
+   * 加载研究会话状态
+   *
+   * 小白讲解：从数据库或内存中恢复上一轮的任务状态。
+   * 如果没有 sessionId 或数据库，就创建一个空状态。
+   */
+  async _loadSessionState() {
+    if (!this.sessionId) {
+      this.sessionState = new ResearchSessionState("anonymous");
+      return;
     }
 
-    return false;
+    try {
+      if (this.sessionStateStore) {
+        const loaded = await this.sessionStateStore.load(this.sessionId);
+        if (loaded) {
+          this.sessionState = loaded;
+          this.addLog("system", `已恢复会话状态: ${this.sessionId}`);
+          return;
+        }
+      }
+
+      // 没有持久化存储时，创建新状态
+      this.sessionState = new ResearchSessionState(this.sessionId);
+    } catch (error) {
+      console.error("[WorkflowEngine] 加载会话状态失败:", error.message);
+      this.sessionState = new ResearchSessionState(this.sessionId || "anonymous");
+    }
+  }
+
+  /**
+   * 保存研究会话状态
+   *
+   * 小白讲解：把当前任务的状态保存到数据库，
+   * 这样下一轮对话时就能恢复上下文。
+   * 只保存任务元数据，不保存临时假设。
+   */
+  async _saveSessionState(result) {
+    if (!this.sessionState) return;
+
+    try {
+      // 从执行结果中提取任务信息
+      const currentTask = {
+        taskId: this.runId || `task_${Date.now()}`,
+        taskType: this.currentTaskType || "chat",
+        entities: this.context.data.entities || [],
+        topic: this.context.userQuery || null,
+        confirmedFacts: this.sessionState.confirmedFacts || [],
+        modelAssumptions: this.sessionState.modelAssumptions || [],
+        artifactRefs: this.sessionState.artifactRefs || [],
+        pendingQuestions: this.sessionState.pendingQuestions || [],
+      };
+
+      this.sessionState.setCurrentTask(currentTask);
+
+      // 如果有证据目录，提取确认事实
+      const evidenceCatalog = this.context.data.evidenceCatalog || [];
+      for (const evidence of evidenceCatalog) {
+        if (evidence.snapshot_sha256 && evidence.tool_id) {
+          this.sessionState.addConfirmedFact({
+            field: evidence.tool_id,
+            value: evidence.snapshot_sha256,
+            source: evidence.tool_id,
+            evidenceId: evidence.evidence_id,
+          });
+        }
+      }
+
+      // 保存到数据库
+      if (this.sessionStateStore) {
+        await this.sessionStateStore.save(this.sessionState);
+        this.addLog("system", `已保存会话状态: ${this.sessionState.sessionId}`);
+      }
+
+      // 将任务状态放入 context，供后续追问使用
+      this.context.previousTaskState = currentTask;
+    } catch (error) {
+      console.error("[WorkflowEngine] 保存会话状态失败:", error.message);
+    }
   }
 
   detectTaskType(userQuery) {
@@ -2548,6 +3510,9 @@ export class WorkflowEngine {
       }
     }
     
+    if ((q.includes("归因") || q.includes("原因")) && q.includes("涨") && q.includes("跌")) {
+      return "MARKET_ATTRIBUTION";
+    }
     if (q.includes("机会") || q.includes("雷达") || q.includes("推荐") || q.includes("选股") || q.includes("opportunity") || q.includes("scan") || q.includes("radar") || q.includes("recommend")) {
       return "OPPORTUNITY_SCAN";
     }
@@ -2578,8 +3543,29 @@ export class WorkflowEngine {
   async executeFlow(flow) {
     this.context.workflowState = "executing";
     this.context.stepIndex = 0;
-    
-    let currentFlow = [...flow];
+
+    const requestedFlow = Array.isArray(flow) ? [...flow] : [];
+    const maxSteps = Math.max(1, Number.parseInt(process.env.WORKFLOW_MAX_STEPS || "12", 10) || 12);
+    let currentFlow = [];
+    let skippedSteps = 0;
+
+    for (const toolId of requestedFlow) {
+      if (WRITE_TOOL_IDS.has(toolId) && !isWriteToolAuthorized(toolId, this.context)) {
+        skippedSteps += 1;
+        this.addLog("system", `已跳过未授权写入工具: ${toolId}`);
+        continue;
+      }
+      if (currentFlow.length >= maxSteps) {
+        skippedSteps += requestedFlow.length - currentFlow.length - skippedSteps;
+        this.addLog("system", `流程超过 ${maxSteps} 步上限，剩余步骤已跳过`);
+        break;
+      }
+      currentFlow.push(toolId);
+    }
+
+    this.currentFlow = currentFlow;
+    let completedSteps = 0;
+    let failedSteps = 0;
     
     for (let i = 0; i < currentFlow.length; i++) {
       const toolId = currentFlow[i];
@@ -2588,6 +3574,7 @@ export class WorkflowEngine {
       const tool = AGENT_TOOLS[toolId];
       if (!tool) {
         this.addLog(toolId, `⚠️ 工具不存在: ${toolId}`);
+        failedSteps += 1;
         continue;
       }
       
@@ -2595,17 +3582,30 @@ export class WorkflowEngine {
       
       try {
         const result = await tool.execute(this.context);
+        if (!result.skipEvidenceCapture) this.captureEvidence(toolId, result);
         
         if (result.success) {
+          completedSteps += 1;
           this.addLog(toolId, `✓ ${tool.name} 完成`, result.data);
           
-          if (this.context.data.intent?.isDynamic && isModelAvailable() && i < currentFlow.length - 1) {
+          if (
+            this.context.data.intent?.isDynamic &&
+            isModelAvailable() &&
+            this.replanCount < this.maxReplans &&
+            i < currentFlow.length - 1
+          ) {
             try {
               initIntentEngine();
               const remainingTools = currentFlow.slice(i + 1);
               this.addLog("system", `动态规划中，检查是否需要调整剩余流程...`);
               
-              const newRemainingTools = await intentEngine.replanFlow(toolId, this.context.data, remainingTools);
+              this.replanCount += 1;
+              const proposedTools = await intentEngine.replanFlow(toolId, this.context.data, remainingTools);
+              const newRemainingTools = proposedTools
+                .filter((candidateId) => AGENT_TOOLS[candidateId])
+                .filter((candidateId) => !WRITE_TOOL_IDS.has(candidateId) || isWriteToolAuthorized(candidateId, this.context))
+                .filter((candidateId, index, all) => all.indexOf(candidateId) === index)
+                .slice(0, Math.max(0, maxSteps - i - 1));
               
               if (newRemainingTools.length !== remainingTools.length || 
                   newRemainingTools.some((t, idx) => t !== remainingTools[idx])) {
@@ -2617,15 +3617,66 @@ export class WorkflowEngine {
             }
           }
         } else {
+          failedSteps += 1;
           this.addLog(toolId, `✗ ${tool.name} 失败: ${result.message}`);
+          if (toolId === "run_governed_stock_deep_dive") {
+            this.context.data.finalResponse = `# 个股深度研究 V3 执行失败\n\n- ${result.message || "受治理研究内核未能完成。"}\n- 本次不使用旧研究逻辑生成替代结论，请修复数据或运行环境后重试。\n`;
+            this.context.data.reportQualityGate = { passed: false, source: "stock_deep_dive_v3" };
+          }
         }
       } catch (error) {
+        failedSteps += 1;
+        if (toolId !== "run_governed_stock_deep_dive") {
+          this.captureEvidence(toolId, { success: false, data: null, message: error.message });
+        } else {
+          this.context.data.finalResponse = `# 个股深度研究 V3 执行失败\n\n- ${error.message}\n- 本次不使用旧研究逻辑生成替代结论，请修复数据或运行环境后重试。\n`;
+          this.context.data.reportQualityGate = { passed: false, source: "stock_deep_dive_v3" };
+        }
         this.addLog(toolId, `✗ ${tool.name} 异常: ${error.message}`);
       }
     }
-    
-    this.context.workflowState = "completed";
+
+    this.executionStats = {
+      totalSteps: requestedFlow.length,
+      completedSteps,
+      failedSteps,
+      skippedSteps,
+    };
+    if (currentFlow.length === 0 && skippedSteps > 0) {
+      this.context.workflowState = "waiting_review";
+    } else if (failedSteps === 0) {
+      this.context.workflowState = "completed";
+    } else if (completedSteps > 0) {
+      this.context.workflowState = "partial";
+    } else {
+      this.context.workflowState = "failed";
+    }
     return this.buildResult();
+  }
+
+  captureEvidence(toolId, result, capturedAt = new Date()) {
+    const nextEvidenceId = `E${String(this.evidenceSequence + 1).padStart(3, "0")}`;
+    const evidence = createEvidenceEnvelope({
+      evidenceId: nextEvidenceId,
+      toolId,
+      result,
+      capturedAt,
+    });
+    if (!evidence) return null;
+    this.evidenceSequence += 1;
+    if (!Array.isArray(this.context.data.evidenceSnapshots)) {
+      Object.defineProperty(this.context.data, "evidenceSnapshots", {
+        value: [], writable: true, configurable: true, enumerable: false,
+      });
+    }
+    const snapshot = createEvidenceSnapshot({ evidence, result });
+    evidence.snapshot_sha256 = snapshot.snapshot_sha256;
+    this.context.data.evidenceSnapshots.push(snapshot);
+    if (!Array.isArray(this.context.data.evidenceCatalog)) this.context.data.evidenceCatalog = [];
+    this.context.data.evidenceCatalog.push(evidence);
+    this.context.data.evidenceIds = this.context.data.evidenceCatalog.map((item) => item.evidence_id);
+    this.context.data.dataHealth = summarizeDataHealth(this.context.data.evidenceCatalog);
+    return evidence;
   }
 
   buildResult() {
@@ -2642,11 +3693,95 @@ export class WorkflowEngine {
     
     // 修复Unicode换行符问题（_x000A_）
     response = response.replace(/_x000A_/g, "\n");
+    data.citationValidation = data.governedWorkflow?.citationValidation || validateEvidenceCitations(
+      response,
+      data.evidenceCatalog || [],
+      data.dataHealth || null,
+    );
+    if (this.currentTaskType === "opportunity_scan" && data.llmAnalysis?.rawAnalysis) {
+      const currentViolations = data.citationValidation.current_claim_violations?.length || 0;
+      const passed = response.length >= 800
+        && data.citationValidation.coverage >= 0.75
+        && currentViolations === 0;
+      data.reportQualityGate = {
+        passed,
+        source: passed ? "llm" : "deterministic_fallback",
+        minimum_characters: 800,
+        minimum_citation_coverage: 0.75,
+        llm_characters: response.length,
+        llm_citation_coverage: data.citationValidation.coverage,
+        llm_current_claim_violations: currentViolations,
+      };
+      if (!passed) {
+        response = this.generateOpportunityFallbackResponse();
+        data.citationValidation = validateEvidenceCitations(
+          response,
+          data.evidenceCatalog || [],
+          data.dataHealth || null,
+        );
+      }
+    } else if (this.currentTaskType === "opportunity_scan") {
+      data.reportQualityGate = {
+        passed: false,
+        source: "deterministic_fallback",
+        minimum_characters: 800,
+        minimum_citation_coverage: 0.75,
+      };
+    } else if (this.currentTaskType === "daily_brief" && data.llmAnalysis?.rawAnalysis) {
+      const currentViolations = data.citationValidation.current_claim_violations?.length || 0;
+      const passed = response.length >= 900
+        && data.citationValidation.coverage >= 0.75
+        && currentViolations === 0;
+      data.reportQualityGate = {
+        passed,
+        source: passed ? "llm" : "deterministic_fallback",
+        minimum_characters: 900,
+        minimum_citation_coverage: 0.75,
+        llm_characters: response.length,
+        llm_citation_coverage: data.citationValidation.coverage,
+        llm_current_claim_violations: currentViolations,
+      };
+      if (!passed) {
+        response = this.generateDailyBriefFallbackResponse();
+        data.citationValidation = validateEvidenceCitations(
+          response,
+          data.evidenceCatalog || [],
+          data.dataHealth || null,
+        );
+      }
+    } else if (
+      ["stock_analysis", "stock_deep_analysis"].includes(this.currentTaskType)
+      && data.llmAnalysis?.rawAnalysis
+      && !data.governedWorkflow
+    ) {
+      const currentViolations = data.citationValidation.current_claim_violations?.length || 0;
+      const passed = response.length >= 1_000
+        && data.citationValidation.coverage >= 0.75
+        && currentViolations === 0;
+      data.reportQualityGate = {
+        passed,
+        source: passed ? "llm" : "deterministic_fallback",
+        minimum_characters: 1_000,
+        minimum_citation_coverage: 0.75,
+        llm_characters: response.length,
+        llm_citation_coverage: data.citationValidation.coverage,
+        llm_current_claim_violations: currentViolations,
+      };
+      if (!passed) {
+        response = this.generateStockResearchFallbackResponse();
+        data.citationValidation = validateEvidenceCitations(
+          response,
+          data.evidenceCatalog || [],
+          data.dataHealth || null,
+        );
+      }
+    }
     
-    // 自动提取结构化记忆（如果分析报告存在且没有已提取的记忆）
+    // Memories must come from the response that actually passed the report gate.
+    // Never persist facts from a rejected model draft.
     let extractedMemories = data.extractedMemories || [];
-    if (data.llmAnalysis?.rawAnalysis && extractedMemories.length === 0) {
-      extractedMemories = this.extractStructuredMemories(data.llmAnalysis.rawAnalysis);
+    if (response && extractedMemories.length === 0 && !data.governedWorkflow) {
+      extractedMemories = this.extractStructuredMemories(response);
       data.extractedMemories = extractedMemories;
     }
     
@@ -2883,12 +4018,9 @@ export class WorkflowEngine {
 
   generateWorkflowSummary() {
     const completedSteps = this.executionHistory.filter(h => h.message.includes("完成"));
-    const failedSteps = this.executionHistory.filter(h => h.message.includes("失败") || h.message.includes("异常"));
     
     return {
-      totalSteps: this.currentFlow.length,
-      completedSteps: completedSteps.length,
-      failedSteps: failedSteps.length,
+      ...this.executionStats,
       stepDetails: completedSteps.map(h => ({
         stepId: h.stepId,
         message: h.message.replace("✓ ", ""),
@@ -2900,6 +4032,22 @@ export class WorkflowEngine {
   generateFallbackResponse() {
     const data = this.context.data;
     const query = this.context.userQuery;
+
+    if (this.currentTaskType === "opportunity_scan") {
+      return this.generateOpportunityFallbackResponse();
+    }
+    if (this.currentTaskType === "daily_brief") {
+      return this.generateDailyBriefFallbackResponse();
+    }
+    if (this.currentTaskType === "market_news") {
+      return this.generateMarketNewsResponse();
+    }
+    if (this.currentTaskType === "market_attribution") {
+      return this.generateMarketAttributionResponse();
+    }
+    if (["stock_analysis", "stock_deep_analysis"].includes(this.currentTaskType)) {
+      return this.generateStockResearchFallbackResponse();
+    }
 
     if (data.topGainers || data.topLosers) {
       let response = "📊 **市场扫描结果**\n\n";
@@ -2933,13 +4081,412 @@ export class WorkflowEngine {
     return `已处理您的问题: "${query}"。由于 AI 模型不可用，无法生成详细分析报告。`;
   }
 
+  generateOpportunityFallbackResponse() {
+    const data = this.context.data;
+    const catalog = data.evidenceCatalog || [];
+    const evidenceId = (toolId, fallback) => catalog.find((item) => item.tool_id === toolId)?.evidence_id || fallback;
+    const indexEvidence = evidenceId("get_market_indices", "E001");
+    const gainerEvidence = evidenceId("get_top_gainers", "E002");
+    const loserEvidence = evidenceId("get_top_losers", "E003");
+    const activityEvidence = evidenceId("get_volume_surge", "E004");
+    const valuationEvidence = evidenceId("get_valuation_extremes", "E006");
+    const newsEvidence = evidenceId("get_latest_news", "E007");
+    const poolEvidence = evidenceId("get_pool_snapshot", "E008");
+    const asOf = data.topGainers?.[0]?.trade_date || catalog.find((item) => item.tool_id === "get_top_gainers")?.as_of?.slice(0, 10) || "未知";
+
+    const activityCodes = new Set((data.volumeSurge || []).map((item) => item.ts_code));
+    const candidates = (data.topGainers || [])
+      .filter(opportunityCandidate)
+      .map((item) => {
+        const pe = Number(item.pe_ttm);
+        const turnover = Number(item.turnover);
+        const marketCap = Number(item.total_mv);
+        let priority = 0;
+        if (Number.isFinite(pe) && pe > 0 && pe <= 80) priority += 3;
+        else if (Number.isFinite(pe) && pe > 0 && pe <= 150) priority += 1;
+        else priority -= 2;
+        if (Number.isFinite(turnover) && turnover >= 3 && turnover <= 20) priority += 2;
+        if (Number.isFinite(marketCap) && marketCap >= 5_000_000_000) priority += 1;
+        if (activityCodes.has(item.ts_code)) priority += 1;
+        if (Number(item.pct_chg) > 15) priority -= 1;
+        return { ...item, priority };
+      })
+      .sort((a, b) => b.priority - a.priority)
+      .slice(0, 5);
+
+    const indexLines = (data.marketIndices || []).slice(0, 4).map((item) => {
+      const pct = Number(item.pct_chg);
+      return `- ${item.name}：${item.price} 点，涨跌幅 ${pct >= 0 ? "+" : ""}${pct.toFixed(2)}%。[${indexEvidence}]`;
+    });
+    const candidateLines = candidates.map((item, index) => {
+      const citations = activityCodes.has(item.ts_code)
+        ? `[${gainerEvidence}][${activityEvidence}]`
+        : `[${gainerEvidence}]`;
+      const pe = Number.isFinite(Number(item.pe_ttm)) ? Number(item.pe_ttm).toFixed(1) : "缺失";
+      const turnover = Number.isFinite(Number(item.turnover)) ? `${Number(item.turnover).toFixed(2)}%` : "缺失";
+      const low = Number.isFinite(Number(item.low)) ? Number(item.low).toFixed(2) : "异动日低点";
+      return `${index + 1}. **${item.name || item.ts_code}（${item.ts_code}）—仅列入观察** ${citations}
+   - 已确认信号：收盘 ${Number(item.close).toFixed(2)} 元，单日涨跌 ${Number(item.pct_chg).toFixed(2)}%，换手 ${turnover}，PE(TTM) ${pe}。${citations}
+   - 为什么跟踪：在剔除 ST/退市整理股后，价格强度、交易活跃度与基础估值的组合相对更可解释；这仍是短线异动线索，不是基本面买入结论。${citations}
+   - 确认条件：后续交易日不出现高开低走，且行业或公司催化能由独立新闻/公告验证。${citations}[${newsEvidence}]
+   - 放弃条件：跌破异动日低点 ${low} 元，或只有换手升高而缺乏新增基本面证据。${citations}`;
+    });
+    const newsLines = (data.latestNews || []).slice(0, 5).map((item) =>
+      `- ${String(item.published_at || "").slice(0, 10)}｜${item.title}。[${newsEvidence}]`
+    );
+    const loserLines = (data.topLosers || []).slice(0, 3).map((item) =>
+      `- ${item.name || item.ts_code}（${item.ts_code}）${Number(item.pct_chg).toFixed(2)}%，列入风险观察而非抄底候选。[${loserEvidence}]`
+    );
+
+    return `# A股机会扫描（确定性降级报告）
+
+- 核心行情截至：${asOf}；当前为非交易时段，以下是最近已完成交易日的收盘观察。[${indexEvidence}]
+- 数据健康：${data.dataHealth?.status === "healthy" ? "健康" : "存在降级项"}。实时行情与新闻可用，但估值快照和本地股票池已过期，不用于当前买卖判断。[${valuationEvidence}][${poolEvidence}]
+- 生成说明：AI 深度综合未通过时限或质量门，本报告由确定性规则生成，优先保证可审计与不编造。
+
+## 结论先行
+
+当前只能形成“跟踪清单”，不能形成直接买入清单。涨幅榜反映短期资金强度，高换手反映成交活跃，二者都不能单独证明基本面改善；名称含 ST、*ST、退市或以“退”结尾的标的已从候选中剔除。若没有公告、业绩或产业催化的二次验证，建议保持观察而不是追涨。[${gainerEvidence}][${activityEvidence}][${newsEvidence}]
+
+## 市场概览
+
+${indexLines.join("\n") || `- 大盘指数缺失，无法判断整体风险偏好。[${indexEvidence}]`}
+
+## 跟踪优先级
+
+${candidateLines.join("\n\n") || `没有通过基础风险过滤的候选，暂不行动。[${gainerEvidence}][${activityEvidence}]`}
+
+## 近期可核验催化
+
+${newsLines.join("\n") || `- 近 8 天没有通过来源与日期过滤的 A 股新闻，新闻维度降级。[${newsEvidence}]`}
+
+新闻只用于解释市场背景，不自动归因到上述个股；个股催化仍需公司公告或权威来源二次确认。[${newsEvidence}]
+
+## 风险观察
+
+${loserLines.join("\n") || `- 跌幅榜数据缺失。[${loserEvidence}]`}
+- 估值证据截至 ${catalog.find((item) => item.tool_id === "get_valuation_extremes")?.as_of?.slice(0, 10) || "未知"}，已超过新鲜度阈值，不能据此声称当前低估。[${valuationEvidence}]
+- 本地股票池行情截至 ${catalog.find((item) => item.tool_id === "get_pool_snapshot")?.as_of?.slice(0, 10) || "未知"}，落后最近交易日，不用于候选排序。[${poolEvidence}]
+- 当前成交活跃榜的量比字段不可用时，系统只称“高换手异动”，不称“放量”。[${activityEvidence}]
+
+## 操作纪律
+
+1. 先观察，不在单日大涨后追价；候选必须经过下一交易日价格行为确认。[${gainerEvidence}]
+2. 只有公司公告、业绩变化或产业数据与行情信号相互印证时，才进入单股深度研究。[${gainerEvidence}][${newsEvidence}]
+3. 任何候选在跌破异动日低点、催化被证伪或流动性快速退潮时，从清单移除。[${gainerEvidence}][${activityEvidence}]
+4. 本报告不构成投资建议，未给出目标价或仓位，是因为当前证据不足以支持这些结论。[${valuationEvidence}][${newsEvidence}]`;
+  }
+
+  generateDailyBriefFallbackResponse() {
+    const data = this.context.data;
+    const catalog = data.evidenceCatalog || [];
+    const evidenceId = (toolId, fallback) => catalog.find((item) => item.tool_id === toolId)?.evidence_id || fallback;
+    const indexEvidence = evidenceId("get_market_indices", "E001");
+    const gainerEvidence = evidenceId("get_top_gainers", "E002");
+    const loserEvidence = evidenceId("get_top_losers", "E003");
+    const activityEvidence = evidenceId("get_volume_surge", "E004");
+    const newsEvidence = evidenceId("get_latest_news", "E005");
+    const poolEvidence = evidenceId("get_pool_snapshot", "E006");
+    const asOf = data.topGainers?.[0]?.trade_date
+      || catalog.find((item) => item.tool_id === "get_market_indices")?.as_of?.slice(0, 10)
+      || "未知";
+
+    const indices = (data.marketIndices || []).slice(0, 6).map((item) => {
+      const pct = Number(item.pct_chg);
+      return `- ${item.name}：${Number(item.price).toFixed(2)} 点，涨跌幅 ${pct >= 0 ? "+" : ""}${pct.toFixed(2)}%。[${indexEvidence}]`;
+    });
+    const gainers = (data.topGainers || []).filter(opportunityCandidate).slice(0, 5).map((item) =>
+      `- ${item.name || item.ts_code}（${item.ts_code}）：收盘 ${Number(item.close).toFixed(2)} 元，涨跌幅 ${Number(item.pct_chg).toFixed(2)}%，换手 ${Number(item.turnover).toFixed(2)}%。[${gainerEvidence}]`
+    );
+    const highRisk = (data.topGainers || []).filter((item) => !opportunityCandidate(item)).slice(0, 3).map((item) =>
+      `- ${item.name || item.ts_code}（${item.ts_code}）涨跌幅 ${Number(item.pct_chg).toFixed(2)}%，因名称触发 ST/退市风险规则，仅作风险记录，不进入关注清单。[${gainerEvidence}]`
+    );
+    const losers = (data.topLosers || []).slice(0, 3).map((item) =>
+      `- ${item.name || item.ts_code}（${item.ts_code}）：涨跌幅 ${Number(item.pct_chg).toFixed(2)}%，换手 ${Number(item.turnover).toFixed(2)}%，列入波动风险观察。[${loserEvidence}]`
+    );
+    const activity = (data.volumeSurge || []).filter(opportunityCandidate).slice(0, 5).map((item) =>
+      `- ${item.name || item.ts_code}（${item.ts_code}）：换手 ${Number(item.turnover).toFixed(2)}%，涨跌幅 ${Number(item.pct_chg).toFixed(2)}%；量比不可用时只称“高换手异动”。[${activityEvidence}]`
+    );
+    const news = (data.latestNews || []).slice(0, 5).map((item) =>
+      `- ${String(item.published_at || "").slice(0, 10)}｜${item.title}。[${newsEvidence}]`
+    );
+    const newsLine = news.length > 0
+      ? news.join("\n")
+      : `- 最近 8 天没有通过来源、日期与正文过滤的新闻；新闻维度本次降级，不做事件归因。[${newsEvidence}]`;
+    const poolAsOf = catalog.find((item) => item.tool_id === "get_pool_snapshot")?.as_of?.slice(0, 10) || "未知";
+
+    return `# A股每日复盘（确定性报告）
+
+- 核心行情截至：${asOf}；当前为非交易时段，以下使用最近已完成交易日的收盘数据。[${indexEvidence}]
+- 生成说明：模型原稿未通过引用质量门，本报告由确定性规则生成，不提供目标价、仓位或未经证据支持的行业归因。
+
+## 指数表现
+
+${indices.join("\n") || `- 指数数据缺失，无法判断市场整体表现。[${indexEvidence}]`}
+
+## 强势观察
+
+以下只是当日价格与成交活跃度记录，不等于买入建议。[${gainerEvidence}]
+
+${gainers.join("\n") || `- 没有通过 ST/退市风险过滤的强势标的。[${gainerEvidence}]`}
+
+## 高换手观察
+
+${activity.join("\n") || `- 高换手数据缺失。[${activityEvidence}]`}
+
+## 风险观察
+
+${[...highRisk, ...losers].join("\n") || `- 跌幅与高风险名称数据缺失。[${gainerEvidence}][${loserEvidence}]`}
+
+## 可核验新闻
+
+${newsLine}
+
+新闻只用于说明市场背景，不能自动归因到上述个股；个股事件仍需公告或权威来源二次确认。[${newsEvidence}]
+
+## 数据边界与下一交易日检查
+
+- 本地股票池行情截至 ${poolAsOf}，若落后于 ${asOf}，不用于本次强弱排序。[${poolEvidence}]
+- 下一交易日只检查三件事：指数是否延续弱势、强势股是否高开低走、高换手是否伴随新增公告；在确认前不把单日异动解释为趋势。[${indexEvidence}][${gainerEvidence}][${activityEvidence}]
+- 本报告是事实复盘与跟踪清单，不构成投资建议。[${indexEvidence}][${gainerEvidence}]`;
+  }
+
+  generateMarketNewsResponse() {
+    const data = this.context.data;
+    const catalog = data.evidenceCatalog || [];
+    const evidence = catalog.find((item) => item.tool_id === "get_latest_news");
+    const evidenceId = evidence?.evidence_id || "E001";
+    const news = (data.latestNews || []).slice(0, 12);
+    const datedNews = news.filter((item) => item.published_at);
+    const newestDate = datedNews
+      .map((item) => String(item.published_at).slice(0, 10))
+      .sort()
+      .at(-1) || evidence?.as_of?.slice(0, 10) || "未知";
+
+    const items = news.map((item, index) => {
+      const date = String(item.published_at || "日期缺失").slice(0, 10);
+      const source = item.source_name || item.source_id || "来源未标注";
+      const title = String(item.title || "无标题").replace(/\s+/g, " ").trim();
+      const url = item.url ? `｜[原文](${item.url})` : "";
+      return `${index + 1}. ${date}｜${source}｜${title}${url}。[${evidenceId}]`;
+    });
+
+    return `# A股市场新闻清单
+
+- 新闻截至：${newestDate}；仅保留有明确发布日期、正文与受信来源的最近结果。[${evidenceId}]
+- 输出说明：这是检索清单，不对市场方向、板块强弱或个股影响作自动推断。[${evidenceId}]
+
+## 已核验条目
+
+${items.join("\n") || `本次新闻抓取没有得到通过质量过滤的结果；请稍后重试，当前不做事件判断。[${evidenceId}]`}
+
+## 使用边界
+
+- 同一条市场新闻不能自动归因到某只股票；个股催化必须再核对公司公告或交易所披露。[${evidenceId}]
+- 标题只代表来源页面的公开表述，系统未补写资金意图、政策含义、目标价或操作建议。[${evidenceId}]`;
+  }
+
+  generateMarketAttributionResponse() {
+    const data = this.context.data;
+    const catalog = data.evidenceCatalog || [];
+    const evidenceId = (toolId, fallback) => catalog.find((item) => item.tool_id === toolId)?.evidence_id || fallback;
+    const gainerEvidence = evidenceId("get_top_gainers", "E001");
+    const loserEvidence = evidenceId("get_top_losers", "E002");
+    const newsEvidence = evidenceId("get_movement_news", "E003");
+    const gainers = (data.topGainers || []).slice(0, 10);
+    const losers = (data.topLosers || []).slice(0, 10);
+    const news = (data.movementNews || []).filter((item) => item?.title);
+    const asOf = gainers[0]?.trade_date || losers[0]?.trade_date
+      || catalog.find((item) => item.tool_id === "get_top_gainers")?.as_of?.slice(0, 10)
+      || "未知";
+
+    const relatedNews = (stock) => {
+      const code = String(stock.ts_code || stock.symbol || "").replace(/\.(SZ|SH|BJ)$/i, "");
+      const name = String(stock.name || STOCK_NAME_MAP[stock.ts_code] || "").replace(/^\*?ST/i, "").trim();
+      if (!code && !name) return [];
+      const asOfTime = new Date(`${asOf}T23:59:59+08:00`).getTime();
+      const oldestTime = asOfTime - 8 * 24 * 60 * 60 * 1000;
+      return news.filter((item) => {
+        const title = String(item.title || "");
+        const publishedAt = new Date(item.published_at || 0).getTime();
+        const sameTicker = item.ticker === stock.ts_code;
+        const sameNameOrCode = (name.length >= 2 && title.includes(name)) || (code.length === 6 && title.includes(code));
+        return (sameTicker || sameNameOrCode)
+          && Number.isFinite(publishedAt)
+          && publishedAt >= oldestTime
+          && publishedAt <= asOfTime;
+      }).slice(0, 2);
+    };
+    const row = (stock, rank, rankingEvidence) => {
+      const name = stock.name || STOCK_NAME_MAP[stock.ts_code] || stock.ts_code || "名称缺失";
+      const ticker = stock.ts_code || stock.symbol || "代码缺失";
+      const pct = Number(stock.pct_chg ?? stock.change_percent);
+      const close = Number(stock.close ?? stock.latest_price);
+      const links = relatedNews(stock);
+      const quote = `${rank}. **${name}（${ticker}）**：${Number.isFinite(pct) ? `${pct >= 0 ? "+" : ""}${pct.toFixed(2)}%` : "涨跌幅缺失"}${Number.isFinite(close) ? `，收盘 ${close.toFixed(2)} 元` : ""}。[${rankingEvidence}]`;
+      if (links.length === 0) {
+        return `${quote}\n   - 归因状态：未在异动日前 8 天的巨潮公告中找到可用事件，**原因未确认**；不得用题材、资金或情绪标签代替证据。[${rankingEvidence}][${newsEvidence}]`;
+      }
+      const eventText = links.map((item) => `${String(item.published_at || item.date || "日期缺失").slice(0, 10)}《${item.title}》`).join("；");
+      return `${quote}\n   - 可核验关联公告：${eventText}。[${newsEvidence}]\n   - 归因边界：这里只确认异动日前 8 天内存在同标的公告，不证明该公告就是涨跌的唯一原因。[${rankingEvidence}][${newsEvidence}]`;
+    };
+    const gainerLines = gainers.map((stock, index) => row(stock, index + 1, gainerEvidence));
+    const loserLines = losers.map((stock, index) => row(stock, index + 1, loserEvidence));
+    const matchedCount = [...gainers, ...losers].filter((stock) => relatedNews(stock).length > 0).length;
+
+    return `# A股涨跌幅归因核对表
+
+- 榜单行情截至：${asOf}；涨幅榜 ${gainers.length} 只、跌幅榜 ${losers.length} 只。[${gainerEvidence}][${loserEvidence}]
+- 本轮共核对 ${gainers.length + losers.length} 只标的，其中 ${matchedCount} 只找到异动日前 8 天内的同标的公告，其余均标记“原因未确认”。[${gainerEvidence}][${loserEvidence}][${newsEvidence}]
+- 方法说明：榜单是事实层，巨潮公告是事件层；只有代码直接对应且发布时间处于异动日前 8 天才列为“关联公告”，不把市场背景新闻强行归因到个股。[${newsEvidence}]
+
+## 涨幅前十
+
+${gainerLines.join("\n\n") || `- 涨幅榜数据缺失，无法归因。[${gainerEvidence}]`}
+
+## 跌幅前十
+
+${loserLines.join("\n\n") || `- 跌幅榜数据缺失，无法归因。[${loserEvidence}]`}
+
+## 使用边界
+
+- “找到关联公告”只表示时间与标的相关，不等于完成因果识别；确认因果仍需核对公告正文、盘中时间线与成交结构。[${gainerEvidence}][${loserEvidence}][${newsEvidence}]
+- “原因未确认”不是没有原因，而是本轮证据不足。报告不生成“主力拉升”“机构出货”“题材炒作”等不可验证叙事。[${newsEvidence}]
+- 本表用于研究排查，不构成投资建议。[${gainerEvidence}][${loserEvidence}]`;
+  }
+
+  generateStockResearchFallbackResponse() {
+    const data = this.context.data;
+    const catalog = data.evidenceCatalog || [];
+    const stockEvidence = catalog.find((item) => item.tool_id === "get_stock_data")?.evidence_id || "E001";
+    const newsEvidence = catalog.find((item) => item.tool_id === "get_news")?.evidence_id || "E002";
+    const stock = data.stockEntity || {};
+    const instrument = data.instrumentData || {};
+    const valuation = instrument.valuation || {};
+    const fundamentals = instrument.fundamentals || {};
+    const technical = instrument.technical || {};
+    const enhanced = data.eastmoneyData || {};
+    const ticker = stock.tsCode || data.currentTicker || "未知代码";
+    const name = (stock.name && stock.name !== ticker ? stock.name : null) || STOCK_NAME_MAP[ticker] || ticker;
+    const asOf = instrument.latestDate || catalog.find((item) => item.tool_id === "get_stock_data")?.as_of?.slice(0, 10) || "未知";
+    const number = (value, digits = 2) => Number.isFinite(Number(value)) ? Number(value).toFixed(digits) : "缺失";
+    const percent = (value) => Number.isFinite(Number(value)) ? `${Number(value).toFixed(2)}%` : "缺失";
+    const yi = (value) => Number.isFinite(Number(value)) ? `${(Number(value) / 100_000_000).toFixed(2)} 亿元` : "缺失";
+
+    const quoteLines = [
+      `- 最近行情日期：${asOf}；收盘/观察价 ${number(instrument.latestPrice)} 元，涨跌幅 ${percent(instrument.changePercent)}。[${stockEvidence}]`,
+      `- 近 5 日变化 ${percent(instrument.momentum?.m5d)}，近 20 日变化 ${percent(instrument.momentum?.m20d)}；两项来自本地历史行情计算。[${stockEvidence}]`,
+      `- 技术因子日期：${technical.tradeDate || "缺失"}；RSI(14) ${number(technical.rsi14)}，MACD DIF ${number(technical.macdDif, 4)}，MA20 ${number(technical.ma20)}。[${stockEvidence}]`,
+    ];
+
+    const valuationLines = [];
+    const pe = Number(valuation.pe);
+    const pb = Number(valuation.pb);
+    const ps = Number(valuation.ps);
+    if (Number.isFinite(pe) && pe > 0 && pe <= 300) valuationLines.push(`- PE(TTM)：${pe.toFixed(2)} 倍。[${stockEvidence}]`);
+    else valuationLines.push(`- PE(TTM) 字段缺失或异常，本报告不使用该指标作结论。[${stockEvidence}]`);
+    if (Number.isFinite(pb) && pb > 0 && pb <= 100) valuationLines.push(`- PB：${pb.toFixed(2)} 倍。[${stockEvidence}]`);
+    else valuationLines.push(`- PB 字段缺失或异常，本报告不使用该指标作结论。[${stockEvidence}]`);
+    if (Number.isFinite(ps) && ps > 0 && ps <= 100) valuationLines.push(`- PS(TTM)：${ps.toFixed(2)} 倍。[${stockEvidence}]`);
+    else valuationLines.push(`- PS(TTM) 字段值 ${number(valuation.ps)} 超出基础合理性检查或缺失，已从分析中剔除。[${stockEvidence}]`);
+
+    const localGrossMargin = Number(fundamentals.grossMargin);
+    const latestEnhancedGrossMargin = Number(enhanced.financialHistory?.[0]?.grossMargin);
+    const localSnapshotUsable = Boolean(fundamentals.period)
+      && Number.isFinite(Number(fundamentals.revenue))
+      && Number(fundamentals.revenue) > 0
+      && Number.isFinite(Number(fundamentals.netIncome))
+      && Math.abs(Number(fundamentals.netIncome)) <= Number(fundamentals.revenue)
+      && Number.isFinite(localGrossMargin)
+      && localGrossMargin >= 0
+      && localGrossMargin <= 100
+      && (!Number.isFinite(latestEnhancedGrossMargin) || Math.abs(localGrossMargin - latestEnhancedGrossMargin) <= 20);
+    const fundamentalLines = localSnapshotUsable
+      ? [
+          `- 财务快照报告期：${fundamentals.period}；数据状态：${fundamentals.freshnessStatus || "未标注"}。[${stockEvidence}]`,
+          `- 营业收入 ${yi(fundamentals.revenue)}，净利润 ${yi(fundamentals.netIncome)}，毛利率 ${percent(fundamentals.grossMargin)}，ROE ${percent(fundamentals.roe)}。[${stockEvidence}]`,
+        ]
+      : [
+          `- 本地财务快照缺少报告期或未通过跨字段一致性检查，已整体隔离，不展示其中的收入、利润、毛利率和 ROE。[${stockEvidence}]`,
+          `- 下方仅保留带明确报告期的多期财务原始字段；绝对金额需回到定期报告原文复核。[${stockEvidence}]`,
+        ];
+
+    const financialLines = (enhanced.financialHistory || []).slice(0, 4).map((item) =>
+      `- ${item.reportName || item.reportDate || "报告期缺失"}：营收同比 ${percent(item.revenueYoy)}，净利润同比 ${percent(item.netProfitYoy)}，毛利率 ${percent(item.grossMargin)}，ROE ${percent(item.roe)}。[${stockEvidence}]`
+    );
+    const fundFlowLines = (enhanced.fundFlow || []).slice(0, 5).map((item) =>
+      `- ${item.date || "日期缺失"}：主力净额 ${number(Number(item.mainNet) / 10_000, 0)} 万元，占比 ${percent(item.mainNetPct)}，当日涨跌 ${percent(item.changePct)}；只记录源字段，不推断机构意图。[${stockEvidence}]`
+    );
+    const researchLines = (enhanced.researchReports || []).slice(0, 5).map((item) =>
+      `- ${item.publishDate || "日期缺失"}｜${item.orgName || "机构未标注"}｜评级 ${item.rating || "未标注"}｜${item.title || "标题缺失"}。[${stockEvidence}]`
+    );
+    const newsLines = (data.news || []).filter((item) => item.published_at || item.date).slice(0, 6).map((item) =>
+      `- ${String(item.published_at || item.date).slice(0, 10)}｜${item.source_name || item.source || "来源未标注"}｜${item.title || "无标题"}。[${newsEvidence}]`
+    );
+
+    return `# ${name}（${ticker}）可审计研究摘要
+
+- 核心行情截至：${asOf}；不同模块可能存在日期差，以下不把历史因子或研报当作实时信号。[${stockEvidence}]
+- 生成说明：模型原稿未通过引用质量门，本报告只陈列可追溯字段，不给目标价、仓位或直接买卖结论。
+
+## 行情与技术快照
+
+${quoteLines.join("\n")}
+
+技术指标只描述源数据，不自动解释为超买、超卖、支撑位或反转信号。[${stockEvidence}]
+
+## 估值字段检查
+
+${valuationLines.join("\n")}
+
+不同估值字段可能来自不同口径，异常字段已显式剔除，不能据此判断高估或低估。[${stockEvidence}]
+
+## 财务快照
+
+${fundamentalLines.join("\n")}
+
+### 多期财务原始变化
+
+${financialLines.join("\n") || `- 未取得可用的多期财务历史，不做增长趋势判断。[${stockEvidence}]`}
+
+## 资金流原始记录
+
+${fundFlowLines.join("\n") || `- 未取得可用的近期资金流记录，不判断主力或机构方向。[${stockEvidence}]`}
+
+## 券商研报清单
+
+${researchLines.join("\n") || `- 未取得可用的近期券商研报。[${stockEvidence}]`}
+
+研报评级是第三方观点，不等于事实，也不据此计算一致目标价。[${stockEvidence}]
+
+## 新闻与公告
+
+${newsLines.join("\n") || `- 未取得带明确日期的个股新闻或公告，不做催化判断。[${newsEvidence}]`}
+
+新闻标题不能自动证明对公司构成利好或利空，涉及重大事项时应回到交易所公告正文核验。[${newsEvidence}]
+
+## 当前结论与下一步
+
+- 当前证据可用于建立研究清单，但不足以直接形成买入、卖出、目标价或仓位建议。[${stockEvidence}][${newsEvidence}]
+- 下一步应核对最新定期报告原文、最近交易日价格口径、异常估值字段和公告正文，再决定是否进入人工审阅。[${stockEvidence}][${newsEvidence}]
+- 本摘要不构成投资建议。[${stockEvidence}]`;
+  }
+
   addLog(stepId, message, data = null) {
-    this.executionHistory.push({
+    const entry = {
       timestamp: new Date().toISOString(),
       stepId,
       message,
       data,
-    });
+    };
+    this.executionHistory.push(entry);
+    if (this.onEvent) {
+      try {
+        this.onEvent(entry);
+      } catch (error) {
+        console.warn("工作流审计事件写入失败:", error.message);
+      }
+    }
   }
 
   getStatus() {

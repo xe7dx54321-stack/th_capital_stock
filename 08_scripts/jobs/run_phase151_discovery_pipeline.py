@@ -43,6 +43,10 @@ run_phase151_discovery_pipeline = create_pipeline(
     output_name="phase151_discovery_pipeline"
 )
 
+# Preserve the original short entry point while keeping the descriptive name.
+def run(mode="dry-run"):
+    return run_phase151_discovery_pipeline([f"--{mode}"])
+
 
 if __name__ == "__main__":
     run_phase151_discovery_pipeline()

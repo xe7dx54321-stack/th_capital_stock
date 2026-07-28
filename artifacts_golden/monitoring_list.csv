@@ -1,0 +1,6 @@
+﻿indicator_id,name,why_it_matters,frequency,current_value,unit,warn_threshold,direction,applies_to_scenarios
+b_implied_cagr_vs_realized,B：隐含 CAGR 是否被季度营收印证,当前价格隐含增长若不能兑现，估值将显著回调,每季度财报后,0.28,%/年 CAGR,0.168,below,partial_switch | full_switch
+b_20d_turnover_surge,B：20 日换手率是否突然上冲,换手率翻 2 倍以上常伴随趋势反转或加速赶顶,每周,0.045,小数/天,0.09,above,partial_switch | full_switch | hold_and_wait
+a_net_margin_retention,A：净利率是否维持在当前水平以上,若 A 净利率快速恶化，即使不换仓也需重新评估持仓,每季度财报后,0.116,小数,0.09860000000000001,below,continue_hold | hold_and_wait | partial_switch
+ab_pe_ratio_extremes,A/B 估值（PE TTM）相对比值,比值 > 2x 或 < 0.5x 时，相对性价比显著偏移，需重估换仓必要性,每周,3.41,B_PE / A_PE,"(0.5, 2.0)",outside_range,continue_hold | partial_switch | full_switch | hold_and_wait
+b_top_risk_items_status,B：已识别 3 项核心风险的进展,任何一项风险爆发都可能推翻成立条件,每周,3,已识别风险项数,1,above,full_switch | partial_switch

@@ -44,6 +44,10 @@ run_phase144_feedback_pipeline = create_pipeline(
     output_name="phase144_feedback_pipeline"
 )
 
+# Preserve the original runner contract used by existing local automation.
+def run_pipeline(mode="dry-run"):
+    return run_phase144_feedback_pipeline([f"--{mode}"])
+
 
 if __name__ == "__main__":
     run_phase144_feedback_pipeline()

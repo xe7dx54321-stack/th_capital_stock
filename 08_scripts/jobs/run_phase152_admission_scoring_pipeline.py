@@ -63,5 +63,41 @@ run_phase152_admission_scoring_pipeline = create_pipeline(
 )
 
 
+def run(mode_or_args="dry-run"):
+    """
+    给测试用的便捷入口：兼容 3 种调用方式。
+
+    小白讲解：
+    因为底层 smr_pipeline_runner.run_pipeline(args) 的 args 必须是 'list of str'（比如 ["--dry-run"]），
+    但 test_phase152_admission_scoring.py 里写的是 run("dry-run") 这种传字符串的形式。
+    所以在这一层做"智能识别"，不管你传哪种都能跑。
+
+    Args:
+        mode_or_args: 支持三种格式
+            1) str == "dry-run"  → 内部转成 ["--dry-run"]
+            2) str == "execute"  → 内部转成 ["--execute"]
+            3) list[str]         → 直接透传（完全按 argparse 来）
+
+    Returns:
+        dict: 同底层 pipeline 返回结构（phase152_admission_scoring_pipeline 字段）
+    """
+    if isinstance(mode_or_args, str):
+        # 写法 1：字符串别名
+        if mode_or_args == "dry-run":
+            args = ["--dry-run"]
+        elif mode_or_args == "execute":
+            args = ["--execute"]
+        else:
+            # 兜底：把字符串按空格切一下（防御性）
+            args = mode_or_args.split()
+    elif isinstance(mode_or_args, (list, tuple)):
+        args = list(mode_or_args)
+    elif mode_or_args is None:
+        args = ["--dry-run"]
+    else:
+        raise TypeError(f"run() 参数类型不对：{type(mode_or_args).__name__}，预期 str / list[str]")
+    return run_phase152_admission_scoring_pipeline(args)
+
+
 if __name__ == "__main__":
     run_phase152_admission_scoring_pipeline()

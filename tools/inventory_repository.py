@@ -89,6 +89,7 @@ GENERATED_PREFIXES = (
     "04_portfolio/",
     "05_risk/",
     "06_reports/",
+    "06_outputs/",
     "07_publish/",
     "10_logs/",
     "11_smr_wiki/raw/",
@@ -125,6 +126,7 @@ CORE_PREFIXES = (
     "docs/",
     "legacy_manifest/",
     "public/",
+    "smr_app/",
     "src/",
     "tools/",
 )
@@ -504,6 +506,10 @@ def _stable_fingerprint(files: list[dict[str, Any]]) -> str:
             )
         }
         for row in files
+        # 运行时数据库、日志和工作流制品会在正常验收过程中持续变化。
+        # 它们仍保留在清单中供审计，但不能让“先验收、后生成制品”天然
+        # 破坏下一次验收。仓库指纹只约束代码、配置、文档和冻结资产。
+        if row["category"] != Classification.GENERATED.value
     ]
     payload = json.dumps(stable_rows, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()

@@ -49,6 +49,10 @@ run_phase150_tiering_pipeline = create_pipeline(
     output_name="phase150_tiering_pipeline"
 )
 
+# Preserve the original short entry point while keeping the descriptive name.
+def run(mode="dry-run"):
+    return run_phase150_tiering_pipeline([f"--{mode}"])
+
 
 if __name__ == "__main__":
     run_phase150_tiering_pipeline()

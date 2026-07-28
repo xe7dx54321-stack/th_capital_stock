@@ -21,10 +21,12 @@ import { useState, useRef, useEffect } from "react";
 import {
   Send, Bot, User, Loader2, Trash2,
   TrendingUp, Newspaper, BarChart3, Target,
-  ArrowUp, Sparkles,
+  ArrowUp, Sparkles, Activity, FileText, ShieldCheck, ChevronDown,
+  CheckCircle2, AlertTriangle, Circle, XCircle,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { parseApiDate } from "../../lib/datetime";
 import {
   fetchSessions, createSession, fetchSessionMessages, deleteSession,
   type ChatSession, type SessionMessage,
@@ -41,6 +43,45 @@ interface ChatMessage {
   content: string;
   timestamp: Date;
   intent?: string;
+  execution?: ResearchExecutionDetails;
+}
+
+interface ResearchExecutionDetails {
+  taskType: string;
+  runId?: string;
+  governedRunId?: string | null;
+  completedSteps: number;
+  totalSteps: number;
+  health?: WorkflowResponse["data"]["dataHealth"];
+  citation?: WorkflowResponse["data"]["citationValidation"];
+  artifacts: NonNullable<WorkflowResponse["artifacts"]>;
+  researchExecution?: ResearchExecutionSummary | null;
+}
+
+interface ResearchStage {
+  id: string;
+  label: string;
+  status: "pending" | "running" | "completed" | "warning" | "failed";
+  message: string;
+  startedAt?: string | null;
+  completedAt?: string | null;
+}
+
+interface ResearchStageGroup {
+  id: string;
+  label: string;
+  completedStages: number;
+  totalStages: number;
+  stages: ResearchStage[];
+}
+
+interface ResearchExecutionSummary {
+  status: "running" | "completed" | "warning" | "failed";
+  completedStages: number;
+  totalStages: number;
+  warningStages: number;
+  failedStages: number;
+  groups: ResearchStageGroup[];
 }
 
 
@@ -48,13 +89,40 @@ interface ChatMessage {
  * Workflow 回复类型
  */
 interface WorkflowResponse {
+  run_id?: string;
+  governed_run_id?: string | null;
   taskType: string;
   status: string;
   response: string;
-  data: Record<string, unknown>;
+  data: Record<string, unknown> & {
+    dataHealth?: {
+      status: "healthy" | "warning" | "blocked";
+      can_claim_current: boolean;
+      total_evidence: number;
+      fresh_current_evidence: number;
+    };
+    citationValidation?: {
+      status: "passed" | "warning" | "not_applicable";
+      coverage: number;
+      unknown_citation_ids: string[];
+      missing_citation_claims: unknown[];
+      current_claim_violations: unknown[];
+    };
+    researchExecution?: ResearchExecutionSummary | null;
+  };
   executionHistory: Array<{ stepId: string; message: string; data?: unknown }>;
   workflowSummary: { totalSteps: number; completedSteps: number };
   extractedMemories?: Array<{ title: string; content: string; category: string; confidence: number }>;
+  artifacts?: Array<{ artifact_id: string; artifact_type?: string; title: string; mime_type: string }>;
+}
+
+interface ResearchProgressEvent {
+  run_id: string;
+  workflow_id: string;
+  status: ResearchExecutionSummary["status"];
+  run_status: string;
+  last_sequence: number;
+  researchExecution: ResearchExecutionSummary;
 }
 
 
@@ -75,7 +143,7 @@ const suggestedTasks = [
   {
     icon: TrendingUp,
     title: "涨跌幅归因分析",
-    description: "分析今天涨幅前10和跌幅前10的股票原因",
+    description: "用涨跌幅榜与巨潮公告交叉核对，不猜测因果",
     message: "做一份今天涨跌幅前10的归因分析",
     color: "from-purple-500 to-pink-500",
   },
@@ -121,10 +189,92 @@ async function sendChatRequest(message: string, sessionId?: string, chatHistory?
   });
 
   if (!response.ok) {
-    throw new Error("聊天服务请求失败");
+    let details: { error?: string; run_id?: string } = {};
+    try {
+      details = await response.json();
+    } catch {
+      // 非 JSON 错误响应保留通用提示。
+    }
+    const runHint = details.run_id ? `（任务 ${details.run_id}）` : "";
+    throw new Error(`${details.error || "聊天服务请求失败"}${runHint}`);
   }
 
   return response.json();
+}
+
+export async function sendChatRequestStream(
+  message: string,
+  sessionId: string | undefined,
+  chatHistory: Array<{role: string; content: string}> | undefined,
+  onProgress: (progress: ResearchProgressEvent) => void,
+): Promise<WorkflowResponse> {
+  const body: Record<string, unknown> = { message };
+  if (sessionId) body.sessionId = sessionId;
+  if (chatHistory && chatHistory.length > 0) body.conversationContext = { chatHistory };
+
+  const response = await fetch("/api/chat/workflow/stream", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Accept: "text/event-stream" },
+    body: JSON.stringify(body),
+  });
+
+  if (response.status === 404 || response.status === 405 || !response.body) {
+    return sendChatRequest(message, sessionId, chatHistory);
+  }
+  if (!response.ok) {
+    let details: { error?: string } = {};
+    try {
+      details = await response.json();
+    } catch {
+      // 保留通用错误。
+    }
+    throw new Error(details.error || "聊天服务请求失败");
+  }
+  if (!response.headers.get("content-type")?.includes("text/event-stream")) {
+    return response.json();
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  let result: WorkflowResponse | null = null;
+  let streamError: Error | null = null;
+
+  const consumeFrame = (frame: string) => {
+    const lines = frame.split(/\r?\n/);
+    let eventName = "message";
+    const dataLines: string[] = [];
+    for (const line of lines) {
+      if (line.startsWith(":")) continue;
+      if (line.startsWith("event:")) eventName = line.slice(6).trim();
+      if (line.startsWith("data:")) dataLines.push(line.slice(5).trimStart());
+    }
+    if (dataLines.length === 0) return;
+    const payload = JSON.parse(dataLines.join("\n")) as Record<string, unknown>;
+    if (eventName === "research_progress") {
+      onProgress(payload as unknown as ResearchProgressEvent);
+    } else if (eventName === "result") {
+      result = payload as unknown as WorkflowResponse;
+    } else if (eventName === "error") {
+      const runHint = payload.run_id ? `（任务 ${String(payload.run_id)}）` : "";
+      streamError = new Error(`${String(payload.error || "研究任务执行失败")}${runHint}`);
+    }
+  };
+
+  while (true) {
+    const { value, done } = await reader.read();
+    buffer += decoder.decode(value, { stream: !done });
+    const frames = buffer.split(/\r?\n\r?\n/);
+    buffer = frames.pop() || "";
+    for (const frame of frames) {
+      if (frame.trim()) consumeFrame(frame);
+    }
+    if (done) break;
+  }
+  if (buffer.trim()) consumeFrame(buffer);
+  if (streamError) throw streamError;
+  if (!result) throw new Error("研究流已结束，但没有收到最终结果");
+  return result;
 }
 
 
@@ -150,6 +300,7 @@ function getIntentLabel(intent: string): string {
     opportunity_radar: "机会雷达",
     discovery_candidates: "新发现",
     market_news: "市场新闻",
+    market_attribution: "涨跌幅归因",
     help: "帮助",
     unknown: "未知",
     stock_deep_analysis: "深度分析",
@@ -192,17 +343,143 @@ function UserMessageBubble({ content, timestamp }: { content: string; timestamp:
 /**
  * AI 消息气泡组件（含 Markdown 渲染）
  */
-function AssistantMessageBubble({ content, timestamp, intent }: { content: string; timestamp: Date; intent?: string }) {
+function ResearchExecutionPanel({ details }: { details: ResearchExecutionDetails }) {
+  const reportArtifacts = details.artifacts.filter((item) =>
+    ["stock_deep_dive_report", "stock_research_packet_v2", "stock_deep_dive_audit"].includes(item.artifact_type || "")
+  );
+  const passed = details.citation?.status === "passed";
+  const research = details.researchExecution;
+  const isRunning = research?.status === "running";
+  const [isExpanded, setIsExpanded] = useState(Boolean(isRunning));
+  const progressText = research
+    ? `${research.completedStages}/${research.totalStages} 阶段完成`
+    : `${details.completedSteps}/${details.totalSteps} 步完成`;
+  const stageIcon = (status: ResearchStage["status"]) => {
+    if (status === "completed") return <CheckCircle2 size={15} className="text-emerald-600" />;
+    if (status === "warning") return <AlertTriangle size={15} className="text-amber-600" />;
+    if (status === "failed") return <XCircle size={15} className="text-rose-600" />;
+    if (status === "running") return <Loader2 size={15} className="animate-spin text-blue-600" />;
+    return <Circle size={15} className="text-slate-300" />;
+  };
   return (
-    <div className="flex justify-start mb-4">
-      <div className="flex items-start gap-2 max-w-[85%]">
+    <details
+      open={isExpanded}
+      onToggle={(event) => setIsExpanded(event.currentTarget.open)}
+      className="group mt-8 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50/80"
+    >
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-4 text-sm text-slate-700 marker:hidden">
+        <span className="flex items-center gap-3 font-medium">
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-slate-700 shadow-sm ring-1 ring-slate-200">
+            <Activity size={16} />
+          </span>
+          研究运行与产物
+        </span>
+        <span className="flex items-center gap-3 text-xs text-slate-500">
+          {progressText}
+          <ChevronDown size={15} className="transition-transform duration-200 group-open:rotate-180" />
+        </span>
+      </summary>
+      <div className="border-t border-slate-200 px-5 py-5">
+        <div className="grid gap-3 sm:grid-cols-4">
+          <div className="rounded-xl bg-white p-3 ring-1 ring-slate-200">
+            <div className="text-[11px] tracking-wide text-slate-400">任务类型</div>
+            <div className="mt-1 text-sm font-semibold text-slate-800">{getIntentLabel(details.taskType)}</div>
+          </div>
+          <div className="rounded-xl bg-white p-3 ring-1 ring-slate-200">
+            <div className="text-[11px] tracking-wide text-slate-400">报告校验</div>
+            <div className="mt-1 flex items-center gap-1.5 text-sm font-semibold text-slate-800">
+              {isRunning
+                ? <Loader2 size={14} className="animate-spin text-blue-600" />
+                : <ShieldCheck size={14} className={passed ? "text-emerald-600" : "text-amber-600"} />}
+              {isRunning ? "等待最终复核" : passed ? "引用与结构通过" : "已降级，建议复核"}
+            </div>
+          </div>
+          <div className="rounded-xl bg-white p-3 ring-1 ring-slate-200">
+            <div className="text-[11px] tracking-wide text-slate-400">研究覆盖</div>
+            <div className="mt-1 text-sm font-semibold text-slate-800">
+              {isRunning ? "资料收集中" : details.health?.status === "healthy" ? "完整" : "部分数据受限"}
+            </div>
+          </div>
+          <div className="rounded-xl bg-white p-3 ring-1 ring-slate-200">
+            <div className="text-[11px] tracking-wide text-slate-400">意图编排</div>
+            <div className="mt-1 text-sm font-semibold text-slate-800">
+              {isRunning ? "已进入深研流程" : `${details.completedSteps}/${details.totalSteps} 步完成`}
+            </div>
+          </div>
+        </div>
+        {research && research.groups.length > 0 && (
+          <div className="mt-5 space-y-3" data-testid="research-stage-timeline">
+            <div className="flex items-center justify-between">
+              <div className="text-sm font-semibold text-slate-800">研究主流程</div>
+              <div className="text-xs text-slate-500">
+                {research.completedStages}/{research.totalStages} 阶段完成
+                {research.warningStages > 0 ? ` · ${research.warningStages} 项降级` : ""}
+              </div>
+            </div>
+            <div className="h-1.5 overflow-hidden rounded-full bg-slate-200">
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 transition-[width] duration-500"
+                style={{ width: `${Math.round((research.completedStages / Math.max(1, research.totalStages)) * 100)}%` }}
+              />
+            </div>
+            {research.groups.map((group) => (
+              <div key={group.id} className="overflow-hidden rounded-xl bg-white ring-1 ring-slate-200">
+                <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/70 px-4 py-2.5">
+                  <span className="text-xs font-semibold text-slate-700">{group.label}</span>
+                  <span className="text-[11px] text-slate-400">{group.completedStages}/{group.totalStages}</span>
+                </div>
+                <div className="divide-y divide-slate-100">
+                  {group.stages.map((stage) => (
+                    <div key={stage.id} className="flex items-start gap-3 px-4 py-3">
+                      <span className="mt-0.5 flex-none">{stageIcon(stage.status)}</span>
+                      <div className="min-w-0 flex-1">
+                        <div className="text-xs font-medium text-slate-700">{stage.label}</div>
+                        {stage.message && <div className="mt-0.5 truncate text-[11px] text-slate-400">{stage.message}</div>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+        {reportArtifacts.length > 0 && (
+          <div className="mt-4 flex flex-wrap gap-2">
+            {reportArtifacts.map((item) => (
+              <a
+                key={item.artifact_id}
+                href={`/api/artifacts/${encodeURIComponent(item.artifact_id)}`}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-2 text-xs font-medium text-slate-700 ring-1 ring-slate-200 transition hover:-translate-y-0.5 hover:text-blue-700 hover:shadow-sm"
+              >
+                <FileText size={13} /> {item.title || "研究产物"}
+              </a>
+            ))}
+          </div>
+        )}
+        {(details.runId || details.governedRunId) && (
+          <div className="mt-4 font-mono text-[10px] leading-5 text-slate-400">
+            {details.governedRunId && <div>研究任务 {details.governedRunId}</div>}
+            {details.runId && <div>会话任务 {details.runId}</div>}
+          </div>
+        )}
+      </div>
+    </details>
+  );
+}
+
+function AssistantMessageBubble({ content, timestamp, intent, execution }: { content: string; timestamp: Date; intent?: string; execution?: ResearchExecutionDetails }) {
+  return (
+    <div className="mb-8 flex justify-start">
+      <div className="flex w-full max-w-[1120px] items-start gap-3">
         <div className="flex flex-col items-center flex-shrink-0">
           <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full flex items-center justify-center">
             <Bot size={16} className="text-white" />
           </div>
           <span className="text-xs text-gray-400 mt-1">{formatTime(timestamp)}</span>
         </div>
-        <div className="bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm">
+        <article className="min-w-0 flex-1 rounded-[26px] rounded-tl-md border border-slate-200 bg-white px-6 py-6 text-slate-900 shadow-[0_16px_50px_-32px_rgba(15,23,42,0.35)] md:px-10 md:py-9">
           {intent && intent !== "help" && (
             <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">
               <span className="bg-gray-200 dark:bg-gray-700 px-2 py-0.5 rounded-full">
@@ -210,24 +487,26 @@ function AssistantMessageBubble({ content, timestamp, intent }: { content: strin
               </span>
             </div>
           )}
-          <div className="text-sm">
+          <div className="text-[15px] leading-7 text-slate-700">
             <ReactMarkdown remarkPlugins={[remarkGfm]} components={{
-              h1: ({ children }) => <h1 className="text-lg font-bold mt-2 mb-1">{children}</h1>,
-              h2: ({ children }) => <h2 className="text-base font-bold mt-2 mb-1">{children}</h2>,
-              h3: ({ children }) => <h3 className="text-sm font-bold mt-2 mb-1">{children}</h3>,
-              ul: ({ children }) => <ul className="list-disc list-inside mt-1 mb-1">{children}</ul>,
-              ol: ({ children }) => <ol className="list-decimal list-inside mt-1 mb-1">{children}</ol>,
-              li: ({ children }) => <li className="text-sm">{children}</li>,
+              h1: ({ children }) => <h1 className="mb-6 mt-1 border-b border-slate-200 pb-5 text-2xl font-bold tracking-tight text-slate-950 md:text-3xl">{children}</h1>,
+              h2: ({ children }) => <h2 className="mb-3 mt-10 text-xl font-bold tracking-tight text-slate-950">{children}</h2>,
+              h3: ({ children }) => <h3 className="mb-2 mt-6 text-base font-bold text-slate-900">{children}</h3>,
+              ul: ({ children }) => <ul className="my-3 list-disc space-y-1 pl-6 marker:text-blue-600">{children}</ul>,
+              ol: ({ children }) => <ol className="my-3 list-decimal space-y-1 pl-6 marker:font-semibold marker:text-blue-700">{children}</ol>,
+              li: ({ children }) => <li>{children}</li>,
               strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
-              table: ({ children }) => <div className="overflow-x-auto my-2 border border-gray-300 dark:border-gray-600 rounded-lg"><table className="w-full text-xs">{children}</table></div>,
-              th: ({ children }) => <th className="border border-gray-300 dark:border-gray-600 px-2 py-1 text-left font-semibold bg-gray-100 dark:bg-gray-700">{children}</th>,
-              td: ({ children }) => <td className="border border-gray-300 dark:border-gray-600 px-2 py-1 text-left">{children}</td>,
-              p: ({ children }) => <p className="mb-1">{children}</p>,
+              table: ({ children }) => <div className="my-5 overflow-x-auto rounded-xl border border-slate-200"><table className="w-full text-xs">{children}</table></div>,
+              th: ({ children }) => <th className="border-b border-slate-200 bg-slate-50 px-3 py-2.5 text-left font-semibold text-slate-700">{children}</th>,
+              td: ({ children }) => <td className="border-b border-slate-100 px-3 py-2.5 text-left text-slate-600">{children}</td>,
+              p: ({ children }) => <p className="mb-3">{children}</p>,
+              blockquote: ({ children }) => <blockquote className="my-5 border-l-2 border-blue-500 bg-blue-50/70 px-4 py-3 text-slate-600">{children}</blockquote>,
             }}>
               {content}
             </ReactMarkdown>
           </div>
-        </div>
+          {execution && <ResearchExecutionPanel details={execution} />}
+        </article>
       </div>
     </div>
   );
@@ -271,7 +550,7 @@ function sessionMessagesToChatMessages(messages: SessionMessage[]): ChatMessage[
     id: `session-${msg.id}`,
     role: msg.role,
     content: msg.content,
-    timestamp: new Date(msg.created_at),
+    timestamp: parseApiDate(msg.created_at),
     intent: msg.intent || undefined,
   }));
 }
@@ -304,6 +583,7 @@ export default function ChatPanel() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isStreamingProgress, setIsStreamingProgress] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const welcomeInputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -433,6 +713,9 @@ export default function ChatPanel() {
     setMessages(prev => [...prev, userMessage]);
     setInputValue("");
     setIsLoading(true);
+    setIsStreamingProgress(false);
+    const streamingMessageId = `stream-${Date.now()}`;
+    let progressMessageCreated = false;
 
     try {
       // 构建对话历史：把当前 session 中已有的消息传给后端
@@ -443,46 +726,79 @@ export default function ChatPanel() {
         content: msg.role === "user" ? msg.content.substring(0, 300) : msg.content.substring(0, 2000),
       }));
 
-      const response = await sendChatRequest(message, sessionId || undefined, chatHistory);
-
-      // 构建执行步骤信息
-      let executionInfo = "";
-      if (response.workflowSummary) {
-        executionInfo = `\n\n---\n\n**📋 执行信息**\n- 任务类型：${getIntentLabel(response.taskType)}\n- 执行步骤：${response.workflowSummary.completedSteps}/${response.workflowSummary.totalSteps} 步`;
-      }
-
-      // 构建提取的记忆信息
-      let memoriesInfo = "";
-      if (response.extractedMemories && response.extractedMemories.length > 0) {
-        memoriesInfo = `\n\n**🧠 可沉淀记忆（${response.extractedMemories.length} 条）**\n`;
-        response.extractedMemories.forEach((mem, i) => {
-          memoriesInfo += `${i + 1}. **${mem.title}**（${mem.category}）\n   ${mem.content.substring(0, 80)}${mem.content.length > 80 ? "..." : ""}\n`;
-        });
-      }
+      const response = await sendChatRequestStream(
+        message,
+        sessionId || undefined,
+        chatHistory,
+        (progress) => {
+          progressMessageCreated = true;
+          setIsStreamingProgress(true);
+          const progressMessage: ChatMessage = {
+            id: streamingMessageId,
+            role: "assistant",
+            content: "正在执行个股深度研究。研究报告完成后将在这里展开。",
+            timestamp: new Date(),
+            intent: "stock_deep_analysis",
+            execution: {
+              taskType: "stock_deep_analysis",
+              governedRunId: progress.run_id,
+              completedSteps: 1,
+              totalSteps: 2,
+              artifacts: [],
+              researchExecution: progress.researchExecution,
+            },
+          };
+          setMessages((previous) => {
+            const exists = previous.some((item) => item.id === streamingMessageId);
+            return exists
+              ? previous.map((item) => item.id === streamingMessageId ? progressMessage : item)
+              : [...previous, progressMessage];
+          });
+        },
+      );
 
       // 添加 AI 回复
       const assistantMessage: ChatMessage = {
-        id: (Date.now() + 1).toString(),
+        id: progressMessageCreated ? streamingMessageId : (Date.now() + 1).toString(),
         role: "assistant",
-        content: response.response + executionInfo + memoriesInfo,
+        content: response.response,
         timestamp: new Date(),
         intent: response.taskType,
+        execution: response.workflowSummary ? {
+          taskType: response.taskType,
+          runId: response.run_id,
+          governedRunId: response.governed_run_id,
+          completedSteps: response.workflowSummary.completedSteps,
+          totalSteps: response.workflowSummary.totalSteps,
+          health: response.data?.dataHealth,
+          citation: response.data?.citationValidation,
+          artifacts: response.artifacts || [],
+          researchExecution: response.data?.researchExecution,
+        } : undefined,
       };
-      setMessages(prev => [...prev, assistantMessage]);
+      setMessages((previous) => progressMessageCreated
+        ? previous.map((item) => item.id === streamingMessageId ? assistantMessage : item)
+        : [...previous, assistantMessage]);
 
       // 刷新侧边栏
       refreshSidebar();
     } catch (error) {
       const errorMessage: ChatMessage = {
-        id: (Date.now() + 1).toString(),
+        id: progressMessageCreated ? streamingMessageId : (Date.now() + 1).toString(),
         role: "assistant",
         content: `抱歉，发生了错误：${error instanceof Error ? error.message : "未知错误"}`,
         timestamp: new Date(),
         intent: "unknown",
       };
-      setMessages(prev => [...prev, errorMessage]);
+      setMessages((previous) => progressMessageCreated
+        ? previous.map((item) => item.id === streamingMessageId ? {
+            ...errorMessage,
+            execution: item.execution,
+          } : item)
+        : [...previous, errorMessage]);
     } finally {
       setIsLoading(false);
+      setIsStreamingProgress(false);
     }
   }
 
@@ -531,7 +847,7 @@ export default function ChatPanel() {
 
 
   return (
-    <div className="flex h-full bg-white dark:bg-gray-900 overflow-hidden">
+    <div className="flex flex-1 min-h-0 bg-white dark:bg-gray-900 overflow-hidden border-t border-gray-200">
       {/* === 左侧：会话列表侧边栏 === */}
       <SessionSidebar
         key={sidebarRefreshKey}
@@ -637,10 +953,10 @@ export default function ChatPanel() {
               msg.role === "user" ? (
                 <UserMessageBubble key={msg.id} content={msg.content} timestamp={msg.timestamp} />
               ) : (
-                <AssistantMessageBubble key={msg.id} content={msg.content} timestamp={msg.timestamp} intent={msg.intent} />
+                <AssistantMessageBubble key={msg.id} content={msg.content} timestamp={msg.timestamp} intent={msg.intent} execution={msg.execution} />
               )
             )}
-            {isLoading && <LoadingIndicator />}
+            {isLoading && !isStreamingProgress && <LoadingIndicator />}
             <div ref={messagesEndRef} />
           </div>
 

@@ -1,0 +1,94 @@
+{
+  "schema_version": "2.0",
+  "evaluation_policy": {
+    "mock_results_forbidden": true,
+    "skipped_hard_gate_is_failure": true,
+    "all_commands_must_exit_zero": true,
+    "evidence": "Each gate is backed by an executed production-component test command."
+  },
+  "six_turns": [
+    {
+      "turn_id": "T1",
+      "name": "阳光电源换仓海光信息",
+      "user_input": "把阳光电源换成海光信息，做调仓比较（300274.SZ、688041.SH）",
+      "expected_task_graph": "pair_switch_decision",
+      "verification_id": "pair_switch",
+      "required_artifacts": ["comparison_matrix", "decision_scenarios", "pair_switch_report", "monitoring_list"]
+    },
+    {
+      "turn_id": "T2",
+      "name": "海光信息经营驱动估值",
+      "user_input": "给海光信息 688041.SH 做经营驱动估值模型",
+      "expected_task_graph": "operating_driver_valuation",
+      "verification_id": "operating_valuation",
+      "required_artifacts": ["valuation_model", "valuation_report", "calculation_ledger", "monitoring_list"]
+    },
+    {
+      "turn_id": "T3",
+      "name": "超节点主题预期差筛选",
+      "user_input": "筛选 AI 算力超节点主题里的预期差候选",
+      "expected_task_graph": "theme_expectation_gap",
+      "verification_id": "theme_gap",
+      "required_artifacts": ["comparison_matrix", "theme_expectation_gap_report", "theme_candidates", "monitoring_list"]
+    },
+    {
+      "turn_id": "T4",
+      "name": "星网锐捷市值纠错与依赖重算",
+      "user_input": "星网锐捷的市值不是 199 亿，请按最新权威数据纠正并重算下游结论",
+      "expected_task_graph": "claim_correction",
+      "verification_id": "claim_correction",
+      "required_artifacts": ["correction_diff", "claim_correction_report"]
+    },
+    {
+      "turn_id": "T5",
+      "name": "DCI 催化缺失的产业因果解释",
+      "user_input": "为什么 DCI 需求明确但 A 股一直没有催化和行情？",
+      "expected_task_graph": "industry_causal_explainer",
+      "verification_id": "causal_chain",
+      "required_artifacts": ["causal_chain", "causal_explainer_report", "monitoring_list"]
+    },
+    {
+      "turn_id": "T6",
+      "name": "德科立九十天公司信号计划",
+      "user_input": "给德科立 688205.SH 做 90 天信号跟踪计划：认证、工厂和出货节奏",
+      "expected_task_graph": "company_signal_plan",
+      "verification_id": "signal_plan",
+      "required_artifacts": ["signal_plan", "company_signal_plan_report", "monitoring_list"]
+    }
+  ],
+  "fault_injections": [
+    {"fault_id": "F01", "name": "LLM 不可用", "verification_id": "llm_unavailable", "inject_point": "intent_router_and_report_synthesis", "gate_tested": ["G9"]},
+    {"fault_id": "F02", "name": "Firecrawl 不可用", "verification_id": "firecrawl_unavailable", "inject_point": "web_acquisition_provider", "gate_tested": ["G10"]},
+    {"fault_id": "F03", "name": "主数据源失败并切换后备源", "verification_id": "primary_provider_failure", "inject_point": "acquisition_kernel", "gate_tested": ["G2", "G10"]},
+    {"fault_id": "F04", "name": "缓存过期", "verification_id": "stale_cache", "inject_point": "acquisition_cache", "gate_tested": ["G3"]},
+    {"fault_id": "F05", "name": "不同来源数值冲突", "verification_id": "source_conflict", "inject_point": "fact_store", "gate_tested": ["G2"]},
+    {"fault_id": "F06", "name": "交易日与节假日边界", "verification_id": "market_calendar_boundary", "inject_point": "market_calendar", "gate_tested": ["G3"]},
+    {"fault_id": "F07", "name": "报告期、币种和单位错误", "verification_id": "unit_currency_period", "inject_point": "research_normalizer", "gate_tested": ["G3"]},
+    {"fault_id": "F08", "name": "估值计算输入缺失", "verification_id": "missing_valuation_input", "inject_point": "valuation_engine", "gate_tested": ["G4"]},
+    {"fault_id": "F09", "name": "未知或缺失引用", "verification_id": "unknown_citation", "inject_point": "report_validator", "gate_tested": ["G5"]},
+    {"fault_id": "F10", "name": "用户纠错仍与权威数据冲突", "verification_id": "correction_conflict", "inject_point": "correction_adapter", "gate_tested": ["G6", "G7"]},
+    {"fault_id": "F11", "name": "会话中断后恢复", "verification_id": "session_resume", "inject_point": "session_state_store", "gate_tested": ["G1", "G6"]}
+  ],
+  "acceptance_gates": [
+    {"gate_id": "G1", "name": "六轮全部路由到正确任务图", "hard_requirement": true},
+    {"gate_id": "G2", "name": "核心数值事实错误为零", "hard_requirement": true},
+    {"gate_id": "G3", "name": "单位、币种、报告期和行情时点混用为零", "hard_requirement": true},
+    {"gate_id": "G4", "name": "计算结果百分之百可复算", "hard_requirement": true},
+    {"gate_id": "G5", "name": "核心主张引用覆盖率百分之百", "hard_requirement": true},
+    {"gate_id": "G6", "name": "未批准候选记忆不得用于事实判断", "hard_requirement": true},
+    {"gate_id": "G7", "name": "纠错后不得遗漏依赖重算", "hard_requirement": true},
+    {"gate_id": "G8", "name": "五类制品视图和记忆审核面板全部可用", "hard_requirement": true},
+    {"gate_id": "G9", "name": "模型失败不生成伪精确结论", "hard_requirement": true},
+    {"gate_id": "G10", "name": "Firecrawl 失败不拖垮正式数据链", "hard_requirement": true},
+    {"gate_id": "G11", "name": "npm run check:full 真实通过", "hard_requirement": true},
+    {"gate_id": "G12", "name": "用户正文不泄漏内部执行状态", "hard_requirement": true}
+  ],
+  "artifact_views_required_for_g8": [
+    "src/features/artifacts/ValuationModelView.tsx",
+    "src/features/artifacts/ComparisonMatrixView.tsx",
+    "src/features/artifacts/CausalChainView.tsx",
+    "src/features/artifacts/SignalPlanView.tsx",
+    "src/features/artifacts/CorrectionDiffView.tsx",
+    "src/features/memory/MemoryCandidatePanel.tsx"
+  ]
+}

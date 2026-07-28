@@ -46,6 +46,11 @@ run_phase143_cross_link_pipeline = create_pipeline(
     output_name="phase143_cross_link_pipeline"
 )
 
+# Backward-compatible public entry point retained for the phase runner tests and
+# any local automation written before the descriptive function name was added.
+def run_pipeline(mode="dry-run"):
+    return run_phase143_cross_link_pipeline([f"--{mode}"])
+
 
 if __name__ == "__main__":
     run_phase143_cross_link_pipeline()

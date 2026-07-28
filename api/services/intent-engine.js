@@ -21,6 +21,7 @@
  */
 
 import { createChatCompletion } from "./llm-service.js";
+import { firstKnownAShareTicker } from "./security-aliases.js";
 
 /**
  * 意图分析结果结构
@@ -34,6 +35,10 @@ class IntentResult {
     this.expectedOutput = data.expectedOutput || "";
     this.isDynamic = data.isDynamic || false;
     this.reasoning = data.reasoning || "";
+    this.confidence = Number.isFinite(Number(data.confidence)) ? Number(data.confidence) : null;
+    this.needsClarification = Boolean(data.needsClarification);
+    this.clarificationQuestion = data.clarificationQuestion || "";
+    this.routingSource = data.routingSource || "llm";
   }
 }
 
@@ -181,6 +186,9 @@ ${toolsDesc}
   "requiredTools": ["工具ID列表，按执行顺序排列"],
   "expectedOutput": "期望的输出内容描述",
   "isDynamic": true或false,
+  "confidence": 0到1之间的数字,
+  "needsClarification": true或false,
+  "clarificationQuestion": "只有实体或任务目标存在实质歧义时才填写",
   "reasoning": "你的分析和决策理由"
 }
 
@@ -188,8 +196,10 @@ ${toolsDesc}
 - 如果用户提到美股（如NVDA、TSLA、AAPL），必须先调用get_us_data获取美股数据
 - 如果用户问A股映射或关联，必须调用find_us_mapping查找映射关系
 - 如果用户问A股投资机会，必须调用get_stock_data获取A股数据
-- 最后必须调用analyze_with_llm进行综合分析
+- 如果 intent=stock_deep_analysis，requiredTools 必须是 ["resolve_entity", "run_governed_stock_deep_dive"]，不得退回通用 analyze_with_llm
+- 其他需要自由文本综合的任务，最后可调用 analyze_with_llm
 - 如果用户查询比较简单（如闲聊），可以只调用analyze_with_llm
+- 只有在无法唯一确定标的或用户目标会导致不同工作流时，才设置 needsClarification=true；不要要求用户记忆命令或工作流名称
 - **重要**：如果用户是对之前对话的追问（如"继续"、"接着说"、"补充一下"），intent应为"chat"，requiredTools只需["analyze_with_llm"]
 - isDynamic=true表示流程由你决定，false表示使用预设的defaultFlow
 - requiredTools必须按执行顺序排列，前一个工具的输出可能是后一个工具的输入
@@ -234,8 +244,10 @@ ${toolsDesc}
    */
   createFallbackIntent(userQuery) {
     const isUsStock = /\b(NVDA|AMD|INTC|MSFT|GOOGL|AAPL|TSLA|META|AMZN|NFLX|BABA|TCEHY|JD|NIO)\b/i.test(userQuery);
+    const knownAShareTicker = firstKnownAShareTicker(userQuery);
     const isAShare = /\b(\d{6}\.(SZ|SH|BJ|HK))\b/i.test(userQuery) ||
-                     /\b(海光信息|中际旭创|宁德时代|比亚迪|贵州茅台)\b/.test(userQuery);
+                     Boolean(knownAShareTicker) ||
+                     /\b(宁德时代|比亚迪|贵州茅台)\b/.test(userQuery);
     const hasMapping = userQuery.includes("映射") || userQuery.includes("关联") ||
                        userQuery.includes("对标") || userQuery.includes("联动");
     const hasAnalysis = userQuery.includes("分析") || userQuery.includes("研究") ||
@@ -260,11 +272,11 @@ ${toolsDesc}
     } else if (isUsStock && hasAnalysis) {
       intent = "stock_deep_analysis";
       intentName = "深度分析";
-      tools = ["resolve_entity", "get_stock_data", "get_news", "analyze_with_llm"];
+      tools = ["resolve_entity", "run_governed_stock_deep_dive"];
     } else if (isAShare && hasAnalysis) {
       intent = "stock_deep_analysis";
       intentName = "深度分析";
-      tools = ["resolve_entity", "get_stock_data", "get_news", "analyze_with_llm"];
+      tools = ["resolve_entity", "run_governed_stock_deep_dive"];
     } else if (hasScan) {
       // 修复：扫描投资机会 → opportunity_scan
       intent = "opportunity_scan";
@@ -286,12 +298,17 @@ ${toolsDesc}
       intentName,
       entities: {
         usTicker: isUsStock ? userQuery.match(/\b(NVDA|AMD|INTC|MSFT|GOOGL|AAPL|TSLA|META|AMZN|NFLX|NIO)\b/i)?.[0] || null : null,
+        aShareTicker: knownAShareTicker,
         keywords: [userQuery],
       },
       requiredTools: tools,
       expectedOutput: "分析用户查询并给出回答",
       isDynamic: true,
       reasoning: "LLM解析失败，使用规则匹配",
+      confidence: intent === "chat" ? 0.35 : 0.9,
+      needsClarification: false,
+      clarificationQuestion: "",
+      routingSource: "deterministic_fallback",
     });
   }
 
@@ -338,16 +355,20 @@ ${JSON.stringify(remainingTools, null, 2)}
       const adjustments = JSON.parse(jsonStr);
 
       let newTools = [...remainingTools];
+      const availableTools = await this.getTools();
 
       for (const adj of adjustments.adjustments || []) {
-        if (adj.action === "add") {
-          newTools.splice(adj.position, 0, adj.toolId);
+        if (adj.action === "add" && availableTools[adj.toolId]) {
+          const position = Math.max(0, Math.min(Number(adj.position) || 0, newTools.length));
+          newTools.splice(position, 0, adj.toolId);
         } else if (adj.action === "remove") {
           newTools = newTools.filter(t => t !== adj.toolId);
         }
       }
 
-      return newTools;
+      return newTools
+        .filter((toolId) => availableTools[toolId])
+        .filter((toolId, index, all) => all.indexOf(toolId) === index);
     } catch (error) {
       console.error("[intent] 重新规划失败:", error.message);
       return remainingTools;

@@ -29,6 +29,7 @@ import {
   fetchSessions, createSession, updateSession, deleteSession,
   type ChatSession
 } from "../../lib/api";
+import { parseApiDate } from "../../lib/datetime";
 
 /**
  * 格式化时间为简短显示
@@ -38,7 +39,7 @@ import {
  */
 function formatTime(dateStr: string | null): string {
   if (!dateStr) return "";
-  const date = new Date(dateStr);
+  const date = parseApiDate(dateStr);
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
   const diffMin = Math.floor(diffMs / 60000);
